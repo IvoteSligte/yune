@@ -1,0 +1,154 @@
+use token
+
+// span of a token, starting at character offset `offset` and with length `len`
+Span = struct
+	offset: Offset
+	len: Int
+
+// unexpected character encountered
+// `expected` is a description of the expected character kind
+Unexpected = struct
+	span: Span
+	expected: String
+	found: Char
+
+nextMultiple(n: Int, mult: Int): Int =
+	assert mult != 0
+	((n + mult) / mult) * mult
+
+Lexer = struct
+	input: PeekSeq
+	indent: Int
+
+Lexer.new(input: String): Lexer =
+	Lexer (input: (input, 0), indent: 0)
+
+(l: ref Lexer).
+	peek: Char = l.input.peek
+	peekN(n: Int): String = l.input.peekN(n)
+
+	// is end-of-input/file
+	isEof: Bool = l.peek == '\0'
+
+	// returns the offset of the token ending right before the next character in the stream
+	offset: Offset = l.input.offset
+
+	span(len: Int): Span = Span (offset: l.ss.offset - len, len: len)
+
+(l: var Lexer).
+	// skips whitespace excluding newlines
+	skipSpace =
+		_ = l.input.takeWhile(|c| c.isSpace and c != '\n').collect
+
+	// Returns the indentation after the next Char
+	peekIndent: Int | Nil =
+		let c = l.input.peek
+		not c.isSpace -> Nil
+		c ==
+			'\n' -> 0
+			' '  -> l.indent + 1
+			'\t' -> l.indent.nextMultiple 4
+		todo // other whitespace characters
+
+	skipIndent =
+		assert l.next == '\n'
+		l.indent = 0
+		l.input.takeWhile |_|
+			l.peekIndent
+				is Nil -> False
+				is ind: Int ->
+					l.indent = ind
+					True
+
+	skipAtMostIndent(max: Int) =
+		for 0---, |_|
+			l.peekIndent is ind: Int and ind <= max -> l.indent = ind
+			Break
+
+	// FIXME: rename due to conflict with Seq.next
+	next: Char =
+		l.skipSpace
+		l.peek == '\n' ->
+			l.calcIndent
+			'\n' // indicates some indentation
+		l.input.next
+
+	skip = _ = l.input.next
+	skipN(n: Int): String = l.input.nextN(n)
+
+	takeWhile(cond: Fn(Char): Bool): Seq Char =
+		loop ||
+			cond l.peek -> l.next
+			Break
+
+	takeBlock: Seq Char =
+		let oldIndent = l.indent
+		l.skipIndent
+		let blockIndent = l.indent
+		loop ||
+				l.indent <= oldIndent -> Break
+				l.input.takeWhile(|c| c != '\n')
+				l.skipAtMostIndent blockIndent
+			.flatten
+
+	// Lex a non-negative integer.
+	integer: LInteger =
+		assert l.peek in '0'--'9'
+		LInteger l.takeWhile(|c| c in '0'--'9').collect
+
+	// Lex character literal.
+	char: LChar | Unexpected =
+		// inside strings and character literals characters can be escaped with a \
+		assert l.next == '\''
+		let c = l.next
+		c == '\'' -> Unexpected(span: l.span(1), expected: "anything but '", found: '\'')
+		let end = l.next
+		end != '\'' -> Unexpected(span: l.span(1), expected: "'", found: end)
+		LChar c
+
+	// Lex string literal.
+	string: LString | Unexpected =
+		assert l.next == '"'
+		let s = l.takeWhile(|c| c != '"' and not l.isEof).collect
+		l.next != '"' -> Unexpected (span: l.span(1), expected: "\"", found: '\0')
+		LString s
+
+	// Lex identifier.
+	// No special requirements for capitalisation here because better error messages
+	// can be given when this is checked at a later stage.
+	id: Id =
+		assert l.peek.isAlNum
+		Id l.takeWhile(isAlNum).collect
+
+	op: Operator =
+		assert l.peek.isPunct
+		Op l.takeWhile Char.isPunct
+
+(l: var Lexer).
+	// TODO: handle line comments and closure pipes
+
+	// Lexes a token.
+	Seq.next: Token | Unexpected =
+		// lexer's offset is the first char after the token
+		let ret = |l, t| Token
+			content: t
+			offset: l.offset - t.len // offset to start of token
+			joint: not l.peek.isSpace
+
+		l.peek
+			is sym: Symbol -> ret(l, sym)
+			== '\n' -> ret(l, Indent l.indent)
+			== '\'' ->
+				l.char is
+					c: LChar -> ret(l, c)
+					err -> err
+			== '"' ->
+				l.string is
+					s: LString -> ret(l, s)
+					err -> err
+			in '0'--'9' ->
+				l.lexInteger is
+					n: LInteger -> ret(l, n)
+					err -> err
+
+		Unexpected(span: l.span(1), expected: "start of token", found: l.peek)
