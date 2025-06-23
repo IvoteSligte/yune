@@ -1,0 +1,54 @@
+
+// still a string so ints of any length can be stored
+LInteger = new String
+LChar = new Char
+LString = new String
+
+// identifier (alphabetic Char followed by multiple alphanumeric Chars)
+Id = new String
+
+// non-alphanumeric strings that are not reserved symbols
+Operator = new String
+
+// literal
+Lit = LInteger | LChar | LString
+
+// types are anything with the Set (datastructure) trait, including (byte) arrays
+Symbol: Type = b"()[]{}=:,;_"
+
+Macro = struct
+	name: Id
+	body: String
+
+Indent = new Int
+
+Content = Id | Lit | Symbol | Indent
+
+Token = struct var
+	content: Content
+	offset: Int // character offset from start of file
+	joint: Bool // is there whitespace between tokens
+
+// ^child = child.parent()
+// precedence(^) > precedence(.)
+(t: Token).Parent.parent = t.content
+
+Length = struct const
+	len(l: Length): Int
+
+Length.len
+	(n: LInteger) = ^n.len
+
+	(_: LChar) = 3
+
+	(s: LString) = ^s.len
+
+	(s: Id) = ^s.len
+
+	(s: Operator) = ^s.len
+
+	(m: Macro) = m.name.len + m.body.len
+
+	(_: Char) = 1
+
+	(s: String) = s.chars.count
