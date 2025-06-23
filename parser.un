@@ -1,0 +1,75 @@
+use lexer.Lexer
+
+Item = abstract Type
+
+// Tabs count as 4 spaces
+YuneTabIndent = 4
+
+// builtin macros? let var const struct
+
+FnCall = struct let
+	name: String
+	implicit: Bool
+	args: Vec Expr
+
+Assign = struct let
+	left: Expr
+	right: Block
+
+BinOp = struct let
+	name: String
+	left: Expr
+	// Most binary operators can be followed by an indented block, which causes
+	// the prefix expression to be concatenated with each (suffix) expression
+	// in the block.
+	//
+	// Example:
+	// var x = 0
+	// x +=
+	//     5
+	//     9
+	//
+	// assert x == 14
+	right: Vec Expr
+
+BinOp.precedence(name: String): Int =
+	name in
+		["+", "-"] -> 5
+		["*", "/"] -> 6
+		["."]      -> 9
+	4
+
+Expr = BinOp | Assign | FnCall
+
+// Consecutive elements in the same scope
+Block = new Vec struct let
+	head: Line
+	indented: Maybe Block
+
+File = new Flat
+
+Folder = struct let
+	name: String
+	files: Vec File
+
+Project = struct let
+	folder: Folder
+
+Parse = struct const
+	Error: Type
+	parse(tokens: PeekSeq Token): Self | Self.Error | Nil
+
+Unexpected = struct let
+	expected: String
+	found: Token | Nil // Nil == EOF
+
+Expr.Parse =
+	Error = ()
+	parse(tokens) =
+		let tokens = tokens.takeWhile(|t| t ;= Token.Dedent)
+
+		tokens.peek is Nil -> Unexpected
+			expected = "expression"
+			found: Nil
+
+		todo
