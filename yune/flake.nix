@@ -7,7 +7,11 @@
   };
 
   outputs =
-    { nixpkgs, flake-utils }:
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -17,8 +21,9 @@
         devShell = pkgs.mkShell {
           name = "antlr-shell";
 
-          buildInputs = [
-            pkgs.antlr4
+          buildInputs = with pkgs; [
+            antlr4
+            go
           ];
 
           # Optional: convenience
