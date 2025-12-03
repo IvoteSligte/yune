@@ -8,14 +8,9 @@ import (
 )
 
 func main() {
-	file, err := os.Open("test.un")
+	bytes, err := os.ReadFile("./test.un")
 	if err != nil {
 		log.Fatalln("Failed to open test.un. Error:", err)
-	}
-	var bytes []byte
-	_, err = file.Read(bytes)
-	if err != nil {
-		log.Fatalln("Failed to read test.un. Error:", err)
 	}
 	inputStream := antlr.NewInputStream(string(bytes))
 	lexer := parser.NewYuneLexer(inputStream)

@@ -43,11 +43,6 @@ CONST    : 'const';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z0-9]*;
 
-NUMBER
-    : INTEGER
-    | FLOAT
-    ;
-
 INTEGER : [0-9]+;
 
 FLOAT : [0-9]+ '.' [0-9]+;

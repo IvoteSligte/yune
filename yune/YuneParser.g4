@@ -86,7 +86,7 @@ tuple
     ;
 
 binaryExpression
-    : primaryExpression
+    : unaryExpression
     | binaryExpression (PLUS | MINUS) binaryExpression
     | binaryExpression (STAR | SLASH) binaryExpression
     | binaryExpression (LESS | GREATER) binaryExpression

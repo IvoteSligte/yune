@@ -2,6 +2,8 @@
 package parser
 
 import (
+	"log"
+
 	"github.com/antlr4-go/antlr/v4"
 )
 
@@ -9,26 +11,25 @@ import (
 
 type YuneLexerBase struct {
 	*antlr.BaseLexer
-	// Indentation in number of 4-space indentations.
+	// Indentation in number of spaces.
 	indent int
-	queue  []antlr.Token
-}
-
-func (l *YuneLexerBase) Emit() antlr.Token {
-	return l.BaseLexer.Emit()
+	// Indentation before the last token.
+	oldIndent  int
+	reachedEOF bool
 }
 
 func (l *YuneLexerBase) EmitToken(t antlr.Token) {
-	l.queue = append(l.queue, t)
+	log.Fatalln() // TODO
 }
 
 func (l *YuneLexerBase) Reset() {
 	l.indent = 0
-	l.queue = []antlr.Token{}
+	l.oldIndent = 0
+	l.reachedEOF = false
 	l.BaseLexer.Reset()
 }
 
-func (l *YuneLexerBase) MakeCommonToken(ttype int, text string) antlr.Token {
+func (l *YuneLexerBase) makeCommonToken(ttype int, text string) antlr.Token {
 	stop := l.TokenStartCharIndex - 1
 	start := stop
 	if len(text) != 0 {
@@ -47,36 +48,57 @@ func (l *YuneLexerBase) MakeCommonToken(ttype int, text string) antlr.Token {
 	return t
 }
 
-func (l *YuneLexerBase) EmitDedents(amount int) {
-	for range l.indent {
-		l.EmitToken(l.MakeCommonToken(YuneParserDEDENT, ""))
-	}
-}
-
 func (l *YuneLexerBase) NextToken() antlr.Token {
-	if l.GetInputStream().LA(1) == antlr.TokenEOF && l.indent > 0 {
-		l.EmitDedents(l.indent)
-		l.indent = 0
-		l.EmitToken(l.MakeCommonToken(antlr.TokenEOF, "<EOF>"))
+	if l.reachedEOF {
+		if l.indent < l.oldIndent {
+			l.indent -= 4
+			return l.makeCommonToken(YuneParserDEDENT, "")
+		}
+		return l.makeCommonToken(YuneParserEOF, "<EOF>")
 	}
-	next := l.BaseLexer.NextToken()
-	if len(l.queue) == 0 {
-		return next
-	} else {
-		x := l.queue[0]
-		l.queue = l.queue[1:]
-		return x
+	if l.indent < l.oldIndent {
+		l.oldIndent -= 4
+		return l.makeCommonToken(YuneParserDEDENT, "")
 	}
-}
+	if l.indent > l.oldIndent {
+		l.oldIndent += 4
+		return l.makeCommonToken(YuneParserINDENT, "")
+	}
+	token := l.BaseLexer.NextToken()
 
-func (l *YuneLexerBase) GetIndentationCount(spaces string) int {
-	count := 0
-	for _, ch := range spaces {
-		if ch == '\t' {
-			count += 4 - (count % 4)
-		} else {
-			count += 1
+	for token.GetTokenType() == YuneParserNEWLINE {
+		newlineToken := token
+		token = l.BaseLexer.NextToken()
+		newIndent := 0
+
+		if token.GetTokenType() == YuneParserWHITESPACE {
+			for _, c := range token.GetText() {
+				switch c {
+				case ' ':
+					newIndent += 1
+				case '\t':
+					// next multiple of 4
+					newIndent = (newIndent/4 + 1) * 4
+				}
+			}
+		}
+		if token.GetTokenType() == YuneParserNEWLINE {
+			continue
+		}
+		if l.indent < newIndent && l.indent+4 != newIndent {
+			// TODO: handle properly
+			log.Fatalln("Indentation is not the next multiple of 4 from the previous indentation.")
+		}
+		l.oldIndent = l.indent
+		l.indent = newIndent
+		return newlineToken
+	}
+	if token.GetTokenType() == YuneParserEOF {
+		l.reachedEOF = true
+		if l.indent < l.oldIndent {
+			l.indent -= 4
+			return l.makeCommonToken(YuneParserDEDENT, "")
 		}
 	}
-	return count
+	return token
 }

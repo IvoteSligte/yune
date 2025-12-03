@@ -44,7 +44,7 @@ func yuneparserParserInit() {
 		"STAR", "SLASH", "LESS", "GREATER", "EQUAL", "EQEQUAL", "NOTEQUAL",
 		"LESSEQUAL", "GREATEREQUAL", "PLUSEQUAL", "MINUSEQUAL", "STAREQUAL",
 		"SLASHEQUAL", "RARROW", "IMPORT", "IN", "AND", "OR", "LET", "VAR", "CONST",
-		"IDENTIFIER", "NUMBER", "INTEGER", "FLOAT", "NEWLINE", "COMMENT", "WHITESPACE",
+		"IDENTIFIER", "INTEGER", "FLOAT", "NEWLINE", "COMMENT", "WHITESPACE",
 		"STRING",
 	}
 	staticData.RuleNames = []string{
@@ -55,7 +55,7 @@ func yuneparserParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 44, 170, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
+		4, 1, 43, 170, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
 		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7,
 		10, 2, 11, 7, 11, 2, 12, 7, 12, 2, 13, 7, 13, 2, 14, 7, 14, 2, 15, 7, 15,
 		2, 16, 7, 16, 2, 17, 7, 17, 2, 18, 7, 18, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1,
@@ -89,18 +89,18 @@ func yuneparserParserInit() {
 		0, 0, 60, 61, 5, 37, 0, 0, 61, 62, 3, 12, 6, 0, 62, 9, 1, 0, 0, 0, 63,
 		64, 5, 37, 0, 0, 64, 65, 3, 12, 6, 0, 65, 66, 3, 14, 7, 0, 66, 11, 1, 0,
 		0, 0, 67, 68, 5, 11, 0, 0, 68, 69, 5, 37, 0, 0, 69, 13, 1, 0, 0, 0, 70,
-		71, 5, 20, 0, 0, 71, 72, 3, 18, 9, 0, 72, 73, 5, 41, 0, 0, 73, 81, 1, 0,
-		0, 0, 74, 75, 5, 20, 0, 0, 75, 76, 5, 41, 0, 0, 76, 77, 5, 1, 0, 0, 77,
+		71, 5, 20, 0, 0, 71, 72, 3, 18, 9, 0, 72, 73, 5, 40, 0, 0, 73, 81, 1, 0,
+		0, 0, 74, 75, 5, 20, 0, 0, 75, 76, 5, 40, 0, 0, 76, 77, 5, 1, 0, 0, 77,
 		78, 3, 16, 8, 0, 78, 79, 5, 2, 0, 0, 79, 81, 1, 0, 0, 0, 80, 70, 1, 0,
 		0, 0, 80, 74, 1, 0, 0, 0, 81, 15, 1, 0, 0, 0, 82, 83, 3, 18, 9, 0, 83,
-		84, 5, 41, 0, 0, 84, 86, 1, 0, 0, 0, 85, 82, 1, 0, 0, 0, 86, 87, 1, 0,
+		84, 5, 40, 0, 0, 84, 86, 1, 0, 0, 0, 85, 82, 1, 0, 0, 0, 86, 87, 1, 0,
 		0, 0, 87, 85, 1, 0, 0, 0, 87, 88, 1, 0, 0, 0, 88, 17, 1, 0, 0, 0, 89, 93,
 		3, 20, 10, 0, 90, 93, 3, 22, 11, 0, 91, 93, 3, 36, 18, 0, 92, 89, 1, 0,
 		0, 0, 92, 90, 1, 0, 0, 0, 92, 91, 1, 0, 0, 0, 93, 19, 1, 0, 0, 0, 94, 95,
 		5, 34, 0, 0, 95, 96, 3, 10, 5, 0, 96, 21, 1, 0, 0, 0, 97, 98, 5, 37, 0,
 		0, 98, 99, 3, 24, 12, 0, 99, 100, 3, 14, 7, 0, 100, 23, 1, 0, 0, 0, 101,
 		102, 7, 0, 0, 0, 102, 25, 1, 0, 0, 0, 103, 113, 3, 28, 14, 0, 104, 113,
-		5, 37, 0, 0, 105, 113, 5, 39, 0, 0, 106, 113, 5, 40, 0, 0, 107, 108, 5,
+		5, 37, 0, 0, 105, 113, 5, 38, 0, 0, 106, 113, 5, 39, 0, 0, 107, 108, 5,
 		4, 0, 0, 108, 109, 3, 36, 18, 0, 109, 110, 5, 7, 0, 0, 110, 113, 1, 0,
 		0, 0, 111, 113, 3, 32, 16, 0, 112, 103, 1, 0, 0, 0, 112, 104, 1, 0, 0,
 		0, 112, 105, 1, 0, 0, 0, 112, 106, 1, 0, 0, 0, 112, 107, 1, 0, 0, 0, 112,
@@ -115,8 +115,8 @@ func yuneparserParserInit() {
 		0, 0, 136, 138, 1, 0, 0, 0, 137, 139, 5, 12, 0, 0, 138, 137, 1, 0, 0, 0,
 		138, 139, 1, 0, 0, 0, 139, 140, 1, 0, 0, 0, 140, 141, 5, 7, 0, 0, 141,
 		143, 1, 0, 0, 0, 142, 122, 1, 0, 0, 0, 142, 124, 1, 0, 0, 0, 142, 129,
-		1, 0, 0, 0, 143, 33, 1, 0, 0, 0, 144, 145, 6, 17, -1, 0, 145, 146, 3, 26,
-		13, 0, 146, 164, 1, 0, 0, 0, 147, 148, 10, 5, 0, 0, 148, 149, 7, 1, 0,
+		1, 0, 0, 0, 143, 33, 1, 0, 0, 0, 144, 145, 6, 17, -1, 0, 145, 146, 3, 30,
+		15, 0, 146, 164, 1, 0, 0, 0, 147, 148, 10, 5, 0, 0, 148, 149, 7, 1, 0,
 		0, 149, 163, 3, 34, 17, 6, 150, 151, 10, 4, 0, 0, 151, 152, 7, 2, 0, 0,
 		152, 163, 3, 34, 17, 5, 153, 154, 10, 3, 0, 0, 154, 155, 7, 3, 0, 0, 155,
 		163, 3, 34, 17, 4, 156, 157, 10, 2, 0, 0, 157, 158, 7, 4, 0, 0, 158, 163,
@@ -201,13 +201,12 @@ const (
 	YuneParserVAR          = 35
 	YuneParserCONST        = 36
 	YuneParserIDENTIFIER   = 37
-	YuneParserNUMBER       = 38
-	YuneParserINTEGER      = 39
-	YuneParserFLOAT        = 40
-	YuneParserNEWLINE      = 41
-	YuneParserCOMMENT      = 42
-	YuneParserWHITESPACE   = 43
-	YuneParserSTRING       = 44
+	YuneParserINTEGER      = 38
+	YuneParserFLOAT        = 39
+	YuneParserNEWLINE      = 40
+	YuneParserCOMMENT      = 41
+	YuneParserWHITESPACE   = 42
+	YuneParserSTRING       = 43
 )
 
 // YuneParser rules.
@@ -1440,7 +1439,7 @@ func (p *YuneParser) StatementBlock() (localctx IStatementBlockContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	for ok := true; ok; ok = ((int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&1803886264336) != 0) {
+	for ok := true; ok; ok = ((int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&979252576272) != 0) {
 		{
 			p.SetState(82)
 			p.Statement()
@@ -2698,7 +2697,7 @@ type IBinaryExpressionContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	PrimaryExpression() IPrimaryExpressionContext
+	UnaryExpression() IUnaryExpressionContext
 	AllBinaryExpression() []IBinaryExpressionContext
 	BinaryExpression(i int) IBinaryExpressionContext
 	PLUS() antlr.TerminalNode
@@ -2748,10 +2747,10 @@ func NewBinaryExpressionContext(parser antlr.Parser, parent antlr.ParserRuleCont
 
 func (s *BinaryExpressionContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *BinaryExpressionContext) PrimaryExpression() IPrimaryExpressionContext {
+func (s *BinaryExpressionContext) UnaryExpression() IUnaryExpressionContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IPrimaryExpressionContext); ok {
+		if _, ok := ctx.(IUnaryExpressionContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -2761,7 +2760,7 @@ func (s *BinaryExpressionContext) PrimaryExpression() IPrimaryExpressionContext 
 		return nil
 	}
 
-	return t.(IPrimaryExpressionContext)
+	return t.(IUnaryExpressionContext)
 }
 
 func (s *BinaryExpressionContext) AllBinaryExpression() []IBinaryExpressionContext {
@@ -2873,7 +2872,7 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(145)
-		p.PrimaryExpression()
+		p.UnaryExpression()
 	}
 
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
