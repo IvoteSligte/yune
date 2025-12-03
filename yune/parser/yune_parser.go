@@ -55,7 +55,7 @@ func yuneparserParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 43, 170, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
+		4, 1, 43, 173, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
 		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7,
 		10, 2, 11, 7, 11, 2, 12, 7, 12, 2, 13, 7, 13, 2, 14, 7, 14, 2, 15, 7, 15,
 		2, 16, 7, 16, 2, 17, 7, 17, 2, 18, 7, 18, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1,
@@ -70,62 +70,64 @@ func yuneparserParserInit() {
 		1, 16, 1, 16, 1, 16, 1, 16, 1, 16, 1, 16, 4, 16, 134, 8, 16, 11, 16, 12,
 		16, 135, 1, 16, 3, 16, 139, 8, 16, 1, 16, 1, 16, 3, 16, 143, 8, 16, 1,
 		17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17,
-		1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 5, 17, 163, 8, 17, 10,
-		17, 12, 17, 166, 9, 17, 1, 18, 1, 18, 1, 18, 0, 1, 34, 19, 0, 2, 4, 6,
-		8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 0, 6, 1, 0,
-		25, 28, 1, 0, 14, 15, 1, 0, 16, 17, 1, 0, 18, 19, 1, 0, 21, 22, 1, 0, 23,
-		24, 171, 0, 38, 1, 0, 0, 0, 2, 43, 1, 0, 0, 0, 4, 45, 1, 0, 0, 0, 6, 52,
-		1, 0, 0, 0, 8, 60, 1, 0, 0, 0, 10, 63, 1, 0, 0, 0, 12, 67, 1, 0, 0, 0,
-		14, 80, 1, 0, 0, 0, 16, 85, 1, 0, 0, 0, 18, 92, 1, 0, 0, 0, 20, 94, 1,
-		0, 0, 0, 22, 97, 1, 0, 0, 0, 24, 101, 1, 0, 0, 0, 26, 112, 1, 0, 0, 0,
-		28, 114, 1, 0, 0, 0, 30, 120, 1, 0, 0, 0, 32, 142, 1, 0, 0, 0, 34, 144,
-		1, 0, 0, 0, 36, 167, 1, 0, 0, 0, 38, 39, 3, 2, 1, 0, 39, 40, 5, 0, 0, 1,
-		40, 1, 1, 0, 0, 0, 41, 44, 3, 4, 2, 0, 42, 44, 3, 10, 5, 0, 43, 41, 1,
-		0, 0, 0, 43, 42, 1, 0, 0, 0, 44, 3, 1, 0, 0, 0, 45, 46, 5, 37, 0, 0, 46,
-		47, 5, 4, 0, 0, 47, 48, 3, 6, 3, 0, 48, 49, 5, 7, 0, 0, 49, 50, 3, 12,
-		6, 0, 50, 51, 3, 14, 7, 0, 51, 5, 1, 0, 0, 0, 52, 57, 3, 8, 4, 0, 53, 54,
-		5, 12, 0, 0, 54, 56, 3, 8, 4, 0, 55, 53, 1, 0, 0, 0, 56, 59, 1, 0, 0, 0,
-		57, 55, 1, 0, 0, 0, 57, 58, 1, 0, 0, 0, 58, 7, 1, 0, 0, 0, 59, 57, 1, 0,
-		0, 0, 60, 61, 5, 37, 0, 0, 61, 62, 3, 12, 6, 0, 62, 9, 1, 0, 0, 0, 63,
-		64, 5, 37, 0, 0, 64, 65, 3, 12, 6, 0, 65, 66, 3, 14, 7, 0, 66, 11, 1, 0,
-		0, 0, 67, 68, 5, 11, 0, 0, 68, 69, 5, 37, 0, 0, 69, 13, 1, 0, 0, 0, 70,
-		71, 5, 20, 0, 0, 71, 72, 3, 18, 9, 0, 72, 73, 5, 40, 0, 0, 73, 81, 1, 0,
-		0, 0, 74, 75, 5, 20, 0, 0, 75, 76, 5, 40, 0, 0, 76, 77, 5, 1, 0, 0, 77,
-		78, 3, 16, 8, 0, 78, 79, 5, 2, 0, 0, 79, 81, 1, 0, 0, 0, 80, 70, 1, 0,
-		0, 0, 80, 74, 1, 0, 0, 0, 81, 15, 1, 0, 0, 0, 82, 83, 3, 18, 9, 0, 83,
-		84, 5, 40, 0, 0, 84, 86, 1, 0, 0, 0, 85, 82, 1, 0, 0, 0, 86, 87, 1, 0,
-		0, 0, 87, 85, 1, 0, 0, 0, 87, 88, 1, 0, 0, 0, 88, 17, 1, 0, 0, 0, 89, 93,
-		3, 20, 10, 0, 90, 93, 3, 22, 11, 0, 91, 93, 3, 36, 18, 0, 92, 89, 1, 0,
-		0, 0, 92, 90, 1, 0, 0, 0, 92, 91, 1, 0, 0, 0, 93, 19, 1, 0, 0, 0, 94, 95,
-		5, 34, 0, 0, 95, 96, 3, 10, 5, 0, 96, 21, 1, 0, 0, 0, 97, 98, 5, 37, 0,
-		0, 98, 99, 3, 24, 12, 0, 99, 100, 3, 14, 7, 0, 100, 23, 1, 0, 0, 0, 101,
-		102, 7, 0, 0, 0, 102, 25, 1, 0, 0, 0, 103, 113, 3, 28, 14, 0, 104, 113,
-		5, 37, 0, 0, 105, 113, 5, 38, 0, 0, 106, 113, 5, 39, 0, 0, 107, 108, 5,
-		4, 0, 0, 108, 109, 3, 36, 18, 0, 109, 110, 5, 7, 0, 0, 110, 113, 1, 0,
-		0, 0, 111, 113, 3, 32, 16, 0, 112, 103, 1, 0, 0, 0, 112, 104, 1, 0, 0,
-		0, 112, 105, 1, 0, 0, 0, 112, 106, 1, 0, 0, 0, 112, 107, 1, 0, 0, 0, 112,
-		111, 1, 0, 0, 0, 113, 27, 1, 0, 0, 0, 114, 115, 5, 37, 0, 0, 115, 116,
-		3, 26, 13, 0, 116, 29, 1, 0, 0, 0, 117, 121, 3, 26, 13, 0, 118, 119, 5,
-		15, 0, 0, 119, 121, 3, 26, 13, 0, 120, 117, 1, 0, 0, 0, 120, 118, 1, 0,
-		0, 0, 121, 31, 1, 0, 0, 0, 122, 123, 5, 4, 0, 0, 123, 143, 5, 7, 0, 0,
-		124, 125, 5, 4, 0, 0, 125, 126, 3, 36, 18, 0, 126, 127, 5, 12, 0, 0, 127,
-		128, 5, 7, 0, 0, 128, 143, 1, 0, 0, 0, 129, 130, 5, 4, 0, 0, 130, 133,
-		3, 36, 18, 0, 131, 132, 5, 12, 0, 0, 132, 134, 3, 36, 18, 0, 133, 131,
-		1, 0, 0, 0, 134, 135, 1, 0, 0, 0, 135, 133, 1, 0, 0, 0, 135, 136, 1, 0,
-		0, 0, 136, 138, 1, 0, 0, 0, 137, 139, 5, 12, 0, 0, 138, 137, 1, 0, 0, 0,
-		138, 139, 1, 0, 0, 0, 139, 140, 1, 0, 0, 0, 140, 141, 5, 7, 0, 0, 141,
-		143, 1, 0, 0, 0, 142, 122, 1, 0, 0, 0, 142, 124, 1, 0, 0, 0, 142, 129,
-		1, 0, 0, 0, 143, 33, 1, 0, 0, 0, 144, 145, 6, 17, -1, 0, 145, 146, 3, 30,
-		15, 0, 146, 164, 1, 0, 0, 0, 147, 148, 10, 5, 0, 0, 148, 149, 7, 1, 0,
-		0, 149, 163, 3, 34, 17, 6, 150, 151, 10, 4, 0, 0, 151, 152, 7, 2, 0, 0,
-		152, 163, 3, 34, 17, 5, 153, 154, 10, 3, 0, 0, 154, 155, 7, 3, 0, 0, 155,
-		163, 3, 34, 17, 4, 156, 157, 10, 2, 0, 0, 157, 158, 7, 4, 0, 0, 158, 163,
-		3, 34, 17, 3, 159, 160, 10, 1, 0, 0, 160, 161, 7, 5, 0, 0, 161, 163, 3,
-		34, 17, 2, 162, 147, 1, 0, 0, 0, 162, 150, 1, 0, 0, 0, 162, 153, 1, 0,
-		0, 0, 162, 156, 1, 0, 0, 0, 162, 159, 1, 0, 0, 0, 163, 166, 1, 0, 0, 0,
-		164, 162, 1, 0, 0, 0, 164, 165, 1, 0, 0, 0, 165, 35, 1, 0, 0, 0, 166, 164,
-		1, 0, 0, 0, 167, 168, 3, 34, 17, 0, 168, 37, 1, 0, 0, 0, 12, 43, 57, 80,
-		87, 92, 112, 120, 135, 138, 142, 162, 164,
+		1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 1, 17, 5,
+		17, 166, 8, 17, 10, 17, 12, 17, 169, 9, 17, 1, 18, 1, 18, 1, 18, 0, 1,
+		34, 19, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32,
+		34, 36, 0, 6, 1, 0, 25, 28, 1, 0, 16, 17, 1, 0, 14, 15, 1, 0, 18, 19, 1,
+		0, 23, 24, 1, 0, 21, 22, 175, 0, 38, 1, 0, 0, 0, 2, 43, 1, 0, 0, 0, 4,
+		45, 1, 0, 0, 0, 6, 52, 1, 0, 0, 0, 8, 60, 1, 0, 0, 0, 10, 63, 1, 0, 0,
+		0, 12, 67, 1, 0, 0, 0, 14, 80, 1, 0, 0, 0, 16, 85, 1, 0, 0, 0, 18, 92,
+		1, 0, 0, 0, 20, 94, 1, 0, 0, 0, 22, 97, 1, 0, 0, 0, 24, 101, 1, 0, 0, 0,
+		26, 112, 1, 0, 0, 0, 28, 114, 1, 0, 0, 0, 30, 120, 1, 0, 0, 0, 32, 142,
+		1, 0, 0, 0, 34, 144, 1, 0, 0, 0, 36, 170, 1, 0, 0, 0, 38, 39, 3, 2, 1,
+		0, 39, 40, 5, 0, 0, 1, 40, 1, 1, 0, 0, 0, 41, 44, 3, 4, 2, 0, 42, 44, 3,
+		10, 5, 0, 43, 41, 1, 0, 0, 0, 43, 42, 1, 0, 0, 0, 44, 3, 1, 0, 0, 0, 45,
+		46, 5, 37, 0, 0, 46, 47, 5, 4, 0, 0, 47, 48, 3, 6, 3, 0, 48, 49, 5, 7,
+		0, 0, 49, 50, 3, 12, 6, 0, 50, 51, 3, 14, 7, 0, 51, 5, 1, 0, 0, 0, 52,
+		57, 3, 8, 4, 0, 53, 54, 5, 12, 0, 0, 54, 56, 3, 8, 4, 0, 55, 53, 1, 0,
+		0, 0, 56, 59, 1, 0, 0, 0, 57, 55, 1, 0, 0, 0, 57, 58, 1, 0, 0, 0, 58, 7,
+		1, 0, 0, 0, 59, 57, 1, 0, 0, 0, 60, 61, 5, 37, 0, 0, 61, 62, 3, 12, 6,
+		0, 62, 9, 1, 0, 0, 0, 63, 64, 5, 37, 0, 0, 64, 65, 3, 12, 6, 0, 65, 66,
+		3, 14, 7, 0, 66, 11, 1, 0, 0, 0, 67, 68, 5, 11, 0, 0, 68, 69, 5, 37, 0,
+		0, 69, 13, 1, 0, 0, 0, 70, 71, 5, 20, 0, 0, 71, 72, 3, 18, 9, 0, 72, 73,
+		5, 40, 0, 0, 73, 81, 1, 0, 0, 0, 74, 75, 5, 20, 0, 0, 75, 76, 5, 40, 0,
+		0, 76, 77, 5, 1, 0, 0, 77, 78, 3, 16, 8, 0, 78, 79, 5, 2, 0, 0, 79, 81,
+		1, 0, 0, 0, 80, 70, 1, 0, 0, 0, 80, 74, 1, 0, 0, 0, 81, 15, 1, 0, 0, 0,
+		82, 83, 3, 18, 9, 0, 83, 84, 5, 40, 0, 0, 84, 86, 1, 0, 0, 0, 85, 82, 1,
+		0, 0, 0, 86, 87, 1, 0, 0, 0, 87, 85, 1, 0, 0, 0, 87, 88, 1, 0, 0, 0, 88,
+		17, 1, 0, 0, 0, 89, 93, 3, 20, 10, 0, 90, 93, 3, 22, 11, 0, 91, 93, 3,
+		36, 18, 0, 92, 89, 1, 0, 0, 0, 92, 90, 1, 0, 0, 0, 92, 91, 1, 0, 0, 0,
+		93, 19, 1, 0, 0, 0, 94, 95, 5, 34, 0, 0, 95, 96, 3, 10, 5, 0, 96, 21, 1,
+		0, 0, 0, 97, 98, 5, 37, 0, 0, 98, 99, 3, 24, 12, 0, 99, 100, 3, 14, 7,
+		0, 100, 23, 1, 0, 0, 0, 101, 102, 7, 0, 0, 0, 102, 25, 1, 0, 0, 0, 103,
+		113, 3, 28, 14, 0, 104, 113, 5, 37, 0, 0, 105, 113, 5, 38, 0, 0, 106, 113,
+		5, 39, 0, 0, 107, 108, 5, 4, 0, 0, 108, 109, 3, 36, 18, 0, 109, 110, 5,
+		7, 0, 0, 110, 113, 1, 0, 0, 0, 111, 113, 3, 32, 16, 0, 112, 103, 1, 0,
+		0, 0, 112, 104, 1, 0, 0, 0, 112, 105, 1, 0, 0, 0, 112, 106, 1, 0, 0, 0,
+		112, 107, 1, 0, 0, 0, 112, 111, 1, 0, 0, 0, 113, 27, 1, 0, 0, 0, 114, 115,
+		5, 37, 0, 0, 115, 116, 3, 26, 13, 0, 116, 29, 1, 0, 0, 0, 117, 121, 3,
+		26, 13, 0, 118, 119, 5, 15, 0, 0, 119, 121, 3, 26, 13, 0, 120, 117, 1,
+		0, 0, 0, 120, 118, 1, 0, 0, 0, 121, 31, 1, 0, 0, 0, 122, 123, 5, 4, 0,
+		0, 123, 143, 5, 7, 0, 0, 124, 125, 5, 4, 0, 0, 125, 126, 3, 36, 18, 0,
+		126, 127, 5, 12, 0, 0, 127, 128, 5, 7, 0, 0, 128, 143, 1, 0, 0, 0, 129,
+		130, 5, 4, 0, 0, 130, 133, 3, 36, 18, 0, 131, 132, 5, 12, 0, 0, 132, 134,
+		3, 36, 18, 0, 133, 131, 1, 0, 0, 0, 134, 135, 1, 0, 0, 0, 135, 133, 1,
+		0, 0, 0, 135, 136, 1, 0, 0, 0, 136, 138, 1, 0, 0, 0, 137, 139, 5, 12, 0,
+		0, 138, 137, 1, 0, 0, 0, 138, 139, 1, 0, 0, 0, 139, 140, 1, 0, 0, 0, 140,
+		141, 5, 7, 0, 0, 141, 143, 1, 0, 0, 0, 142, 122, 1, 0, 0, 0, 142, 124,
+		1, 0, 0, 0, 142, 129, 1, 0, 0, 0, 143, 33, 1, 0, 0, 0, 144, 145, 6, 17,
+		-1, 0, 145, 146, 3, 30, 15, 0, 146, 167, 1, 0, 0, 0, 147, 148, 10, 6, 0,
+		0, 148, 149, 7, 1, 0, 0, 149, 166, 3, 34, 17, 7, 150, 151, 10, 5, 0, 0,
+		151, 152, 7, 2, 0, 0, 152, 166, 3, 34, 17, 6, 153, 154, 10, 4, 0, 0, 154,
+		155, 7, 3, 0, 0, 155, 166, 3, 34, 17, 5, 156, 157, 10, 3, 0, 0, 157, 158,
+		7, 4, 0, 0, 158, 166, 3, 34, 17, 4, 159, 160, 10, 2, 0, 0, 160, 161, 7,
+		5, 0, 0, 161, 166, 3, 34, 17, 3, 162, 163, 10, 1, 0, 0, 163, 164, 5, 29,
+		0, 0, 164, 166, 3, 34, 17, 2, 165, 147, 1, 0, 0, 0, 165, 150, 1, 0, 0,
+		0, 165, 153, 1, 0, 0, 0, 165, 156, 1, 0, 0, 0, 165, 159, 1, 0, 0, 0, 165,
+		162, 1, 0, 0, 0, 166, 169, 1, 0, 0, 0, 167, 165, 1, 0, 0, 0, 167, 168,
+		1, 0, 0, 0, 168, 35, 1, 0, 0, 0, 169, 167, 1, 0, 0, 0, 170, 171, 3, 34,
+		17, 0, 171, 37, 1, 0, 0, 0, 12, 43, 57, 80, 87, 92, 112, 120, 135, 138,
+		142, 165, 167,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -2700,16 +2702,17 @@ type IBinaryExpressionContext interface {
 	UnaryExpression() IUnaryExpressionContext
 	AllBinaryExpression() []IBinaryExpressionContext
 	BinaryExpression(i int) IBinaryExpressionContext
-	PLUS() antlr.TerminalNode
-	MINUS() antlr.TerminalNode
 	STAR() antlr.TerminalNode
 	SLASH() antlr.TerminalNode
+	PLUS() antlr.TerminalNode
+	MINUS() antlr.TerminalNode
 	LESS() antlr.TerminalNode
 	GREATER() antlr.TerminalNode
-	EQEQUAL() antlr.TerminalNode
-	NOTEQUAL() antlr.TerminalNode
 	LESSEQUAL() antlr.TerminalNode
 	GREATEREQUAL() antlr.TerminalNode
+	EQEQUAL() antlr.TerminalNode
+	NOTEQUAL() antlr.TerminalNode
+	RARROW() antlr.TerminalNode
 
 	// IsBinaryExpressionContext differentiates from other interfaces.
 	IsBinaryExpressionContext()
@@ -2804,20 +2807,20 @@ func (s *BinaryExpressionContext) BinaryExpression(i int) IBinaryExpressionConte
 	return t.(IBinaryExpressionContext)
 }
 
-func (s *BinaryExpressionContext) PLUS() antlr.TerminalNode {
-	return s.GetToken(YuneParserPLUS, 0)
-}
-
-func (s *BinaryExpressionContext) MINUS() antlr.TerminalNode {
-	return s.GetToken(YuneParserMINUS, 0)
-}
-
 func (s *BinaryExpressionContext) STAR() antlr.TerminalNode {
 	return s.GetToken(YuneParserSTAR, 0)
 }
 
 func (s *BinaryExpressionContext) SLASH() antlr.TerminalNode {
 	return s.GetToken(YuneParserSLASH, 0)
+}
+
+func (s *BinaryExpressionContext) PLUS() antlr.TerminalNode {
+	return s.GetToken(YuneParserPLUS, 0)
+}
+
+func (s *BinaryExpressionContext) MINUS() antlr.TerminalNode {
+	return s.GetToken(YuneParserMINUS, 0)
 }
 
 func (s *BinaryExpressionContext) LESS() antlr.TerminalNode {
@@ -2828,6 +2831,14 @@ func (s *BinaryExpressionContext) GREATER() antlr.TerminalNode {
 	return s.GetToken(YuneParserGREATER, 0)
 }
 
+func (s *BinaryExpressionContext) LESSEQUAL() antlr.TerminalNode {
+	return s.GetToken(YuneParserLESSEQUAL, 0)
+}
+
+func (s *BinaryExpressionContext) GREATEREQUAL() antlr.TerminalNode {
+	return s.GetToken(YuneParserGREATEREQUAL, 0)
+}
+
 func (s *BinaryExpressionContext) EQEQUAL() antlr.TerminalNode {
 	return s.GetToken(YuneParserEQEQUAL, 0)
 }
@@ -2836,12 +2847,8 @@ func (s *BinaryExpressionContext) NOTEQUAL() antlr.TerminalNode {
 	return s.GetToken(YuneParserNOTEQUAL, 0)
 }
 
-func (s *BinaryExpressionContext) LESSEQUAL() antlr.TerminalNode {
-	return s.GetToken(YuneParserLESSEQUAL, 0)
-}
-
-func (s *BinaryExpressionContext) GREATEREQUAL() antlr.TerminalNode {
-	return s.GetToken(YuneParserGREATEREQUAL, 0)
+func (s *BinaryExpressionContext) RARROW() antlr.TerminalNode {
+	return s.GetToken(YuneParserRARROW, 0)
 }
 
 func (s *BinaryExpressionContext) GetRuleContext() antlr.RuleContext {
@@ -2876,7 +2883,7 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 	}
 
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
-	p.SetState(164)
+	p.SetState(167)
 	p.GetErrorHandler().Sync(p)
 	if p.HasError() {
 		goto errorExit
@@ -2891,7 +2898,7 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 				p.TriggerExitRuleEvent()
 			}
 			_prevctx = localctx
-			p.SetState(162)
+			p.SetState(165)
 			p.GetErrorHandler().Sync(p)
 			if p.HasError() {
 				goto errorExit
@@ -2903,37 +2910,12 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
 				p.SetState(147)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 5)) {
-					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 5)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 6)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 6)", ""))
 					goto errorExit
 				}
 				{
 					p.SetState(148)
-					_la = p.GetTokenStream().LA(1)
-
-					if !(_la == YuneParserPLUS || _la == YuneParserMINUS) {
-						p.GetErrorHandler().RecoverInline(p)
-					} else {
-						p.GetErrorHandler().ReportMatch(p)
-						p.Consume()
-					}
-				}
-				{
-					p.SetState(149)
-					p.binaryExpression(6)
-				}
-
-			case 2:
-				localctx = NewBinaryExpressionContext(p, _parentctx, _parentState)
-				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
-				p.SetState(150)
-
-				if !(p.Precpred(p.GetParserRuleContext(), 4)) {
-					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 4)", ""))
-					goto errorExit
-				}
-				{
-					p.SetState(151)
 					_la = p.GetTokenStream().LA(1)
 
 					if !(_la == YuneParserSTAR || _la == YuneParserSLASH) {
@@ -2944,8 +2926,33 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 					}
 				}
 				{
+					p.SetState(149)
+					p.binaryExpression(7)
+				}
+
+			case 2:
+				localctx = NewBinaryExpressionContext(p, _parentctx, _parentState)
+				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
+				p.SetState(150)
+
+				if !(p.Precpred(p.GetParserRuleContext(), 5)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 5)", ""))
+					goto errorExit
+				}
+				{
+					p.SetState(151)
+					_la = p.GetTokenStream().LA(1)
+
+					if !(_la == YuneParserPLUS || _la == YuneParserMINUS) {
+						p.GetErrorHandler().RecoverInline(p)
+					} else {
+						p.GetErrorHandler().ReportMatch(p)
+						p.Consume()
+					}
+				}
+				{
 					p.SetState(152)
-					p.binaryExpression(5)
+					p.binaryExpression(6)
 				}
 
 			case 3:
@@ -2953,8 +2960,8 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
 				p.SetState(153)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 3)) {
-					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 3)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 4)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 4)", ""))
 					goto errorExit
 				}
 				{
@@ -2970,7 +2977,7 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 				}
 				{
 					p.SetState(155)
-					p.binaryExpression(4)
+					p.binaryExpression(5)
 				}
 
 			case 4:
@@ -2978,37 +2985,12 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
 				p.SetState(156)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 2)) {
-					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 2)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 3)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 3)", ""))
 					goto errorExit
 				}
 				{
 					p.SetState(157)
-					_la = p.GetTokenStream().LA(1)
-
-					if !(_la == YuneParserEQEQUAL || _la == YuneParserNOTEQUAL) {
-						p.GetErrorHandler().RecoverInline(p)
-					} else {
-						p.GetErrorHandler().ReportMatch(p)
-						p.Consume()
-					}
-				}
-				{
-					p.SetState(158)
-					p.binaryExpression(3)
-				}
-
-			case 5:
-				localctx = NewBinaryExpressionContext(p, _parentctx, _parentState)
-				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
-				p.SetState(159)
-
-				if !(p.Precpred(p.GetParserRuleContext(), 1)) {
-					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 1)", ""))
-					goto errorExit
-				}
-				{
-					p.SetState(160)
 					_la = p.GetTokenStream().LA(1)
 
 					if !(_la == YuneParserLESSEQUAL || _la == YuneParserGREATEREQUAL) {
@@ -3019,7 +3001,54 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 					}
 				}
 				{
+					p.SetState(158)
+					p.binaryExpression(4)
+				}
+
+			case 5:
+				localctx = NewBinaryExpressionContext(p, _parentctx, _parentState)
+				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
+				p.SetState(159)
+
+				if !(p.Precpred(p.GetParserRuleContext(), 2)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 2)", ""))
+					goto errorExit
+				}
+				{
+					p.SetState(160)
+					_la = p.GetTokenStream().LA(1)
+
+					if !(_la == YuneParserEQEQUAL || _la == YuneParserNOTEQUAL) {
+						p.GetErrorHandler().RecoverInline(p)
+					} else {
+						p.GetErrorHandler().ReportMatch(p)
+						p.Consume()
+					}
+				}
+				{
 					p.SetState(161)
+					p.binaryExpression(3)
+				}
+
+			case 6:
+				localctx = NewBinaryExpressionContext(p, _parentctx, _parentState)
+				p.PushNewRecursionContext(localctx, _startState, YuneParserRULE_binaryExpression)
+				p.SetState(162)
+
+				if !(p.Precpred(p.GetParserRuleContext(), 1)) {
+					p.SetError(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 1)", ""))
+					goto errorExit
+				}
+				{
+					p.SetState(163)
+					p.Match(YuneParserRARROW)
+					if p.HasError() {
+						// Recognition error - abort rule
+						goto errorExit
+					}
+				}
+				{
+					p.SetState(164)
 					p.binaryExpression(2)
 				}
 
@@ -3028,7 +3057,7 @@ func (p *YuneParser) binaryExpression(_p int) (localctx IBinaryExpressionContext
 			}
 
 		}
-		p.SetState(166)
+		p.SetState(169)
 		p.GetErrorHandler().Sync(p)
 		if p.HasError() {
 			goto errorExit
@@ -3127,7 +3156,7 @@ func (p *YuneParser) Expression() (localctx IExpressionContext) {
 	p.EnterRule(localctx, 36, YuneParserRULE_expression)
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(167)
+		p.SetState(170)
 		p.binaryExpression(0)
 	}
 
@@ -3161,18 +3190,21 @@ func (p *YuneParser) Sempred(localctx antlr.RuleContext, ruleIndex, predIndex in
 func (p *YuneParser) BinaryExpression_Sempred(localctx antlr.RuleContext, predIndex int) bool {
 	switch predIndex {
 	case 0:
-		return p.Precpred(p.GetParserRuleContext(), 5)
+		return p.Precpred(p.GetParserRuleContext(), 6)
 
 	case 1:
-		return p.Precpred(p.GetParserRuleContext(), 4)
+		return p.Precpred(p.GetParserRuleContext(), 5)
 
 	case 2:
-		return p.Precpred(p.GetParserRuleContext(), 3)
+		return p.Precpred(p.GetParserRuleContext(), 4)
 
 	case 3:
-		return p.Precpred(p.GetParserRuleContext(), 2)
+		return p.Precpred(p.GetParserRuleContext(), 3)
 
 	case 4:
+		return p.Precpred(p.GetParserRuleContext(), 2)
+
+	case 5:
 		return p.Precpred(p.GetParserRuleContext(), 1)
 
 	default:

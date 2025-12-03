@@ -1,2 +1,9 @@
 .direnv
 .envrc
+# generated
+parser/yune_lexer.go
+parser/yune_parser.go
+parser/YuneLexer.tokens
+parser/YuneParser.tokens
+parser/YuneLexer.interp
+parser/YuneParser.interp

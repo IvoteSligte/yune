@@ -3,10 +3,10 @@ parser grammar YuneParser;
 options { tokenVocab = YuneLexer; }
 
 module
-	: topLevel EOF
+	: topLevelDeclaration+ EOF
     ;
 
-topLevel
+topLevelDeclaration
     : functionDeclaration
     | constantDeclaration
     ;
@@ -87,11 +87,12 @@ tuple
 
 binaryExpression
     : unaryExpression
-    | binaryExpression (PLUS | MINUS) binaryExpression
     | binaryExpression (STAR | SLASH) binaryExpression
+    | binaryExpression (PLUS | MINUS) binaryExpression
     | binaryExpression (LESS | GREATER) binaryExpression
-    | binaryExpression (EQEQUAL | NOTEQUAL) binaryExpression
     | binaryExpression (LESSEQUAL | GREATEREQUAL) binaryExpression
+    | binaryExpression (EQEQUAL | NOTEQUAL) binaryExpression
+    | binaryExpression RARROW binaryExpression
     ;
 
 expression
