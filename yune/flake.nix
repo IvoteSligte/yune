@@ -25,11 +25,6 @@
             antlr4
             go
           ];
-
-          # Optional: convenience
-          shellHook = ''
-            echo "ANTLR version: $(antlr4 -version)"
-          '';
         };
       }
     );

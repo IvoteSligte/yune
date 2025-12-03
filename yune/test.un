@@ -1,0 +1,5 @@
+
+fibonacci(n: Int): Int =
+	n
+
+
