@@ -64,6 +64,10 @@ func (l *YuneLexerBase) NextToken() antlr.Token {
 		l.oldIndent += 4
 		return l.makeCommonToken(YuneParserINDENT, "")
 	}
+	if l.GetInputStream().LA(1) == '#' {
+		// offset := 2
+		log.Fatalln("TODO")
+	}
 	token := l.BaseLexer.NextToken()
 
 	for token.GetTokenType() == YuneParserNEWLINE {
