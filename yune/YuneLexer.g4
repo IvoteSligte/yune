@@ -3,7 +3,7 @@ lexer grammar YuneLexer;
 options { superClass=YuneLexerBase; }
 
 tokens {
-    INDENT, DEDENT, MACRO
+    INDENT, DEDENT, MACROLINE
 }
 
 LPAREN           : '(';
@@ -20,6 +20,7 @@ PLUS             : '+';
 MINUS            : '-';
 STAR             : '*';
 SLASH            : '/';
+HASHTAG         : '#';
 LESS             : '<';
 GREATER          : '>';
 EQUAL            : '=';
@@ -54,3 +55,4 @@ COMMENT : '//' ~[\r\n]*                   -> channel(HIDDEN);
 WHITESPACE : [ \t\f]+                     -> channel(HIDDEN);
 
 STRING : '"' .*? '"';
+

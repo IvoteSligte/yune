@@ -68,15 +68,11 @@ primaryExpression
     | FLOAT
     | LPAREN expression RPAREN
     | tuple
+    | macro
     ;
 
 functionCall
     : IDENTIFIER primaryExpression
-    ;
-
-unaryExpression
-    : primaryExpression
-    | MINUS primaryExpression
     ;
 
 tuple
@@ -84,6 +80,16 @@ tuple
     | LPAREN expression COMMA RPAREN
     | LPAREN expression (COMMA expression)+ COMMA? RPAREN
     ;
+
+macro
+    : IDENTIFIER HASHTAG MACROLINE*
+    ;
+
+unaryExpression
+    : primaryExpression
+    | MINUS primaryExpression
+    ;
+
 
 binaryExpression
     : unaryExpression
