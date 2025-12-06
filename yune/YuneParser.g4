@@ -3,7 +3,7 @@ parser grammar YuneParser;
 options { tokenVocab = YuneLexer; }
 
 module
-	: topLevelDeclaration+ EOF
+	: (topLevelDeclaration NEWLINE)* topLevelDeclaration? EOF
     ;
 
 topLevelDeclaration
@@ -36,7 +36,7 @@ typeAnnotation
     ;
 
 statementBody
-    : statement NEWLINE
+    : statement
     | NEWLINE INDENT statementBlock DEDENT
     ;
 
@@ -47,8 +47,8 @@ statementBlock
 statement
     : variableDeclaration
     | assignment
-    | expression
     | branchStatement
+    | expression
     ;
 
 variableDeclaration

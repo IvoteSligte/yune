@@ -3,5 +3,5 @@ fibonacci(n: Int): Int =
 	n == 1 -> 1
 	fibonacci(n - 1) + fibonacci(n - 2)
 
-sqlQuery: SqlQuery =
-	sql#SELECT * FROM table
+sqlQuery: SqlQuery = sql#
+	SELECT * FROM table
