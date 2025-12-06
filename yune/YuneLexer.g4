@@ -20,7 +20,6 @@ PLUS             : '+';
 MINUS            : '-';
 STAR             : '*';
 SLASH            : '/';
-HASHTAG         : '#';
 LESS             : '<';
 GREATER          : '>';
 EQUAL            : '=';
@@ -33,6 +32,7 @@ MINUSEQUAL       : '-=';
 STAREQUAL        : '*=';
 SLASHEQUAL       : '/=';
 RARROW           : '->';
+HASHTAG          : '#';
 
 IMPORT   : 'import';
 IN       : 'in';

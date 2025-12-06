@@ -11,8 +11,12 @@ topLevelDeclaration
     | constantDeclaration
     ;
 
+name
+    : IDENTIFIER
+    ;
+
 functionDeclaration
-    : IDENTIFIER LPAREN functionParameters RPAREN typeAnnotation statementBody
+    : name LPAREN functionParameters RPAREN typeAnnotation EQUAL statementBody
     ;
 
 functionParameters
@@ -20,20 +24,20 @@ functionParameters
     ;
 
 functionParameter
-    : IDENTIFIER typeAnnotation
+    : name typeAnnotation
     ;
 
 constantDeclaration
-    : IDENTIFIER typeAnnotation statementBody
+    : name typeAnnotation EQUAL statementBody
     ;
 
 typeAnnotation
-    : COLON IDENTIFIER
+    : COLON name
     ;
 
 statementBody
-    : EQUAL statement NEWLINE
-    | EQUAL NEWLINE INDENT statementBlock DEDENT
+    : statement NEWLINE
+    | NEWLINE INDENT statementBlock DEDENT
     ;
 
 statementBlock
@@ -44,6 +48,7 @@ statement
     : variableDeclaration
     | assignment
     | expression
+    | branchStatement
     ;
 
 variableDeclaration
@@ -51,11 +56,12 @@ variableDeclaration
     ;
 
 assignment
-    : IDENTIFIER assignmentOp statementBody
+    : name assignmentOp EQUAL statementBody
     ;
 
 assignmentOp
-    : PLUSEQUAL
+    : EQUAL
+    | PLUSEQUAL
     | MINUSEQUAL
     | STAREQUAL
     | SLASHEQUAL
@@ -63,7 +69,7 @@ assignmentOp
 
 primaryExpression
     : functionCall
-    | IDENTIFIER
+    | name
     | INTEGER
     | FLOAT
     | LPAREN expression RPAREN
@@ -72,7 +78,7 @@ primaryExpression
     ;
 
 functionCall
-    : IDENTIFIER primaryExpression
+    : name primaryExpression
     ;
 
 tuple
@@ -82,14 +88,13 @@ tuple
     ;
 
 macro
-    : IDENTIFIER HASHTAG MACROLINE*
+    : name HASHTAG MACROLINE*
     ;
 
 unaryExpression
     : primaryExpression
     | MINUS primaryExpression
     ;
-
 
 binaryExpression
     : unaryExpression
@@ -98,9 +103,12 @@ binaryExpression
     | binaryExpression (LESS | GREATER) binaryExpression
     | binaryExpression (LESSEQUAL | GREATEREQUAL) binaryExpression
     | binaryExpression (EQEQUAL | NOTEQUAL) binaryExpression
-    | binaryExpression RARROW binaryExpression
     ;
 
 expression
     : binaryExpression
+    ;
+
+branchStatement
+    : expression RARROW statementBody
     ;

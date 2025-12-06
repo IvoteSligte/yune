@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/antlr4-go/antlr/v4"
 	"log"
 	"os"
 	"yune/parser"
+
+	"github.com/antlr4-go/antlr/v4"
 )
 
 func main() {
@@ -15,7 +16,10 @@ func main() {
 	inputStream := antlr.NewInputStream(string(bytes))
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
-	parser := parser.NewYuneParser(tokenStream)
-	module := parser.Module()
-	println(module)
+	yuneParser := parser.NewYuneParser(tokenStream)
+	parseTreeModule := yuneParser.Module()
+	if yuneParser.HasError() {
+		log.Fatalln("Parse error:", yuneParser.GetError())
+	}
+	_ = parser.LowerModule(parseTreeModule)
 }
