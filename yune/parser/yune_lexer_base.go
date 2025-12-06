@@ -3,7 +3,6 @@ package parser
 
 import (
 	"log"
-	"math"
 
 	"github.com/antlr4-go/antlr/v4"
 )
@@ -16,10 +15,9 @@ type YuneLexerBase struct {
 	*antlr.BaseLexer
 	// Indentation in number of spaces.
 	indent int
-	// Indentation of the last token.
-	prevIndent int
-	eofToken   antlr.Token
-	inMacro    bool
+	// Difference in indentation from previous line.
+	deltaIndent int
+	queue       []antlr.Token
 }
 
 func (l *YuneLexerBase) EmitToken(t antlr.Token) {
@@ -28,132 +26,145 @@ func (l *YuneLexerBase) EmitToken(t antlr.Token) {
 
 func (l *YuneLexerBase) Reset() {
 	l.indent = 0
-	l.prevIndent = 0
-	l.eofToken = nil
+	l.deltaIndent = 0
 	l.BaseLexer.Reset()
 }
 
 func (l *YuneLexerBase) makeCommonToken(ttype int, text string) antlr.Token {
-	stop := l.TokenStartCharIndex - 1
-	start := stop
-	if len(text) != 0 {
-		start = stop - len(text) + 1
-	}
 	ctf := l.GetTokenFactory()
+	index := l.GetInputStream().Index()
 	t := ctf.Create(
 		l.GetTokenSourceCharStreamPair(),
 		ttype,
 		text,
 		antlr.TokenDefaultChannel,
-		start,
-		l.TokenStartCharIndex-1,
-		l.TokenStartLine,
-		l.TokenStartColumn)
+		index-len(text),
+		index,
+		// FIXME: not accurate since they are interpreter-managed, not stream-managed
+		l.GetLine(),
+		l.GetCharPositionInLine())
+	// For some reason, no text is not allowed, so set it to a recognisable alternative.
+	t.SetText("%")
 	return t
 }
 
-func (l *YuneLexerBase) updateIndent(newIndent int) {
-	if newIndent%4 != 0 {
-		// TODO: handle properly
-		log.Fatalln("Indentation is not a multiple of 4.")
-	}
-	if l.indent < newIndent && l.indent+4 != newIndent {
-		// TODO: handle properly
-		log.Fatalln("Indentation is not the next multiple of 4 from the previous indentation.")
-	}
-	l.prevIndent = l.indent
-	l.indent = newIndent
+func (l *YuneLexerBase) pushToken(token antlr.Token) {
+	l.queue = append(l.queue, token)
 }
 
-func (l *YuneLexerBase) NextToken() antlr.Token {
-	if l.indent < l.prevIndent {
-		l.prevIndent -= 4
-		return l.makeCommonToken(YuneParserDEDENT, "")
-	}
-	if l.indent > l.prevIndent {
-		l.prevIndent += 4
-		return l.makeCommonToken(YuneParserINDENT, "")
-	}
-	if l.eofToken != nil {
-		return l.eofToken
-	}
-	if l.inMacro {
-		input := l.GetInputStream()
-		c := input.LA(1)
-		if c == '\n' {
-			token := l.BaseLexer.NextToken()
-			indent := l.takeAtMostIndent(l.indent + 4)
-			// macro ends on dedent
-			if indent <= l.indent {
-				l.updateIndent(indent)
-				l.inMacro = false
-				return token
-			}
-		}
-		if c == EOF {
-			return l.BaseLexer.NextToken()
-		}
-		line := l.takeLine()
-		return l.makeCommonToken(YuneParserMACROLINE, line)
-	}
-	token := l.BaseLexer.NextToken()
-	switch token.GetTokenType() {
-	case YuneParserHASHTAG:
-		l.inMacro = true
-		return token
-	case YuneParserNEWLINE:
-		l.updateIndent(l.takeAtMostIndent(math.MaxInt))
-		return token
-	case YuneParserEOF:
-		l.eofToken = token
-		if l.indent < l.prevIndent {
-			l.prevIndent -= 4
-			return l.makeCommonToken(YuneParserDEDENT, "")
-		}
-	}
-	return token
-}
-
-func (l *YuneLexerBase) takeAtMostIndent(max int) int {
-	if max == 0 {
-		return 0
-	}
+// Handles lexing indentation on the new line.
+func (l *YuneLexerBase) onNewline() (indent int) {
 	input := l.GetInputStream()
-	indent := 0
+	indent = 0
 	for {
 		switch input.LA(1) {
 		case ' ':
-			indent += 1
-		case '\t':
-			// next multiple of 4
-			indent = (indent/4 + 1) * 4
-		case '\n':
+			indent++
 			input.Consume()
+		case '\t':
+			indent = (indent/4 + 1) * 4
+			input.Consume()
+		case '\n':
 			indent = 0
-			continue
+			input.Consume()
+		case EOF:
+			return 0
 		default:
 			return indent
 		}
-		if indent >= max {
-			return indent
-		}
-		input.Consume()
 	}
 }
 
-// FIXME: invalid in BaseLexer.NextToken(): b.TokenStartColumn = b.Interpreter.GetCharPositionInLine()
-// FIXME: invalid in BaseLexer.NextToken(): b.TokenStartLine = b.Interpreter.GetLine()
-
-func (l *YuneLexerBase) takeLine() string {
+// Handles lexing indentation on the new line, assuming that the lexer
+// is lexing a macro. Returns the new indentation level.
+func (l *YuneLexerBase) onMacroNewline() (indent int) {
 	input := l.GetInputStream()
-	text := ""
-	for {
-		c := input.LA(1)
-		if c == EOF || c == '\n' {
-			break
+	indent = 0
+	for indent < l.indent {
+		switch input.LA(1) {
+		case ' ':
+			indent++
+			input.Consume()
+			continue
+		case '\t':
+			indent = (indent/4 + 1) * 4
+			input.Consume()
+			continue
+		case '\n':
+			// empty lines are also passed to macros
+			return l.indent
+		case EOF:
+			return 0
 		}
-		input.Consume()
-		text += string(rune(c))
+		break
 	}
-	return text
+	if indent%4 != 0 {
+		log.Fatalln("Indentation is not a multiple of 4.")
+	}
+	return indent
+}
+
+func (l *YuneLexerBase) updateIndent(indent int) {
+	if indent%4 != 0 {
+		log.Fatalln("Indentation is not a multiple of 4.")
+	}
+	if indent < l.indent {
+		for range (l.indent - indent) / 4 {
+			l.pushToken(l.makeCommonToken(YuneParserDEDENT, ""))
+		}
+	} else if indent > l.indent {
+		if l.indent+4 != indent {
+			log.Fatalln("Indentation is not the next multiple of 4.")
+		}
+		l.pushToken(l.makeCommonToken(YuneParserINDENT, ""))
+	}
+	l.indent = indent
+}
+
+func (l *YuneLexerBase) update() {
+	token := l.BaseLexer.NextToken()
+	l.pushToken(token)
+	switch token.GetTokenType() {
+	case YuneParserHASHTAG:
+		// macros have increased indentation
+		l.indent += 4
+		input := l.GetInputStream()
+		// parse the whole macro in here because macros can have empty lines,
+		// but ANTLR cannot handle MACROLINE lexing the empty string
+		text := ""
+		for {
+			c := input.LA(1)
+			println(string(rune(c)))
+			switch c {
+			case '\r' | '\n':
+				l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+				text = ""
+				l.pushToken(l.BaseLexer.NextToken())
+				indent := l.onMacroNewline()
+				if indent < l.indent {
+					// remove indentation that was artificially added for the macro
+					l.indent -= 4
+					l.updateIndent(indent)
+					return
+				}
+			case EOF:
+				l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+				return
+			default:
+				text += string(rune(c))
+				input.Consume()
+			}
+		}
+	case YuneParserNEWLINE:
+		l.updateIndent(l.onNewline())
+	}
+}
+
+func (l *YuneLexerBase) NextToken() antlr.Token {
+	if len(l.queue) == 0 {
+		l.update()
+	}
+	token := l.queue[0]
+	l.queue = l.queue[1:]
+	return token
 }

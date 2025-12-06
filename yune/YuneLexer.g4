@@ -32,7 +32,6 @@ MINUSEQUAL       : '-=';
 STAREQUAL        : '*=';
 SLASHEQUAL       : '/=';
 RARROW           : '->';
-HASHTAG          : '#';
 
 IMPORT   : 'import';
 IN       : 'in';
@@ -44,15 +43,14 @@ CONST    : 'const';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z0-9]*;
 
-INTEGER : [0-9]+;
+INTEGER    : [0-9]+;
+FLOAT      : [0-9]+ '.' [0-9]+;
 
-FLOAT : [0-9]+ '.' [0-9]+;
+NEWLINE    : '\r'? '\n';
 
-NEWLINE : '\r'? '\n';
+COMMENT    : '//' ~[\r\n]*                -> skip;
+WHITESPACE : [ \t\f]+                     -> skip;
 
-COMMENT : '//' ~[\r\n]*                   -> channel(HIDDEN);
+STRING     : '"' .*? '"';
 
-WHITESPACE : [ \t\f]+                     -> channel(HIDDEN);
-
-STRING : '"' .*? '"';
-
+HASHTAG : '#';

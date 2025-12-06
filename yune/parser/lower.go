@@ -232,7 +232,7 @@ func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDecla
 	case ctx.FunctionDeclaration() != nil:
 		return LowerFunctionDeclaration(ctx.FunctionDeclaration())
 	default:
-		panic("unreachable")
+		panic("unreachable(" + ctx.GetText() + ")")
 	}
 }
 

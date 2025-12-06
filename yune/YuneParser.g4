@@ -88,7 +88,7 @@ tuple
     ;
 
 macro
-    : name HASHTAG MACROLINE*
+    : name HASHTAG (MACROLINE NEWLINE)*
     ;
 
 unaryExpression
