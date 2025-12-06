@@ -119,40 +119,45 @@ func (l *YuneLexerBase) updateIndent(indent int) {
 	l.indent = indent
 }
 
+func (l *YuneLexerBase) lexMacro() {
+	// macros have increased indentation
+	l.indent += 4
+	input := l.GetInputStream()
+	// parse the whole macro in here because macros can have empty lines,
+	// but ANTLR cannot handle MACROLINE lexing the empty string
+	text := ""
+	for {
+		c := input.LA(1)
+		switch c {
+		case '\n':
+			l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+			text = ""
+			l.pushToken(l.BaseLexer.NextToken())
+			indent := l.onMacroNewline()
+			if indent < l.indent {
+				// remove indentation that was artificially added for the macro
+				l.indent -= 4
+				return
+			}
+		case EOF:
+			l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+			// remove indentation that was artificially added for the macro
+			l.indent -= 4
+			return
+		default:
+			println(string(rune(c)))
+			text += string(rune(c))
+			input.Consume()
+		}
+	}
+}
+
 func (l *YuneLexerBase) update() {
 	token := l.BaseLexer.NextToken()
 	l.pushToken(token)
 	switch token.GetTokenType() {
 	case YuneParserHASHTAG:
-		// macros have increased indentation
-		l.indent += 4
-		input := l.GetInputStream()
-		// parse the whole macro in here because macros can have empty lines,
-		// but ANTLR cannot handle MACROLINE lexing the empty string
-		text := ""
-		for {
-			c := input.LA(1)
-			println(string(rune(c)))
-			switch c {
-			case '\r' | '\n':
-				l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
-				text = ""
-				l.pushToken(l.BaseLexer.NextToken())
-				indent := l.onMacroNewline()
-				if indent < l.indent {
-					// remove indentation that was artificially added for the macro
-					l.indent -= 4
-					l.updateIndent(indent)
-					return
-				}
-			case EOF:
-				l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
-				return
-			default:
-				text += string(rune(c))
-				input.Consume()
-			}
-		}
+		l.lexMacro()
 	case YuneParserNEWLINE:
 		l.updateIndent(l.onNewline())
 	}
