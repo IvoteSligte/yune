@@ -68,8 +68,8 @@ assignmentOp
     ;
 
 primaryExpression
-    : functionCall
-    | name
+    : function=primaryExpression argument=primaryExpression
+    | variable
     | INTEGER
     | FLOAT
     | LPAREN expression RPAREN
@@ -77,8 +77,8 @@ primaryExpression
     | macro
     ;
 
-functionCall
-    : name primaryExpression
+variable
+    : name
     ;
 
 tuple
@@ -93,16 +93,16 @@ macro
 
 unaryExpression
     : primaryExpression
-    | MINUS primaryExpression
+    | op=MINUS primaryExpression
     ;
 
 binaryExpression
     : unaryExpression
-    | binaryExpression (STAR | SLASH) binaryExpression
-    | binaryExpression (PLUS | MINUS) binaryExpression
-    | binaryExpression (LESS | GREATER) binaryExpression
-    | binaryExpression (LESSEQUAL | GREATEREQUAL) binaryExpression
-    | binaryExpression (EQEQUAL | NOTEQUAL) binaryExpression
+    | binaryExpression op=(STAR | SLASH) binaryExpression
+    | binaryExpression op=(PLUS | MINUS) binaryExpression
+    | binaryExpression op=(LESS | GREATER) binaryExpression
+    | binaryExpression op=(LESSEQUAL | GREATEREQUAL) binaryExpression
+    | binaryExpression op=(EQEQUAL | NOTEQUAL) binaryExpression
     ;
 
 expression
