@@ -20,6 +20,12 @@ type FunctionDeclaration struct {
 
 func (FunctionDeclaration) topLevelDeclaration() {}
 
+// GetSpan implements Declaration.
+func (d FunctionDeclaration) GetSpan() Span {
+	// TODO: attach span to d.Name I think
+	panic("unimplemented")
+}
+
 func (d FunctionDeclaration) GetName() string {
 	return d.Name
 }
@@ -36,6 +42,11 @@ type FunctionParameter struct {
 	Type Type
 }
 
+// GetSpan implements Declaration.
+func (d FunctionParameter) GetSpan() Span {
+	panic("unimplemented")
+}
+
 func (d FunctionParameter) GetName() string {
 	return d.Name
 }
@@ -48,6 +59,11 @@ type ConstantDeclaration struct {
 	Name string
 	Type Type
 	Body []Statement
+}
+
+// GetSpan implements Declaration.
+func (d ConstantDeclaration) GetSpan() Span {
+	panic("unimplemented")
 }
 
 func (ConstantDeclaration) topLevelDeclaration() {}

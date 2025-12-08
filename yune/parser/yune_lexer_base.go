@@ -20,10 +20,6 @@ type YuneLexerBase struct {
 	queue       []antlr.Token
 }
 
-func (l *YuneLexerBase) EmitToken(t antlr.Token) {
-	log.Fatalln() // TODO
-}
-
 func (l *YuneLexerBase) Reset() {
 	l.indent = 0
 	l.deltaIndent = 0
@@ -145,7 +141,6 @@ func (l *YuneLexerBase) lexMacro() {
 			l.indent -= 4
 			return
 		default:
-			println(string(rune(c)))
 			text += string(rune(c))
 			input.Consume()
 		}

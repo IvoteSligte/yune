@@ -14,6 +14,7 @@ func (env *Environment) Get(name string) (Declaration, bool) {
 }
 
 type Declaration interface {
+	GetSpan() Span
 	GetName() string
 	GetDeclarationType() Type
 }
@@ -25,16 +26,19 @@ var _ Declaration = VariableDeclaration{}
 
 type TopLevelDeclarations = map[string]TopLevelDeclaration
 
-func (m *Module) GetDeclarations() (TopLevelDeclarations, []DuplicateDeclaration) {
+func (m *Module) GetDeclarations() (TopLevelDeclarations, []error) {
 	declarations := make(TopLevelDeclarations, len(m.Declarations))
-	errors := make([]DuplicateDeclaration, 0)
+	errors := make([]error, 0)
 
 	for _, decl := range m.Declarations {
 		name := decl.GetName()
-		_, exists := declarations[name]
+		first_decl, exists := declarations[name]
 
 		if exists {
-			errors = append(errors, DuplicateDeclaration{Name: name})
+			errors = append(errors, DuplicateDeclaration{
+				First:  first_decl,
+				Second: decl,
+			})
 		} else {
 			declarations[name] = decl
 		}

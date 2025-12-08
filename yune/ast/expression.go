@@ -5,6 +5,7 @@ import (
 )
 
 type Variable struct {
+	Span
 	ExpressionType
 	Name string
 }
@@ -13,7 +14,7 @@ type Variable struct {
 func (e *Variable) InferExpressionType(env Environment) (_type Type, err error) {
 	declaration, ok := env.Get(e.Name)
 	if !ok {
-		err = UndefinedVariable{e.Name}
+		err = UndefinedVariable(*e)
 		return
 	}
 	_type = declaration.GetDeclarationType()
@@ -22,6 +23,7 @@ func (e *Variable) InferExpressionType(env Environment) (_type Type, err error) 
 }
 
 type FunctionCall struct {
+	Span
 	ExpressionType
 	Function Expression
 	Argument Expression
@@ -35,6 +37,7 @@ func (f *FunctionCall) InferExpressionType(env Environment) (_type Type, err err
 }
 
 type Tuple struct {
+	Span
 	ExpressionType
 	Elements []Expression
 }
@@ -48,7 +51,7 @@ func (t *Tuple) InferExpressionType(env Environment) (_type Type, err error) {
 		}
 	}
 	_type = Type{
-		Name:     "",
+		Name:     "Tuple",
 		Generics: util.Map(t.Elements, Expression.GetExpressionType),
 	}
 	t.ExpressionType = ExpressionType(_type)
@@ -56,6 +59,8 @@ func (t *Tuple) InferExpressionType(env Environment) (_type Type, err error) {
 }
 
 type Macro struct {
+	// TODO: indicate macro text with a special span
+	Span
 	ExpressionType
 	Language string
 	Text     string
@@ -67,6 +72,7 @@ func (m Macro) InferExpressionType(env Environment) (_type Type, err error) {
 }
 
 type UnaryExpression struct {
+	Span
 	ExpressionType
 	Op         UnaryOp
 	Expression Expression
@@ -88,6 +94,7 @@ const (
 )
 
 type BinaryExpression struct {
+	Span
 	ExpressionType
 	Op    BinaryOp
 	Left  Expression
@@ -114,7 +121,10 @@ const (
 	GreaterEqual BinaryOp = ">="
 )
 
-type Integer int64
+type Integer struct {
+	Span
+	Value int64
+}
 
 // InferExpressionType implements Expression.
 func (i Integer) InferExpressionType(env Environment) (_type Type, err error) {
@@ -126,7 +136,10 @@ func (Integer) GetExpressionType() Type {
 	return Type{Name: "Int"}
 }
 
-type Float float64
+type Float struct {
+	Span
+	Value float64
+}
 
 // InferExpressionType implements Expression.
 func (f Float) InferExpressionType(env Environment) (_type Type, err error) {
@@ -149,8 +162,8 @@ func (t ExpressionType) GetExpressionType() Type {
 	return Type(t)
 }
 
-var _ Expression = Integer(0)
-var _ Expression = Float(0.0)
+var _ Expression = Integer{}
+var _ Expression = Float{}
 var _ Expression = &Variable{}
 var _ Expression = &FunctionCall{}
 var _ Expression = &Tuple{}

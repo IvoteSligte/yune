@@ -9,6 +9,13 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
+func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
+	return ast.Span{
+		Line:   ctx.GetStart().GetLine(),
+		Column: ctx.GetStart().GetColumn(),
+	}
+}
+
 func LowerAssignment(ctx IAssignmentContext) ast.Assignment {
 	return ast.Assignment{
 		Target: LowerName(ctx.Name()),
@@ -112,6 +119,7 @@ func LowerName(ctx INameContext) string {
 func LowerVariable(ctx IVariableContext) ast.Variable {
 	return ast.Variable{
 		Name: LowerName(ctx.Name()),
+		Span: GetSpan(ctx),
 	}
 }
 
@@ -143,13 +151,19 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 		if err != nil {
 			panic("ANTLR parser-accepted integer failed to parse by strconv.ParseInt")
 		}
-		return ast.Integer(integer)
+		return ast.Integer{
+			Span:  GetSpan(ctx),
+			Value: integer,
+		}
 	case ctx.FLOAT() != nil:
 		float, err := strconv.ParseFloat(ctx.FLOAT().GetText(), 64)
 		if err != nil {
 			panic("ANTLR parser-accepted float failed to parse by strconv.ParseFloat")
 		}
-		return ast.Float(float)
+		return ast.Float{
+			Span:  GetSpan(ctx),
+			Value: float,
+		}
 	case ctx.Expression() != nil:
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
@@ -217,6 +231,7 @@ func LowerTuple(ctx ITupleContext) ast.Tuple {
 func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
 	return ast.Type{
 		Name: LowerName(ctx.Name()),
+		Span: GetSpan(ctx),
 	}
 }
 
@@ -224,6 +239,7 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 	switch {
 	case ctx.MINUS() != nil:
 		return ast.UnaryExpression{
+			Span:       GetSpan(ctx),
 			Op:         ast.Negate,
 			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
 		}
@@ -236,6 +252,7 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 
 func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDeclaration {
 	return ast.VariableDeclaration{
+		Span: GetSpan(ctx),
 		Name: LowerName(ctx.ConstantDeclaration().Name()),
 		Type: LowerTypeAnnotation(ctx.ConstantDeclaration().TypeAnnotation()),
 		Body: LowerStatementBody(ctx.ConstantDeclaration().StatementBody()),

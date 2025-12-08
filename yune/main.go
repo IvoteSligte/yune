@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"yune/ast"
 	"yune/parser"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -50,9 +51,6 @@ func main() {
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 	tokenStream.Fill() // lex all tokens in advance (for debugging)
 
-	printText(tokenStream)
-	printTokens(lexer, tokenStream)
-
 	yuneParser := parser.NewYuneParser(tokenStream)
 	parseTreeModule := yuneParser.Module()
 
@@ -60,5 +58,10 @@ func main() {
 	if yuneParser.HasError() {
 		log.Fatalln("Parse error:", yuneParser.GetError())
 	}
-	_ = parser.LowerModule(parseTreeModule)
+	fmt.Println("Lowering Parse Tree to AST...")
+	astModule := parser.LowerModule(parseTreeModule)
+	fmt.Println("Lowering AST to CPP...")
+	cppModule := ast.LowerModule(astModule)
+	fmt.Println("CPP code:")
+	fmt.Println(cppModule)
 }
