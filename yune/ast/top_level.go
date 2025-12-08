@@ -18,7 +18,7 @@ type FunctionDeclaration struct {
 	Body       []Statement
 }
 
-func (FunctionDeclaration) topLevelDeclaration()
+func (FunctionDeclaration) topLevelDeclaration() {}
 
 func (d FunctionDeclaration) GetName() string {
 	return d.Name
@@ -50,7 +50,7 @@ type ConstantDeclaration struct {
 	Body []Statement
 }
 
-func (ConstantDeclaration) topLevelDeclaration()
+func (ConstantDeclaration) topLevelDeclaration() {}
 
 func (d ConstantDeclaration) GetName() string {
 	return d.Name

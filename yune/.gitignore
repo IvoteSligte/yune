@@ -1,5 +1,6 @@
 .direnv
 .envrc
+main
 # generated
 parser/yune_lexer.go
 parser/yune_parser.go

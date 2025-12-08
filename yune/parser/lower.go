@@ -131,12 +131,13 @@ func LowerModule(ctx IModuleContext) ast.Module {
 func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	switch {
 	case ctx.GetFunction() != nil:
-		return ast.FunctionCall{
+		return &ast.FunctionCall{
 			Function: LowerPrimaryExpression(ctx.GetFunction()),
 			Argument: LowerPrimaryExpression(ctx.GetArgument()),
 		}
 	case ctx.Variable() != nil:
-		return LowerVariable(ctx.Variable())
+		variable := LowerVariable(ctx.Variable())
+		return &variable
 	case ctx.INTEGER() != nil:
 		integer, err := strconv.ParseInt(ctx.INTEGER().GetText(), 0, 64)
 		if err != nil {
@@ -152,7 +153,8 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.Expression() != nil:
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
-		return LowerTuple(ctx.Tuple())
+		tuple := LowerTuple(ctx.Tuple())
+		return &tuple
 	case ctx.Macro() != nil:
 		return LowerMacro(ctx.Macro())
 	default:
