@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"yune/util"
 )
 
 type TopLevelDeclaration fmt.Stringer
@@ -11,7 +12,7 @@ type Module struct {
 }
 
 func (m Module) String() string {
-	return separatedBy(m.Declarations, "\n\n")
+	return util.SeparatedBy(m.Declarations, "\n\n")
 }
 
 type FunctionDeclaration struct {
@@ -22,7 +23,7 @@ type FunctionDeclaration struct {
 }
 
 func (f FunctionDeclaration) String() string {
-	return fmt.Sprintf("%s %s(%s) %s", f.ReturnType, f.Name, separatedBy(f.Parameters, ", "), f.Body)
+	return fmt.Sprintf("%s %s(%s) %s", f.ReturnType, f.Name, util.SeparatedBy(f.Parameters, ", "), f.Body)
 }
 
 type FunctionParameter struct {

@@ -1,87 +1,175 @@
 package ast
 
 import (
+	"fmt"
+	"yune/cpp"
 	"yune/util"
 )
 
 type Variable struct {
-	Span
-	ExpressionType
-	Name string
+	InferredType
+	Name
 }
 
-// InferExpressionType implements Expression.
-func (e *Variable) InferExpressionType(env Environment) (_type Type, err error) {
-	declaration, ok := env.Get(e.Name)
-	if !ok {
-		err = UndefinedVariable(*e)
+// Lower implements Expression.
+func (v *Variable) Lower() cpp.Expression {
+	panic("unimplemented")
+}
+
+// Analyze implements Expression.
+func (v *Variable) Analyze() (queries Queries, finalizer Finalizer) {
+	queries = []Query{
+		v.Name,
+	}
+	finalizer = func(env Env) (errors Errors) {
+		v.InferredType = env.Get(v.Name.String).GetType()
 		return
 	}
-	_type = declaration.GetDeclarationType()
-	e.ExpressionType = ExpressionType(_type)
 	return
 }
 
 type FunctionCall struct {
 	Span
-	ExpressionType
+	InferredType
 	Function Expression
 	Argument Expression
 }
 
-// InferExpressionType implements Expression.
-func (f *FunctionCall) InferExpressionType(env Environment) (_type Type, err error) {
-	_type, err = f.Function.InferExpressionType(env)
-	f.ExpressionType = ExpressionType(_type)
+// GetSpan implements Express
+// Lower implements Expression.
+func (f *FunctionCall) Lower() cpp.Expression {
+	panic("unimplemented")
+}
+
+// FIXME: since type queries and constant queries are combined, it is not possible to do recursion
+// 	considering that that forms a cycle
+
+// Analyze implements Expression.
+func (f *FunctionCall) Analyze() (queries Queries, finalizer Finalizer) {
+	queries, functionFinalizer := f.Function.Analyze()
+	_queries, argumentFinalizer := f.Argument.Analyze()
+	queries = append(queries, _queries...)
+	finalizer = func(env Env) (errors Errors) {
+		errors = append(functionFinalizer(env), argumentFinalizer(env)...)
+		if len(errors) > 0 {
+			return
+		}
+		if !f.Function.GetType().IsFunction() {
+			errors = append(errors, NotAFunction{Found: f.Function.GetType()})
+			return
+		}
+		expected := f.Function.GetType().GetGeneric(0)
+		found := f.Argument.GetType()
+		if !expected.Eq(found) {
+			errors = append(errors, TypeMismatch{
+				Expected: expected,
+				Found:    found,
+				At:       f.Argument.GetSpan(),
+			})
+		}
+		f.InferredType = f.Function.GetType().GetGeneric(1)
+		return
+	}
 	return
 }
 
 type Tuple struct {
 	Span
-	ExpressionType
 	Elements []Expression
 }
 
-// InferExpressionType implements Expression.
-func (t *Tuple) InferExpressionType(env Environment) (_type Type, err error) {
-	for _, element := range t.Elements {
-		_, err = element.InferExpressionType(env)
-		if err != nil {
-			return
+// Lower implements Expression.
+func (t *Tuple) Lower() cpp.Expression {
+	panic("unimplemented")
+}
+
+// Analyze implements Expression.
+func (t *Tuple) Analyze() (queries Queries, _finalizer Finalizer) {
+	finalizers := make([]Finalizer, len(t.Elements))
+	for i := range t.Elements {
+		_queries, _finalizer := t.Elements[i].Analyze()
+		queries = append(queries, _queries...)
+		finalizers = append(finalizers, _finalizer)
+	}
+	_finalizer = func(env Env) (errors Errors) {
+		for _, fin := range finalizers {
+			errors = append(errors, fin(env)...)
 		}
+		return
 	}
-	_type = Type{
-		Name:     "Tuple",
-		Generics: util.Map(t.Elements, Expression.GetExpressionType),
-	}
-	t.ExpressionType = ExpressionType(_type)
 	return
+}
+
+// GetType implements Expression.
+func (t *Tuple) GetType() InferredType {
+	return InferredType{
+		name:     "Tuple",
+		generics: util.Map(t.Elements, Expression.GetType),
+	}
 }
 
 type Macro struct {
 	// TODO: indicate macro text with a special span
 	Span
-	ExpressionType
-	Language string
+	Language Name
 	Text     string
+	// Result after evaluating the macro.
+	Result Expression
 }
 
-// InferExpressionType implements Expression.
-func (m Macro) InferExpressionType(env Environment) (_type Type, err error) {
-	panic("Macros are not supported yet.")
+// Lower implements Expression.
+func (m *Macro) Lower() cpp.Expression {
+	panic("unimplemented")
+}
+
+// Analyze implements Expression.
+func (m *Macro) Analyze() (queries Queries, finalizer Finalizer) {
+	panic("unimplemented")
+}
+
+// GetType implements Expression.
+func (m *Macro) GetType() InferredType {
+	return m.Result.GetType()
 }
 
 type UnaryExpression struct {
 	Span
-	ExpressionType
+	InferredType
 	Op         UnaryOp
 	Expression Expression
 }
 
-// InferExpressionType implements Expression.
-func (u UnaryExpression) InferExpressionType(env Environment) (_type Type, err error) {
-	_type, err = u.Expression.InferExpressionType(env)
-	if err != nil {
+// Lower implements Expression.
+func (u *UnaryExpression) Lower() cpp.Expression {
+	panic("unimplemented")
+}
+
+// Analyze implements Expression.
+func (u *UnaryExpression) Analyze() (queries Queries, finalizer Finalizer) {
+	queries, fin := u.Expression.Analyze()
+	finalizer = func(env Env) (errors Errors) {
+		errors = fin(env)
+		if len(errors) > 0 {
+			return
+		}
+		expressionType := u.Expression.GetType()
+		switch u.Op {
+		case Negate:
+			switch {
+			case !expressionType.Eq(IntType):
+				u.InferredType = IntType
+			case !expressionType.Eq(FloatType):
+				u.InferredType = FloatType
+			default:
+				errors = append(errors, InvalidUnaryExpressionType{
+					Op:   u.Op,
+					Type: expressionType,
+					At:   u.Span,
+				})
+			}
+		default:
+			panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
+		}
 		return
 	}
 	return
@@ -95,15 +183,70 @@ const (
 
 type BinaryExpression struct {
 	Span
-	ExpressionType
+	InferredType
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
 }
 
-// InferExpressionType implements Expression.
-func (b BinaryExpression) InferExpressionType(env Environment) (_type Type, err error) {
+// Lower implements Expression.
+func (b *BinaryExpression) Lower() cpp.Expression {
 	panic("unimplemented")
+}
+
+// Analyze implements Expression.
+func (b *BinaryExpression) Analyze() (queries Queries, finalizer Finalizer) {
+	queries, finLeft := b.Left.Analyze()
+	_queries, finRight := b.Right.Analyze()
+	queries = append(queries, _queries...)
+
+	finalizer = func(env Env) (errors Errors) {
+		errors = append(finLeft(env), finRight(env)...)
+		if len(errors) > 0 {
+			return
+		}
+		leftType := b.Left.GetType()
+		rightType := b.Right.GetType()
+		if !leftType.Eq(rightType) {
+			errors = append(errors, InvalidBinaryExpressionTypes{
+				Op:    b.Op,
+				Left:  leftType,
+				Right: rightType,
+				At:    b.Span,
+			})
+			return
+		}
+
+		switch b.Op {
+		case Add:
+		case Subtract:
+		case Multiply:
+		case Divide:
+		case Greater:
+		case GreaterEqual:
+		case Less:
+		case LessEqual:
+		case Equal:
+		case NotEqual:
+			switch {
+			case !leftType.Eq(IntType):
+				b.InferredType = IntType
+			case !leftType.Eq(FloatType):
+				b.InferredType = FloatType
+			default:
+				errors = append(errors, InvalidBinaryExpressionTypes{
+					Op:    b.Op,
+					Left:  leftType,
+					Right: rightType,
+					At:    b.Span,
+				})
+			}
+		default:
+			panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
+		}
+		return
+	}
+	return
 }
 
 type BinaryOp string
@@ -126,14 +269,20 @@ type Integer struct {
 	Value int64
 }
 
-// InferExpressionType implements Expression.
-func (i Integer) InferExpressionType(env Environment) (_type Type, err error) {
-	return i.GetExpressionType(), nil
+// Lower implements Expression.
+func (i Integer) Lower() cpp.Expression {
+	panic("unimplemented")
 }
 
-// GetExpressionType implements Expression.
-func (Integer) GetExpressionType() Type {
-	return Type{Name: "Int"}
+// GetType implements Expression.
+func (i Integer) GetType() InferredType {
+	return IntType
+}
+
+// Analyze implements Expression.
+func (i Integer) Analyze() (queries Queries, finalizer Finalizer) {
+	finalizer = func(Env) (errors Errors) { return }
+	return
 }
 
 type Float struct {
@@ -141,25 +290,29 @@ type Float struct {
 	Value float64
 }
 
-// InferExpressionType implements Expression.
-func (f Float) InferExpressionType(env Environment) (_type Type, err error) {
-	return f.GetExpressionType(), nil
+// Lower implements Expression.
+func (i Float) Lower() cpp.Expression {
+	return cpp.Float(i.Value)
 }
 
-// GetExpressionType implements Expression.
-func (Float) GetExpressionType() Type {
-	return Type{Name: "F64"}
+// Analyze implements Expression.
+func (i Float) Analyze() (queries Queries, finalizer Finalizer) {
+	finalizer = func(Env) (errors Errors) { return }
+	return
 }
+
+// GetType implements Expression.
+func (f Float) GetType() InferredType {
+	return FloatType
+}
+
+type Finalizer = func(env Env) (errors Errors)
 
 type Expression interface {
-	InferExpressionType(env Environment) (_type Type, err error)
-	GetExpressionType() Type
-}
-
-type ExpressionType Type
-
-func (t ExpressionType) GetExpressionType() Type {
-	return Type(t)
+	INode
+	Analyze() (queries Queries, finalizer Finalizer)
+	GetType() InferredType
+	Lower() cpp.Expression
 }
 
 var _ Expression = Integer{}

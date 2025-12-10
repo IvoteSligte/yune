@@ -56,7 +56,7 @@ variableDeclaration
     ;
 
 assignment
-    : name assignmentOp EQUAL statementBody
+    : variable assignmentOp EQUAL statementBody
     ;
 
 assignmentOp

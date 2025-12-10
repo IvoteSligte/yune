@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"yune/util"
 )
 
 type Variable string
@@ -12,7 +13,7 @@ type FunctionCall struct {
 }
 
 func (c FunctionCall) String() string {
-	return fmt.Sprintf("%s(%s)", c.Function, separatedBy(c.Arguments, ", "))
+	return fmt.Sprintf("%s(%s)", c.Function, util.SeparatedBy(c.Arguments, ", "))
 }
 
 type Tuple struct {
@@ -20,7 +21,7 @@ type Tuple struct {
 }
 
 func (t Tuple) String() string {
-	return fmt.Sprintf("std::make_tuple(%s)", separatedBy(t.Elements, ", "))
+	return fmt.Sprintf("std::make_tuple(%s)", util.SeparatedBy(t.Elements, ", "))
 }
 
 type UnaryExpression struct {
@@ -47,6 +48,17 @@ func (b BinaryExpression) String() string {
 type BinaryOp string
 
 type Integer int64
+
+// String implements Expression.
+func (i Integer) String() string {
+	return fmt.Sprint(int64(i))
+}
+
 type Float float64
+
+// String implements Expression.
+func (f Float) String() string {
+	return fmt.Sprint(float64(f))
+}
 
 type Expression fmt.Stringer

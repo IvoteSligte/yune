@@ -18,7 +18,7 @@ func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 
 func LowerAssignment(ctx IAssignmentContext) ast.Assignment {
 	return ast.Assignment{
-		Target: LowerName(ctx.Name()),
+		Target: LowerVariable(ctx.Variable()),
 		Op:     LowerAssignmentOp(ctx.AssignmentOp()),
 		Body:   LowerStatementBody(ctx.StatementBody()),
 	}
@@ -56,17 +56,20 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 	default:
 		panic("unreachable")
 	}
-	return ast.BinaryExpression{
+	expr := ast.BinaryExpression{
 		Op:    op,
 		Left:  LowerBinaryExpression(ctx.BinaryExpression(0)),
 		Right: LowerBinaryExpression(ctx.BinaryExpression(1)),
 	}
+	return &expr
 }
 
 func LowerBranchStatement(ctx IBranchStatementContext, statementsAfter []IStatementContext) ast.BranchStatement {
-	elseBlock := []ast.Statement{}
+	elseBlock := ast.Block{}
 	if len(statementsAfter) > 0 {
-		elseBlock = LowerStatement(statementsAfter[0], statementsAfter[1:])
+		elseBlock = ast.Block{
+			Statements: LowerStatement(statementsAfter[0], statementsAfter[1:]),
+		}
 	}
 	return ast.BranchStatement{
 		Condition: LowerExpression(ctx.Expression()),
@@ -103,6 +106,7 @@ func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDecla
 
 func LowerFunctionParameter(ctx IFunctionParameterContext) ast.FunctionParameter {
 	return ast.FunctionParameter{
+		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
 		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
 	}
@@ -112,14 +116,17 @@ func LowerFunctionParameters(ctx IFunctionParametersContext) []ast.FunctionParam
 	return util.Map(ctx.AllFunctionParameter(), LowerFunctionParameter)
 }
 
-func LowerName(ctx INameContext) string {
-	return ctx.IDENTIFIER().GetText()
+func LowerName(ctx INameContext) ast.Name {
+
+	return ast.Name{
+		Span:   GetSpan(ctx),
+		String: ctx.IDENTIFIER().GetText(),
+	}
 }
 
 func LowerVariable(ctx IVariableContext) ast.Variable {
 	return ast.Variable{
 		Name: LowerName(ctx.Name()),
-		Span: GetSpan(ctx),
 	}
 }
 
@@ -170,7 +177,8 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 		tuple := LowerTuple(ctx.Tuple())
 		return &tuple
 	case ctx.Macro() != nil:
-		return LowerMacro(ctx.Macro())
+		macro := LowerMacro(ctx.Macro())
+		return &macro
 	default:
 		panic("unreachable")
 	}
@@ -181,13 +189,19 @@ func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) 
 
 	switch {
 	case ctx.VariableDeclaration() != nil:
-		single = LowerVariableDeclaration(ctx.VariableDeclaration())
+		stmt := LowerVariableDeclaration(ctx.VariableDeclaration())
+		single = &stmt
 	case ctx.Assignment() != nil:
-		single = LowerAssignment(ctx.Assignment())
+		stmt := LowerAssignment(ctx.Assignment())
+		single = &stmt
 	case ctx.Expression() != nil:
-		single = LowerExpression(ctx.Expression())
+		stmt := ast.ExpressionStatement{
+			Expression: LowerExpression(ctx.Expression()),
+		}
+		single = &stmt
 	case ctx.BranchStatement() != nil:
-		return []ast.Statement{LowerBranchStatement(ctx.BranchStatement(), statementsAfter)}
+		stmt := LowerBranchStatement(ctx.BranchStatement(), statementsAfter)
+		single = &stmt
 	default:
 		panic("unreachable")
 	}
@@ -197,16 +211,20 @@ func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) 
 	return util.Prepend(single, LowerStatement(statementsAfter[0], statementsAfter[1:]))
 }
 
-func LowerStatementBlock(ctx IStatementBlockContext) []ast.Statement {
+func LowerStatementBlock(ctx IStatementBlockContext) ast.Block {
 	if len(ctx.AllStatement()) == 0 {
 		panic("A statement block should contain at least one statement.")
 	}
-	return LowerStatement(ctx.AllStatement()[0], ctx.AllStatement()[1:])
+	return ast.Block{
+		Statements: LowerStatement(ctx.AllStatement()[0], ctx.AllStatement()[1:]),
+	}
 }
 
-func LowerStatementBody(ctx IStatementBodyContext) []ast.Statement {
+func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	if ctx.Statement() != nil {
-		return LowerStatement(ctx.Statement(), []IStatementContext{})
+		return ast.Block{
+			Statements: LowerStatement(ctx.Statement(), []IStatementContext{}),
+		}
 	}
 	return LowerStatementBlock(ctx.StatementBlock())
 }
@@ -238,11 +256,12 @@ func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
 func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 	switch {
 	case ctx.MINUS() != nil:
-		return ast.UnaryExpression{
+		expr := ast.UnaryExpression{
 			Span:       GetSpan(ctx),
 			Op:         ast.Negate,
 			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
 		}
+		return &expr
 	case ctx.PrimaryExpression() != nil:
 		return LowerPrimaryExpression(ctx.PrimaryExpression())
 	default:

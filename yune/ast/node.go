@@ -7,6 +7,27 @@ type Span struct {
 	Column int
 }
 
-func (s Span) String() string {
-	return fmt.Sprintf("%s:%s", s.Line, s.Column)
+func (s Span) GetSpan() Span {
+	return s
 }
+
+func (s Span) String() string {
+	return fmt.Sprintf("%d:%d", s.Line, s.Column)
+}
+
+type Name struct {
+	Span
+	String string
+}
+
+func (n Name) GetName() string {
+	return n.String
+}
+
+type INode interface {
+	GetSpan() Span
+}
+
+type Query = Name
+type Queries = []Query
+type Errors = []error

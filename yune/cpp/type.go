@@ -2,7 +2,6 @@ package cpp
 
 import (
 	"fmt"
-	"strings"
 	"yune/util"
 )
 
@@ -12,5 +11,9 @@ type Type struct {
 }
 
 func (t Type) String() string {
-	return fmt.Sprintf("%s<%s>", t.Name, strings.Join(util.Map(t.Generics, Type.String), ", "))
+	if len(t.Generics) == 0 {
+		return t.Name
+	} else {
+		return fmt.Sprintf("%s<%s>", t.Name, util.SeparatedBy(t.Generics, ", "))
+	}
 }

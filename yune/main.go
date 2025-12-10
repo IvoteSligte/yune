@@ -60,8 +60,20 @@ func main() {
 	}
 	fmt.Println("Lowering Parse Tree to AST...")
 	astModule := parser.LowerModule(parseTreeModule)
+
 	fmt.Println("Lowering AST to CPP...")
-	cppModule := ast.LowerModule(astModule)
+	queries, finalizer := astModule.Analyze()
+	if len(queries) > 0 {
+		panic("unimplemented")
+	}
+	errors := finalizer(ast.Env{}) // TODO: primitives/builtins
+	if len(errors) > 0 {
+		for _, err := range errors {
+			fmt.Println("ERROR:", err)
+		}
+		return
+	}
+	cppModule := astModule.Lower()
 	fmt.Println("CPP code:")
 	fmt.Println(cppModule)
 }

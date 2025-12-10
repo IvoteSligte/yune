@@ -2,18 +2,18 @@ package cpp
 
 import (
 	"fmt"
+	"yune/util"
 )
-
-type Block []Statement
-
-func (b Block) String() string {
-	return "{" + separatedBy(b, "\n") + "\n}"
-}
 
 type VariableDeclaration struct {
 	Name string
 	Type Type
-	Body []Statement
+	Body Expression
+}
+
+// String implements Statement.
+func (v VariableDeclaration) String() string {
+	return fmt.Sprintf("%s %s = %s;", v.Type, v.Name, v.Body)
 }
 
 type Assignment struct {
@@ -46,6 +46,18 @@ type ReturnStatement struct {
 
 func (r ReturnStatement) String() string {
 	return fmt.Sprintf("return %s;", r.Expression)
+}
+
+type Block []Statement
+
+func (b Block) String() string {
+	return "{" + util.SeparatedBy(b, "") + "}"
+}
+
+type LambdaBlock []Statement
+
+func (b LambdaBlock) String() string {
+	return "[](){" + util.SeparatedBy(b, "") + "}()"
 }
 
 type Statement fmt.Stringer

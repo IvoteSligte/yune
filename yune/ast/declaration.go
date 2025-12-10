@@ -1,33 +1,34 @@
 package ast
 
-type Environment struct {
-	parent  *Environment
-	symbols map[string]Declaration
+type DeclarationMap = map[string]Declaration
+
+type Env struct {
+	parent       *Env
+	declarations DeclarationMap
 }
 
-func (env *Environment) Get(name string) (Declaration, bool) {
-	declaration, ok := env.symbols[name]
+func (env *Env) Get(name string) Declaration {
+	declaration, ok := env.declarations[name]
 	if !ok && env.parent != nil {
 		return env.parent.Get(name)
 	}
-	return declaration, ok
+	return declaration
 }
 
 type Declaration interface {
+	Analyze() (queries Queries, finalizer Finalizer)
 	GetSpan() Span
 	GetName() string
-	GetDeclarationType() Type
+	GetType() InferredType
 }
 
-var _ Declaration = FunctionDeclaration{}
-var _ Declaration = FunctionParameter{}
-var _ Declaration = ConstantDeclaration{}
-var _ Declaration = VariableDeclaration{}
+var _ Declaration = &FunctionDeclaration{}
+var _ Declaration = &FunctionParameter{}
+var _ Declaration = &ConstantDeclaration{}
+var _ Declaration = &VariableDeclaration{}
 
-type TopLevelDeclarations = map[string]TopLevelDeclaration
-
-func (m *Module) GetDeclarations() (TopLevelDeclarations, []error) {
-	declarations := make(TopLevelDeclarations, len(m.Declarations))
+func (m *Module) GetDeclarationMap() (DeclarationMap, []error) {
+	declarations := make(DeclarationMap, len(m.Declarations))
 	errors := make([]error, 0)
 
 	for _, decl := range m.Declarations {
