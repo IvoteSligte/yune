@@ -40,8 +40,19 @@ func (m *Module) Analyze() (queries Queries, finalizer Finalizer) {
 		queries = append(queries, _queries...)
 		finalizers = append(finalizers, _finalizer)
 	}
+	declarations, _errors := newDeclarationMap(m.Declarations)
+	i := 0
+	for i < len(queries) {
+		_, ok := declarations[queries[i].String]
+		if ok {
+			queries[i] = queries[len(queries)-1]
+			queries = queries[:len(queries)-1]
+		} else {
+			i++
+		}
+	}
 	finalizer = func(env Env) (errors Errors) {
-		declarations, errors := newDeclarationMap(m.Declarations)
+		errors = _errors
 		env = Env{
 			parent:       &env,
 			declarations: declarations,
@@ -88,6 +99,8 @@ func (d FunctionDeclaration) Analyze() (queries Queries, finalizer Finalizer) {
 	_queries, bodyFin := d.Body.Analyze()
 	queries = append(queries, _queries...)
 	finalizer = func(env Env) (errors Errors) {
+		// TODO: handle queries and check for undefined variables (also use-before-declare)
+
 		errors = returnTypeFin(env)
 		declarations, _errors := newDeclarationMap(d.Parameters)
 		errors = append(errors, _errors...)
