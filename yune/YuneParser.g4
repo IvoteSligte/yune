@@ -32,7 +32,7 @@ constantDeclaration
     ;
 
 typeAnnotation
-    : COLON name
+    : COLON variable
     ;
 
 statementBody
@@ -88,7 +88,7 @@ tuple
     ;
 
 macro
-    : name HASHTAG (MACROLINE NEWLINE)* MACROLINE?
+    : variable HASHTAG (MACROLINE NEWLINE)* MACROLINE?
     ;
 
 unaryExpression

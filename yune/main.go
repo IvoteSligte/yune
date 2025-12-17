@@ -66,7 +66,7 @@ func main() {
 	if len(queries) > 0 {
 		panic("unimplemented")
 	}
-	errors := finalizer(ast.Env{}) // TODO: primitives/builtins
+	errors := finalizer(ast.DeclarationTable{}) // TODO: primitives/builtins
 	if len(errors) > 0 {
 		for _, err := range errors {
 			fmt.Println("ERROR:", err)

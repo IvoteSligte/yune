@@ -132,7 +132,7 @@ func LowerVariable(ctx IVariableContext) ast.Variable {
 
 func LowerMacro(ctx IMacroContext) ast.Macro {
 	return ast.Macro{
-		Language: LowerName(ctx.Name()),
+		Language: LowerVariable(ctx.Variable()),
 		Text:     strings.Join(util.Map(ctx.AllMACROLINE(), antlr.TerminalNode.GetText), "\n"),
 	}
 }
@@ -232,9 +232,11 @@ func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDeclaration {
 	switch {
 	case ctx.ConstantDeclaration() != nil:
-		return LowerConstantDeclaration(ctx.ConstantDeclaration())
+		decl := LowerConstantDeclaration(ctx.ConstantDeclaration())
+		return &decl
 	case ctx.FunctionDeclaration() != nil:
-		return LowerFunctionDeclaration(ctx.FunctionDeclaration())
+		decl := LowerFunctionDeclaration(ctx.FunctionDeclaration())
+		return &decl
 	default:
 		panic("unreachable(" + ctx.GetText() + ")")
 	}
@@ -248,7 +250,7 @@ func LowerTuple(ctx ITupleContext) ast.Tuple {
 
 func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
 	return ast.Type{
-		Name: LowerName(ctx.Name()),
+		Name: LowerVariable(ctx.Variable()),
 		Span: GetSpan(ctx),
 	}
 }

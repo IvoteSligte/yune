@@ -6,14 +6,14 @@ import (
 )
 
 type VariableDeclaration struct {
-	Name string
-	Type Type
-	Body Expression
+	Name  string
+	Type  Type
+	Value Expression
 }
 
 // String implements Statement.
 func (v VariableDeclaration) String() string {
-	return fmt.Sprintf("%s %s = %s;", v.Type, v.Name, v.Body)
+	return fmt.Sprintf("%s %s = %s;", v.Type, v.Name, v.Value)
 }
 
 type Assignment struct {

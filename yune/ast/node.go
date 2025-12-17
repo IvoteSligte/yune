@@ -24,7 +24,14 @@ func (n Name) GetName() string {
 	return n.String
 }
 
-type INode interface {
+type Node interface {
+	GetSpan() Span
+	InferType(deps DeclarationTable) Errors
+	GetType() InferredType
+}
+
+type IName interface {
+	GetName() string
 	GetSpan() Span
 }
 

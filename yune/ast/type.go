@@ -12,49 +12,49 @@ type Type struct {
 	// InferredType can reliably be compared with for equality, whereas Type
 	// may contain aliases that would report false inequalities.
 	InferredType
-	Name     Name
+	Name     Variable
 	Generics []Type
+}
+
+// GetValueDependencies implements Node.
+func (t Type) GetValueDependencies() []string {
+	return append(util.FlatMap(t.Generics, Type.GetValueDependencies), t.Name.GetName())
+}
+
+// InferType implements Node.
+func (t *Type) InferType(deps DeclarationTable) (errors Errors) {
+	for i := range t.Generics {
+		errors = append(errors, t.Generics[i].InferType(deps)...)
+	}
+	errors = append(errors, t.Name.InferType(deps)...)
+	if len(errors) > 0 {
+		return
+	}
+	// TODO: use Generics
+	t.InferredType = t.Name.GetType()
+	return
 }
 
 func (t Type) Lower() cpp.Type {
 	return cpp.Type{
-		Name:     t.Name.String,
+		Name:     t.GetName(),
 		Generics: util.Map(t.Generics, Type.Lower),
 	}
 }
 
-func (t *Type) Analyze() (queries Queries, _finalizer Finalizer) {
-	finalizers := make([]Finalizer, len(t.Generics))
-	for i := range t.Generics {
-		_queries, _finalizer := t.Generics[i].Analyze()
-		queries = append(queries, _queries...)
-		finalizers = append(finalizers, _finalizer)
-	}
-	queries = append(queries, t.Name)
-	_finalizer = func(env Env) (errors Errors) {
-		for _, fin := range finalizers {
-			errors = append(errors, fin(env)...)
-		}
-		if len(errors) > 0 {
-			return
-		}
-		if len(t.Generics) > 0 {
-			panic("unimplemented: generics")
-		} else {
-			t.InferredType = env.Get(t.Name.String).GetType()
-		}
-		return
-	}
-	return
+func (t Type) GetName() string {
+	return t.Name.GetName()
 }
 
 func (t Type) String() string {
 	if len(t.Generics) == 0 {
-		return t.Name.String
+		return t.GetName()
 	} else {
 		return fmt.Sprintf("%s<%s>", t.Name, util.SeparatedBy(t.Generics, ", "))
 	}
 }
+
+var _ Node = &Type{}
 
 type InferredType struct {
 	name     string
@@ -68,6 +68,24 @@ func (t InferredType) GetType() InferredType {
 // Function type has generics[0] as argument type and generics[1] as return type.
 func (t InferredType) IsFunction() bool {
 	return t.name == "Fn"
+}
+
+func (t InferredType) GetParameterType() (parameterType InferredType, isFunction bool) {
+	isFunction = t.IsFunction()
+	if !isFunction {
+		return
+	}
+	parameterType = t.generics[0]
+	return
+}
+
+func (t InferredType) GetReturnType() (returnType InferredType, isFunction bool) {
+	isFunction = t.IsFunction()
+	if !isFunction {
+		return
+	}
+	returnType = t.generics[1]
+	return
 }
 
 func (t InferredType) IsTuple() bool {
@@ -93,3 +111,5 @@ func (left InferredType) Eq(right InferredType) bool {
 
 var IntType InferredType = InferredType{name: "Int"}
 var FloatType InferredType = InferredType{name: "Float"}
+var BoolType InferredType = InferredType{name: "Bool"}
+var NilType InferredType = InferredType{name: "Nil"}

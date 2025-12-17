@@ -54,10 +54,10 @@ func (e InvalidBinaryExpressionTypes) Error() string {
 	)
 }
 
-type UndefinedVariable Variable
+type UndefinedVariable Name
 
 func (e UndefinedVariable) Error() string {
-	return fmt.Sprintf("Variable %s used at %s is not defined.", Variable(e).Name.String, e.Span)
+	return fmt.Sprintf("Variable %s used at %s is not defined.", e.String, e.Span)
 }
 
 type NotAFunction struct {

@@ -5,67 +5,28 @@ import (
 	"yune/util"
 )
 
-func newDeclarationMap[T Declaration](declarations []T) (declarationMap DeclarationMap, errors Errors) {
-	declarationMap = make(DeclarationMap, len(declarations))
-	for _, decl := range declarations {
-		previous, exists := declarationMap[decl.GetName()]
-
-		if exists {
-			errors = append(errors, DuplicateDeclaration{
-				First:  previous,
-				Second: decl,
-			})
-		} else {
-			declarationMap[decl.GetName()] = decl
-		}
-	}
-	return
-}
-
 type Module struct {
 	Declarations []TopLevelDeclaration
+}
+
+func (m *Module) ResolveDependencies() {
+	for i := range m.Declarations {
+		m.Declarations[i].GetTypeDependencies()
+		m.Declarations[i].GetValueDependencies()
+	}
+}
+
+func (m *Module) InferType(deps DeclarationTable) (errors Errors) {
+	for i := range m.Declarations {
+		errors = append(errors, m.Declarations[i].InferType(deps)...)
+	}
+	return
 }
 
 func (m Module) Lower() cpp.Module {
 	return cpp.Module{
 		Declarations: util.Map(m.Declarations, TopLevelDeclaration.Lower),
 	}
-}
-
-func (m *Module) Analyze() (queries Queries, finalizer Finalizer) {
-	finalizers := make([]Finalizer, len(m.Declarations))
-
-	for _, decl := range m.Declarations {
-		_queries, _finalizer := decl.Analyze()
-		queries = append(queries, _queries...)
-		finalizers = append(finalizers, _finalizer)
-	}
-	declarations, _errors := newDeclarationMap(m.Declarations)
-	i := 0
-	for i < len(queries) {
-		_, ok := declarations[queries[i].String]
-		if ok {
-			queries[i] = queries[len(queries)-1]
-			queries = queries[:len(queries)-1]
-		} else {
-			i++
-		}
-	}
-	finalizer = func(env Env) (errors Errors) {
-		errors = _errors
-		env = Env{
-			parent:       &env,
-			declarations: declarations,
-		}
-		if len(errors) > 0 {
-			return
-		}
-		for _, fin := range finalizers {
-			errors = append(errors, fin(env)...)
-		}
-		return
-	}
-	return
 }
 
 type FunctionDeclaration struct {
@@ -76,6 +37,36 @@ type FunctionDeclaration struct {
 	Body       Block
 }
 
+// GetValueDependencies implements TopLevelDeclaration.
+func (d FunctionDeclaration) GetValueDependencies() []string {
+	locals := DeclarationTable{}
+	for _, param := range d.Parameters {
+		locals.Add(param)
+	}
+	return append(d.GetTypeDependencies(), d.Body.GetValueDependencies(locals)...)
+}
+
+// CalcValue implements TopLevelDeclaration.
+func (d FunctionDeclaration) CalcValue(deps DeclarationTable) (result Value, errors Errors) {
+	panic("unimplemented")
+}
+
+// GetTypeDependencies implements TopLevelDeclaration.
+func (d FunctionDeclaration) GetTypeDependencies() (deps []string) {
+	deps = util.FlatMap(d.Parameters, FunctionParameter.GetTypeDependencies)
+	deps = append(deps, d.ReturnType.GetValueDependencies()...)
+	return
+}
+
+// InferType implements TopLevelDeclaration.
+func (d *FunctionDeclaration) InferType(deps DeclarationTable) (errors Errors) {
+	for i := range d.Parameters {
+		errors = append(errors, d.Parameters[i].InferType(deps)...)
+	}
+	errors = append(errors, d.ReturnType.InferType(deps)...)
+	return
+}
+
 // Lower implements TopLevelDeclaration.
 func (d FunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.FunctionDeclaration{
@@ -84,49 +75,6 @@ func (d FunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		ReturnType: d.ReturnType.Lower(),
 		Body:       d.Body.Lower(),
 	}
-}
-
-// Analyze implements Declaration.
-func (d FunctionDeclaration) Analyze() (queries Queries, finalizer Finalizer) {
-	parameterFins := make([]Finalizer, len(d.Parameters)+2)
-	for i := range d.Parameters {
-		_queries, _finalizer := d.Parameters[i].Analyze()
-		queries = append(queries, _queries...)
-		parameterFins = append(parameterFins, _finalizer)
-	}
-	_queries, returnTypeFin := d.ReturnType.Analyze()
-	queries = append(queries, _queries...)
-	_queries, bodyFin := d.Body.Analyze()
-	queries = append(queries, _queries...)
-	finalizer = func(env Env) (errors Errors) {
-		// TODO: handle queries and check for undefined variables (also use-before-declare)
-
-		errors = returnTypeFin(env)
-		declarations, _errors := newDeclarationMap(d.Parameters)
-		errors = append(errors, _errors...)
-		env = Env{
-			parent:       &env,
-			declarations: declarations,
-		}
-		if len(errors) > 0 {
-			return
-		}
-		errors = bodyFin(env)
-		if len(errors) > 0 {
-			return
-		}
-		returnType := d.ReturnType.GetType()
-		bodyType := d.Body.GetType()
-		if !returnType.Eq(bodyType) {
-			errors = append(errors, TypeMismatch{
-				Expected: returnType,
-				Found:    bodyType,
-				At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
-			})
-		}
-		return
-	}
-	return
 }
 
 func (FunctionDeclaration) topLevelDeclaration() {}
@@ -155,18 +103,20 @@ func (d FunctionParameter) Lower() cpp.FunctionParameter {
 	}
 }
 
-// Analyze implements Declaration.
-func (d FunctionParameter) Analyze() (queries Queries, finalizer Finalizer) {
-	queries, finalizer = d.Type.Analyze()
-	return
-}
-
 func (d FunctionParameter) GetName() string {
 	return d.Name.String
 }
 
 func (d FunctionParameter) GetType() InferredType {
 	return d.Type.InferredType
+}
+
+func (d FunctionParameter) GetTypeDependencies() []string {
+	return d.Type.GetValueDependencies()
+}
+
+func (d FunctionParameter) InferType(deps DeclarationTable) (errors Errors) {
+	return d.Type.InferType(deps)
 }
 
 type ConstantDeclaration struct {
@@ -176,6 +126,32 @@ type ConstantDeclaration struct {
 	Body Block
 }
 
+// CalcValue implements TopLevelDeclaration.
+func (d *ConstantDeclaration) CalcValue(deps DeclarationTable) (result Value, errors Errors) {
+	errors = d.Body.InferType(deps)
+	if len(errors) > 0 {
+		return
+	}
+	// evaluate body with dependencies
+	// cppBlock := d.Body.Lower()
+	panic("unimplemented")
+}
+
+// GetTypeDependencies implements TopLevelDeclaration.
+func (d ConstantDeclaration) GetTypeDependencies() []string {
+	return d.Type.GetValueDependencies()
+}
+
+// GetValueDependencies implements TopLevelDeclaration.
+func (d ConstantDeclaration) GetValueDependencies() []string {
+	return append(d.GetTypeDependencies(), d.Body.GetValueDependencies(DeclarationTable{})...)
+}
+
+// InferType implements TopLevelDeclaration.
+func (d *ConstantDeclaration) InferType(deps DeclarationTable) (errors Errors) {
+	return d.Type.InferType(deps)
+}
+
 // Lower implements TopLevelDeclaration.
 func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
@@ -183,18 +159,6 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 		Type:  d.Type.Lower(),
 		Value: d.Body.Lower(),
 	}
-}
-
-// Analyze implements Declaration.
-func (d ConstantDeclaration) Analyze() (queries Queries, finalizer Finalizer) {
-	queries, typeFin := d.Type.Analyze()
-	_queries, bodyFin := d.Body.Analyze()
-	queries = append(queries, _queries...)
-	finalizer = func(env Env) (errors Errors) {
-		errors = append(typeFin(env), bodyFin(env)...)
-		return
-	}
-	return
 }
 
 // GetType implements Declaration.
@@ -215,8 +179,14 @@ func (d ConstantDeclaration) GetDeclarationType() Type {
 type TopLevelDeclaration interface {
 	Declaration
 	topLevelDeclaration()
+	// A list of dependencies required to calculate the type of this declaration.
+	// Subset of the result of GetValueDependencies().
+	GetTypeDependencies() []string
+	GetValueDependencies() []string
+	// Calculates the value of the declaration, assuming InferType has been called.
+	CalcValue(deps DeclarationTable) (Value, Errors)
 	Lower() cpp.TopLevelDeclaration
 }
 
-var _ TopLevelDeclaration = FunctionDeclaration{}
-var _ TopLevelDeclaration = ConstantDeclaration{}
+var _ TopLevelDeclaration = &FunctionDeclaration{}
+var _ TopLevelDeclaration = &ConstantDeclaration{}
