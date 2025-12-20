@@ -1,0 +1,18 @@
+
+compilation order of a function
+	1. type check the header (depends on types used in header)
+	2. type check the body (depends on types and types of globals used in body)
+ 
+compilation order of a constant
+	1. type check the type annotation (depends on types used in type annotation)
+	2. type check the body (depends on types and types of globals used in body)
+	3. if required at compile-time, calculate value of constant
+
+dependency kinds
+	type->value
+		declaration // the type of a declaration depends on the values of its type annotations
+
+	value->type  // everything at the type checking step
+
+	value->value // a global constant value is used in the body of a declaration
+		expression // variable use or function call that rely on global declarations

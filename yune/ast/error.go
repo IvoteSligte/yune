@@ -95,3 +95,12 @@ func (e BranchTypeNotEqual) Error() string {
 		e.ElseAt,
 	)
 }
+
+type CyclicDependency struct {
+	First  string
+	Second string
+}
+
+func (e CyclicDependency) Error() string {
+	return fmt.Sprintf("Cyclic dependency between declarations %s and %s.", e.First, e.Second)
+}

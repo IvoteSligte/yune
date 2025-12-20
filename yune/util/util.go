@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"iter"
 	"strings"
 )
 
@@ -48,4 +49,45 @@ func SliceEqual[T comparable](left []T, right []T) bool {
 		}
 	}
 	return true
+}
+
+type Set[T comparable] map[T]struct{}
+
+func NewSet[T comparable](values ...T) Set[T] {
+	set := Set[T]{}
+
+	for _, value := range values {
+		set[value] = struct{}{}
+	}
+	return set
+}
+
+func Contains[Map ~map[K]V, K comparable, V any](m Map, keys ...K) bool {
+	for _, key := range keys {
+		_, ok := m[key]
+		if !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func Remove[Map ~map[K]V, K comparable, V any](m Map, keys ...K) {
+	for _, key := range keys {
+		delete(m, key)
+	}
+}
+
+func TakeExisting[Map ~map[K]V, K comparable, V any](m Map, keys ...K) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for _, key := range keys {
+			value, ok := m[key]
+			if !ok {
+				continue
+			}
+			if !yield(key, value) {
+				return
+			}
+		}
+	}
 }

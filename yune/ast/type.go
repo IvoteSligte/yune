@@ -108,8 +108,3 @@ func (left InferredType) Eq(right InferredType) bool {
 	return left.name == right.name &&
 		slices.EqualFunc(left.generics, right.generics, InferredType.Eq)
 }
-
-var IntType InferredType = InferredType{name: "Int"}
-var FloatType InferredType = InferredType{name: "Float"}
-var BoolType InferredType = InferredType{name: "Bool"}
-var NilType InferredType = InferredType{name: "Nil"}

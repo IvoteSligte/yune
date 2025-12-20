@@ -53,7 +53,7 @@ func (a *Assignment) GetValueDependencies(locals DeclarationTable) []string {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(deps), a.Body.InferType(deps)...)
+	errors = append(a.Target.InferType(deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -114,8 +114,8 @@ func (b *BranchStatement) GetValueDependencies(locals DeclarationTable) (deps []
 // InferType implements Statement.
 func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 	errors = b.Condition.InferType(deps)
-	errors = append(errors, b.Then.InferType(deps)...)
-	errors = append(errors, b.Else.InferType(deps)...)
+	errors = append(errors, b.Then.InferType(deps.NewScope())...)
+	errors = append(errors, b.Else.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}

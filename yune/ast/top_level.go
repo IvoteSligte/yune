@@ -3,17 +3,92 @@ package ast
 import (
 	"yune/cpp"
 	"yune/util"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 type Module struct {
 	Declarations []TopLevelDeclaration
 }
 
-func (m *Module) ResolveDependencies() {
+func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
+	declarations := map[string]Declaration{}
+
+	// get unique mapping of name -> declaration
 	for i := range m.Declarations {
-		m.Declarations[i].GetTypeDependencies()
-		m.Declarations[i].GetValueDependencies()
+		name := m.Declarations[i].GetName()
+		other, exists := declarations[name]
+
+		if exists {
+			errors = append(errors, DuplicateDeclaration{
+				First:  other,
+				Second: m.Declarations[i],
+			})
+		} else {
+			declarations[name] = m.Declarations[i]
+		}
 	}
+	graph := map[string]stageNode{}
+
+	// detect dependency cycles
+	for i := range m.Declarations {
+		name := m.Declarations[i].GetName()
+		deps := m.Declarations[i].GetTypeDependencies()
+		for _, dep := range deps {
+			depDeps, ok := graph[dep]
+
+			if ok && depDeps.priors.Contains(name) {
+				errors = append(errors, CyclicDependency{
+					First:  dep,
+					Second: name,
+				})
+				break
+			}
+		}
+		graph[name] = stageNode{
+			priors: mapset.NewSet(deps...),
+			simuls: mapset.NewSet(m.Declarations[i].GetValueDependencies()...),
+		}
+	}
+	table := DeclarationTable{
+		parent:       &DeclarationTable{declarations: BuiltinDeclarations},
+		declarations: declarations,
+	}
+	cache := map[string]cpp.TopLevelDeclaration{}
+
+	// remove links to builtins to prevent them from being calculated
+	for _, deps := range graph {
+		deps.priors.RemoveAll(BuiltinNames...)
+		deps.simuls.RemoveAll(BuiltinNames...)
+	}
+	ordering := stagedOrdering(graph)
+
+	for i, stage := range ordering {
+		lowered = cpp.Module{
+			Declarations: stage.getPrefix(cache),
+		}
+		// add the actual code
+		for name := range stage {
+			decl := declarations[name]
+			errors = append(errors, decl.CalcType(table)...)
+			if len(errors) > 0 {
+				return
+			}
+			errors = append(errors, decl.TypeCheck(table)...)
+			if len(errors) > 0 {
+				return
+			}
+			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
+			cppDeclaration := decl.Lower()
+			cache[name] = cppDeclaration
+			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
+		}
+		// the last lowered stage is simply the runtime code
+		if i+1 == len(ordering) {
+			return
+		}
+	}
+	return
 }
 
 func (m *Module) InferType(deps DeclarationTable) (errors Errors) {
@@ -21,12 +96,6 @@ func (m *Module) InferType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, m.Declarations[i].InferType(deps)...)
 	}
 	return
-}
-
-func (m Module) Lower() cpp.Module {
-	return cpp.Module{
-		Declarations: util.Map(m.Declarations, TopLevelDeclaration.Lower),
-	}
 }
 
 type FunctionDeclaration struct {
@@ -128,7 +197,7 @@ type ConstantDeclaration struct {
 
 // CalcValue implements TopLevelDeclaration.
 func (d *ConstantDeclaration) CalcValue(deps DeclarationTable) (result Value, errors Errors) {
-	errors = d.Body.InferType(deps)
+	errors = d.Body.InferType(deps.NewScope())
 	if len(errors) > 0 {
 		return
 	}

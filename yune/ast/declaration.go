@@ -1,6 +1,9 @@
 package ast
 
-import "log"
+import (
+	"log"
+	"yune/cpp"
+)
 
 type DeclarationTable struct {
 	parent       *DeclarationTable
@@ -30,13 +33,34 @@ func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	return declaration, true
 }
 
+type BuiltinDeclaration struct {
+	InferredType
+	Name string
+}
+
+func (d BuiltinDeclaration) GetName() string {
+	return d.Name
+}
+
+func (d BuiltinDeclaration) GetSpan() Span {
+	return Span{}
+}
+
+func (d BuiltinDeclaration) InferType(DeclarationTable) (errors Errors) {
+	return
+}
+
 type Declaration interface {
 	Node
 	GetName() string
 	GetType() InferredType
+	CalcType(table DeclarationTable) (errors Errors)
+	TypeCheck(table DeclarationTable) (errors Errors)
+	Lower() cpp.Declaration
 }
 
 var _ Declaration = &FunctionDeclaration{}
 var _ Declaration = &FunctionParameter{}
 var _ Declaration = &ConstantDeclaration{}
 var _ Declaration = &VariableDeclaration{}
+var _ Declaration = BuiltinDeclaration{}
