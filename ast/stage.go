@@ -55,9 +55,9 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-func (s stage) getPrefix(cache map[string]cpp.Declaration) (declarations []cpp.Declaration) {
-	for _, decl := range cpp.BuiltinDeclarations {
-		declarations = append(declarations, decl)
+func (s stage) getPrefix(topLevel map[string]Declaration) (declarations []cpp.Declaration) {
+	for _, decl := range BuiltinDeclarations {
+		declarations = append(declarations, decl.GetValue())
 	}
 	typeDeps := mapset.NewSet[string]()
 	valueDeps := mapset.NewSet[string]()

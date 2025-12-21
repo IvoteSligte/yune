@@ -250,7 +250,7 @@ func LowerTuple(ctx ITupleContext) ast.Tuple {
 
 func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
 	return ast.Type{
-		Name: LowerVariable(ctx.Variable()),
+		Name: LowerName(ctx.Name()),
 		Span: GetSpan(ctx),
 	}
 }

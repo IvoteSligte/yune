@@ -1,26 +1,46 @@
 package ast
 
-var IntDeclaration Declaration = BuiltinDeclaration{Name: "Int", InferredType: TypeType}
-var FloatDeclaration Declaration = BuiltinDeclaration{Name: "Float", InferredType: TypeType}
-var BoolDeclaration Declaration = BuiltinDeclaration{Name: "Bool", InferredType: TypeType}
-var NilDeclaration Declaration = BuiltinDeclaration{Name: "Nil", InferredType: TypeType}
+var IntDeclaration = BuiltinDeclaration{
+	Name:         "Int",
+	InferredType: TypeType,
+	Value:        InferredType{name: "Int"},
+	Raw:          "typedef Int int;",
+}
+var FloatDeclaration = BuiltinDeclaration{
+	Name:         "Float",
+	InferredType: TypeType,
+	Value:        InferredType{name: "Float"},
+	Raw:          "typedef Float float;",
+}
+var BoolDeclaration = BuiltinDeclaration{
+	Name:         "Bool",
+	InferredType: TypeType,
+	Value:        InferredType{name: "Bool"},
+	Raw:          "typedef Bool bool;",
+}
+var NilDeclaration = BuiltinDeclaration{
+	Name:         "Nil",
+	InferredType: TypeType,
+	Value:        InferredType{name: "Nil"},
+	Raw:          "typedef Nil void;",
+}
 
-var BuiltinDeclarations map[string]Declaration = map[string]Declaration{
+var BuiltinDeclarations = map[string]TopLevelDeclaration{
 	"Int":   IntDeclaration,
 	"Float": FloatDeclaration,
 	"Bool":  BoolDeclaration,
 	"Nil":   NilDeclaration,
 }
 
-var BuiltinNames []string = []string{
-	"Int",
-	"Float",
-	"Bool",
-	"Nil",
+var BuiltinNames = []string{
+	IntDeclaration.Name,
+	FloatDeclaration.Name,
+	BoolDeclaration.Name,
+	NilDeclaration.Name,
 }
 
-var TypeType InferredType = InferredType{name: "Type"}
-var IntType InferredType = InferredType{name: "Int"}
-var FloatType InferredType = InferredType{name: "Float"}
-var BoolType InferredType = InferredType{name: "Bool"}
-var NilType InferredType = InferredType{name: "Nil"}
+var TypeType = InferredType{name: "Type"}
+var IntType = IntDeclaration.Value.(InferredType)
+var FloatType = FloatDeclaration.Value.(InferredType)
+var BoolType = BoolDeclaration.Value.(InferredType)
+var NilType = NilDeclaration.Value.(InferredType)

@@ -60,6 +60,12 @@ func (e UndefinedVariable) Error() string {
 	return fmt.Sprintf("Variable %s used at %s is not defined.", e.String, e.Span)
 }
 
+type UndefinedType Name
+
+func (e UndefinedType) Error() string {
+	return fmt.Sprintf("Type %s used at %s is not defined.", e.String, e.Span)
+}
+
 type NotAFunction struct {
 	Found InferredType
 	At    Span
@@ -67,6 +73,15 @@ type NotAFunction struct {
 
 func (e NotAFunction) Error() string {
 	return fmt.Sprintf("Function call on non-function type %s at %s.", e.Found, e.At)
+}
+
+type NotAType struct {
+	Found InferredType
+	At    Span
+}
+
+func (e NotAType) Error() string {
+	return fmt.Sprintf("Non-type %s used as type at %s.", e.Found, e.At)
 }
 
 type TypeMismatch struct {

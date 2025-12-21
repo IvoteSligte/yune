@@ -32,7 +32,7 @@ constantDeclaration
     ;
 
 typeAnnotation
-    : COLON variable
+    : COLON name
     ;
 
 statementBody

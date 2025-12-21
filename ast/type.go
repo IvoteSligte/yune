@@ -9,10 +9,10 @@ import (
 
 type Type struct {
 	Span
-	// InferredType can reliably be compared with for equality, whereas Type
+	// unique can reliably be compared with for equality, whereas Type
 	// may contain aliases that would report false inequalities.
-	InferredType
-	Name     Variable
+	unique   InferredType
+	Name     Name
 	Generics []Type
 }
 
@@ -20,14 +20,35 @@ func (t Type) GetValueDependencies() []string {
 	return append(util.FlatMap(t.Generics, Type.GetValueDependencies), t.Name.GetName())
 }
 
+func (t *Type) Get() InferredType {
+	return t.unique
+}
+
 // Calculates the true type without aliases that this type represents.
-func (t *Type) CalcType(deps DeclarationTable) {
+func (t *Type) Calc(deps DeclarationTable) (errors Errors) {
 	for i := range t.Generics {
-		t.Generics[i].CalcType(deps)
+		errors = append(errors, t.Generics[i].Calc(deps)...)
 	}
-	_ = t.Name.InferType(deps)
-	// TODO: use Generics
-	t.InferredType = t.Name.GetType()
+	if len(errors) > 0 {
+		return
+	}
+	decl, ok := deps.GetTopLevel(t.Name.String)
+	if !ok {
+		errors = append(errors, UndefinedType{
+			String: t.Name.String,
+			Span:   t.Name.GetSpan(),
+		})
+		return
+	}
+	if !decl.GetType().Eq(TypeType) {
+		errors = append(errors, NotAType{
+			Found: InferredType{},
+			At:    Span{},
+		})
+	}
+	// TODO: use Generics to compute the final type
+	t.unique = decl.GetValue().(InferredType)
+	return
 }
 
 func (t Type) Lower() cpp.Type {
@@ -54,6 +75,10 @@ var _ Node = &Type{}
 type InferredType struct {
 	name     string
 	generics []InferredType
+}
+
+// value implements Value.
+func (t InferredType) value() {
 }
 
 func (t InferredType) GetType() InferredType {

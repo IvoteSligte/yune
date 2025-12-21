@@ -43,19 +43,10 @@ func (c ConstantDeclaration) String() string {
 	return fmt.Sprintf("%s %s = %s;", c.Type, c.Name, c.Value)
 }
 
-type BuiltinDeclaration struct {
-	Raw string
-}
+type BuiltinDeclaration string
 
 func (b BuiltinDeclaration) String() string {
-	return b.Raw
-}
-
-var BuiltinDeclarations []Declaration = []Declaration{
-	BuiltinDeclaration{Raw: "typedef Int int;"},
-	BuiltinDeclaration{Raw: "typedef Float float;"},
-	BuiltinDeclaration{Raw: "typedef Bool bool;"},
-	BuiltinDeclaration{Raw: "typedef Nil void;"},
+	return string(b)
 }
 
 type TopLevelDeclaration fmt.Stringer

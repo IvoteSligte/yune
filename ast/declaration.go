@@ -2,6 +2,7 @@ package ast
 
 import (
 	"log"
+	"yune/cpp"
 )
 
 type DeclarationTable struct {
@@ -35,13 +36,34 @@ func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	return declaration, ok
 }
 
+func (table *DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bool) {
+	if table.parent != nil {
+		return table.parent.GetTopLevel(name)
+	}
+	declaration, ok := table.declarations[name]
+	return declaration.(TopLevelDeclaration), ok
+}
+
 type BuiltinDeclaration struct {
 	InferredType
-	Name string
+	Name  string
+	Value Value
+	Raw   string
+}
+
+// GetValue implements TopLevelDeclaration.
+func (d BuiltinDeclaration) GetValue() Value {
+	return d.Value
+}
+
+// Lower implements TopLevelDeclaration.
+func (d BuiltinDeclaration) Lower() cpp.TopLevelDeclaration {
+	return cpp.BuiltinDeclaration(d.Raw)
 }
 
 // CalcType implements Declaration.
-func (d BuiltinDeclaration) CalcType(deps DeclarationTable) {
+func (d BuiltinDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
+	return
 }
 
 // GetTypeDependencies implements Declaration.
@@ -80,7 +102,7 @@ type Declaration interface {
 	// Queries the names of types used in this declaration, including in the body.
 	GetTypeDependencies() []string
 	// Calculates the declaration's type, but does not touch the body.
-	CalcType(deps DeclarationTable)
+	CalcType(deps DeclarationTable) Errors
 	// Returns the calculated type.
 	GetType() InferredType
 

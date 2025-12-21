@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"log"
 	"yune/cpp"
 	"yune/util"
 
@@ -54,14 +55,16 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		parent:       &DeclarationTable{declarations: BuiltinDeclarations},
 		declarations: declarations,
 	}
-	cache := map[string]cpp.Declaration{}
-
 	// remove links to builtins to prevent them from being calculated
 	for _, deps := range graph {
 		deps.priors.RemoveAll(BuiltinNames...)
 		deps.simuls.RemoveAll(BuiltinNames...)
 	}
 	ordering := stagedOrdering(graph)
+
+	if len(ordering) > 1 {
+		log.Fatalln("Multiple compilation stages are currently not supported.")
+	}
 
 	for i, stage := range ordering {
 		lowered = cpp.Module{
@@ -77,7 +80,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
 			cppDeclaration := decl.Lower()
-			cache[name] = cppDeclaration
+			decl.SetValue(cppDeclaration)
 			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
 		}
 		// the last lowered stage is simply the runtime code
@@ -94,6 +97,12 @@ type FunctionDeclaration struct {
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
+	Value      cpp.FunctionDeclaration
+}
+
+// GetValue implements TopLevelDeclaration.
+func (d *FunctionDeclaration) GetValue() Value {
+	return CppASTValue{d.Value}
 }
 
 // TypeCheckBody implements Declaration.
@@ -102,13 +111,14 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	deps.declarations = map[string]Declaration{d.GetName(): d}
 	for i := range d.Parameters {
 		param := &d.Parameters[i]
+		println("Param", param.GetName(), ":", param.GetType().String())
 		deps.declarations[param.GetName()] = param
 	}
 	errors = d.Body.InferType(deps)
 	if len(errors) > 0 {
 		return
 	}
-	returnType := d.ReturnType.InferredType
+	returnType := d.ReturnType.Get()
 	bodyType := d.Body.GetType()
 
 	if !returnType.Eq(bodyType) {
@@ -142,11 +152,12 @@ func (d FunctionDeclaration) GetTypeDependencies() (deps []string) {
 }
 
 // CalcType implements Declaration.
-func (d *FunctionDeclaration) CalcType(deps DeclarationTable) {
+func (d *FunctionDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
 	for i := range d.Parameters {
-		d.Parameters[i].CalcType(deps)
+		errors = append(errors, d.Parameters[i].CalcType(deps)...)
 	}
-	d.ReturnType.CalcType(deps)
+	errors = append(errors, d.ReturnType.Calc(deps)...)
+	return
 }
 
 // Lower implements Declaration.
@@ -166,7 +177,7 @@ func (d FunctionDeclaration) GetName() string {
 func (d FunctionDeclaration) GetType() InferredType {
 	return InferredType{
 		name:     "Fn",
-		generics: append(util.Map(d.Parameters, FunctionParameter.GetType), d.ReturnType.InferredType),
+		generics: append(util.Map(d.Parameters, FunctionParameter.GetType), d.ReturnType.Get()),
 	}
 }
 
@@ -195,7 +206,7 @@ func (d FunctionParameter) GetName() string {
 
 // GetType implements Declaration
 func (d FunctionParameter) GetType() InferredType {
-	return d.Type.InferredType
+	return d.Type.Get()
 }
 
 // GetTypeDependencies implements Declaration
@@ -209,15 +220,21 @@ func (d FunctionParameter) GetValueDependencies() (deps []string) {
 }
 
 // CalcType implements Declaration
-func (d FunctionParameter) CalcType(deps DeclarationTable) {
-	d.Type.CalcType(deps)
+func (d FunctionParameter) CalcType(deps DeclarationTable) Errors {
+	return d.Type.Calc(deps)
 }
 
 type ConstantDeclaration struct {
 	Span
-	Name Name
-	Type Type
-	Body Block
+	Name  Name
+	Type  Type
+	Body  Block
+	Value Value
+}
+
+// GetValue implements TopLevelDeclaration.
+func (d *ConstantDeclaration) GetValue() Value {
+	return d.Value
 }
 
 // TypeCheckBody implements TopLevelDeclaration.
@@ -226,7 +243,7 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	if len(errors) > 0 {
 		return
 	}
-	returnType := d.Type.InferredType
+	returnType := d.Type.Get()
 	bodyType := d.Body.GetType()
 
 	if !returnType.Eq(bodyType) {
@@ -250,8 +267,8 @@ func (d ConstantDeclaration) GetValueDependencies() []string {
 }
 
 // InferType implements Declaration.
-func (d *ConstantDeclaration) CalcType(deps DeclarationTable) {
-	d.Type.CalcType(deps)
+func (d *ConstantDeclaration) CalcType(deps DeclarationTable) Errors {
+	return d.Type.Calc(deps)
 }
 
 // Lower implements Declaration.
@@ -265,7 +282,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 
 // GetType implements Declaration.
 func (d ConstantDeclaration) GetType() InferredType {
-	return d.Type.InferredType
+	return d.Type.Get()
 }
 
 func (d ConstantDeclaration) GetName() string {
@@ -281,6 +298,11 @@ type TopLevelDeclaration interface {
 	// Lowers the declaration to executable C++ code.
 	// Assumes type checking has been performed.
 	Lower() cpp.TopLevelDeclaration
+	// Returns the value computed by running the code in
+	// the declaration's body if this is a constant.
+	// If this is not a constant, this function returns
+	// the C++ code of the declaration.
+	GetValue() Value
 }
 
 var _ TopLevelDeclaration = &FunctionDeclaration{}

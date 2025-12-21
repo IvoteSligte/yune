@@ -14,7 +14,7 @@ type VariableDeclaration struct {
 
 // TypeCheckBody implements Declaration.
 func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
-	panic("TypeCheckBody should not be called on VariableDeclaration.")
+	panic("TypeCheckBody should not be called on VariableDeclaration (use InferType).")
 }
 
 // GetTypeDependencies implements Statement.
@@ -29,12 +29,25 @@ func (d VariableDeclaration) GetValueDependencies() []string {
 
 // InferType implements Statement.
 func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
-	d.Type.CalcType(deps)
+	errors = append(d.Type.Calc(deps), d.Body.InferType(deps)...)
+	if len(errors) > 0 {
+		return
+	}
+	declType := d.Type.Get()
+	bodyType := d.Body.GetType()
+	if !declType.Eq(bodyType) {
+		errors = append(errors, TypeMismatch{
+			Expected: declType,
+			Found:    bodyType,
+			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
+		})
+		return
+	}
 	return
 }
 
-func (d *VariableDeclaration) CalcType(deps DeclarationTable) {
-	d.Type.CalcType(deps)
+func (d *VariableDeclaration) CalcType(deps DeclarationTable) Errors {
+	panic("CalcType should not be called on VariableDeclaration (use InferType).")
 }
 
 // Lower implements Statement.
@@ -51,7 +64,7 @@ func (d VariableDeclaration) GetName() string {
 }
 
 func (d VariableDeclaration) GetType() InferredType {
-	return d.Type.InferredType
+	return d.Type.Get()
 }
 
 type Assignment struct {
