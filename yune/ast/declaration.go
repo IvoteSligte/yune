@@ -14,7 +14,10 @@ func (table *DeclarationTable) Add(decl Declaration) {
 	if exists {
 		log.Fatalf("Duplicate declaration of %s in the same scope.", decl.GetName()) // TODO: handle properly
 	}
-	table.declarations[decl.GetName()] = decl
+	if table.declarations == nil {
+		table.declarations = map[string]Declaration{}
+		table.declarations[decl.GetName()] = decl
+	}
 }
 
 func (table *DeclarationTable) NewScope() DeclarationTable {
@@ -29,7 +32,7 @@ func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	if !ok && table.parent != nil {
 		return table.parent.Get(name)
 	}
-	return declaration, true
+	return declaration, ok
 }
 
 type BuiltinDeclaration struct {
