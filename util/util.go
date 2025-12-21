@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"iter"
+	"slices"
 	"strings"
 )
 
@@ -45,6 +46,23 @@ func SliceEqual[T comparable](left []T, right []T) bool {
 	}
 	for i, l := range left {
 		if l != right[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func Identity[T any](value T) T {
+	return value
+}
+
+func Any[T any](f func(T) bool, slice ...T) bool {
+	return slices.ContainsFunc(slice, f)
+}
+
+func All[T any](f func(T) bool, slice ...T) bool {
+	for _, elem := range slice {
+		if !f(elem) {
 			return false
 		}
 	}

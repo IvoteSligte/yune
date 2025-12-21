@@ -98,6 +98,12 @@ type FunctionDeclaration struct {
 
 // TypeCheckBody implements Declaration.
 func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+	deps = deps.NewScope()
+	deps.declarations = map[string]Declaration{d.GetName(): d}
+	for i := range d.Parameters {
+		param := &d.Parameters[i]
+		deps.declarations[param.GetName()] = param
+	}
 	errors = d.Body.InferType(deps)
 	if len(errors) > 0 {
 		return
@@ -116,12 +122,16 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetValueDependencies implements Declaration.
-func (d FunctionDeclaration) GetValueDependencies() []string {
-	locals := DeclarationTable{}
-	for _, param := range d.Parameters {
-		locals.Add(param)
+func (d FunctionDeclaration) GetValueDependencies() (deps []string) {
+	for _, dep := range d.Body.GetValueDependencies() {
+		equals := func(param FunctionParameter) bool {
+			return dep == param.GetName()
+		}
+		if dep != d.GetName() && !util.Any(equals, d.Parameters...) {
+			deps = append(deps, dep)
+		}
 	}
-	return append(d.GetTypeDependencies(), d.Body.GetValueDependencies()...)
+	return
 }
 
 // GetTypeDependencies implements Declaration.
