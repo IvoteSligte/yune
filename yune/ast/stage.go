@@ -55,7 +55,7 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-func (s stage) getPrefix(cache map[string]cpp.TopLevelDeclaration) (declarations []cpp.TopLevelDeclaration) {
+func (s stage) getPrefix(cache map[string]cpp.Declaration) (declarations []cpp.Declaration) {
 	for _, decl := range cpp.BuiltinDeclarations {
 		declarations = append(declarations, decl)
 	}

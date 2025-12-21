@@ -7,6 +7,10 @@ import (
 
 type Variable string
 
+func (v Variable) String() string {
+	return string(v)
+}
+
 type FunctionCall struct {
 	Function  Expression
 	Arguments []Expression

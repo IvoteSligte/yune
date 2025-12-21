@@ -26,8 +26,6 @@ func (n Name) GetName() string {
 
 type Node interface {
 	GetSpan() Span
-	InferType(deps DeclarationTable) Errors
-	GetType() InferredType
 }
 
 type IName interface {

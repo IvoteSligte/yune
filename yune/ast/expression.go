@@ -12,7 +12,7 @@ type Integer struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (i Integer) GetGlobalDependencies(locals DeclarationTable) (deps []string) {
+func (i Integer) GetGlobalDependencies() (deps []string) {
 	return
 }
 
@@ -37,7 +37,7 @@ type Float struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f Float) GetGlobalDependencies(locals DeclarationTable) (deps []string) {
+func (f Float) GetGlobalDependencies() (deps []string) {
 	return
 }
 
@@ -62,11 +62,8 @@ type Variable struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (v *Variable) GetGlobalDependencies(locals DeclarationTable) (deps []string) {
-	_, ok := locals.Get(v.GetName())
-	if !ok {
-		deps = append(deps, v.GetName())
-	}
+func (v *Variable) GetGlobalDependencies() (deps []string) {
+	deps = append(deps, v.GetName())
 	return
 }
 
@@ -83,7 +80,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (v *Variable) Lower() cpp.Expression {
-	panic("unimplemented")
+	return cpp.Variable(v.GetName())
 }
 
 type FunctionCall struct {
@@ -94,8 +91,8 @@ type FunctionCall struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f *FunctionCall) GetGlobalDependencies(locals DeclarationTable) []string {
-	return append(f.Function.GetGlobalDependencies(locals), f.Argument.GetGlobalDependencies(locals)...)
+func (f *FunctionCall) GetGlobalDependencies() []string {
+	return append(f.Function.GetGlobalDependencies(), f.Argument.GetGlobalDependencies()...)
 }
 
 // InferType implements Expression.
@@ -128,7 +125,12 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
-	panic("unimplemented")
+	return cpp.FunctionCall{
+		Function: f.Function.Lower(),
+		Arguments: []cpp.Expression{
+			f.Argument.Lower(),
+		},
+	}
 }
 
 type Tuple struct {
@@ -137,9 +139,9 @@ type Tuple struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (t *Tuple) GetGlobalDependencies(locals DeclarationTable) (deps []string) {
+func (t *Tuple) GetGlobalDependencies() (deps []string) {
 	for i := range t.Elements {
-		deps = append(deps, t.Elements[i].GetGlobalDependencies(locals)...)
+		deps = append(deps, t.Elements[i].GetGlobalDependencies()...)
 	}
 	return
 }
@@ -154,7 +156,10 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	panic("unimplemented")
+	return cpp.FunctionCall{
+		Function:  cpp.Variable("std::make_tuple"),
+		Arguments: util.Map(t.Elements, Expression.Lower),
+	}
 }
 
 // GetType implements Expression.
@@ -175,8 +180,8 @@ type Macro struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (m *Macro) GetGlobalDependencies(locals DeclarationTable) []string {
-	return m.Language.GetGlobalDependencies(locals)
+func (m *Macro) GetGlobalDependencies() []string {
+	return m.Language.GetGlobalDependencies()
 }
 
 // InferType implements Expression.
@@ -203,8 +208,8 @@ type UnaryExpression struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (u *UnaryExpression) GetGlobalDependencies(locals DeclarationTable) []string {
-	return u.Expression.GetGlobalDependencies(locals)
+func (u *UnaryExpression) GetGlobalDependencies() []string {
+	return u.Expression.GetGlobalDependencies()
 }
 
 // InferType implements Expression.
@@ -232,7 +237,15 @@ func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (u *UnaryExpression) Lower() cpp.Expression {
-	panic("unimplemented")
+	switch u.Op {
+	case Negate:
+		return cpp.UnaryExpression{
+			Op:         "-",
+			Expression: u.Expression.Lower(),
+		}
+	default:
+		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
+	}
 }
 
 type UnaryOp string
@@ -250,8 +263,8 @@ type BinaryExpression struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (b *BinaryExpression) GetGlobalDependencies(locals DeclarationTable) []string {
-	return append(b.Left.GetGlobalDependencies(locals), b.Right.GetGlobalDependencies(locals)...)
+func (b *BinaryExpression) GetGlobalDependencies() []string {
+	return append(b.Left.GetGlobalDependencies(), b.Right.GetGlobalDependencies()...)
 }
 
 // InferType implements Expression.
@@ -304,7 +317,26 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (b *BinaryExpression) Lower() cpp.Expression {
-	panic("unimplemented")
+	switch b.Op {
+	case Add:
+	case Divide:
+	case Equal:
+	case Greater:
+	case GreaterEqual:
+	case Less:
+	case LessEqual:
+	case Multiply:
+	case NotEqual:
+	case Subtract:
+		return cpp.BinaryExpression{
+			Op:    cpp.BinaryOp(b.Op),
+			Left:  b.Left.Lower(),
+			Right: b.Right.Lower(),
+		}
+	default:
+		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
+	}
+	panic("unreachable")
 }
 
 type BinaryOp string
@@ -324,7 +356,8 @@ const (
 
 type Expression interface {
 	Node
-	GetGlobalDependencies(locals DeclarationTable) []string
+	GetGlobalDependencies() []string
+	InferType(deps DeclarationTable) (errors Errors)
 	GetType() InferredType
 	Lower() cpp.Expression
 }

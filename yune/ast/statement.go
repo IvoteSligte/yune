@@ -12,14 +12,29 @@ type VariableDeclaration struct {
 	Body Block
 }
 
+// TypeCheckBody implements Declaration.
+func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+	panic("TypeCheckBody should not be called on VariableDeclaration.")
+}
+
+// GetTypeDependencies implements Statement.
+func (d *VariableDeclaration) GetTypeDependencies() []string {
+	return append(d.Type.GetValueDependencies(), d.Body.GetTypeDependencies()...)
+}
+
 // GetValueDependencies implements Statement.
-func (d VariableDeclaration) GetValueDependencies(locals DeclarationTable) []string {
-	return append(d.Type.GetValueDependencies(), d.Body.GetValueDependencies(locals.NewScope())...)
+func (d VariableDeclaration) GetValueDependencies() []string {
+	return append(d.Type.GetValueDependencies(), d.Body.GetValueDependencies()...)
 }
 
 // InferType implements Statement.
-func (d *VariableDeclaration) InferType(deps DeclarationTable) Errors {
-	return d.Type.InferType(deps)
+func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
+	d.Type.CalcType(deps)
+	return
+}
+
+func (d *VariableDeclaration) CalcType(deps DeclarationTable) {
+	d.Type.CalcType(deps)
 }
 
 // Lower implements Statement.
@@ -46,9 +61,14 @@ type Assignment struct {
 	Body   Block
 }
 
+// GetTypeDependencies implements Statement.
+func (a *Assignment) GetTypeDependencies() []string {
+	return a.Body.GetTypeDependencies()
+}
+
 // GetValueDependencies implements Statement.
-func (a *Assignment) GetValueDependencies(locals DeclarationTable) []string {
-	return append(a.Target.GetGlobalDependencies(locals), a.Body.GetValueDependencies(locals.NewScope())...)
+func (a *Assignment) GetValueDependencies() []string {
+	return append(a.Target.GetGlobalDependencies(), a.Body.GetValueDependencies()...)
 }
 
 // InferType implements Statement.
@@ -75,7 +95,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	return cpp.Assignment{
 		Target: a.Target.GetName(),
 		Op:     cpp.AssignmentOp(a.Op),
-		Value:  nil, // TODO
+		Value:  nil, // TODO: body -> expression using immediately invoked lambda
 	}
 }
 
@@ -103,11 +123,16 @@ type BranchStatement struct {
 	Else      Block
 }
 
+// GetTypeDependencies implements Statement.
+func (b *BranchStatement) GetTypeDependencies() (deps []string) {
+	return append(b.Then.GetTypeDependencies(), b.Else.GetTypeDependencies()...)
+}
+
 // GetValueDependencies implements Statement.
-func (b *BranchStatement) GetValueDependencies(locals DeclarationTable) (deps []string) {
-	deps = b.Condition.GetGlobalDependencies(locals)
-	deps = append(deps, b.Then.GetValueDependencies(locals.NewScope())...)
-	deps = append(deps, b.Else.GetValueDependencies(locals.NewScope())...)
+func (b *BranchStatement) GetValueDependencies() (deps []string) {
+	deps = b.Condition.GetGlobalDependencies()
+	deps = append(deps, b.Then.GetValueDependencies()...)
+	deps = append(deps, b.Else.GetValueDependencies()...)
 	return
 }
 
@@ -156,30 +181,45 @@ type Block struct {
 	Statements []Statement
 }
 
-// GetValueDependencies implements Node.
-func (b *Block) GetValueDependencies(locals DeclarationTable) (deps []string) {
+func (b *Block) GetValueDependencies() (deps []string) {
+	locals := map[string]Declaration{}
 	for _, stmt := range b.Statements {
+		for _, dep := range stmt.GetValueDependencies() {
+			_, ok := locals[dep]
+			if !ok {
+				deps = append(deps, dep)
+			}
+		}
+		// register local after getting dependencies to prevent cyclic definitions
 		decl, ok := stmt.(Declaration)
 		if ok {
-			locals.Add(decl)
+			locals[decl.GetName()] = decl
 		}
-		deps = append(deps, stmt.GetValueDependencies(locals)...)
 	}
 	return
 }
 
-// InferType implements Node.
+func (b *Block) GetTypeDependencies() (deps []string) {
+	for _, stmt := range b.Statements {
+		decl, ok := stmt.(Declaration)
+		if ok {
+			deps = append(deps, decl.GetTypeDependencies()...)
+		}
+	}
+	return
+}
+
 func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 	for i := range b.Statements {
-		// FIXME: does not take into account variable declarations
 		errors = append(errors, b.Statements[i].InferType(deps)...)
 		if len(errors) > 0 {
 			return
 		}
 		decl, ok := b.Statements[i].(Declaration)
 		if ok {
-			TODO
+			deps.Add(decl)
 		}
+		b.Statements[i].InferType(deps)
 	}
 	b.InferredType = b.Statements[len(b.Statements)-1].GetType()
 	return
@@ -196,9 +236,14 @@ type ExpressionStatement struct {
 	Expression
 }
 
+// GetTypeDependencies implements Statement.
+func (e *ExpressionStatement) GetTypeDependencies() (deps []string) {
+	return
+}
+
 // GetValueDependencies implements Statement.
-func (e *ExpressionStatement) GetValueDependencies(locals DeclarationTable) (deps []string) {
-	return e.Expression.GetGlobalDependencies(locals)
+func (e *ExpressionStatement) GetValueDependencies() (deps []string) {
+	return e.Expression.GetGlobalDependencies()
 }
 
 // Lower implements Statement.
@@ -210,9 +255,10 @@ type Types = []*Type
 
 type Statement interface {
 	Node
+	InferType(deps DeclarationTable) Errors
 	GetType() InferredType
-	// TODO: rename to GetGlobalDependencies
-	GetValueDependencies(locals DeclarationTable) (deps []string)
+	GetTypeDependencies() (deps []string)
+	GetValueDependencies() (deps []string)
 	Lower() cpp.Statement
 }
 

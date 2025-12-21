@@ -5,10 +5,8 @@ import (
 	"yune/util"
 )
 
-type TopLevelDeclaration fmt.Stringer
-
 type Module struct {
-	Declarations []TopLevelDeclaration
+	Declarations []Declaration
 }
 
 func (m Module) String() string {
@@ -53,9 +51,11 @@ func (b BuiltinDeclaration) String() string {
 	return b.Raw
 }
 
-var BuiltinDeclarations []TopLevelDeclaration = []TopLevelDeclaration{
+var BuiltinDeclarations []Declaration = []Declaration{
 	BuiltinDeclaration{Raw: "typedef Int int;"},
 	BuiltinDeclaration{Raw: "typedef Float float;"},
 	BuiltinDeclaration{Raw: "typedef Bool bool;"},
 	BuiltinDeclaration{Raw: "typedef Nil void;"},
 }
+
+type TopLevelDeclaration fmt.Stringer

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"yune/ast"
 	"yune/parser"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -62,18 +61,13 @@ func main() {
 	astModule := parser.LowerModule(parseTreeModule)
 
 	fmt.Println("Lowering AST to CPP...")
-	queries, finalizer := astModule.Analyze()
-	if len(queries) > 0 {
-		panic("unimplemented")
-	}
-	errors := finalizer(ast.DeclarationTable{}) // TODO: primitives/builtins
+	cppModule, errors := astModule.Lower()
 	if len(errors) > 0 {
 		for _, err := range errors {
-			fmt.Println("ERROR:", err)
+			fmt.Println("Error:", err)
 		}
-		return
+		log.Fatalln("Errors found, exiting.")
 	}
-	cppModule := astModule.Lower()
 	fmt.Println("CPP code:")
 	fmt.Println(cppModule)
 }

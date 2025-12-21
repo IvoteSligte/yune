@@ -16,23 +16,18 @@ type Type struct {
 	Generics []Type
 }
 
-// GetValueDependencies implements Node.
 func (t Type) GetValueDependencies() []string {
 	return append(util.FlatMap(t.Generics, Type.GetValueDependencies), t.Name.GetName())
 }
 
-// InferType implements Node.
-func (t *Type) InferType(deps DeclarationTable) (errors Errors) {
+// Calculates the true type without aliases that this type represents.
+func (t *Type) CalcType(deps DeclarationTable) {
 	for i := range t.Generics {
-		errors = append(errors, t.Generics[i].InferType(deps)...)
+		t.Generics[i].CalcType(deps)
 	}
-	errors = append(errors, t.Name.InferType(deps)...)
-	if len(errors) > 0 {
-		return
-	}
+	_ = t.Name.InferType(deps)
 	// TODO: use Generics
 	t.InferredType = t.Name.GetType()
-	return
 }
 
 func (t Type) Lower() cpp.Type {

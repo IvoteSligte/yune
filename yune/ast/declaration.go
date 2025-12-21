@@ -2,7 +2,6 @@ package ast
 
 import (
 	"log"
-	"yune/cpp"
 )
 
 type DeclarationTable struct {
@@ -38,6 +37,25 @@ type BuiltinDeclaration struct {
 	Name string
 }
 
+// CalcType implements Declaration.
+func (d BuiltinDeclaration) CalcType(deps DeclarationTable) {
+}
+
+// GetTypeDependencies implements Declaration.
+func (d BuiltinDeclaration) GetTypeDependencies() (deps []string) {
+	return
+}
+
+// GetValueDependencies implements Declaration.
+func (d BuiltinDeclaration) GetValueDependencies() (deps []string) {
+	return
+}
+
+// TypeCheckBody implements Declaration.
+func (d BuiltinDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+	return
+}
+
 func (d BuiltinDeclaration) GetName() string {
 	return d.Name
 }
@@ -53,10 +71,24 @@ func (d BuiltinDeclaration) InferType(DeclarationTable) (errors Errors) {
 type Declaration interface {
 	Node
 	GetName() string
+
+	// --- compilation stage 1 ---
+
+	// Queries the names of types used in this declaration, including in the body.
+	GetTypeDependencies() []string
+	// Calculates the declaration's type, but does not touch the body.
+	CalcType(deps DeclarationTable)
+	// Returns the calculated type.
 	GetType() InferredType
-	CalcType(table DeclarationTable) (errors Errors)
-	TypeCheck(table DeclarationTable) (errors Errors)
-	Lower() cpp.Declaration
+
+	// --- compilation stage 2 ---
+
+	// Queries the names of constants such as global variables and functions
+	// used in this declaration's body.
+	GetValueDependencies() []string
+	// Type checks the declaration's body, possibly resulting in errors.
+	// Assumes the declaration's type has been calculated.
+	TypeCheckBody(deps DeclarationTable) (errors Errors)
 }
 
 var _ Declaration = &FunctionDeclaration{}
