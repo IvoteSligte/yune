@@ -62,19 +62,19 @@ func (s stage) getPrefix(topLevel map[string]TopLevelDeclaration) (declarations 
 	typeDeps := mapset.NewSet[string]()
 	valueDeps := mapset.NewSet[string]()
 	for _, deps := range s {
-		typeDeps.Append(<-deps.priors.Iter())
-		valueDeps.Append(<-deps.simuls.Iter())
+		typeDeps.Append(deps.priors.ToSlice()...)
+		valueDeps.Append(deps.simuls.ToSlice()...)
 	}
 	// ensure dependencies in the current stage are not added again
 	for name := range s {
 		valueDeps.Remove(name)
 	}
 	// add type dependencies
-	for typeDep := range typeDeps.Each {
+	for typeDep := range typeDeps.Iter() {
 		declarations = append(declarations, topLevel[typeDep].Lower())
 	}
 	// add value dependencies
-	for valueDep := range valueDeps.Each {
+	for valueDep := range valueDeps.Iter() {
 		declarations = append(declarations, topLevel[valueDep].Lower())
 	}
 	return
