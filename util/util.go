@@ -24,6 +24,15 @@ func Map2[T, V1, V2 any](slice []T, function func(T) (V1, V2)) ([]V1, []V2) {
 	return result1, result2
 }
 
+func MapMap[Map ~map[K1]V1, K1, K2 comparable, V1, V2 any](m Map, function func(K1, V1) (K2, V2)) map[K2]V2 {
+	result := make(map[K2]V2, len(m))
+	for k1, v1 := range m {
+		k2, v2 := function(k1, v1)
+		result[k2] = v2
+	}
+	return result
+}
+
 func FlatMap[T, V any](slice []T, function func(T) []V) []V {
 	result := make([]V, len(slice))
 	for _, t := range slice {

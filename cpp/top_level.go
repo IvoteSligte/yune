@@ -6,7 +6,7 @@ import (
 )
 
 type Module struct {
-	Declarations []Declaration
+	Declarations []TopLevelDeclaration
 }
 
 func (m Module) String() string {
@@ -43,10 +43,15 @@ func (c ConstantDeclaration) String() string {
 	return fmt.Sprintf("%s %s = %s;", c.Type, c.Name, c.Value)
 }
 
-type BuiltinDeclaration string
+// Alias of an existing type.
+// Only allowed for builtin types.
+type TypeAlias struct {
+	Alias string
+	Of    string
+}
 
-func (b BuiltinDeclaration) String() string {
-	return string(b)
+func (t TypeAlias) String() string {
+	return fmt.Sprintf("typedef %s %s;", t.Of, t.Alias)
 }
 
 type TopLevelDeclaration fmt.Stringer

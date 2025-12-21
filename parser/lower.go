@@ -229,7 +229,7 @@ func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	return LowerStatementBlock(ctx.StatementBlock())
 }
 
-func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.Declaration {
+func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDeclaration {
 	switch {
 	case ctx.ConstantDeclaration() != nil:
 		decl := LowerConstantDeclaration(ctx.ConstantDeclaration())

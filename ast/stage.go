@@ -55,9 +55,9 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-func (s stage) getPrefix(topLevel map[string]Declaration) (declarations []cpp.Declaration) {
+func (s stage) getPrefix(topLevel map[string]TopLevelDeclaration) (declarations []cpp.TopLevelDeclaration) {
 	for _, decl := range BuiltinDeclarations {
-		declarations = append(declarations, decl.GetValue())
+		declarations = append(declarations, decl.(TopLevelDeclaration).Lower())
 	}
 	typeDeps := mapset.NewSet[string]()
 	valueDeps := mapset.NewSet[string]()
@@ -71,11 +71,11 @@ func (s stage) getPrefix(topLevel map[string]Declaration) (declarations []cpp.De
 	}
 	// add type dependencies
 	for typeDep := range typeDeps.Each {
-		declarations = append(declarations, cache[typeDep])
+		declarations = append(declarations, topLevel[typeDep].Lower())
 	}
 	// add value dependencies
 	for valueDep := range valueDeps.Each {
-		declarations = append(declarations, cache[valueDep])
+		declarations = append(declarations, topLevel[valueDep].Lower())
 	}
 	return
 }

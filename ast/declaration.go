@@ -44,55 +44,6 @@ func (table *DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bo
 	return declaration.(TopLevelDeclaration), ok
 }
 
-type BuiltinDeclaration struct {
-	InferredType
-	Name  string
-	Value Value
-	Raw   string
-}
-
-// GetValue implements TopLevelDeclaration.
-func (d BuiltinDeclaration) GetValue() Value {
-	return d.Value
-}
-
-// Lower implements TopLevelDeclaration.
-func (d BuiltinDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.BuiltinDeclaration(d.Raw)
-}
-
-// CalcType implements Declaration.
-func (d BuiltinDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
-	return
-}
-
-// GetTypeDependencies implements Declaration.
-func (d BuiltinDeclaration) GetTypeDependencies() (deps []string) {
-	return
-}
-
-// GetValueDependencies implements Declaration.
-func (d BuiltinDeclaration) GetValueDependencies() (deps []string) {
-	return
-}
-
-// TypeCheckBody implements Declaration.
-func (d BuiltinDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
-	return
-}
-
-func (d BuiltinDeclaration) GetName() string {
-	return d.Name
-}
-
-func (d BuiltinDeclaration) GetSpan() Span {
-	return Span{}
-}
-
-func (d BuiltinDeclaration) InferType(DeclarationTable) (errors Errors) {
-	return
-}
-
 type Declaration interface {
 	Node
 	GetName() string
@@ -104,7 +55,7 @@ type Declaration interface {
 	// Calculates the declaration's type, but does not touch the body.
 	CalcType(deps DeclarationTable) Errors
 	// Returns the calculated type.
-	GetType() InferredType
+	GetType() cpp.Type
 
 	// --- compilation stage 2 ---
 

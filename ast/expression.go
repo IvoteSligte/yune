@@ -27,7 +27,7 @@ func (i Integer) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (i Integer) GetType() InferredType {
+func (i Integer) GetType() cpp.Type {
 	return IntType
 }
 
@@ -52,13 +52,18 @@ func (f Float) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (f Float) GetType() InferredType {
+func (f Float) GetType() cpp.Type {
 	return FloatType
 }
 
 type Variable struct {
-	InferredType
+	cpp.Type
 	Name
+}
+
+// GetType implements Expression.
+func (v *Variable) GetType() cpp.Type {
+	return v.Type
 }
 
 // GetGlobalDependencies implements Expression.
@@ -74,7 +79,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, UndefinedVariable(v.Name))
 		return
 	}
-	v.InferredType = decl.GetType()
+	v.Type = decl.GetType()
 	return
 }
 
@@ -85,9 +90,14 @@ func (v *Variable) Lower() cpp.Expression {
 
 type FunctionCall struct {
 	Span
-	InferredType
+	cpp.Type
 	Function Expression
 	Argument Expression
+}
+
+// GetType implements Expression.
+func (f *FunctionCall) GetType() cpp.Type {
+	return f.Type
 }
 
 // GetGlobalDependencies implements Expression.
@@ -119,7 +129,7 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 		})
 		return
 	}
-	f.InferredType, _ = functionType.GetReturnType()
+	f.Type, _ = functionType.GetReturnType()
 	return
 }
 
@@ -163,10 +173,10 @@ func (t *Tuple) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (t *Tuple) GetType() InferredType {
-	return InferredType{
-		name:     "Tuple",
-		generics: util.Map(t.Elements, Expression.GetType),
+func (t *Tuple) GetType() cpp.Type {
+	return cpp.Type{
+		Name:     "Tuple",
+		Generics: util.Map(t.Elements, Expression.GetType),
 	}
 }
 
@@ -196,15 +206,20 @@ func (m *Macro) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (m *Macro) GetType() InferredType {
+func (m *Macro) GetType() cpp.Type {
 	return m.Result.GetType()
 }
 
 type UnaryExpression struct {
 	Span
-	InferredType
+	cpp.Type
 	Op         UnaryOp
 	Expression Expression
+}
+
+// GetType implements Expression.
+func (u *UnaryExpression) GetType() cpp.Type {
+	return u.Type
 }
 
 // GetGlobalDependencies implements Expression.
@@ -231,7 +246,7 @@ func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 		})
 		return
 	}
-	u.InferredType = expressionType
+	u.Type = expressionType
 	return
 }
 
@@ -256,10 +271,15 @@ const (
 
 type BinaryExpression struct {
 	Span
-	InferredType
+	cpp.Type
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
+}
+
+// GetType implements Expression.
+func (b *BinaryExpression) GetType() cpp.Type {
+	return b.Type
 }
 
 // GetGlobalDependencies implements Expression.
@@ -311,7 +331,7 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	b.InferredType = leftType
+	b.Type = leftType
 	return
 }
 
@@ -358,7 +378,7 @@ type Expression interface {
 	Node
 	GetGlobalDependencies() []string
 	InferType(deps DeclarationTable) (errors Errors)
-	GetType() InferredType
+	GetType() cpp.Type
 	Lower() cpp.Expression
 }
 

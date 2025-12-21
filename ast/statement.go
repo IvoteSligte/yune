@@ -63,8 +63,8 @@ func (d VariableDeclaration) GetName() string {
 	return d.Name.String
 }
 
-func (d VariableDeclaration) GetType() InferredType {
-	return d.Type.Get()
+func (d VariableDeclaration) GetType() cpp.Type {
+	return NilType
 }
 
 type Assignment struct {
@@ -112,7 +112,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	}
 }
 
-func (a Assignment) GetType() InferredType {
+func (a Assignment) GetType() cpp.Type {
 	return NilType
 }
 
@@ -130,10 +130,15 @@ const (
 // statements in a block are is in its .Else field.
 type BranchStatement struct {
 	Span
-	InferredType
+	cpp.Type
 	Condition Expression
 	Then      Block
 	Else      Block
+}
+
+// GetType implements Statement.
+func (b *BranchStatement) GetType() cpp.Type {
+	return b.Type
 }
 
 // GetTypeDependencies implements Statement.
@@ -190,8 +195,11 @@ func (b *BranchStatement) Lower() cpp.Statement {
 
 type Block struct {
 	Span
-	InferredType
 	Statements []Statement
+}
+
+func (b Block) GetType() cpp.Type {
+	return b.Statements[len(b.Statements)-1].GetType()
 }
 
 func (b *Block) GetValueDependencies() (deps []string) {
@@ -234,7 +242,6 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 		}
 		b.Statements[i].InferType(deps)
 	}
-	b.InferredType = b.Statements[len(b.Statements)-1].GetType()
 	return
 }
 
@@ -269,7 +276,7 @@ type Types = []*Type
 type Statement interface {
 	Node
 	InferType(deps DeclarationTable) Errors
-	GetType() InferredType
+	GetType() cpp.Type
 	GetTypeDependencies() (deps []string)
 	GetValueDependencies() (deps []string)
 	Lower() cpp.Statement

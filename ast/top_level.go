@@ -9,11 +9,11 @@ import (
 )
 
 type Module struct {
-	Declarations []Declaration
+	Declarations []TopLevelDeclaration
 }
 
 func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
-	declarations := map[string]Declaration{}
+	declarations := map[string]TopLevelDeclaration{}
 
 	// get unique mapping of name -> declaration
 	for i := range m.Declarations {
@@ -52,8 +52,10 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		}
 	}
 	table := DeclarationTable{
-		parent:       &DeclarationTable{declarations: BuiltinDeclarations},
-		declarations: declarations,
+		parent: &DeclarationTable{declarations: BuiltinDeclarations},
+		declarations: util.MapMap(declarations, func(name string, decl TopLevelDeclaration) (string, Declaration) {
+			return name, decl
+		}),
 	}
 	// remove links to builtins to prevent them from being calculated
 	for _, deps := range graph {
@@ -68,11 +70,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 
 	for i, stage := range ordering {
 		lowered = cpp.Module{
-			Declarations: stage.getPrefix(cache),
+			Declarations: stage.getPrefix(declarations),
 		}
 		// add the actual code
 		for name := range stage {
-			decl := declarations[name].(TopLevelDeclaration)
+			decl := declarations[name]
 			decl.CalcType(table)
 			errors = append(errors, decl.TypeCheckBody(table)...)
 			if len(errors) > 0 {
@@ -80,7 +82,6 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
 			cppDeclaration := decl.Lower()
-			decl.SetValue(cppDeclaration)
 			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
 		}
 		// the last lowered stage is simply the runtime code
@@ -98,11 +99,6 @@ type FunctionDeclaration struct {
 	ReturnType Type
 	Body       Block
 	Value      cpp.FunctionDeclaration
-}
-
-// GetValue implements TopLevelDeclaration.
-func (d *FunctionDeclaration) GetValue() Value {
-	return CppASTValue{d.Value}
 }
 
 // TypeCheckBody implements Declaration.
@@ -174,10 +170,10 @@ func (d FunctionDeclaration) GetName() string {
 	return d.Name.String
 }
 
-func (d FunctionDeclaration) GetType() InferredType {
-	return InferredType{
-		name:     "Fn",
-		generics: append(util.Map(d.Parameters, FunctionParameter.GetType), d.ReturnType.Get()),
+func (d FunctionDeclaration) GetType() cpp.Type {
+	return cpp.Type{
+		Name:     "Fn",
+		Generics: append(util.Map(d.Parameters, FunctionParameter.GetType), d.ReturnType.Get()),
 	}
 }
 
@@ -205,7 +201,7 @@ func (d FunctionParameter) GetName() string {
 }
 
 // GetType implements Declaration
-func (d FunctionParameter) GetType() InferredType {
+func (d FunctionParameter) GetType() cpp.Type {
 	return d.Type.Get()
 }
 
@@ -226,15 +222,9 @@ func (d FunctionParameter) CalcType(deps DeclarationTable) Errors {
 
 type ConstantDeclaration struct {
 	Span
-	Name  Name
-	Type  Type
-	Body  Block
-	Value Value
-}
-
-// GetValue implements TopLevelDeclaration.
-func (d *ConstantDeclaration) GetValue() Value {
-	return d.Value
+	Name Name
+	Type Type
+	Body Block
 }
 
 // TypeCheckBody implements TopLevelDeclaration.
@@ -281,7 +271,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 }
 
 // GetType implements Declaration.
-func (d ConstantDeclaration) GetType() InferredType {
+func (d ConstantDeclaration) GetType() cpp.Type {
 	return d.Type.Get()
 }
 
@@ -297,13 +287,15 @@ type TopLevelDeclaration interface {
 	Declaration
 	// Lowers the declaration to executable C++ code.
 	// Assumes type checking has been performed.
+	//
+	// NOTE: when the value has been computed, this function should
+	// lower to a more efficient representation instead of forcing
+	// the same code to run.
 	Lower() cpp.TopLevelDeclaration
-	// Returns the value computed by running the code in
-	// the declaration's body if this is a constant.
-	// If this is not a constant, this function returns
-	// the C++ code of the declaration.
-	GetValue() Value
 }
+
+// TODO: when types and type aliases can be created, make sure that
+// values are cached and aliases are properly resolved.
 
 var _ TopLevelDeclaration = &FunctionDeclaration{}
 var _ TopLevelDeclaration = &ConstantDeclaration{}

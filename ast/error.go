@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"yune/cpp"
 )
 
 type DuplicateDeclaration struct {
@@ -24,7 +25,7 @@ func (e DuplicateParameter) Error() string {
 
 type InvalidUnaryExpressionType struct {
 	Op   UnaryOp
-	Type InferredType
+	Type cpp.Type
 	At   Span
 }
 
@@ -39,8 +40,8 @@ func (e InvalidUnaryExpressionType) Error() string {
 
 type InvalidBinaryExpressionTypes struct {
 	Op    BinaryOp
-	Left  InferredType
-	Right InferredType
+	Left  cpp.Type
+	Right cpp.Type
 	At    Span
 }
 
@@ -67,7 +68,7 @@ func (e UndefinedType) Error() string {
 }
 
 type NotAFunction struct {
-	Found InferredType
+	Found cpp.Type
 	At    Span
 }
 
@@ -76,7 +77,7 @@ func (e NotAFunction) Error() string {
 }
 
 type NotAType struct {
-	Found InferredType
+	Found cpp.Type
 	At    Span
 }
 
@@ -85,8 +86,8 @@ func (e NotAType) Error() string {
 }
 
 type TypeMismatch struct {
-	Expected InferredType
-	Found    InferredType
+	Expected cpp.Type
+	Found    cpp.Type
 	At       Span
 }
 
@@ -95,9 +96,9 @@ func (e TypeMismatch) Error() string {
 }
 
 type BranchTypeNotEqual struct {
-	Then   InferredType
+	Then   cpp.Type
 	ThenAt Span
-	Else   InferredType
+	Else   cpp.Type
 	ElseAt Span
 }
 

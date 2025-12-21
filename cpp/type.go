@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"slices"
 	"yune/util"
 )
 
@@ -16,4 +17,32 @@ func (t Type) String() string {
 	} else {
 		return fmt.Sprintf("%s<%s>", t.Name, util.SeparatedBy(t.Generics, ", "))
 	}
+}
+
+func (left Type) Eq(right Type) bool {
+	return left.Name == right.Name &&
+		slices.EqualFunc(left.Generics, right.Generics, Type.Eq)
+}
+
+// Function type has generics[0] as argument type and generics[1] as return type.
+func (t Type) IsFunction() bool {
+	return t.Name == "Fn"
+}
+
+func (t Type) GetParameterType() (parameterType Type, isFunction bool) {
+	isFunction = t.IsFunction()
+	if !isFunction {
+		return
+	}
+	parameterType = t.Generics[0]
+	return
+}
+
+func (t Type) GetReturnType() (returnType Type, isFunction bool) {
+	isFunction = t.IsFunction()
+	if !isFunction {
+		return
+	}
+	returnType = t.Generics[1]
+	return
 }

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"slices"
 	"yune/cpp"
 	"yune/util"
 )
@@ -11,7 +10,7 @@ type Type struct {
 	Span
 	// unique can reliably be compared with for equality, whereas Type
 	// may contain aliases that would report false inequalities.
-	unique   InferredType
+	unique   cpp.Type
 	Name     Name
 	Generics []Type
 }
@@ -20,7 +19,7 @@ func (t Type) GetValueDependencies() []string {
 	return append(util.FlatMap(t.Generics, Type.GetValueDependencies), t.Name.GetName())
 }
 
-func (t *Type) Get() InferredType {
+func (t *Type) Get() cpp.Type {
 	return t.unique
 }
 
@@ -42,12 +41,15 @@ func (t *Type) Calc(deps DeclarationTable) (errors Errors) {
 	}
 	if !decl.GetType().Eq(TypeType) {
 		errors = append(errors, NotAType{
-			Found: InferredType{},
+			Found: cpp.Type{},
 			At:    Span{},
 		})
 	}
 	// TODO: use Generics to compute the final type
-	t.unique = decl.GetValue().(InferredType)
+	// and use the computed value when aliases exist
+	t.unique = cpp.Type{
+		Name: decl.Lower().(cpp.TypeAlias).Alias,
+	}
 	return
 }
 
@@ -71,60 +73,3 @@ func (t Type) String() string {
 }
 
 var _ Node = &Type{}
-
-type InferredType struct {
-	name     string
-	generics []InferredType
-}
-
-// value implements Value.
-func (t InferredType) value() {
-}
-
-func (t InferredType) GetType() InferredType {
-	return t
-}
-
-// Function type has generics[0] as argument type and generics[1] as return type.
-func (t InferredType) IsFunction() bool {
-	return t.name == "Fn"
-}
-
-func (t InferredType) GetParameterType() (parameterType InferredType, isFunction bool) {
-	isFunction = t.IsFunction()
-	if !isFunction {
-		return
-	}
-	parameterType = t.generics[0]
-	return
-}
-
-func (t InferredType) GetReturnType() (returnType InferredType, isFunction bool) {
-	isFunction = t.IsFunction()
-	if !isFunction {
-		return
-	}
-	returnType = t.generics[1]
-	return
-}
-
-func (t InferredType) IsTuple() bool {
-	return t.name == "Tuple"
-}
-
-func (t InferredType) GetGeneric(i int) InferredType {
-	return t.generics[i]
-}
-
-func (t InferredType) String() string {
-	if len(t.generics) == 0 {
-		return t.name
-	} else {
-		return fmt.Sprintf("%s<%s>", t.name, util.SeparatedBy(t.generics, ", "))
-	}
-}
-
-func (left InferredType) Eq(right InferredType) bool {
-	return left.name == right.name &&
-		slices.EqualFunc(left.generics, right.generics, InferredType.Eq)
-}
