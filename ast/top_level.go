@@ -29,6 +29,9 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			declarations[name] = m.Declarations[i]
 		}
 	}
+	if len(errors) > 0 {
+		return
+	}
 	graph := map[string]stageNode{}
 
 	// detect dependency cycles
@@ -46,9 +49,22 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				break
 			}
 		}
+		valueDeps := m.Declarations[i].GetValueDependencies()
+		// TEMP (should be a unit test)
+		for _, t := range deps {
+			if len(t) == 0 {
+				log.Fatalf("Empty type dependency of declaration '%s'", name)
+			}
+		}
+		// TEMP (should be a unit test)
+		for _, t := range valueDeps {
+			if len(t) == 0 {
+				log.Fatalf("Empty value dependency of declaration '%s'", name)
+			}
+		}
 		graph[name] = stageNode{
 			priors: mapset.NewSet(deps...),
-			simuls: mapset.NewSet(m.Declarations[i].GetValueDependencies()...),
+			simuls: mapset.NewSet(valueDeps...),
 		}
 	}
 	table := DeclarationTable{
@@ -67,7 +83,6 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(ordering) > 1 {
 		log.Fatalln("Multiple compilation stages are currently not supported.")
 	}
-
 	for i, stage := range ordering {
 		lowered = cpp.Module{
 			Declarations: stage.getPrefix(declarations),
@@ -107,7 +122,6 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	deps.declarations = map[string]Declaration{d.GetName(): d}
 	for i := range d.Parameters {
 		param := &d.Parameters[i]
-		println("Param", param.GetName(), ":", param.GetType().String())
 		deps.declarations[param.GetName()] = param
 	}
 	errors = d.Body.InferType(deps)

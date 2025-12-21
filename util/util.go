@@ -34,7 +34,7 @@ func MapMap[Map ~map[K1]V1, K1, K2 comparable, V1, V2 any](m Map, function func(
 }
 
 func FlatMap[T, V any](slice []T, function func(T) []V) []V {
-	result := make([]V, len(slice))
+	result := make([]V, 0, len(slice))
 	for _, t := range slice {
 		result = append(result, function(t)...)
 	}
