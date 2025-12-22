@@ -210,22 +210,11 @@ func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) 
 	return util.Prepend(single, LowerStatement(statementsAfter[0], statementsAfter[1:]))
 }
 
-func LowerStatementBlock(ctx IStatementBlockContext) ast.Block {
-	if len(ctx.AllStatement()) == 0 {
-		panic("A statement block should contain at least one statement.")
-	}
-	return ast.Block{
-		Statements: LowerStatement(ctx.AllStatement()[0], ctx.AllStatement()[1:]),
-	}
-}
-
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
-	if ctx.Statement() != nil {
-		return ast.Block{
-			Statements: LowerStatement(ctx.Statement(), []IStatementContext{}),
-		}
+	statements := ctx.AllStatement()
+	return ast.Block{
+		Statements: LowerStatement(statements[0], statements[1:]),
 	}
-	return LowerStatementBlock(ctx.StatementBlock())
 }
 
 func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDeclaration {

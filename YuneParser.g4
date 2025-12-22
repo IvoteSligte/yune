@@ -37,19 +37,15 @@ typeAnnotation
     ;
 
 statementBody
-    : statement // FIXME: statement already consumes a newline, but so does variableDeclaration, so 2 NEWLINEs are expected
-    | NEWLINE INDENT statementBlock DEDENT
-    ;
-
-statementBlock
-    : statement+
+    : statement
+    | NEWLINE INDENT statement+ DEDENT
     ;
 
 statement
-    : variableDeclaration NEWLINE
-    | assignment          NEWLINE
-    | branchStatement     // already has newline
-    | expression          NEWLINE
+    : variableDeclaration
+    | assignment
+    | branchStatement
+    | expression NEWLINE
     ;
 
 variableDeclaration
