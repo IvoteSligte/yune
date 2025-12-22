@@ -55,7 +55,7 @@ func (d VariableDeclaration) Lower() cpp.Statement {
 	return cpp.VariableDeclaration{
 		Name:  d.Name.String,
 		Type:  d.Type.Lower(),
-		Value: nil, // TODO
+		Value: d.Body.LowerVariableBody(),
 	}
 }
 
@@ -187,8 +187,8 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 func (b *BranchStatement) Lower() cpp.Statement {
 	return cpp.BranchStatement{
 		Condition: b.Condition.Lower(),
-		Then:      b.Then.Lower(),
-		Else:      b.Else.Lower(),
+		Then:      b.Then.LowerFunctionBody(),
+		Else:      b.Else.LowerFunctionBody(),
 	}
 }
 
@@ -244,9 +244,25 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 	return
 }
 
-func (b *Block) Lower() cpp.Block {
-	// TODO: function body vs variable body
-	return util.Map(b.Statements, Statement.Lower)
+func (b *Block) lowerStatements() []cpp.Statement {
+	statements := util.Map(b.Statements, Statement.Lower)
+
+	if !b.Statements[len(b.Statements)-1].GetType().Eq(NilType) {
+		// last expression is implicitly returned in Yune,
+		// but needs to be explicitly returned in C++
+		statements[len(statements)-1] = cpp.ReturnStatement{
+			Expression: statements[len(statements)-1].(cpp.ExpressionStatement).Expression,
+		}
+	}
+	return statements
+}
+
+func (b *Block) LowerFunctionBody() cpp.Block {
+	return b.lowerStatements()
+}
+
+func (b *Block) LowerVariableBody() cpp.LambdaBlock {
+	return b.lowerStatements()
 }
 
 var _ Node = &Block{}
@@ -267,7 +283,7 @@ func (e *ExpressionStatement) GetValueDependencies() (deps []string) {
 
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower() cpp.Statement {
-	return e.Expression.Lower()
+	return cpp.ExpressionStatement{Expression: e.Expression.Lower()}
 }
 
 type Types = []*Type

@@ -45,10 +45,14 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 
 func main() {
 	data := readFile()
+	data += "\n\n\n\n"
+	println(data)
 	inputStream := antlr.NewInputStream(data)
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
+
 	tokenStream.Fill() // lex all tokens in advance (for debugging)
+	printTokens(lexer, tokenStream)
 
 	yuneParser := parser.NewYuneParser(tokenStream)
 	parseTreeModule := yuneParser.Module()

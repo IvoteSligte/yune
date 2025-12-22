@@ -54,10 +54,12 @@ func (b Block) String() string {
 	return "{" + util.Join(b, "") + "}"
 }
 
-type LambdaBlock []Statement
+type ExpressionStatement struct {
+	Expression
+}
 
-func (b LambdaBlock) String() string {
-	return "[](){" + util.Join(b, "") + "}()"
+func (e ExpressionStatement) String() string {
+	return e.Expression.String() + ";"
 }
 
 type Statement fmt.Stringer

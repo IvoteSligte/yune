@@ -104,13 +104,13 @@ func (l *YuneLexerBase) updateIndent(indent int) {
 	}
 	if indent < l.indent {
 		for range (l.indent - indent) / 4 {
-			l.pushToken(l.makeCommonToken(YuneParserDEDENT, "<$"))
+			l.pushToken(l.makeCommonToken(YuneParserDEDENT, "<DEDENT>"))
 		}
 	} else if indent > l.indent {
 		if l.indent+4 != indent {
 			log.Fatalln("Indentation is not the next multiple of 4.")
 		}
-		l.pushToken(l.makeCommonToken(YuneParserINDENT, "$>"))
+		l.pushToken(l.makeCommonToken(YuneParserINDENT, "<INDENT>"))
 	}
 	l.indent = indent
 }

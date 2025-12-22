@@ -194,7 +194,7 @@ func (d FunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		Name:       d.Name.String,
 		Parameters: util.Map(d.Parameters, FunctionParameter.Lower),
 		ReturnType: d.ReturnType.Lower(),
-		Body:       d.Body.Lower(),
+		Body:       d.Body.LowerFunctionBody(),
 	}
 }
 
@@ -298,7 +298,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
 		Name:  d.Name.String,
 		Type:  d.Type.Lower(),
-		Value: d.Body.Lower(),
+		Value: d.Body.LowerVariableBody(),
 	}
 }
 

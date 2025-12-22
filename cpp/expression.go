@@ -51,6 +51,12 @@ func (b BinaryExpression) String() string {
 
 type BinaryOp string
 
+type LambdaBlock []Statement
+
+func (b LambdaBlock) String() string {
+	return "[](){" + util.Join(b, "") + "}()"
+}
+
 type Integer int64
 
 // String implements Expression.
