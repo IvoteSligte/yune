@@ -77,7 +77,9 @@ func (d *FunctionDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, d.Parameters[i].CalcType(deps)...)
 	}
 	errors = append(errors, d.ReturnType.Calc(deps)...)
-
+	if len(errors) > 0 {
+		return
+	}
 	if d.GetName() == "main" && !d.GetType().Eq(MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetType(),

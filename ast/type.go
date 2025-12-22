@@ -48,6 +48,7 @@ func (t *Type) Calc(deps DeclarationTable) (errors Errors) {
 			Found: cpp.Type{},
 			At:    Span{},
 		})
+		return
 	}
 	// TODO: use Generics to compute the final type
 	// and use the computed value once (non-builtin) aliases exist

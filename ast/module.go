@@ -10,7 +10,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-
 type Module struct {
 	Declarations []TopLevelDeclaration
 }
@@ -91,17 +90,25 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		lowered = cpp.Module{
 			Declarations: stage.getPrefix(declarations),
 		}
-		// add the actual code
+		// compute signatures
 		for name := range stage {
 			decl := declarations[name]
 			errors = append(errors, decl.CalcType(table)...)
-			if len(errors) > 0 {
-				return
-			}
+		}
+		if len(errors) > 0 {
+			return
+		}
+		// type check bodies
+		for name := range stage {
+			decl := declarations[name]
 			errors = append(errors, decl.TypeCheckBody(table)...)
-			if len(errors) > 0 {
-				return
-			}
+		}
+		if len(errors) > 0 {
+			return
+		}
+		// add the actual code
+		for name := range stage {
+			decl := declarations[name]
 			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
 			cppDeclaration := decl.Lower()
 			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
