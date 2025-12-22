@@ -235,9 +235,10 @@ func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 	}
 	expressionType := u.Expression.GetType()
 	switch {
-	case expressionType.Eq(IntType):
-	case expressionType.Eq(FloatType):
-		return
+	case
+		expressionType.Eq(IntType),
+		expressionType.Eq(FloatType):
+		break
 	default:
 		errors = append(errors, InvalidUnaryExpressionType{
 			Op:   u.Op,
@@ -293,6 +294,7 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
+	println(b.Lower().String())
 	leftType := b.Left.GetType()
 	rightType := b.Right.GetType()
 	if !leftType.Eq(rightType) {
@@ -317,16 +319,16 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 		return
 	}
 	switch b.Op {
-	case Add:
-	case Divide:
-	case Equal:
-	case Greater:
-	case GreaterEqual:
-	case Less:
-	case LessEqual:
-	case Multiply:
-	case NotEqual:
-	case Subtract:
+	case Add,
+		Divide,
+		Equal,
+		Greater,
+		GreaterEqual,
+		Less,
+		LessEqual,
+		Multiply,
+		NotEqual,
+		Subtract:
 		break
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
@@ -338,16 +340,16 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 // Lower implements Expression.
 func (b *BinaryExpression) Lower() cpp.Expression {
 	switch b.Op {
-	case Add:
-	case Divide:
-	case Equal:
-	case Greater:
-	case GreaterEqual:
-	case Less:
-	case LessEqual:
-	case Multiply:
-	case NotEqual:
-	case Subtract:
+	case Add,
+		Divide,
+		Equal,
+		Greater,
+		GreaterEqual,
+		Less,
+		LessEqual,
+		Multiply,
+		NotEqual,
+		Subtract:
 		return cpp.BinaryExpression{
 			Op:    cpp.BinaryOp(b.Op),
 			Left:  b.Left.Lower(),
@@ -356,7 +358,6 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	panic("unreachable")
 }
 
 type BinaryOp string

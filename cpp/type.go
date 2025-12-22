@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"log"
 	"slices"
 	"yune/util"
 )
@@ -12,6 +13,9 @@ type Type struct {
 }
 
 func (t Type) String() string {
+	if len(t.Name) == 0 {
+		log.Println("WARN: Found empty type name.")
+	}
 	if len(t.Generics) == 0 {
 		return t.Name
 	} else {
