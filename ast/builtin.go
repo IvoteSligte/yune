@@ -39,6 +39,12 @@ var BuiltinDeclarations = map[string]Declaration{
 }
 
 var TypeType = cpp.Type{Name: "Type"}
+var MainType = cpp.Type{
+	Name: "Fn",
+	// NOTE: main() returns int for compatibility with C++,
+	// though this may change in the future
+	Generics: []cpp.Type{IntType},
+}
 var IntType = IntDeclaration.Get()
 var FloatType = FloatDeclaration.Get()
 var BoolType = BoolDeclaration.Get()

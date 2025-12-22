@@ -30,7 +30,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	bodyType := d.Body.GetType()
 
 	if !returnType.Eq(bodyType) {
-		errors = append(errors, TypeMismatch{
+		errors = append(errors, ReturnTypeMismatch{
 			Expected: returnType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
@@ -77,6 +77,13 @@ func (d *FunctionDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, d.Parameters[i].CalcType(deps)...)
 	}
 	errors = append(errors, d.ReturnType.Calc(deps)...)
+
+	if d.GetName() == "main" && !d.GetType().Eq(MainType) {
+		errors = append(errors, InvalidMainSignature{
+			Found: d.GetType(),
+			At:    d.Name.GetSpan(),
+		})
+	}
 	return
 }
 
@@ -157,12 +164,12 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	if len(errors) > 0 {
 		return
 	}
-	returnType := d.Type.Get()
+	declType := d.Type.Get()
 	bodyType := d.Body.GetType()
 
-	if !returnType.Eq(bodyType) {
-		errors = append(errors, TypeMismatch{
-			Expected: returnType,
+	if !declType.Eq(bodyType) {
+		errors = append(errors, ConstantTypeMismatch{
+			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})

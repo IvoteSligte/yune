@@ -36,7 +36,7 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 	declType := d.Type.Get()
 	bodyType := d.Body.GetType()
 	if !declType.Eq(bodyType) {
-		errors = append(errors, TypeMismatch{
+		errors = append(errors, VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
@@ -93,7 +93,7 @@ func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
 	targetType := a.Target.GetType()
 	bodyType := a.Body.GetType()
 	if !targetType.Eq(bodyType) {
-		errors = append(errors, TypeMismatch{
+		errors = append(errors, AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
 			At:       a.Body.GetSpan(),

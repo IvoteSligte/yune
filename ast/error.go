@@ -76,14 +76,44 @@ func (e NotAType) Error() string {
 	return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
 }
 
-type TypeMismatch struct {
+type AssignmentTypeMismatch struct {
 	Expected cpp.Type
 	Found    cpp.Type
 	At       Span
 }
 
-func (e TypeMismatch) Error() string {
-	return fmt.Sprintf("Expected type '%s', found type '%s' at %s.", e.Expected, e.Found, e.At)
+func (e AssignmentTypeMismatch) Error() string {
+	return fmt.Sprintf("Expected variable type '%s' for assignment, but found type '%s' at %s.", e.Expected, e.Found, e.At)
+}
+
+type ReturnTypeMismatch struct {
+	Expected cpp.Type
+	Found    cpp.Type
+	At       Span
+}
+
+func (e ReturnTypeMismatch) Error() string {
+	return fmt.Sprintf("Expected return type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+}
+
+type VariableTypeMismatch struct {
+	Expected cpp.Type
+	Found    cpp.Type
+	At       Span
+}
+
+func (e VariableTypeMismatch) Error() string {
+	return fmt.Sprintf("Expected declared variable type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+}
+
+type ConstantTypeMismatch struct {
+	Expected cpp.Type
+	Found    cpp.Type
+	At       Span
+}
+
+func (e ConstantTypeMismatch) Error() string {
+	return fmt.Sprintf("Expected declared constant type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
 }
 
 type ArgumentTypeMismatch struct {
@@ -93,7 +123,7 @@ type ArgumentTypeMismatch struct {
 }
 
 func (e ArgumentTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected argument type '%s', found type '%s' at %s.", e.Expected, e.Found, e.At)
+	return fmt.Sprintf("Expected argument type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
 }
 
 type InvalidConditionType struct {
@@ -102,7 +132,7 @@ type InvalidConditionType struct {
 }
 
 func (e InvalidConditionType) Error() string {
-	return fmt.Sprintf("Expected type 'Bool' for condition, found type '%s' at %s.", e.Found, e.At)
+	return fmt.Sprintf("Expected type 'Bool' for condition, but found type '%s' at %s.", e.Found, e.At)
 }
 
 type BranchTypeNotEqual struct {
@@ -120,6 +150,15 @@ func (e BranchTypeNotEqual) Error() string {
 		e.Else,
 		e.ElseAt,
 	)
+}
+
+type InvalidMainSignature struct {
+	Found cpp.Type
+	At    Span
+}
+
+func (e InvalidMainSignature) Error() string {
+	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, MainType, e.Found)
 }
 
 type CyclicDependency struct {
