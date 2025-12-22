@@ -11,16 +11,7 @@ type DuplicateDeclaration struct {
 }
 
 func (e DuplicateDeclaration) Error() string {
-	return fmt.Sprintf("%s previously defined at %s redefined at %s.", e.First.GetName(), e.First.GetSpan(), e.Second.GetSpan())
-}
-
-type DuplicateParameter struct {
-	First  FunctionParameter
-	Second FunctionParameter
-}
-
-func (e DuplicateParameter) Error() string {
-	return fmt.Sprintf("%s previously defined at %s redefined at %s.", e.First.Name, e.First.Span, e.Second.Span)
+	return fmt.Sprintf("'%s' previously defined at '%s' redefined at %s.", e.First.GetName(), e.First.GetSpan(), e.Second.GetSpan())
 }
 
 type InvalidUnaryExpressionType struct {
@@ -31,7 +22,7 @@ type InvalidUnaryExpressionType struct {
 
 func (e InvalidUnaryExpressionType) Error() string {
 	return fmt.Sprintf(
-		"Unary operator %s cannot be applied to expression of type %s at %s.",
+		"Unary operator %s cannot be applied to expression of type '%s' at %s.",
 		e.Op,
 		e.Type,
 		e.At,
@@ -47,7 +38,7 @@ type InvalidBinaryExpressionTypes struct {
 
 func (e InvalidBinaryExpressionTypes) Error() string {
 	return fmt.Sprintf(
-		"Binary operator %s cannot be applied to expressions of types %s and %s at %s.",
+		"Binary operator %s cannot be applied to expressions of types '%s' and '%s' at %s.",
 		e.Op,
 		e.Left,
 		e.Right,

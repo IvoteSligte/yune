@@ -12,9 +12,13 @@ type Type struct {
 	Generics []Type
 }
 
+func (t Type) IsUninit() bool {
+	return t.Eq(Type{})
+}
+
 func (t Type) String() string {
 	if len(t.Name) == 0 {
-		log.Println("WARN: Found empty type name.")
+		log.Println("WARN: Found empty type name when converting to string.")
 	}
 	if len(t.Generics) == 0 {
 		return t.Name

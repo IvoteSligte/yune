@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"log"
 	"yune/cpp"
 	"yune/util"
 )
@@ -79,7 +80,11 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, UndefinedVariable(v.Name))
 		return
 	}
+	if decl.GetType().IsUninit() {
+		log.Printf("WARN: Type queried before being calculated on declaration '%s'.", v.GetName())
+	}
 	v.Type = decl.GetType()
+	println("type:", v.Type.String(), ";")
 	return
 }
 
@@ -319,7 +324,8 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 		return
 	}
 	switch b.Op {
-	case Add,
+	case
+		Add,
 		Divide,
 		Equal,
 		Greater,
@@ -340,7 +346,8 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 // Lower implements Expression.
 func (b *BinaryExpression) Lower() cpp.Expression {
 	switch b.Op {
-	case Add,
+	case
+		Add,
 		Divide,
 		Equal,
 		Greater,

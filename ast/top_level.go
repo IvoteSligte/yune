@@ -55,13 +55,13 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// TEMP (should be a unit test)
 		for _, t := range deps {
 			if len(t) == 0 {
-				log.Fatalf("Empty type dependency of declaration '%s'", name)
+				log.Printf("WARN: Empty type dependency of declaration '%s'.", name)
 			}
 		}
 		// TEMP (should be a unit test)
 		for _, t := range valueDeps {
 			if len(t) == 0 {
-				log.Fatalf("Empty value dependency of declaration '%s'", name)
+				log.Printf("WARN: Empty value dependency of declaration '%s'.", name)
 			}
 		}
 		graph[name] = stageNode{
@@ -165,6 +165,18 @@ func (d FunctionDeclaration) GetTypeDependencies() (deps []string) {
 
 // CalcType implements Declaration.
 func (d *FunctionDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
+	// check for duplicate parameters
+	paramNames := map[string]*FunctionParameter{}
+	for i := range d.Parameters {
+		param := &d.Parameters[i]
+		prev, exists := paramNames[param.GetName()]
+		if exists {
+			errors = append(errors, DuplicateDeclaration{
+				First:  prev,
+				Second: param,
+			})
+		}
+	}
 	for i := range d.Parameters {
 		errors = append(errors, d.Parameters[i].CalcType(deps)...)
 	}
@@ -232,7 +244,7 @@ func (d FunctionParameter) GetValueDependencies() (deps []string) {
 }
 
 // CalcType implements Declaration
-func (d FunctionParameter) CalcType(deps DeclarationTable) Errors {
+func (d *FunctionParameter) CalcType(deps DeclarationTable) Errors {
 	return d.Type.Calc(deps)
 }
 

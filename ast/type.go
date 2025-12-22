@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"log"
 	"yune/cpp"
 	"yune/util"
 )
@@ -20,6 +21,9 @@ func (t Type) GetValueDependencies() []string {
 }
 
 func (t *Type) Get() cpp.Type {
+	if t.unique.IsUninit() {
+		log.Printf("Get() called on unresolved type '%s'.", t.Name)
+	}
 	return t.unique
 }
 
@@ -48,6 +52,9 @@ func (t *Type) Calc(deps DeclarationTable) (errors Errors) {
 	// TODO: use Generics to compute the final type
 	// and use the computed value once (non-builtin) aliases exist
 	t.unique = decl.Lower().(cpp.TypeAlias).Get()
+	if len(t.unique.Name) == 0 {
+		log.Printf("Calc() resolved to empty type name on type '%s'.", t.unique.Name)
+	}
 	return
 }
 
