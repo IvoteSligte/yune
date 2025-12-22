@@ -46,6 +46,10 @@ func (l *YuneLexerBase) pushToken(token antlr.Token) {
 	l.queue = append(l.queue, token)
 }
 
+func (l *YuneLexerBase) Consume() {
+	l.Interpreter.Consume(l.GetInputStream())
+}
+
 // Handles lexing indentation on the new line.
 func (l *YuneLexerBase) onNewline() (indent int) {
 	input := l.GetInputStream()
@@ -54,13 +58,13 @@ func (l *YuneLexerBase) onNewline() (indent int) {
 		switch input.LA(1) {
 		case ' ':
 			indent++
-			input.Consume()
+			l.Consume()
 		case '\t':
 			indent = (indent/4 + 1) * 4
-			input.Consume()
+			l.Consume()
 		case '\n':
 			indent = 0
-			input.Consume()
+			l.Consume()
 		case EOF:
 			return 0
 		default:
@@ -78,11 +82,11 @@ func (l *YuneLexerBase) onMacroNewline() (indent int) {
 		switch input.LA(1) {
 		case ' ':
 			indent++
-			input.Consume()
+			l.Consume()
 			continue
 		case '\t':
 			indent = (indent/4 + 1) * 4
-			input.Consume()
+			l.Consume()
 			continue
 		case '\n':
 			// empty lines are also passed to macros
@@ -142,7 +146,7 @@ func (l *YuneLexerBase) lexMacro() {
 			return
 		default:
 			text += string(rune(c))
-			input.Consume()
+			l.Consume()
 		}
 	}
 }

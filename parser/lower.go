@@ -186,7 +186,6 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 
 func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) []ast.Statement {
 	var single ast.Statement
-
 	switch {
 	case ctx.VariableDeclaration() != nil:
 		stmt := LowerVariableDeclaration(ctx.VariableDeclaration())
