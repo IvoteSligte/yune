@@ -5,3 +5,4 @@ fibonacci(n: Int): Int =
 
 main(): Int =
 	a: Int = fibonacci(10)
+	0

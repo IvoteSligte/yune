@@ -45,6 +45,7 @@ statement
     : variableDeclaration
     | assignment
     | branchStatement
+    // only this should have a newline because all statements end in an expression
     | expression NEWLINE
     ;
 
