@@ -53,7 +53,7 @@ statement
     ;
 
 variableDeclaration
-    : LET constantDeclaration
+    : constantDeclaration
     ;
 
 assignment

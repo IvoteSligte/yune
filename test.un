@@ -4,4 +4,4 @@ fibonacci(n: Int): Int =
 	fibonacci(n - 1) + fibonacci(n - 2)
 
 main(): Nil =
-	fibonacci(10)
+	a: Int = fibonacci(10)
