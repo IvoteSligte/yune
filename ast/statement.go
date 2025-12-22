@@ -167,10 +167,9 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 	elseType := b.Else.GetType()
 
 	if !conditionType.Eq(BoolType) {
-		errors = append(errors, TypeMismatch{
-			Expected: BoolType,
-			Found:    conditionType,
-			At:       b.Condition.GetSpan(),
+		errors = append(errors, InvalidConditionType{
+			Found: conditionType,
+			At:    b.Condition.GetSpan(),
 		})
 	}
 	if !thenType.Eq(elseType) {

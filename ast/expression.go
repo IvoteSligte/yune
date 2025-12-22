@@ -126,7 +126,7 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 		return
 	}
 	if !argumentType.Eq(expectedType) {
-		errors = append(errors, TypeMismatch{
+		errors = append(errors, ArgumentTypeMismatch{
 			Expected: expectedType,
 			Found:    argumentType,
 			At:       f.Argument.GetSpan(),
@@ -325,19 +325,20 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 	case
 		Add,
 		Divide,
+		Multiply,
+		Subtract:
+		b.Type = leftType
+	case
 		Equal,
 		Greater,
 		GreaterEqual,
 		Less,
 		LessEqual,
-		Multiply,
-		NotEqual,
-		Subtract:
-		break
+		NotEqual:
+		b.Type = BoolType
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	b.Type = leftType
 	return
 }
 

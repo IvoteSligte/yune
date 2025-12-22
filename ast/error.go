@@ -49,13 +49,13 @@ func (e InvalidBinaryExpressionTypes) Error() string {
 type UndefinedVariable Name
 
 func (e UndefinedVariable) Error() string {
-	return fmt.Sprintf("Variable %s used at %s is not defined.", e.String, e.Span)
+	return fmt.Sprintf("Variable '%s' used at %s is not defined.", e.String, e.Span)
 }
 
 type UndefinedType Name
 
 func (e UndefinedType) Error() string {
-	return fmt.Sprintf("Type %s used at %s is not defined.", e.String, e.Span)
+	return fmt.Sprintf("Type '%s' used at %s is not defined.", e.String, e.Span)
 }
 
 type NotAFunction struct {
@@ -64,7 +64,7 @@ type NotAFunction struct {
 }
 
 func (e NotAFunction) Error() string {
-	return fmt.Sprintf("Function call on non-function type %s at %s.", e.Found, e.At)
+	return fmt.Sprintf("Function call on non-function type '%s' at %s.", e.Found, e.At)
 }
 
 type NotAType struct {
@@ -73,7 +73,7 @@ type NotAType struct {
 }
 
 func (e NotAType) Error() string {
-	return fmt.Sprintf("Non-type %s used as type at %s.", e.Found, e.At)
+	return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
 }
 
 type TypeMismatch struct {
@@ -83,7 +83,26 @@ type TypeMismatch struct {
 }
 
 func (e TypeMismatch) Error() string {
-	return fmt.Sprintf("Expected type %s, found type %s at %s.", e.Expected, e.Found, e.At)
+	return fmt.Sprintf("Expected type '%s', found type '%s' at %s.", e.Expected, e.Found, e.At)
+}
+
+type ArgumentTypeMismatch struct {
+	Expected cpp.Type
+	Found    cpp.Type
+	At       Span
+}
+
+func (e ArgumentTypeMismatch) Error() string {
+	return fmt.Sprintf("Expected argument type '%s', found type '%s' at %s.", e.Expected, e.Found, e.At)
+}
+
+type InvalidConditionType struct {
+	Found cpp.Type
+	At    Span
+}
+
+func (e InvalidConditionType) Error() string {
+	return fmt.Sprintf("Expected type 'Bool' for condition, found type '%s' at %s.", e.Found, e.At)
 }
 
 type BranchTypeNotEqual struct {
@@ -95,7 +114,7 @@ type BranchTypeNotEqual struct {
 
 func (e BranchTypeNotEqual) Error() string {
 	return fmt.Sprintf(
-		"Types of branches %s at %s and %s at %s are not equal.",
+		"Types of branches '%s' at %s and '%s' at %s are not equal.",
 		e.Then,
 		e.ThenAt,
 		e.Else,
@@ -109,5 +128,5 @@ type CyclicDependency struct {
 }
 
 func (e CyclicDependency) Error() string {
-	return fmt.Sprintf("Cyclic dependency between declarations %s and %s.", e.First, e.Second)
+	return fmt.Sprintf("Cyclic dependency between declarations '%s' and '%s'.", e.First, e.Second)
 }

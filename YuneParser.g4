@@ -16,11 +16,12 @@ name
     ;
 
 functionDeclaration
-    : name LPAREN functionParameters RPAREN typeAnnotation EQUAL statementBody
+    : name functionParameters typeAnnotation EQUAL statementBody
     ;
 
 functionParameters
-    : functionParameter (COMMA functionParameter)*
+    : LPAREN RPAREN
+    | LPAREN functionParameter (COMMA functionParameter)* RPAREN
     ;
 
 functionParameter

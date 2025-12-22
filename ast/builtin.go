@@ -14,20 +14,20 @@ var IntDeclaration = BuiltinTypeDeclaration{
 }
 var FloatDeclaration = BuiltinTypeDeclaration{
 	cpp.TypeAlias{
-		Alias: "Int",
-		Of:    "int",
+		Alias: "Float",
+		Of:    "float",
 	},
 }
 var BoolDeclaration = BuiltinTypeDeclaration{
 	cpp.TypeAlias{
-		Alias: "Int",
-		Of:    "int",
+		Alias: "Bool",
+		Of:    "bool",
 	},
 }
 var NilDeclaration = BuiltinTypeDeclaration{
 	cpp.TypeAlias{
-		Alias: "Int",
-		Of:    "int",
+		Alias: "Nil",
+		Of:    "void",
 	},
 }
 

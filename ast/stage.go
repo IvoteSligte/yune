@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"log"
 	"yune/cpp"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -71,11 +72,19 @@ func (s stage) getPrefix(topLevel map[string]TopLevelDeclaration) (declarations 
 	}
 	// add type dependencies
 	for typeDep := range typeDeps.Iter() {
-		declarations = append(declarations, topLevel[typeDep].Lower())
+		decl, ok := topLevel[typeDep]
+		if !ok {
+			log.Fatalf("Tried to access non-existent type dependency declaration '%s'.", typeDep)
+		}
+		declarations = append(declarations, decl.Lower())
 	}
 	// add value dependencies
 	for valueDep := range valueDeps.Iter() {
-		declarations = append(declarations, topLevel[valueDep].Lower())
+		decl, ok := topLevel[valueDep]
+		if !ok {
+			log.Fatalf("Tried to access non-existent value dependency declaration '%s'.", valueDep)
+		}
+		declarations = append(declarations, decl.Lower())
 	}
 	return
 }

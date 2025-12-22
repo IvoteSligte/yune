@@ -40,6 +40,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
 		deps := m.Declarations[i].GetTypeDependencies()
+		// TODO: cyclic dependency detection for non-function constants (using .simuls)
 		for _, dep := range deps {
 			depDeps, ok := graph[dep]
 
@@ -92,7 +93,10 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// add the actual code
 		for name := range stage {
 			decl := declarations[name]
-			decl.CalcType(table)
+			errors = append(errors, decl.CalcType(table)...)
+			if len(errors) > 0 {
+				return
+			}
 			errors = append(errors, decl.TypeCheckBody(table)...)
 			if len(errors) > 0 {
 				return

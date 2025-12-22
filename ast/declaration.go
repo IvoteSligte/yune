@@ -21,14 +21,17 @@ func (table *DeclarationTable) Add(decl Declaration) {
 	}
 }
 
-func (table *DeclarationTable) NewScope() DeclarationTable {
+func (table DeclarationTable) NewScope() DeclarationTable {
 	return DeclarationTable{
-		parent:       table,
+		parent:       &table,
 		declarations: map[string]Declaration{},
 	}
 }
 
 func (table *DeclarationTable) Get(name string) (Declaration, bool) {
+	if table == table.parent {
+		log.Panicf("Table at address %p has itself as parent.", table)
+	}
 	declaration, ok := table.declarations[name]
 	if !ok && table.parent != nil {
 		return table.parent.Get(name)
