@@ -36,7 +36,6 @@ func (l *YuneLexerBase) makeCommonToken(ttype int, text string) antlr.Token {
 		antlr.TokenDefaultChannel,
 		index-len(text),
 		index,
-		// FIXME: not accurate since they are interpreter-managed, not stream-managed
 		l.GetLine(),
 		l.GetCharPositionInLine())
 	return t
