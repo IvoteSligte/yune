@@ -50,6 +50,10 @@ type TypeAlias struct {
 	Of    string
 }
 
+func (t TypeAlias) Get() Type {
+	return Type{Name: t.Alias}
+}
+
 func (t TypeAlias) String() string {
 	return fmt.Sprintf("typedef %s %s;", t.Of, t.Alias)
 }

@@ -2,6 +2,8 @@ package ast
 
 import (
 	"log"
+	"maps"
+	"slices"
 	"yune/cpp"
 	"yune/util"
 
@@ -75,8 +77,8 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	}
 	// remove links to builtins to prevent them from being calculated
 	for _, deps := range graph {
-		deps.priors.RemoveAll(BuiltinNames...)
-		deps.simuls.RemoveAll(BuiltinNames...)
+		deps.priors.RemoveAll(slices.Collect(maps.Keys(BuiltinDeclarations))...)
+		deps.simuls.RemoveAll(slices.Collect(maps.Keys(BuiltinDeclarations))...)
 	}
 	ordering := stagedOrdering(graph)
 

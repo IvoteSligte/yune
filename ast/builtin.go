@@ -2,96 +2,86 @@ package ast
 
 import "yune/cpp"
 
-type BuiltinDeclaration struct {
-	cpp.Type
-	Name  string
-	Value cpp.Node
+type BuiltinTypeDeclaration struct {
+	cpp.TypeAlias
 }
 
-var IntDeclaration = BuiltinDeclaration{
-	Name:  "Int",
-	Value: cpp.Type{Name: "int"},
-	Type:  TypeType,
+var IntDeclaration = BuiltinTypeDeclaration{
+	cpp.TypeAlias{
+		Alias: "Int",
+		Of:    "int",
+	},
 }
-var FloatDeclaration = BuiltinDeclaration{
-	Name:  "Float",
-	Type:  TypeType,
-	Value: cpp.Type{Name: "float"},
+var FloatDeclaration = BuiltinTypeDeclaration{
+	cpp.TypeAlias{
+		Alias: "Int",
+		Of:    "int",
+	},
 }
-var BoolDeclaration = BuiltinDeclaration{
-	Name:  "Bool",
-	Type:  TypeType,
-	Value: cpp.Type{Name: "bool"},
+var BoolDeclaration = BuiltinTypeDeclaration{
+	cpp.TypeAlias{
+		Alias: "Int",
+		Of:    "int",
+	},
 }
-var NilDeclaration = BuiltinDeclaration{
-	Name:  "Nil",
-	Type:  TypeType,
-	Value: cpp.Type{Name: "void"},
+var NilDeclaration = BuiltinTypeDeclaration{
+	cpp.TypeAlias{
+		Alias: "Int",
+		Of:    "int",
+	},
 }
 
 var BuiltinDeclarations = map[string]Declaration{
-	"Int":   IntDeclaration,
-	"Float": FloatDeclaration,
-	"Bool":  BoolDeclaration,
-	"Nil":   NilDeclaration,
-}
-
-var BuiltinNames = []string{
-	IntDeclaration.Name,
-	FloatDeclaration.Name,
-	BoolDeclaration.Name,
-	NilDeclaration.Name,
+	IntDeclaration.GetName():   IntDeclaration,
+	FloatDeclaration.GetName(): FloatDeclaration,
+	BoolDeclaration.GetName():  BoolDeclaration,
+	NilDeclaration.GetName():   NilDeclaration,
 }
 
 var TypeType = cpp.Type{Name: "Type"}
-var IntType = IntDeclaration.Value.(cpp.Type)
-var FloatType = FloatDeclaration.Value.(cpp.Type)
-var BoolType = BoolDeclaration.Value.(cpp.Type)
-var NilType = NilDeclaration.Value.(cpp.Type)
+var IntType = IntDeclaration.GetType()
+var FloatType = FloatDeclaration.GetType()
+var BoolType = BoolDeclaration.GetType()
+var NilType = NilDeclaration.GetType()
 
 // GetType implements Declaration.
-func (d BuiltinDeclaration) GetType() cpp.Type {
-	return d.Type
-}
-
-// GetValue implements TopLevelDeclaration.
-func (d BuiltinDeclaration) GetValue() cpp.TopLevelDeclaration {
-	return d.Value
+func (d BuiltinTypeDeclaration) GetType() cpp.Type {
+	return TypeType
 }
 
 // Lower implements TopLevelDeclaration.
-func (d BuiltinDeclaration) Lower() cpp.TopLevelDeclaration {
-	return d.Value
+func (d BuiltinTypeDeclaration) Lower() cpp.TopLevelDeclaration {
+	return d.TypeAlias
 }
 
 // CalcType implements Declaration.
-func (d BuiltinDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
+func (d BuiltinTypeDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
 	return
 }
 
 // GetTypeDependencies implements Declaration.
-func (d BuiltinDeclaration) GetTypeDependencies() (deps []string) {
+func (d BuiltinTypeDeclaration) GetTypeDependencies() (deps []string) {
 	return
 }
 
 // GetValueDependencies implements Declaration.
-func (d BuiltinDeclaration) GetValueDependencies() (deps []string) {
+func (d BuiltinTypeDeclaration) GetValueDependencies() (deps []string) {
 	return
 }
 
 // TypeCheckBody implements Declaration.
-func (d BuiltinDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+func (d BuiltinTypeDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
 	return
 }
 
-func (d BuiltinDeclaration) GetName() string {
-	return d.Name
+func (d BuiltinTypeDeclaration) GetName() string {
+	return d.Alias
 }
 
-func (d BuiltinDeclaration) GetSpan() Span {
+func (d BuiltinTypeDeclaration) GetSpan() Span {
 	return Span{}
 }
 
-func (d BuiltinDeclaration) InferType(DeclarationTable) (errors Errors) {
+func (d BuiltinTypeDeclaration) InferType(DeclarationTable) (errors Errors) {
 	return
 }

@@ -71,4 +71,4 @@ var _ Declaration = &FunctionDeclaration{}
 var _ Declaration = &FunctionParameter{}
 var _ Declaration = &ConstantDeclaration{}
 var _ Declaration = &VariableDeclaration{}
-var _ Declaration = BuiltinDeclaration{}
+var _ Declaration = BuiltinTypeDeclaration{}

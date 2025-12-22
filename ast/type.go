@@ -46,10 +46,8 @@ func (t *Type) Calc(deps DeclarationTable) (errors Errors) {
 		})
 	}
 	// TODO: use Generics to compute the final type
-	// and use the computed value when aliases exist
-	t.unique = cpp.Type{
-		Name: decl.Lower().(cpp.TypeAlias).Alias,
-	}
+	// and use the computed value once (non-builtin) aliases exist
+	t.unique = decl.Lower().(cpp.TypeAlias).Get()
 	return
 }
 
