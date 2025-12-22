@@ -45,7 +45,7 @@ func Prepend[T any](element T, slice []T) []T {
 	return append([]T{element}, slice...)
 }
 
-func SeparatedBy[T fmt.Stringer](array []T, separator string) string {
+func Join[T fmt.Stringer](array []T, separator string) string {
 	return strings.Join(Map(array, T.String), separator)
 }
 

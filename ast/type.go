@@ -73,7 +73,7 @@ func (t Type) String() string {
 	if len(t.Generics) == 0 {
 		return t.GetName()
 	} else {
-		return fmt.Sprintf("%s<%s>", t.Name, util.SeparatedBy(t.Generics, ", "))
+		return fmt.Sprintf("%s<%s>", t.Name, util.Join(t.Generics, ", "))
 	}
 }
 

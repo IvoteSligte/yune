@@ -10,7 +10,7 @@ type Module struct {
 }
 
 func (m Module) String() string {
-	return util.SeparatedBy(m.Declarations, "")
+	return util.Join(m.Declarations, "")
 }
 
 type FunctionDeclaration struct {
@@ -21,7 +21,7 @@ type FunctionDeclaration struct {
 }
 
 func (f FunctionDeclaration) String() string {
-	return fmt.Sprintf("%s %s(%s) %s", f.ReturnType, f.Name, util.SeparatedBy(f.Parameters, ", "), f.Body)
+	return fmt.Sprintf("%s %s(%s) %s", f.ReturnType, f.Name, util.Join(f.Parameters, ", "), f.Body)
 }
 
 type FunctionParameter struct {

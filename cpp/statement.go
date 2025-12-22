@@ -51,13 +51,13 @@ func (r ReturnStatement) String() string {
 type Block []Statement
 
 func (b Block) String() string {
-	return "{" + util.SeparatedBy(b, "") + "}"
+	return "{" + util.Join(b, "") + "}"
 }
 
 type LambdaBlock []Statement
 
 func (b LambdaBlock) String() string {
-	return "[](){" + util.SeparatedBy(b, "") + "}()"
+	return "[](){" + util.Join(b, "") + "}()"
 }
 
 type Statement fmt.Stringer

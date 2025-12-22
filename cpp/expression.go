@@ -17,7 +17,7 @@ type FunctionCall struct {
 }
 
 func (c FunctionCall) String() string {
-	return fmt.Sprintf("%s(%s)", c.Function, util.SeparatedBy(c.Arguments, ", "))
+	return fmt.Sprintf("%s(%s)", c.Function, util.Join(c.Arguments, ", "))
 }
 
 type Tuple struct {
@@ -25,7 +25,7 @@ type Tuple struct {
 }
 
 func (t Tuple) String() string {
-	return fmt.Sprintf("std::make_tuple(%s)", util.SeparatedBy(t.Elements, ", "))
+	return fmt.Sprintf("std::make_tuple(%s)", util.Join(t.Elements, ", "))
 }
 
 type UnaryExpression struct {
