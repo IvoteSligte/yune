@@ -10,15 +10,19 @@ type DeclarationTable struct {
 	declarations map[string]Declaration
 }
 
-func (table *DeclarationTable) Add(decl Declaration) {
-	_, exists := table.declarations[decl.GetName()]
+func (table *DeclarationTable) Add(decl Declaration) error {
+	prev, exists := table.declarations[decl.GetName()]
 	if exists {
-		log.Fatalf("Duplicate declaration of %s in the same scope.", decl.GetName()) // TODO: handle properly
+		return DuplicateDeclaration{
+			First:  prev,
+			Second: decl,
+		}
 	}
 	if table.declarations == nil {
 		table.declarations = map[string]Declaration{}
 		table.declarations[decl.GetName()] = decl
 	}
+	return nil
 }
 
 func (table DeclarationTable) NewScope() DeclarationTable {

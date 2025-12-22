@@ -108,7 +108,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	return cpp.Assignment{
 		Target: a.Target.GetName(),
 		Op:     cpp.AssignmentOp(a.Op),
-		Value:  nil, // TODO: body -> expression using immediately invoked lambda
+		Value:  a.Body.LowerVariableBody(),
 	}
 }
 
@@ -237,7 +237,10 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 		}
 		decl, ok := b.Statements[i].(Declaration)
 		if ok {
-			deps.Add(decl)
+			err := deps.Add(decl)
+			if err != nil {
+				errors = append(errors, err)
+			}
 		}
 		b.Statements[i].InferType(deps)
 	}
