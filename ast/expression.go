@@ -84,7 +84,6 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 		log.Printf("WARN: Type queried before being calculated on declaration '%s'.", v.GetName())
 	}
 	v.Type = decl.GetType()
-	println("type:", v.Type.String(), ";")
 	return
 }
 
@@ -299,7 +298,6 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	println(b.Lower().String())
 	leftType := b.Left.GetType()
 	rightType := b.Right.GetType()
 	if !leftType.Eq(rightType) {

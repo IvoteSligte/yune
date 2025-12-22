@@ -10,7 +10,7 @@ type Module struct {
 }
 
 func (m Module) String() string {
-	return util.SeparatedBy(m.Declarations, "\n\n")
+	return util.SeparatedBy(m.Declarations, "")
 }
 
 type FunctionDeclaration struct {

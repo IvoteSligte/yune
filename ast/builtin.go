@@ -39,10 +39,10 @@ var BuiltinDeclarations = map[string]Declaration{
 }
 
 var TypeType = cpp.Type{Name: "Type"}
-var IntType = IntDeclaration.GetType()
-var FloatType = FloatDeclaration.GetType()
-var BoolType = BoolDeclaration.GetType()
-var NilType = NilDeclaration.GetType()
+var IntType = IntDeclaration.Get()
+var FloatType = FloatDeclaration.Get()
+var BoolType = BoolDeclaration.Get()
+var NilType = NilDeclaration.Get()
 
 // GetType implements Declaration.
 func (d BuiltinTypeDeclaration) GetType() cpp.Type {
