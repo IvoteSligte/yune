@@ -37,7 +37,7 @@ typeAnnotation
     ;
 
 statementBody
-    : statement
+    : statement // FIXME: statement already consumes a newline, but so does variableDeclaration, so 2 NEWLINEs are expected
     | NEWLINE INDENT statementBlock DEDENT
     ;
 
@@ -53,11 +53,11 @@ statement
     ;
 
 variableDeclaration
-    : constantDeclaration
+    : name typeAnnotation EQUAL statementBody
     ;
 
 assignment
-    : variable assignmentOp EQUAL statementBody
+    : variable assignmentOp statementBody
     ;
 
 assignmentOp

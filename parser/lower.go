@@ -273,9 +273,9 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDeclaration {
 	return ast.VariableDeclaration{
 		Span: GetSpan(ctx),
-		Name: LowerName(ctx.ConstantDeclaration().Name()),
-		Type: LowerTypeAnnotation(ctx.ConstantDeclaration().TypeAnnotation()),
-		Body: LowerStatementBody(ctx.ConstantDeclaration().StatementBody()),
+		Name: LowerName(ctx.Name()),
+		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
+		Body: LowerStatementBody(ctx.StatementBody()),
 	}
 
 }
