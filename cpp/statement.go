@@ -51,7 +51,7 @@ func (r ReturnStatement) String() string {
 type Block []Statement
 
 func (b Block) String() string {
-	return "{" + util.Join(b, "") + "}"
+	return "{\n" + util.Join(b, "\n") + "\n}"
 }
 
 type ExpressionStatement struct {

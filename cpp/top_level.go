@@ -2,16 +2,23 @@ package cpp
 
 import (
 	"fmt"
+	"strings"
 	"yune/util"
 )
 
-// TODO: either forward-declare functions or generate a header file and import that
 type Module struct {
 	Declarations []TopLevelDeclaration
 }
 
+// FIXME: declarations need to be ordered properly in the header file.
+// It is primarily that type declarations need to come before constant declarations that use them.
+
+func (m Module) GenHeader() string {
+	return strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
+}
+
 func (m Module) String() string {
-	return util.Join(m.Declarations, "")
+	return util.Join(m.Declarations, "\n")
 }
 
 type FunctionDeclaration struct {
@@ -19,6 +26,11 @@ type FunctionDeclaration struct {
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
+}
+
+// GenHeader implements TopLevelDeclaration.
+func (f FunctionDeclaration) GenHeader() string {
+	return fmt.Sprintf("%s %s(%s);", f.ReturnType, f.Name, util.Join(f.Parameters, ", "))
 }
 
 func (f FunctionDeclaration) String() string {
@@ -40,6 +52,11 @@ type ConstantDeclaration struct {
 	Value Expression
 }
 
+// GenHeader implements TopLevelDeclaration.
+func (c ConstantDeclaration) GenHeader() string {
+	return fmt.Sprintf("extern %s %s;", c.Type, c.Name)
+}
+
 func (c ConstantDeclaration) String() string {
 	return fmt.Sprintf("%s %s = %s;", c.Type, c.Name, c.Value)
 }
@@ -51,6 +68,11 @@ type TypeAlias struct {
 	Of    string
 }
 
+// GenHeader implements TopLevelDeclaration.
+func (t TypeAlias) GenHeader() string {
+	return fmt.Sprintf("typedef %s %s;", t.Of, t.Alias)
+}
+
 func (t TypeAlias) Get() Type {
 	return NamedType{Name: t.Alias}
 }
@@ -59,4 +81,11 @@ func (t TypeAlias) String() string {
 	return fmt.Sprintf("typedef %s %s;", t.Of, t.Alias)
 }
 
-type TopLevelDeclaration fmt.Stringer
+type TopLevelDeclaration interface {
+	fmt.Stringer
+	GenHeader() string
+}
+
+var _ TopLevelDeclaration = FunctionDeclaration{}
+var _ TopLevelDeclaration = ConstantDeclaration{}
+var _ TopLevelDeclaration = TypeAlias{}

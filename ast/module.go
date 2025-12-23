@@ -103,9 +103,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// add the actual code
 		for name := range stage {
 			decl := declarations[name]
-			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
 			// NOTE: declarations are added in a random order because of the map
-			// TODO: header file or ordering based on dependencies
 			cppDeclaration := decl.Lower()
 			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
 		}
