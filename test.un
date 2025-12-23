@@ -1,12 +1,11 @@
 N: Int = 12
 
-Cycle1: Float = Cycle2
-Cycle2: Float = Cycle1
-
 fibonacci(n: Int): Int =
 	n == 0 -> 0
 	n == 1 -> 1
 	fibonacci(n - 1) + fibonacci(n - 2)
+
+add(a: Float, b: Float): Float = a + b
 
 main(): Int =
 	a: Int = fibonacci(N)

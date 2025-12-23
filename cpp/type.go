@@ -7,50 +7,74 @@ import (
 	"yune/util"
 )
 
-type Type struct {
-	Name     string
-	Generics []Type
+type Type interface {
+	fmt.Stringer
+	Eq(other Type) bool
 }
 
-func (t Type) IsUninit() bool {
-	return t.Eq(Type{})
+type NamedType struct {
+	Name string
 }
 
-func (t Type) String() string {
+// Eq implements Type.
+func (t NamedType) Eq(other Type) bool {
+	{
+		other, ok := other.(NamedType)
+		return ok &&
+			t.Name == other.Name
+	}
+}
+
+// String implements Type.
+func (t NamedType) String() string {
 	if len(t.Name) == 0 {
 		log.Println("WARN: Found empty type name when converting to string.")
 	}
-	if len(t.Generics) == 0 {
-		return t.Name
-	} else {
-		return fmt.Sprintf("%s<%s>", t.Name, util.Join(t.Generics, ", "))
+	return t.Name
+}
+
+// NOTE: requires #include <functional>
+type FunctionType struct {
+	Name       string
+	Parameter  Type
+	ReturnType Type
+}
+
+// String implements Type.
+func (t FunctionType) String() string {
+	return fmt.Sprintf("std::function<%s(%s)>", t.ReturnType, t.Parameter)
+}
+
+// Eq implements Type.
+func (t FunctionType) Eq(other Type) bool {
+	{
+		other, ok := other.(FunctionType)
+		return ok &&
+			t.Name == other.Name &&
+			t.Parameter.Eq(other.Parameter) &&
+			t.ReturnType.Eq(other.ReturnType)
 	}
 }
 
-func (left Type) Eq(right Type) bool {
-	return left.Name == right.Name &&
-		slices.EqualFunc(left.Generics, right.Generics, Type.Eq)
+// NOTE: requires #include <tuple>
+type TupleType struct {
+	Elements []Type
 }
 
-// Function type has generics[0] as argument type and generics[1] as return type.
-func (t Type) IsFunction() bool {
-	return t.Name == "Fn"
-}
-
-func (t Type) GetParameterType() (parameterType Type, isFunction bool) {
-	isFunction = t.IsFunction()
-	if !isFunction {
-		return
+// Eq implements Type.
+func (t TupleType) Eq(other Type) bool {
+	{
+		other, ok := other.(TupleType)
+		return ok &&
+			slices.EqualFunc(t.Elements, other.Elements, Type.Eq)
 	}
-	parameterType = t.Generics[0]
-	return
 }
 
-func (t Type) GetReturnType() (returnType Type, isFunction bool) {
-	isFunction = t.IsFunction()
-	if !isFunction {
-		return
-	}
-	returnType = t.Generics[1]
-	return
+// String implements Type.
+func (t TupleType) String() string {
+	return fmt.Sprintf("std::tuple<%s>", util.Join(t.Elements, ", "))
 }
+
+var _ Type = NamedType{}
+var _ Type = FunctionType{}
+var _ Type = TupleType{}

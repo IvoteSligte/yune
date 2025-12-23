@@ -2,6 +2,7 @@ package ast
 
 import "yune/cpp"
 
+// TODO: just replace with ConstantDeclaration
 type BuiltinTypeDeclaration struct {
 	cpp.TypeAlias
 }
@@ -38,13 +39,13 @@ var BuiltinDeclarations = map[string]Declaration{
 	NilDeclaration.GetName():   NilDeclaration,
 }
 
-var TypeType = cpp.Type{Name: "Type"}
-var MainType = cpp.Type{
-	Name: "Fn",
-	// NOTE: main() returns int for compatibility with C++,
-	// though this may change in the future
-	Generics: []cpp.Type{IntType},
+// NOTE: main() returns int for compatibility with C++,
+// though this may change in the future
+var MainType = cpp.FunctionType{
+	Parameter:  cpp.TupleType{},
+	ReturnType: IntType,
 }
+var TypeType = cpp.NamedType{Name: "Type"}
 var IntType = IntDeclaration.Get()
 var FloatType = FloatDeclaration.Get()
 var BoolType = BoolDeclaration.Get()

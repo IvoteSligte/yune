@@ -52,7 +52,7 @@ type TypeAlias struct {
 }
 
 func (t TypeAlias) Get() Type {
-	return Type{Name: t.Alias}
+	return NamedType{Name: t.Alias}
 }
 
 func (t TypeAlias) String() string {

@@ -109,10 +109,7 @@ func (d FunctionDeclaration) GetName() string {
 }
 
 func (d FunctionDeclaration) GetType() cpp.Type {
-	return cpp.Type{
-		Name:     "Fn",
-		Generics: append(util.Map(d.Parameters, FunctionParameter.GetType), d.ReturnType.Get()),
-	}
+	panic("unimplemented")
 }
 
 type FunctionParameter struct {

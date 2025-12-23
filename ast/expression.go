@@ -80,7 +80,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, UndefinedVariable(v.Name))
 		return
 	}
-	if decl.GetType().IsUninit() {
+	if decl.GetType() == nil {
 		log.Printf("WARN: Type queried before being calculated on declaration '%s'.", v.GetName())
 	}
 	v.Type = decl.GetType()
@@ -115,25 +115,25 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	functionType := f.Function.GetType()
+	maybeFunctionType := f.Function.GetType()
 	argumentType := f.Argument.GetType()
-	expectedType, isFunction := functionType.GetParameterType()
+	functionType, isFunction := maybeFunctionType.(cpp.FunctionType)
 	if !isFunction {
 		errors = append(errors, NotAFunction{
-			Found: functionType,
+			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
 		})
 		return
 	}
-	if !argumentType.Eq(expectedType) {
+	if !argumentType.Eq(functionType.Parameter) {
 		errors = append(errors, ArgumentTypeMismatch{
-			Expected: expectedType,
+			Expected: functionType.Parameter,
 			Found:    argumentType,
 			At:       f.Argument.GetSpan(),
 		})
 		return
 	}
-	f.Type, _ = functionType.GetReturnType()
+	f.Type = functionType.ReturnType
 	return
 }
 
@@ -178,9 +178,8 @@ func (t *Tuple) Lower() cpp.Expression {
 
 // GetType implements Expression.
 func (t *Tuple) GetType() cpp.Type {
-	return cpp.Type{
-		Name:     "Tuple",
-		Generics: util.Map(t.Elements, Expression.GetType),
+	return cpp.TupleType{
+		Elements: util.Map(t.Elements, Expression.GetType),
 	}
 }
 
