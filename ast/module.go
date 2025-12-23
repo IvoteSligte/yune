@@ -45,13 +45,13 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// TEMP (should be a unit test)
 		for _, t := range typeDeps {
 			if len(t) == 0 {
-				log.Printf("WARN: Empty type dependency of declaration '%s'.", name)
+				log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
 			}
 		}
 		// TEMP (should be a unit test)
 		for _, t := range valueDeps {
 			if len(t) == 0 {
-				log.Printf("WARN: Empty value dependency of declaration '%s'.", name)
+				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
 		}
 		graph[name] = stageNode{
@@ -104,6 +104,8 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		for name := range stage {
 			decl := declarations[name]
 			// TODO: cache the serialized value instead of the raw cpp code so that it's only run once
+			// NOTE: declarations are added in a random order because of the map
+			// TODO: header file or ordering based on dependencies
 			cppDeclaration := decl.Lower()
 			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
 		}

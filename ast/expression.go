@@ -139,6 +139,24 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
+	tupleType, argumentIsTuple := f.Argument.GetType().(cpp.TupleType)
+	if argumentIsTuple {
+		// functions called with the empty tuple are lowered to functions called with nothing
+		if len(tupleType.Elements) == 0 {
+			return cpp.FunctionCall{
+				Function:  f.Function.Lower(),
+				Arguments: []cpp.Expression{},
+			}
+		}
+		// calls the function with a tuple of arguments
+		return cpp.FunctionCall{
+			Function: cpp.Variable("std::apply"),
+			Arguments: []cpp.Expression{
+				f.Function.Lower(),
+				f.Argument.Lower(),
+			},
+		}
+	}
 	return cpp.FunctionCall{
 		Function: f.Function.Lower(),
 		Arguments: []cpp.Expression{

@@ -109,7 +109,19 @@ func (d FunctionDeclaration) GetName() string {
 }
 
 func (d FunctionDeclaration) GetType() cpp.Type {
-	panic("unimplemented")
+	if len(d.Parameters) == 1 {
+		return cpp.FunctionType{
+			Parameter:  d.Parameters[0].GetType(),
+			ReturnType: d.ReturnType.Get(),
+		}
+	} else {
+		return cpp.FunctionType{
+			Parameter: cpp.TupleType{
+				Elements: util.Map(d.Parameters, FunctionParameter.GetType),
+			},
+			ReturnType: d.ReturnType.Get(),
+		}
+	}
 }
 
 type FunctionParameter struct {

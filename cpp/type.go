@@ -35,7 +35,6 @@ func (t NamedType) String() string {
 
 // NOTE: requires #include <functional>
 type FunctionType struct {
-	Name       string
 	Parameter  Type
 	ReturnType Type
 }
@@ -50,7 +49,6 @@ func (t FunctionType) Eq(other Type) bool {
 	{
 		other, ok := other.(FunctionType)
 		return ok &&
-			t.Name == other.Name &&
 			t.Parameter.Eq(other.Parameter) &&
 			t.ReturnType.Eq(other.ReturnType)
 	}
