@@ -11,7 +11,7 @@ type DuplicateDeclaration struct {
 }
 
 func (e DuplicateDeclaration) Error() string {
-	return fmt.Sprintf("'%s' previously defined at '%s' redefined at %s.", e.First.GetName(), e.First.GetSpan(), e.Second.GetSpan())
+	return fmt.Sprintf("'%s' previously defined at %s redefined at %s.", e.First.GetName(), e.First.GetSpan(), e.Second.GetSpan())
 }
 
 type InvalidUnaryExpressionType struct {

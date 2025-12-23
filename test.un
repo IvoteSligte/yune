@@ -1,7 +1,7 @@
 N: Int = 12
 
-Duplicate: Float = 0.0
-Duplicate: Float = 0.0
+Cycle1: Float = Cycle2
+Cycle2: Float = Cycle1
 
 fibonacci(n: Int): Int =
 	n == 0 -> 0
