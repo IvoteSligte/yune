@@ -2,7 +2,6 @@ package parser
 
 import (
 	"strconv"
-	"strings"
 	"yune/ast"
 	"yune/util"
 
@@ -18,6 +17,7 @@ func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 
 func LowerAssignment(ctx IAssignmentContext) ast.Assignment {
 	return ast.Assignment{
+		Span:  GetSpan(ctx),
 		Target: LowerVariable(ctx.Variable()),
 		Op:     LowerAssignmentOp(ctx.AssignmentOp()),
 		Body:   LowerStatementBody(ctx.StatementBody()),
@@ -57,6 +57,7 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 		panic("unreachable")
 	}
 	expr := ast.BinaryExpression{
+		Span:  GetSpan(ctx),
 		Op:    op,
 		Left:  LowerBinaryExpression(ctx.BinaryExpression(0)),
 		Right: LowerBinaryExpression(ctx.BinaryExpression(1)),
@@ -72,6 +73,7 @@ func LowerBranchStatement(ctx IBranchStatementContext, statementsAfter []IStatem
 		}
 	}
 	return ast.BranchStatement{
+		Span:      GetSpan(ctx),
 		Condition: LowerExpression(ctx.Expression()),
 		Then:      LowerStatementBody(ctx.StatementBody()),
 		Else:      elseBlock,
@@ -80,6 +82,7 @@ func LowerBranchStatement(ctx IBranchStatementContext, statementsAfter []IStatem
 
 func LowerConstantDeclaration(ctx IConstantDeclarationContext) ast.ConstantDeclaration {
 	return ast.ConstantDeclaration{
+		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
 		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
 		Body: LowerStatementBody(ctx.StatementBody()),
@@ -97,6 +100,7 @@ func LowerExpression(ctx IExpressionContext) ast.Expression {
 
 func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDeclaration {
 	return ast.FunctionDeclaration{
+		Span:       GetSpan(ctx),
 		Name:       LowerName(ctx.Name()),
 		Parameters: LowerFunctionParameters(ctx.FunctionParameters()),
 		ReturnType: LowerTypeAnnotation(ctx.TypeAnnotation()),
@@ -117,7 +121,6 @@ func LowerFunctionParameters(ctx IFunctionParametersContext) []ast.FunctionParam
 }
 
 func LowerName(ctx INameContext) ast.Name {
-
 	return ast.Name{
 		Span:   GetSpan(ctx),
 		String: ctx.IDENTIFIER().GetText(),
@@ -132,8 +135,17 @@ func LowerVariable(ctx IVariableContext) ast.Variable {
 
 func LowerMacro(ctx IMacroContext) ast.Macro {
 	return ast.Macro{
+		Span:     GetSpan(ctx),
 		Language: LowerVariable(ctx.Variable()),
-		Text:     strings.Join(util.Map(ctx.AllMACROLINE(), antlr.TerminalNode.GetText), "\n"),
+		Lines: util.Map(ctx.AllMACROLINE(), func(macroLine antlr.TerminalNode) ast.MacroLine {
+			return ast.MacroLine{
+				Span: ast.Span{
+					Line:   macroLine.GetSymbol().GetStart(),
+					Column: macroLine.GetSymbol().GetColumn(),
+				},
+				Text: macroLine.GetText(),
+			}
+		}),
 	}
 }
 
@@ -213,6 +225,7 @@ func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) 
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	statements := ctx.AllStatement()
 	return ast.Block{
+		Span:  GetSpan(ctx),
 		Statements: LowerStatement(statements[0], statements[1:]),
 	}
 }
@@ -232,14 +245,15 @@ func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDecla
 
 func LowerTuple(ctx ITupleContext) ast.Tuple {
 	return ast.Tuple{
+		Span: GetSpan(ctx),
 		Elements: util.Map(ctx.AllExpression(), LowerExpression),
 	}
 }
 
 func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
 	return ast.Type{
-		Name: LowerName(ctx.Name()),
 		Span: GetSpan(ctx),
+		Name: LowerName(ctx.Name()),
 	}
 }
 

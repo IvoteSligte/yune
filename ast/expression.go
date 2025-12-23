@@ -185,12 +185,16 @@ func (t *Tuple) GetType() cpp.Type {
 }
 
 type Macro struct {
-	// TODO: indicate macro text with a special span or just keep it as macro lines
 	Span
 	Language Variable
-	Text     string
+	Lines    []MacroLine
 	// Result after evaluating the macro.
 	Result Expression
+}
+
+type MacroLine struct {
+	Span
+	Text string
 }
 
 // GetGlobalDependencies implements Expression.

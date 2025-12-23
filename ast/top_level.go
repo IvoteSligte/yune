@@ -6,12 +6,17 @@ import (
 )
 
 type FunctionDeclaration struct {
-	Span
+	Span       Span
 	Name       Name
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
 	Value      cpp.FunctionDeclaration
+}
+
+// GetSpan implements TopLevelDeclaration.
+func (d *FunctionDeclaration) GetSpan() Span {
+	return d.Name.GetSpan()
 }
 
 // TypeCheckBody implements Declaration.
@@ -154,10 +159,15 @@ func (d *FunctionParameter) CalcType(deps DeclarationTable) Errors {
 }
 
 type ConstantDeclaration struct {
-	Span
+	Span Span
 	Name Name
 	Type Type
 	Body Block
+}
+
+// GetSpan implements TopLevelDeclaration.
+func (d *ConstantDeclaration) GetSpan() Span {
+	return d.Name.GetSpan()
 }
 
 // TypeCheckBody implements TopLevelDeclaration.
