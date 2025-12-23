@@ -115,12 +115,6 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	return
 }
 
-// NOTE: the following edge case is currently not handled, although types cannot be declared at this point
-// so it cannot happen right now, but it can in the future
-// ```
-// A: Type = B
-// B: A = ...
-// ```
 func CheckCyclicType(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
 	for name, node := range graph {
 		queue := node.priors.ToSlice()
