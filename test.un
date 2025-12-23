@@ -1,8 +1,13 @@
+N: Int = 12
+
+Duplicate: Float = 0.0
+Duplicate: Float = 0.0
+
 fibonacci(n: Int): Int =
 	n == 0 -> 0
 	n == 1 -> 1
 	fibonacci(n - 1) + fibonacci(n - 2)
 
 main(): Int =
-	a: Int = fibonacci(10)
+	a: Int = fibonacci(N)
 	0

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"yune/parser"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -23,35 +24,48 @@ func printText(tokenStream *antlr.CommonTokenStream) {
 	println("```")
 }
 
-func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
-	maxLen := 0
-	for _, symbol := range lexer.GetSymbolicNames() {
-		maxLen = max(maxLen, len(symbol))
+func printPadding(amount int) {
+	for range amount {
+		fmt.Print(" ")
 	}
+}
+
+func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
+	tokenStream.Fill()
+	maxSymbolLen := 0
+	for _, symbol := range lexer.GetSymbolicNames() {
+		maxSymbolLen = max(maxSymbolLen, len(symbol))
+	}
+	maxColumnStrLen := 0
+	for _, token := range tokenStream.GetAllTokens() {
+		maxColumnStrLen = max(maxColumnStrLen, len(strconv.Itoa(token.GetColumn())))
+	}
+
+	lastToken := tokenStream.Get(tokenStream.Size() - 1)
+	maxLineStrLen := len(strconv.Itoa(lastToken.GetLine()))
 	for _, token := range tokenStream.GetAllTokens() {
 		symbol := "<EOF>"
 		if token.GetTokenType() != antlr.TokenEOF {
 			symbol = lexer.GetSymbolicNames()[token.GetTokenType()]
 		}
-		fmt.Printf("Token (%s) ", symbol)
-		for range maxLen - len(symbol) {
-			fmt.Print(" ")
-		}
-		fmt.Printf("'%s'\n",
-			token.GetText(),
-		)
+		fmt.Print("Token ")
+		fmt.Printf("%d", token.GetLine())
+		fmt.Printf(":%d", token.GetColumn())
+		printPadding((maxLineStrLen - len(strconv.Itoa(token.GetLine()))) +
+			(maxColumnStrLen - len(strconv.Itoa(token.GetColumn()))))
+		fmt.Printf(" (%s) ", symbol)
+		printPadding(maxSymbolLen - len(symbol))
+		fmt.Printf("'%s'\n", token.GetText())
 	}
 }
 
 func main() {
 	data := readFile()
-	data += "\n\n\n\n"
 	println(data)
 	inputStream := antlr.NewInputStream(data)
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
-	tokenStream.Fill() // lex all tokens in advance (for debugging)
 	printTokens(lexer, tokenStream)
 
 	yuneParser := parser.NewYuneParser(tokenStream)
