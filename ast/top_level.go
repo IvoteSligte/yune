@@ -237,6 +237,11 @@ type TopLevelDeclaration interface {
 	Lower() cpp.TopLevelDeclaration
 }
 
+func isConstantDeclaration(decl TopLevelDeclaration) bool {
+	_, isConstant := decl.(*ConstantDeclaration)
+	return isConstant
+}
+
 // TODO: when types and type aliases can be created, make sure that
 // values are cached and aliases are properly resolved.
 

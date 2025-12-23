@@ -5,6 +5,7 @@ import (
 	"yune/util"
 )
 
+// TODO: either forward-declare functions or generate a header file and import that
 type Module struct {
 	Declarations []TopLevelDeclaration
 }

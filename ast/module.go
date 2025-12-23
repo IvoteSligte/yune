@@ -39,22 +39,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	// detect dependency cycles
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		deps := m.Declarations[i].GetTypeDependencies()
-		// TODO: cyclic dependency detection for non-function constants (using .simuls)
-		for _, dep := range deps {
-			depDeps, ok := graph[dep]
-
-			if ok && depDeps.priors.Contains(name) {
-				errors = append(errors, CyclicDependency{
-					First:  dep,
-					Second: name,
-				})
-				break
-			}
-		}
+		typeDeps := m.Declarations[i].GetTypeDependencies()
 		valueDeps := m.Declarations[i].GetValueDependencies()
+
 		// TEMP (should be a unit test)
-		for _, t := range deps {
+		for _, t := range typeDeps {
 			if len(t) == 0 {
 				log.Printf("WARN: Empty type dependency of declaration '%s'.", name)
 			}
@@ -66,9 +55,14 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 		}
 		graph[name] = stageNode{
-			priors: mapset.NewSet(deps...),
+			priors: mapset.NewSet(typeDeps...),
 			simuls: mapset.NewSet(valueDeps...),
 		}
+	}
+	errors = append(errors, CheckCyclicType(declarations, graph)...)
+	errors = append(errors, CheckCyclicConstant(declarations, graph)...)
+	if len(errors) > 0 {
+		return
 	}
 	table := DeclarationTable{
 		parent: &DeclarationTable{declarations: BuiltinDeclarations},
@@ -116,6 +110,79 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// the last lowered stage is simply the runtime code
 		if i+1 == len(ordering) {
 			return
+		}
+	}
+	return
+}
+
+// NOTE: the following edge case is currently not handled, although types cannot be declared at this point
+// so it cannot happen right now, but it can in the future
+// ```
+// A: Type = B
+// B: A = ...
+// ```
+func CheckCyclicType(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
+	for name, node := range graph {
+		queue := node.priors.ToSlice()
+		visited := mapset.NewSet[string]()
+
+		for len(queue) > 0 {
+			dep := queue[0]
+			queue = queue[1:]
+			_, isBuiltin := BuiltinDeclarations[dep]
+			if isBuiltin {
+				continue
+			}
+			if visited.Contains(dep) {
+				continue
+			}
+			visited.Add(dep)
+			queue = append(queue, graph[dep].priors.ToSlice()...)
+		}
+		if visited.Contains(name) {
+			errors = append(errors, CyclicTypeDependency{
+				In: declarations[name],
+			})
+		}
+	}
+	return
+}
+
+// NOTE: an uncommon edge case that is currently not handled is when a constant depends on another constant
+// through a function call and that forms a cycle
+// ```
+// f(): Int = A
+// A: Int = B
+// B: Int = f()
+// ```
+func CheckCyclicConstant(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
+	for name, node := range graph {
+		if !isConstantDeclaration(declarations[name]) {
+			continue
+		}
+		queue := node.simuls.ToSlice()
+		visited := mapset.NewSet[string]()
+
+		for len(queue) > 0 {
+			dep := queue[0]
+			queue = queue[1:]
+			_, isBuiltin := BuiltinDeclarations[dep]
+			if isBuiltin {
+				continue
+			}
+			if !isConstantDeclaration(declarations[dep]) {
+				continue
+			}
+			if visited.Contains(dep) {
+				continue
+			}
+			visited.Add(dep)
+			queue = append(queue, graph[dep].simuls.ToSlice()...)
+		}
+		if visited.Contains(name) {
+			errors = append(errors, CyclicConstantDependency{
+				In: declarations[name],
+			})
 		}
 	}
 	return

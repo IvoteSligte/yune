@@ -161,11 +161,18 @@ func (e InvalidMainSignature) Error() string {
 	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, MainType, e.Found)
 }
 
-type CyclicDependency struct {
-	First  string
-	Second string
+type CyclicTypeDependency struct {
+	In Declaration
 }
 
-func (e CyclicDependency) Error() string {
-	return fmt.Sprintf("Cyclic dependency between declarations '%s' and '%s'.", e.First, e.Second)
+func (e CyclicTypeDependency) Error() string {
+	return fmt.Sprintf("Cyclic type dependency in declaration '%s' at %s.", e.In.GetName(), e.In.GetSpan())
+}
+
+type CyclicConstantDependency struct {
+	In Declaration
+}
+
+func (e CyclicConstantDependency) Error() string {
+	return fmt.Sprintf("Cyclic constant dependency in declaration '%s' at %s.", e.In.GetName(), e.In.GetSpan())
 }
