@@ -114,8 +114,8 @@ func main() {
 		}
 		log.Fatalln("Errors found, exiting.")
 	}
-	fmt.Println("CPP header:")
+	fmt.Println("--- CPP header ---")
 	printCpp(cppModule.GenHeader())
-	fmt.Println("CPP implementation (should include header):")
+	fmt.Println("--- CPP implementation (should include header) ---")
 	printCpp(cppModule.String())
 }
