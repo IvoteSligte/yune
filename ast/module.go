@@ -80,10 +80,13 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(ordering) > 1 {
 		log.Fatalln("Multiple compilation stages are currently not supported.")
 	}
+	priorDeclarations := util.Map(
+		slices.Collect(maps.Values(BuiltinDeclarations)),
+		func(d Declaration) cpp.TopLevelDeclaration { return d.(TopLevelDeclaration).Lower() },
+	)
 	for i, stage := range ordering {
 		lowered = cpp.Module{
-			// FIXME: unsorted
-			Declarations: stage.getDependencyDeclarations(declarations),
+			Declarations: priorDeclarations,
 		}
 		declarationNames := stage.extractSortedNames()
 		// compute signatures
@@ -113,6 +116,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		if i+1 == len(ordering) {
 			return
 		}
+		priorDeclarations = append(priorDeclarations, lowered.Declarations...)
 	}
 	return
 }

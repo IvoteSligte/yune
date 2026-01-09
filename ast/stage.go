@@ -3,7 +3,6 @@ package ast
 import (
 	"log"
 	"maps"
-	"yune/cpp"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -57,39 +56,7 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-// Get the declarations of the dependencies required for the current stage.
-func (s stage) getDependencyDeclarations(topLevel map[string]TopLevelDeclaration) (declarations []cpp.TopLevelDeclaration) {
-	for _, decl := range BuiltinDeclarations {
-		declarations = append(declarations, decl.(TopLevelDeclaration).Lower())
-	}
-	typeDeps := mapset.NewSet[string]()
-	valueDeps := mapset.NewSet[string]()
-	for _, deps := range s {
-		typeDeps.Append(deps.priors.ToSlice()...)
-		valueDeps.Append(deps.simuls.ToSlice()...)
-	}
-	// ensure dependencies in the current stage are not added again
-	for name := range s {
-		valueDeps.Remove(name)
-	}
-	// add type dependencies
-	for typeDep := range typeDeps.Iter() {
-		decl, ok := topLevel[typeDep]
-		if !ok {
-			log.Fatalf("Tried to access non-existent type dependency declaration '%s'.", typeDep)
-		}
-		declarations = append(declarations, decl.Lower())
-	}
-	// add value dependencies
-	for valueDep := range valueDeps.Iter() {
-		decl, ok := topLevel[valueDep]
-		if !ok {
-			log.Fatalf("Tried to access non-existent value dependency declaration '%s'.", valueDep)
-		}
-		declarations = append(declarations, decl.Lower())
-	}
-	return
-}
+// FIXME: needs forward function declarations for recursion between two functions
 
 // Ensures dependencies within the stage are properly ordered to prevent C++ compiler errors.
 // Consumes the stage.
