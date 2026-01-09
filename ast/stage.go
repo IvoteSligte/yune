@@ -2,6 +2,7 @@ package ast
 
 import (
 	"log"
+	"maps"
 	"yune/cpp"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -56,7 +57,8 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-func (s stage) getPrefix(topLevel map[string]TopLevelDeclaration) (declarations []cpp.TopLevelDeclaration) {
+// Get the declarations of the dependencies required for the current stage.
+func (s stage) getDependencyDeclarations(topLevel map[string]TopLevelDeclaration) (declarations []cpp.TopLevelDeclaration) {
 	for _, decl := range BuiltinDeclarations {
 		declarations = append(declarations, decl.(TopLevelDeclaration).Lower())
 	}
@@ -85,6 +87,25 @@ func (s stage) getPrefix(topLevel map[string]TopLevelDeclaration) (declarations 
 			log.Fatalf("Tried to access non-existent value dependency declaration '%s'.", valueDep)
 		}
 		declarations = append(declarations, decl.Lower())
+	}
+	return
+}
+
+// Ensures dependencies within the stage are properly ordered to prevent C++ compiler errors.
+// Consumes the stage.
+func (s stage) extractSortedNames() (names []string) {
+	prevLen := len(s)
+	for len(s) > 0 {
+		for name, node := range s {
+			if node.simuls.IsSubset(mapset.NewSet(names...)) {
+				names = append(names, name)
+				delete(s, name)
+			}
+		}
+		if len(s) == prevLen {
+			log.Fatalln("Infinite loop in extractSortedNames with remaining keys", maps.Keys(s))
+		}
+		prevLen = len(s)
 	}
 	return
 }

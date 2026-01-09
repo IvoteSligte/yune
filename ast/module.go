@@ -82,10 +82,12 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	}
 	for i, stage := range ordering {
 		lowered = cpp.Module{
-			Declarations: stage.getPrefix(declarations),
+			// FIXME: unsorted
+			Declarations: stage.getDependencyDeclarations(declarations),
 		}
+		declarationNames := stage.extractSortedNames()
 		// compute signatures
-		for name := range stage {
+		for _, name := range declarationNames {
 			decl := declarations[name]
 			errors = append(errors, decl.CalcType(table)...)
 		}
@@ -93,7 +95,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// type check bodies
-		for name := range stage {
+		for _, name := range declarationNames {
 			decl := declarations[name]
 			errors = append(errors, decl.TypeCheckBody(table)...)
 		}
@@ -101,7 +103,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// add the actual code
-		for name := range stage {
+		for _, name := range declarationNames {
 			decl := declarations[name]
 			// NOTE: declarations are added in a random order because of the map
 			cppDeclaration := decl.Lower()
