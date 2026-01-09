@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 	"yune/parser"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -59,6 +61,32 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 	}
 }
 
+func formatCpp(code string) (formatted string, err error) {
+	cmd := exec.Command("clang-format")
+	if cmd.Err != nil {
+		err = cmd.Err
+		return
+	}
+	cmd.Stdin = strings.NewReader(code)
+	outputBytes, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	formatted = string(outputBytes)
+	return
+}
+
+func printCpp(code string) {
+	formatted, err := formatCpp(code)
+	if err != nil {
+		log.Println("Error formatting C++ with clang-format:", err)
+		log.Println("Unformatted C++:")
+		fmt.Println(code)
+	} else {
+		fmt.Println(formatted)
+	}
+}
+
 func main() {
 	data := readFile()
 	println(data)
@@ -87,7 +115,7 @@ func main() {
 		log.Fatalln("Errors found, exiting.")
 	}
 	fmt.Println("CPP header:")
-	fmt.Println(cppModule.GenHeader())
+	printCpp(cppModule.GenHeader())
 	fmt.Println("CPP implementation (should include header):")
-	fmt.Println(cppModule)
+	printCpp(cppModule.String())
 }

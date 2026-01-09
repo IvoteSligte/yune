@@ -24,6 +24,7 @@
           buildInputs = with pkgs; [
             antlr4
             go
+            clang-tools
           ];
         };
       }
