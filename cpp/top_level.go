@@ -14,7 +14,9 @@ type Module struct {
 // It is primarily that type declarations need to come before constant declarations that use them.
 
 func (m Module) GenHeader() string {
-	return strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
+	// <utility> for std::tuple, std::apply
+	return "#include <utility>\n" +
+		strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
 }
 
 func (m Module) String() string {

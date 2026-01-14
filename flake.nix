@@ -25,6 +25,7 @@
             antlr4
             go
             clang-tools
+            clang
           ];
         };
       }

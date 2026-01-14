@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"slices"
+	"path"
 	"strconv"
 	"strings"
 	"yune/cpp"
@@ -89,19 +89,19 @@ func printCpp(code string) {
 	}
 }
 
-func createTempFile(dir string, name string) *os.File {
-	headerFile, err := os.CreateTemp(dir, "code.h")
+func createFile(dir string, name string) *os.File {
+	file, err := os.Create(path.Join(dir, name))
 	if err != nil {
-		log.Fatalln("Failed to create temporary file during compilation process. Error:", err)
+		log.Fatalln("Failed to create file during compilation process. Error:", err)
 	}
-	return headerFile
+	return file
 }
 
 func writeTempFile(dir string, name string, contents string) *os.File {
-	file := createTempFile(dir, name)
+	file := createFile(dir, name)
 	_, err := file.WriteString(contents)
 	if err != nil {
-		log.Fatalln("Failed to write to temporary file during compilation process. Error:", err)
+		log.Fatalln("Failed to write to file during compilation process. Error:", err)
 	}
 	return file
 }
@@ -111,16 +111,26 @@ func runCppModule(module cpp.Module) {
 	if err != nil {
 		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
 	}
-	defer os.RemoveAll(dir)
+	// defer os.RemoveAll(dir)
 
 	header := module.GenHeader()
 	implementation := module.String()
-	headerFile := writeTempFile(dir, "code.hpp", header)
-	implementationFile := writeTempFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
+	writeTempFile(dir, "code.hpp", header)
+	writeTempFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
+	implementationPath := path.Join(dir, "code.cpp")
+	binaryPath := path.Join(dir, "code.bin")
 
+	cmd := exec.Command("clang", []string{implementationPath, "-o", binaryPath}...)
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln("Failed to compile code. Error:", err)
+	}
+	err = exec.Command(binaryPath).Run()
+	if err != nil {
+		log.Fatalln("Failed to run code. Error:", err)
+	}
 	// NOTE: main function is assumed to exist
-
-	panic("TODO compile and run implementationFile")
 }
 
 func main() {
@@ -154,4 +164,6 @@ func main() {
 	printCpp(cppModule.GenHeader())
 	fmt.Println("--- CPP implementation (should include header) ---")
 	printCpp(cppModule.String())
+	fmt.Println("--- Output ---")
+	runCppModule(cppModule)
 }
