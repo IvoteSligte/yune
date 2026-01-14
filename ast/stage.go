@@ -56,8 +56,6 @@ func stagedOrdering(currentStage stage) []stage {
 	}
 }
 
-// FIXME: needs forward function declarations for recursion between two functions
-
 // Ensures dependencies within the stage are properly ordered to prevent C++ compiler errors.
 // Consumes the stage.
 func (s stage) extractSortedNames() (names []string) {

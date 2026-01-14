@@ -5,8 +5,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
+	"yune/cpp"
 	"yune/parser"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -85,6 +87,40 @@ func printCpp(code string) {
 	} else {
 		fmt.Println(formatted)
 	}
+}
+
+func createTempFile(dir string, name string) *os.File {
+	headerFile, err := os.CreateTemp(dir, "code.h")
+	if err != nil {
+		log.Fatalln("Failed to create temporary file during compilation process. Error:", err)
+	}
+	return headerFile
+}
+
+func writeTempFile(dir string, name string, contents string) *os.File {
+	file := createTempFile(dir, name)
+	_, err := file.WriteString(contents)
+	if err != nil {
+		log.Fatalln("Failed to write to temporary file during compilation process. Error:", err)
+	}
+	return file
+}
+
+func runCppModule(module cpp.Module) {
+	dir, err := os.MkdirTemp("", "yune-build")
+	if err != nil {
+		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
+	}
+	defer os.RemoveAll(dir)
+
+	header := module.GenHeader()
+	implementation := module.String()
+	headerFile := writeTempFile(dir, "code.hpp", header)
+	implementationFile := writeTempFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
+
+	// NOTE: main function is assumed to exist
+
+	panic("TODO compile and run implementationFile")
 }
 
 func main() {
