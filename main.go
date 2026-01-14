@@ -111,7 +111,7 @@ func runCppModule(module cpp.Module) {
 	if err != nil {
 		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
 	}
-	// defer os.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 
 	header := module.GenHeader()
 	implementation := module.String()
