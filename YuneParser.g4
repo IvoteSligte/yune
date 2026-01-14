@@ -3,7 +3,7 @@ parser grammar YuneParser;
 options { tokenVocab = YuneLexer; }
 
 module
-	: topLevelDeclaration* EOF
+    : topLevelDeclaration* EOF
     ;
 
 topLevelDeclaration
@@ -66,7 +66,7 @@ assignmentOp
     ;
 
 primaryExpression
-    : function=primaryExpression argument=primaryExpression
+    : function=primaryExpression argument=unaryExpression
     | variable
     | INTEGER
     | FLOAT
