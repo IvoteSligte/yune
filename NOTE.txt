@@ -16,3 +16,25 @@ dependency kinds
 
 	value->value // a global constant value is used in the body of a declaration
 		expression // variable use or function call that rely on global declarations
+
+--- January 14 ---
+
+co-recursion
+
+checked code injection
+	JS/python in HTML; unlike C macro library that is unhygienic
+	templating, but checked at compile-time
+	formatting vulnerability
+	C printf vulnerability
+
+embedding game assets at compile-time
+
+macros that generate Yune AST, possibly including more macros
+
+helper for easily parsing macros according to Tobias' suggestions
+       e.g. 
+
+parser(s: String): (type_dependencies, Fn(resolved_type_dependencies) -> (value_dependencies, Fn(resolved...) -> output) =
+	  info = preprocessor(s, "::")
+	  ...
+
