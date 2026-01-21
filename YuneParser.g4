@@ -16,7 +16,7 @@ name
     ;
 
 functionDeclaration
-    : name functionParameters typeAnnotation EQUAL statementBody
+    : name functionParameters COLON type EQUAL statementBody
     ;
 
 functionParameters
@@ -25,15 +25,26 @@ functionParameters
     ;
 
 functionParameter
-    : name typeAnnotation
+    : name COLON type
     ;
 
 constantDeclaration
-    : name typeAnnotation EQUAL statementBody
+    : name COLON type EQUAL statementBody
     ;
 
-typeAnnotation
-    : COLON name
+type
+    : functionType
+    | name
+    ;
+
+functionType
+    : FN LPAREN (COMMA functionTypeArgument)* RPAREN COLON returnType=type
+    ;
+
+// Required to separate it from return type in functionType.
+// Just naming it argument=type is not sufficient when querying multiple arguments.
+functionTypeArgument
+    : type
     ;
 
 statementBody
@@ -50,7 +61,7 @@ statement
     ;
 
 variableDeclaration
-    : name typeAnnotation EQUAL statementBody
+    : name COLON type EQUAL statementBody
     ;
 
 assignment

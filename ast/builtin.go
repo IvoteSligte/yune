@@ -41,6 +41,15 @@ var NilDeclaration = BuiltinTypeDeclaration{
 	},
 }
 
+type BuiltinFunctionDeclaration struct {
+	cpp.FunctionDeclaration
+}
+
+////  String range(Int, Int):
+// var StringRangeDeclaration = BuiltinFunctionDeclaration {
+// 	cpp.FunctionDeclaration
+// };
+
 var BuiltinDeclarations = map[string]Declaration{
 	IntDeclaration.GetName():    IntDeclaration,
 	FloatDeclaration.GetName():  FloatDeclaration,

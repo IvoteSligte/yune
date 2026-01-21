@@ -42,6 +42,7 @@ VAR      : 'var';
 CONST    : 'const';
 TRUE     : 'true';
 FALSE    : 'false';
+FN 	 : 'fn';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z0-9]*;
 

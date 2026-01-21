@@ -88,7 +88,7 @@ func LowerConstantDeclaration(ctx IConstantDeclarationContext) ast.ConstantDecla
 	return ast.ConstantDeclaration{
 		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
-		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
+		Type: LowerType(ctx.Type_()),
 		Body: LowerStatementBody(ctx.StatementBody()),
 	}
 }
@@ -107,7 +107,7 @@ func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDecla
 		Span:       GetSpan(ctx),
 		Name:       LowerName(ctx.Name()),
 		Parameters: LowerFunctionParameters(ctx.FunctionParameters()),
-		ReturnType: LowerTypeAnnotation(ctx.TypeAnnotation()),
+		ReturnType: LowerType(ctx.Type_()),
 		Body:       LowerStatementBody(ctx.StatementBody()),
 	}
 }
@@ -116,7 +116,7 @@ func LowerFunctionParameter(ctx IFunctionParameterContext) ast.FunctionParameter
 	return ast.FunctionParameter{
 		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
-		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
+		Type: LowerType(ctx.Type_()),
 	}
 }
 
@@ -265,11 +265,30 @@ func LowerTuple(ctx ITupleContext) ast.Tuple {
 	}
 }
 
-func LowerTypeAnnotation(ctx ITypeAnnotationContext) ast.Type {
-	return ast.Type{
-		Span: GetSpan(ctx),
-		Name: LowerName(ctx.Name()),
+func LowerType(ctx ITypeContext) ast.Type {
+	switch {
+	case ctx.FunctionType() != nil:
+		return LowerFunctionType(ctx.FunctionType())
+	case ctx.Name() != nil:
+		return &ast.NamedType{
+			Span: GetSpan(ctx),
+			Name: LowerName(ctx.Name()),
+		}
+	default:
+		panic("unreachable")
 	}
+}
+
+func LowerFunctionType(ctx IFunctionTypeContext) ast.Type {
+	return &ast.FunctionType{
+		Span:       GetSpan(ctx),
+		Arguments:  util.Map(ctx.AllFunctionTypeArgument(), LowerFunctionTypeArgument),
+		ReturnType: LowerType(ctx.GetReturnType()),
+	}
+}
+
+func LowerFunctionTypeArgument(ctx IFunctionTypeArgumentContext) ast.Type {
+	return LowerType(ctx.Type_())
 }
 
 func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
@@ -292,7 +311,7 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDecla
 	return ast.VariableDeclaration{
 		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
-		Type: LowerTypeAnnotation(ctx.TypeAnnotation()),
+		Type: LowerType(ctx.Type_()),
 		Body: LowerStatementBody(ctx.StatementBody()),
 	}
 
