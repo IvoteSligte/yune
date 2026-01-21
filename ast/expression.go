@@ -165,7 +165,6 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	fmt.Printf("%v; %v\n", f.Function, f.Argument)
 	maybeFunctionType := f.Function.GetType()
 	argumentType := f.Argument.GetType()
 	functionType, isFunction := maybeFunctionType.(cpp.FunctionType)

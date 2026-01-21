@@ -2,7 +2,6 @@ package ast
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -63,7 +62,6 @@ func (s stage) extractSortedNames() (names []string) {
 	prevLen := len(s)
 	for len(s) > 0 {
 		for name, node := range s {
-			fmt.Printf("%s %d: %v; %v\n", name, node.simuls.Cardinality(), node.simuls.ToSlice(), names)
 			if node.simuls.IsSubset(mapset.NewSet(names...)) {
 				names = append(names, name)
 				delete(s, name)
