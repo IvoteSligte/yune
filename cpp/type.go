@@ -43,9 +43,10 @@ type FunctionType struct {
 func (t FunctionType) String() string {
 	_, isTupleType := t.Parameter.(TupleType)
 	if isTupleType {
-		// functions that take an empty tuple cannot be called with std::apply(),
-		// so this is easier
-		return fmt.Sprintf("std::function<%s()>", t.ReturnType)
+		// simplifies the type of functions that only take a tuple (most Yune functions)
+		// and prevents a few issues, such as std::apply not working with zero-element tuples
+		parameters := util.Join(t.Parameter.(TupleType).Elements, ", ")
+		return fmt.Sprintf("std::function<%s(%s)>", t.ReturnType, parameters)
 	} else {
 		return fmt.Sprintf("std::function<%s(%s)>", t.ReturnType, t.Parameter)
 	}

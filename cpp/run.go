@@ -66,7 +66,7 @@ func Run(module Module) {
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
 
-	cmd := exec.Command("clang", []string{implementationPath, "-o", binaryPath}...)
+	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
