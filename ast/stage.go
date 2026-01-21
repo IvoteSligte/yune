@@ -1,9 +1,9 @@
 package ast
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
-	"maps"
-	"slices"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -63,13 +63,19 @@ func (s stage) extractSortedNames() (names []string) {
 	prevLen := len(s)
 	for len(s) > 0 {
 		for name, node := range s {
+			fmt.Printf("%s %d: %v; %v\n", name, node.simuls.Cardinality(), node.simuls.ToSlice(), names)
 			if node.simuls.IsSubset(mapset.NewSet(names...)) {
 				names = append(names, name)
 				delete(s, name)
 			}
 		}
 		if len(s) == prevLen {
-			log.Fatalf("Infinite loop in extractSortedNames with remaining keys %#v", slices.Collect(maps.Keys(s)))
+			// The compiler should have errored before reaching this point.
+			jsonStr, err := json.Marshal(s)
+			if err != nil {
+				log.Fatalln("Infinite loop in extractSortedNames and Json serialization error:", err)
+			}
+			log.Fatalf("Infinite loop in extractSortedNames with remaining keys %s.", jsonStr)
 		}
 		prevLen = len(s)
 	}

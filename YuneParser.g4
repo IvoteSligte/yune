@@ -67,11 +67,11 @@ assignmentOp
 
 primaryExpression
     : function=primaryExpression argument=primaryExpression
-    | variable
     | INTEGER
     | FLOAT
     | STRING
-    | BOOL
+    | bool=(TRUE | FALSE)
+    | variable
     | LPAREN expression RPAREN
     | tuple
     | macro

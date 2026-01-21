@@ -59,6 +59,10 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			simuls: mapset.NewSet(valueDeps...),
 		}
 	}
+	errors = append(errors, CheckUndefinedDependencies(declarations, graph)...)
+	if len(errors) > 0 {
+		return
+	}
 	errors = append(errors, CheckCyclicType(declarations, graph)...)
 	errors = append(errors, CheckCyclicConstant(declarations, graph)...)
 	if len(errors) > 0 {
@@ -117,6 +121,33 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		priorDeclarations = append(priorDeclarations, lowered.Declarations...)
+	}
+	return
+}
+
+func mapContains[K comparable, V any, M map[K]V](m M, key K) bool {
+	_, exists := m[key]
+	return exists
+}
+
+func CheckUndefinedDependencies(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
+	for _, node := range graph {
+		for _, prior := range node.priors.ToSlice() {
+			if !mapContains(declarations, prior) && !mapContains(BuiltinDeclarations, prior) {
+				errors = append(errors, UndefinedVariable{
+					// TODO: span
+					String: prior,
+				})
+			}
+		}
+		for _, simul := range node.simuls.ToSlice() {
+			if !mapContains(declarations, simul) && !mapContains(BuiltinDeclarations, simul) {
+				errors = append(errors, UndefinedVariable{
+					// TODO: span
+					String: simul,
+				})
+			}
+		}
 	}
 	return
 }

@@ -187,10 +187,10 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Span:  GetSpan(ctx),
 			Value: float,
 		}
-	case ctx.BOOL() != nil:
+	case ctx.GetBool_() != nil:
 		return ast.Bool{
 			Span:  GetSpan(ctx),
-			Value: ctx.BOOL().GetText() == "true",
+			Value: ctx.GetBool_().GetText() == "true",
 		}
 	case ctx.STRING() != nil:
 		s := ctx.STRING().GetText()
@@ -198,7 +198,6 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Span:  GetSpan(ctx),
 			Value: s[1 : len(s)-1], // strip ""
 		}
-
 	case ctx.Expression() != nil:
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
