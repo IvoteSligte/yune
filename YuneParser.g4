@@ -37,6 +37,7 @@ type
     | name
     ;
 
+// TODO: tupleType: LPAREN (COMMA functionTypeArgument)* RPAREN;
 functionType
     : FN LPAREN (COMMA functionTypeArgument)* RPAREN COLON returnType=type
     ;

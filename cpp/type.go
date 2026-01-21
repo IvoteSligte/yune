@@ -41,7 +41,14 @@ type FunctionType struct {
 
 // String implements Type.
 func (t FunctionType) String() string {
-	return fmt.Sprintf("std::function<%s(%s)>", t.ReturnType, t.Parameter)
+	_, isTupleType := t.Parameter.(TupleType)
+	if isTupleType {
+		// functions that take an empty tuple cannot be called with std::apply(),
+		// so this is easier
+		return fmt.Sprintf("std::function<%s()>", t.ReturnType)
+	} else {
+		return fmt.Sprintf("std::function<%s(%s)>", t.ReturnType, t.Parameter)
+	}
 }
 
 // Eq implements Type.

@@ -188,7 +188,7 @@ func (b *BranchStatement) Lower() cpp.Statement {
 	return cpp.BranchStatement{
 		Condition: b.Condition.Lower(),
 		Then:      b.Then.LowerFunctionBody(),
-		Else:      b.Else.LowerFunctionBody(),
+		Else:      b.Else.LowerFunctionBody(), // FIXME: branches generate duplicate, unreachable code (not sure where the bug is)
 	}
 }
 
