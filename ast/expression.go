@@ -381,32 +381,39 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 		})
 		return
 	}
-	switch {
-	case leftType.Eq(IntType):
-	case leftType.Eq(FloatType):
-	default:
+	emitErr := func() {
 		errors = append(errors, InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
 			Right: rightType,
 			At:    b.Span,
 		})
-		return
 	}
 	switch b.Op {
 	case
 		Add,
 		Divide,
 		Multiply,
-		Subtract:
-		b.Type = leftType
-	case
-		Equal,
+		Subtract,
 		Greater,
 		GreaterEqual,
 		Less,
-		LessEqual,
+		LessEqual:
+		if !leftType.Eq(IntType) && !leftType.Eq(FloatType) {
+			emitErr()
+			return
+		}
+		b.Type = leftType
+	case
+		Equal,
 		NotEqual:
+		b.Type = BoolType
+	case
+		Or, And:
+		if !leftType.Eq(BoolType) {
+			emitErr()
+			return
+		}
 		b.Type = BoolType
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
@@ -416,6 +423,7 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (b *BinaryExpression) Lower() cpp.Expression {
+	var op string
 	switch b.Op {
 	case
 		Add,
@@ -428,14 +436,20 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 		Multiply,
 		NotEqual,
 		Subtract:
-		return cpp.BinaryExpression{
-			Op:    cpp.BinaryOp(b.Op),
-			Left:  b.Left.Lower(),
-			Right: b.Right.Lower(),
-		}
+		op = string(b.Op)
+	case Or:
+		op = "||"
+	case And:
+		op = "&&"
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
+	return cpp.BinaryExpression{
+		Op:    cpp.BinaryOp(op),
+		Left:  b.Left.Lower(),
+		Right: b.Right.Lower(),
+	}
+
 }
 
 type BinaryOp string
@@ -451,6 +465,8 @@ const (
 	NotEqual     BinaryOp = "!="
 	LessEqual    BinaryOp = "<="
 	GreaterEqual BinaryOp = ">="
+	Or           BinaryOp = "or"
+	And          BinaryOp = "and"
 )
 
 type Expression interface {

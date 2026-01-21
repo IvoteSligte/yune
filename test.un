@@ -9,4 +9,6 @@ add(a: Int, b: Int): Int = a + b
 
 main(): Int =
 	a: Int = fibonacci(add(N, N))
+	true and false
+	"string galore"
 	0

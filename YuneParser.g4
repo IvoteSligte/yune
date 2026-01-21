@@ -103,6 +103,8 @@ binaryExpression
     | binaryExpression op=(LESS | GREATER) binaryExpression
     | binaryExpression op=(LESSEQUAL | GREATEREQUAL) binaryExpression
     | binaryExpression op=(EQEQUAL | NOTEQUAL) binaryExpression
+    | binaryExpression op=AND binaryExpression
+    | binaryExpression op=OR binaryExpression
     ;
 
 expression

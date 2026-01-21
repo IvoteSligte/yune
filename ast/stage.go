@@ -3,6 +3,7 @@ package ast
 import (
 	"log"
 	"maps"
+	"slices"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -68,7 +69,7 @@ func (s stage) extractSortedNames() (names []string) {
 			}
 		}
 		if len(s) == prevLen {
-			log.Fatalln("Infinite loop in extractSortedNames with remaining keys", maps.Keys(s))
+			log.Fatalf("Infinite loop in extractSortedNames with remaining keys %#v", slices.Collect(maps.Keys(s)))
 		}
 		prevLen = len(s)
 	}

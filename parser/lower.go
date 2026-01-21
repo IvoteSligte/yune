@@ -53,6 +53,10 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 		op = ast.Equal
 	case ctx.NOTEQUAL() != nil:
 		op = ast.NotEqual
+	case ctx.OR() != nil:
+		op = ast.Or
+	case ctx.AND() != nil:
+		op = ast.And
 	default:
 		panic("unreachable")
 	}
@@ -189,10 +193,12 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Value: ctx.BOOL().GetText() == "true",
 		}
 	case ctx.STRING() != nil:
+		s := ctx.STRING().GetText()
 		return ast.String{
 			Span:  GetSpan(ctx),
-			Value: ctx.STRING().GetText(),
+			Value: s[1 : len(s)-1], // strip ""
 		}
+
 	case ctx.Expression() != nil:
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
