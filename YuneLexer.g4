@@ -40,6 +40,7 @@ OR       : 'or';
 LET      : 'let';
 VAR      : 'var';
 CONST    : 'const';
+BOOL     : 'true|false';
 
 IDENTIFIER : [a-zA-Z][a-zA-Z0-9]*;
 

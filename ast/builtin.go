@@ -2,7 +2,10 @@ package ast
 
 import "yune/cpp"
 
-// TODO: just replace with ConstantDeclaration
+// TODO: just replace with ConstantDeclaration or maybe TypeDeclaration,
+// since types need to be handled specially in the Lower function as well
+// due to `typedef A <expr>` not being valid C++. In general we need a way to
+// evaluate expressions used for types.
 type BuiltinTypeDeclaration struct {
 	cpp.TypeAlias
 }
@@ -25,6 +28,12 @@ var BoolDeclaration = BuiltinTypeDeclaration{
 		Of:    "bool",
 	},
 }
+var StringDeclaration = BuiltinTypeDeclaration{
+	cpp.TypeAlias{
+		Alias: "String",
+		Of:    "std::string",
+	},
+}
 var NilDeclaration = BuiltinTypeDeclaration{
 	cpp.TypeAlias{
 		Alias: "Nil",
@@ -33,10 +42,11 @@ var NilDeclaration = BuiltinTypeDeclaration{
 }
 
 var BuiltinDeclarations = map[string]Declaration{
-	IntDeclaration.GetName():   IntDeclaration,
-	FloatDeclaration.GetName(): FloatDeclaration,
-	BoolDeclaration.GetName():  BoolDeclaration,
-	NilDeclaration.GetName():   NilDeclaration,
+	IntDeclaration.GetName():    IntDeclaration,
+	FloatDeclaration.GetName():  FloatDeclaration,
+	BoolDeclaration.GetName():   BoolDeclaration,
+	StringDeclaration.GetName(): StringDeclaration,
+	NilDeclaration.GetName():    NilDeclaration,
 }
 
 // NOTE: main() returns int for compatibility with C++,
@@ -49,6 +59,7 @@ var TypeType = cpp.NamedType{Name: "Type"}
 var IntType = IntDeclaration.Get()
 var FloatType = FloatDeclaration.Get()
 var BoolType = BoolDeclaration.Get()
+var StringType = StringDeclaration.Get()
 var NilType = NilDeclaration.Get()
 
 // GetType implements Declaration.

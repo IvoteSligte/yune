@@ -73,4 +73,18 @@ func (f Float) String() string {
 	return fmt.Sprint(float64(f))
 }
 
+type Bool bool
+
+// Bool implements Expression
+func (b Bool) String() string {
+	return fmt.Sprint(bool(b))
+}
+
+type String string
+
+// String implements Expression
+func (b String) String() string {
+	return `"` + string(b) + `"`
+}
+
 type Expression fmt.Stringer

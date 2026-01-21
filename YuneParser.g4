@@ -66,10 +66,12 @@ assignmentOp
     ;
 
 primaryExpression
-    : function=primaryExpression argument=unaryExpression
+    : function=primaryExpression argument=primaryExpression
     | variable
     | INTEGER
     | FLOAT
+    | STRING
+    | BOOL
     | LPAREN expression RPAREN
     | tuple
     | macro

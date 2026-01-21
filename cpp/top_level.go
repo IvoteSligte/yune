@@ -15,7 +15,9 @@ type Module struct {
 
 func (m Module) GenHeader() string {
 	// <tuple> for std::tuple, std::apply
-	return "#include <tuple>\n" +
+	// <functional> for std::function
+	// <string> for std::string
+	return "#include <tuple>\n#include <functional>\n#include <string>\n" +
 		strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
 }
 
@@ -64,7 +66,6 @@ func (c ConstantDeclaration) String() string {
 }
 
 // Alias of an existing type.
-// Only allowed for builtin types.
 type TypeAlias struct {
 	Alias string
 	Of    string

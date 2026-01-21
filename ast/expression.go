@@ -57,6 +57,56 @@ func (f Float) GetType() cpp.Type {
 	return FloatType
 }
 
+type Bool struct {
+	Span
+	Value bool
+}
+
+// GetGlobalDependencies implements Expression.
+func (f Bool) GetGlobalDependencies() (deps []string) {
+	return
+}
+
+// InferType implements Expression.
+func (f Bool) InferType(deps DeclarationTable) (errors Errors) {
+	return
+}
+
+// Lower implements Expression.
+func (f Bool) Lower() cpp.Expression {
+	return cpp.Bool(f.Value)
+}
+
+// GetType implements Expression.
+func (f Bool) GetType() cpp.Type {
+	return BoolType
+}
+
+type String struct {
+	Span
+	Value string
+}
+
+// GetGlobalDependencies implements Expression.
+func (f String) GetGlobalDependencies() (deps []string) {
+	return
+}
+
+// InferType implements Expression.
+func (f String) InferType(deps DeclarationTable) (errors Errors) {
+	return
+}
+
+// Lower implements Expression.
+func (f String) Lower() cpp.Expression {
+	return cpp.String(f.Value)
+}
+
+// GetType implements Expression.
+func (f String) GetType() cpp.Type {
+	return StringType
+}
+
 type Variable struct {
 	cpp.Type
 	Name
@@ -115,6 +165,7 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
+	fmt.Printf("%v; %v\n", f.Function, f.Argument)
 	maybeFunctionType := f.Function.GetType()
 	argumentType := f.Argument.GetType()
 	functionType, isFunction := maybeFunctionType.(cpp.FunctionType)

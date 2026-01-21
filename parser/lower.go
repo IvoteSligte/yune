@@ -17,7 +17,7 @@ func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 
 func LowerAssignment(ctx IAssignmentContext) ast.Assignment {
 	return ast.Assignment{
-		Span:  GetSpan(ctx),
+		Span:   GetSpan(ctx),
 		Target: LowerVariable(ctx.Variable()),
 		Op:     LowerAssignmentOp(ctx.AssignmentOp()),
 		Body:   LowerStatementBody(ctx.StatementBody()),
@@ -183,6 +183,16 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Span:  GetSpan(ctx),
 			Value: float,
 		}
+	case ctx.BOOL() != nil:
+		return ast.Bool{
+			Span:  GetSpan(ctx),
+			Value: ctx.BOOL().GetText() == "true",
+		}
+	case ctx.STRING() != nil:
+		return ast.String{
+			Span:  GetSpan(ctx),
+			Value: ctx.STRING().GetText(),
+		}
 	case ctx.Expression() != nil:
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
@@ -225,7 +235,7 @@ func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) 
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	statements := ctx.AllStatement()
 	return ast.Block{
-		Span:  GetSpan(ctx),
+		Span:       GetSpan(ctx),
 		Statements: LowerStatement(statements[0], statements[1:]),
 	}
 }
@@ -245,7 +255,7 @@ func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDecla
 
 func LowerTuple(ctx ITupleContext) ast.Tuple {
 	return ast.Tuple{
-		Span: GetSpan(ctx),
+		Span:     GetSpan(ctx),
 		Elements: util.Map(ctx.AllExpression(), LowerExpression),
 	}
 }
