@@ -269,6 +269,8 @@ func LowerType(ctx ITypeContext) ast.Type {
 	switch {
 	case ctx.FunctionType() != nil:
 		return LowerFunctionType(ctx.FunctionType())
+	case ctx.TupleType() != nil:
+		return LowerTupleType(ctx.TupleType())
 	case ctx.Name() != nil:
 		return &ast.NamedType{
 			Span: GetSpan(ctx),
@@ -279,16 +281,19 @@ func LowerType(ctx ITypeContext) ast.Type {
 	}
 }
 
-func LowerFunctionType(ctx IFunctionTypeContext) ast.Type {
-	return &ast.FunctionType{
-		Span:       GetSpan(ctx),
-		Arguments:  util.Map(ctx.AllFunctionTypeArgument(), LowerFunctionTypeArgument),
-		ReturnType: LowerType(ctx.GetReturnType()),
+func LowerTupleType(ctx ITupleTypeContext) ast.Type {
+	return &ast.TupleType{
+		Span:     GetSpan(ctx),
+		Elements: util.Map(ctx.AllType_(), LowerType),
 	}
 }
 
-func LowerFunctionTypeArgument(ctx IFunctionTypeArgumentContext) ast.Type {
-	return LowerType(ctx.Type_())
+func LowerFunctionType(ctx IFunctionTypeContext) ast.Type {
+	return &ast.FunctionType{
+		Span:       GetSpan(ctx),
+		Argument:   LowerTupleType(ctx.TupleType()),
+		ReturnType: LowerType(ctx.GetReturnType()),
+	}
 }
 
 func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {

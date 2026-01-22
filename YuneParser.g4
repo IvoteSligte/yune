@@ -34,18 +34,16 @@ constantDeclaration
 
 type
     : functionType
+    | tupleType
     | name
     ;
 
-// TODO: tupleType: LPAREN (COMMA functionTypeArgument)* RPAREN;
-functionType
-    : FN LPAREN (COMMA functionTypeArgument)* RPAREN COLON returnType=type
+tupleType
+    : LPAREN (COMMA type)* RPAREN
     ;
 
-// Required to separate it from return type in functionType.
-// Just naming it argument=type is not sufficient when querying multiple arguments.
-functionTypeArgument
-    : type
+functionType
+    : FN tupleType COLON returnType=type
     ;
 
 statementBody

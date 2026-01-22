@@ -69,31 +69,61 @@ func (t NamedType) String() string {
 	return t.GetName()
 }
 
+type TupleType struct {
+	Span
+	Elements []Type
+}
+
+func (t TupleType) GetValueDependencies() []string {
+	return util.FlatMap(t.Elements, Type.GetValueDependencies)
+}
+
+func (t *TupleType) Get() cpp.Type {
+	return cpp.TupleType{
+		Elements: util.Map(t.Elements, Type.Get),
+	}
+}
+
+// Calculates the true type without aliases that this type represents.
+func (t *TupleType) Calc(deps DeclarationTable) (errors Errors) {
+	for i := range t.Elements {
+		errors = append(errors, t.Elements[i].Calc(deps)...)
+	}
+	return
+}
+
+func (t TupleType) Lower() cpp.Type {
+	return t.Get()
+}
+
+func (t TupleType) String() string {
+	if len(t.Elements) == 1 {
+		return fmt.Sprintf("(%s,)", t.Elements[0])
+	} else {
+		return fmt.Sprintf("(%s)", util.Join(t.Elements, ", "))
+	}
+}
+
 type FunctionType struct {
 	Span
-	Arguments  []Type
+	Argument   Type
 	ReturnType Type
 }
 
 func (t FunctionType) GetValueDependencies() []string {
-	return append(util.FlatMap(t.Arguments, Type.GetValueDependencies), t.ReturnType.GetValueDependencies()...)
+	return append(t.Argument.GetValueDependencies(), t.ReturnType.GetValueDependencies()...)
 }
 
 func (t *FunctionType) Get() cpp.Type {
 	return cpp.FunctionType{
-		Parameter: cpp.TupleType{
-			Elements: util.Map(t.Arguments, Type.Get),
-		},
+		Parameter:  t.Argument.Get(),
 		ReturnType: t.ReturnType.Get(),
 	}
 }
 
 // Calculates the true type without aliases that this type represents.
 func (t *FunctionType) Calc(deps DeclarationTable) (errors Errors) {
-	for i := range t.Arguments {
-		errors = append(errors, t.Arguments[i].Calc(deps)...)
-	}
-	errors = append(errors, t.ReturnType.Calc(deps)...)
+	errors = append(t.Argument.Calc(deps), t.ReturnType.Calc(deps)...)
 	return
 }
 
@@ -102,8 +132,14 @@ func (t FunctionType) Lower() cpp.Type {
 }
 
 func (t FunctionType) String() string {
-	return fmt.Sprintf("fn(%s): %s", util.Join(t.Arguments, ", "), t.ReturnType)
+	_, isTupleType := t.Argument.(*TupleType)
+	if isTupleType {
+		return fmt.Sprintf("fn%s: %s", t.Argument, t.ReturnType)
+	} else {
+		return fmt.Sprintf("fn(%s): %s", t.Argument, t.ReturnType)
+	}
 }
 
 var _ Type = &NamedType{}
+var _ Type = &TupleType{}
 var _ Type = &FunctionType{}

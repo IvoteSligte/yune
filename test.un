@@ -9,6 +9,9 @@ add(a: Int, b: Int): Int = a + b
 
 something(f: fn(): Int): Int = f()
 
+takeTuple(t: (Int, String)): String =
+    "literal"
+
 main(): Int =
 	a: Int = fibonacci(add(N, N))
 	true and false
