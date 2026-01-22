@@ -93,7 +93,6 @@ variable
 
 tuple
     : LPAREN RPAREN
-    | LPAREN expression COMMA RPAREN
     | LPAREN expression (COMMA expression)+ COMMA? RPAREN
     ;
 
