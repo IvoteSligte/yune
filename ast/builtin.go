@@ -1,6 +1,9 @@
 package ast
 
-import "yune/cpp"
+import (
+	"yune/cpp"
+	"yune/value"
+)
 
 // TODO: just replace with ConstantDeclaration or maybe TypeDeclaration,
 // since types need to be handled specially in the Lower function as well
@@ -60,11 +63,8 @@ var BuiltinDeclarations = map[string]Declaration{
 
 // NOTE: main() returns int for compatibility with C++,
 // though this may change in the future
-var MainType = cpp.FunctionType{
-	Parameter:  cpp.TupleType{},
-	ReturnType: IntType,
-}
-var TypeType = cpp.NamedType{Name: "Type"}
+var MainType = value.Type("std::function<Int()>")
+var TypeType = value.Type("Type")
 var IntType = IntDeclaration.Get()
 var FloatType = FloatDeclaration.Get()
 var BoolType = BoolDeclaration.Get()
@@ -72,7 +72,7 @@ var StringType = StringDeclaration.Get()
 var NilType = NilDeclaration.Get()
 
 // GetType implements Declaration.
-func (d BuiltinTypeDeclaration) GetType() cpp.Type {
+func (d BuiltinTypeDeclaration) GetType() value.Type {
 	return TypeType
 }
 
@@ -87,7 +87,7 @@ func (d BuiltinTypeDeclaration) CalcType(deps DeclarationTable) (errors Errors) 
 }
 
 // GetTypeDependencies implements Declaration.
-func (d BuiltinTypeDeclaration) GetTypeDependencies() (deps []string) {
+func (d BuiltinTypeDeclaration) GetTypeDependencies() (deps []*Type) {
 	return
 }
 

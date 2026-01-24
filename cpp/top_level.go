@@ -77,7 +77,7 @@ func (t TypeAlias) GenHeader() string {
 }
 
 func (t TypeAlias) Get() Type {
-	return NamedType{Name: t.Alias}
+	return Type(t.Alias)
 }
 
 func (t TypeAlias) String() string {

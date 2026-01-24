@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"yune/cpp"
+	"yune/value"
 )
 
 type DuplicateDeclaration struct {
@@ -16,7 +16,7 @@ func (e DuplicateDeclaration) Error() string {
 
 type InvalidUnaryExpressionType struct {
 	Op   UnaryOp
-	Type cpp.Type
+	Type value.Type
 	At   Span
 }
 
@@ -31,8 +31,8 @@ func (e InvalidUnaryExpressionType) Error() string {
 
 type InvalidBinaryExpressionTypes struct {
 	Op    BinaryOp
-	Left  cpp.Type
-	Right cpp.Type
+	Left  value.Type
+	Right value.Type
 	At    Span
 }
 
@@ -59,7 +59,7 @@ func (e UndefinedType) Error() string {
 }
 
 type NotAFunction struct {
-	Found cpp.Type
+	Found value.Type
 	At    Span
 }
 
@@ -68,7 +68,7 @@ func (e NotAFunction) Error() string {
 }
 
 type NotAType struct {
-	Found cpp.Type
+	Found value.Type
 	At    Span
 }
 
@@ -77,8 +77,8 @@ func (e NotAType) Error() string {
 }
 
 type AssignmentTypeMismatch struct {
-	Expected cpp.Type
-	Found    cpp.Type
+	Expected value.Type
+	Found    value.Type
 	At       Span
 }
 
@@ -87,8 +87,8 @@ func (e AssignmentTypeMismatch) Error() string {
 }
 
 type ReturnTypeMismatch struct {
-	Expected cpp.Type
-	Found    cpp.Type
+	Expected value.Type
+	Found    value.Type
 	At       Span
 }
 
@@ -97,8 +97,8 @@ func (e ReturnTypeMismatch) Error() string {
 }
 
 type VariableTypeMismatch struct {
-	Expected cpp.Type
-	Found    cpp.Type
+	Expected value.Type
+	Found    value.Type
 	At       Span
 }
 
@@ -107,8 +107,8 @@ func (e VariableTypeMismatch) Error() string {
 }
 
 type ConstantTypeMismatch struct {
-	Expected cpp.Type
-	Found    cpp.Type
+	Expected value.Type
+	Found    value.Type
 	At       Span
 }
 
@@ -117,8 +117,8 @@ func (e ConstantTypeMismatch) Error() string {
 }
 
 type ArgumentTypeMismatch struct {
-	Expected cpp.Type
-	Found    cpp.Type
+	Expected value.Type
+	Found    value.Type
 	At       Span
 }
 
@@ -127,7 +127,7 @@ func (e ArgumentTypeMismatch) Error() string {
 }
 
 type InvalidConditionType struct {
-	Found cpp.Type
+	Found value.Type
 	At    Span
 }
 
@@ -136,9 +136,9 @@ func (e InvalidConditionType) Error() string {
 }
 
 type BranchTypeNotEqual struct {
-	Then   cpp.Type
+	Then   value.Type
 	ThenAt Span
-	Else   cpp.Type
+	Else   value.Type
 	ElseAt Span
 }
 
@@ -153,7 +153,7 @@ func (e BranchTypeNotEqual) Error() string {
 }
 
 type InvalidMainSignature struct {
-	Found cpp.Type
+	Found value.Type
 	At    Span
 }
 

@@ -3,6 +3,7 @@ package ast
 import (
 	"yune/cpp"
 	"yune/util"
+	"yune/value"
 )
 
 type FunctionDeclaration struct {
@@ -21,13 +22,28 @@ func (d *FunctionDeclaration) GetSpan() Span {
 
 // TypeCheckBody implements Declaration.
 func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+	// check for duplicate parameters
+	paramNames := map[string]*FunctionParameter{}
+	for i := range d.Parameters {
+		param := &d.Parameters[i]
+		prev, exists := paramNames[param.GetName()]
+		if exists {
+			errors = append(errors, DuplicateDeclaration{
+				First:  prev,
+				Second: param,
+			})
+		}
+	}
+	if len(errors) > 0 {
+		return
+	}
 	deps = deps.NewScope()
 	deps.declarations = map[string]Declaration{d.GetName(): d}
 	for i := range d.Parameters {
 		param := &d.Parameters[i]
 		deps.declarations[param.GetName()] = param
 	}
-	errors = d.Body.InferType(deps)
+	errors = append(errors, d.Body.InferType(deps)...)
 	if len(errors) > 0 {
 		return
 	}
@@ -39,6 +55,12 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			Expected: returnType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
+		})
+	}
+	if d.GetName() == "main" && !d.GetType().Eq(MainType) {
+		errors = append(errors, InvalidMainSignature{
+			Found: d.GetType(),
+			At:    d.Name.GetSpan(),
 		})
 	}
 	return
@@ -58,39 +80,9 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []string) {
 }
 
 // GetTypeDependencies implements Declaration.
-func (d FunctionDeclaration) GetTypeDependencies() (deps []string) {
+func (d FunctionDeclaration) GetTypeDependencies() (deps []*Type) {
 	deps = util.FlatMap(d.Parameters, FunctionParameter.GetTypeDependencies)
-	deps = append(deps, d.ReturnType.GetValueDependencies()...)
-	return
-}
-
-// CalcType implements Declaration.
-func (d *FunctionDeclaration) CalcType(deps DeclarationTable) (errors Errors) {
-	// check for duplicate parameters
-	paramNames := map[string]*FunctionParameter{}
-	for i := range d.Parameters {
-		param := &d.Parameters[i]
-		prev, exists := paramNames[param.GetName()]
-		if exists {
-			errors = append(errors, DuplicateDeclaration{
-				First:  prev,
-				Second: param,
-			})
-		}
-	}
-	for i := range d.Parameters {
-		errors = append(errors, d.Parameters[i].CalcType(deps)...)
-	}
-	errors = append(errors, d.ReturnType.Calc(deps)...)
-	if len(errors) > 0 {
-		return
-	}
-	if d.GetName() == "main" && !d.GetType().Eq(MainType) {
-		errors = append(errors, InvalidMainSignature{
-			Found: d.GetType(),
-			At:    d.Name.GetSpan(),
-		})
-	}
+	deps = append(deps, d.ReturnType.expression)
 	return
 }
 
@@ -108,7 +100,7 @@ func (d FunctionDeclaration) GetName() string {
 	return d.Name.String
 }
 
-func (d FunctionDeclaration) GetType() cpp.Type {
+func (d FunctionDeclaration) GetType() value.Type {
 	if len(d.Parameters) == 1 {
 		return cpp.FunctionType{
 			Parameter:  d.Parameters[0].GetType(),
@@ -148,23 +140,18 @@ func (d FunctionParameter) GetName() string {
 }
 
 // GetType implements Declaration
-func (d FunctionParameter) GetType() cpp.Type {
+func (d FunctionParameter) GetType() value.Type {
 	return d.Type.Get()
 }
 
 // GetTypeDependencies implements Declaration
-func (d FunctionParameter) GetTypeDependencies() []string {
-	return d.Type.GetValueDependencies()
+func (d *FunctionParameter) GetTypeDependencies() []*Type {
+	return []*Type{&d.Type}
 }
 
 // GetValueDependencies implements Declaration
 func (d FunctionParameter) GetValueDependencies() (deps []string) {
 	return
-}
-
-// CalcType implements Declaration
-func (d *FunctionParameter) CalcType(deps DeclarationTable) Errors {
-	return d.Type.Calc(deps)
 }
 
 type ConstantDeclaration struct {
@@ -199,18 +186,13 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetTypeDependencies implements Declaration.
-func (d ConstantDeclaration) GetTypeDependencies() []string {
-	return d.Type.GetValueDependencies()
+func (d *ConstantDeclaration) GetTypeDependencies() []*Type {
+	return append([]*Type{&d.Type}, d.Body.GetTypeDependencies()...)
 }
 
 // GetValueDependencies implements Declaration.
 func (d ConstantDeclaration) GetValueDependencies() []string {
-	return append(d.GetTypeDependencies(), d.Body.GetValueDependencies()...)
-}
-
-// InferType implements Declaration.
-func (d *ConstantDeclaration) CalcType(deps DeclarationTable) Errors {
-	return d.Type.Calc(deps)
+	return d.Body.GetValueDependencies()
 }
 
 // Lower implements Declaration.
@@ -223,7 +205,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 }
 
 // GetType implements Declaration.
-func (d ConstantDeclaration) GetType() cpp.Type {
+func (d ConstantDeclaration) GetType() value.Type {
 	return d.Type.Get()
 }
 

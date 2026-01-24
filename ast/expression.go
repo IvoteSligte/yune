@@ -5,6 +5,7 @@ import (
 	"log"
 	"yune/cpp"
 	"yune/util"
+	"yune/value"
 )
 
 type Integer struct {
@@ -28,7 +29,7 @@ func (i Integer) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (i Integer) GetType() cpp.Type {
+func (i Integer) GetType() value.Type {
 	return IntType
 }
 
@@ -53,7 +54,7 @@ func (f Float) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (f Float) GetType() cpp.Type {
+func (f Float) GetType() value.Type {
 	return FloatType
 }
 
@@ -78,7 +79,7 @@ func (f Bool) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (f Bool) GetType() cpp.Type {
+func (f Bool) GetType() value.Type {
 	return BoolType
 }
 
@@ -103,17 +104,17 @@ func (f String) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (f String) GetType() cpp.Type {
+func (f String) GetType() value.Type {
 	return StringType
 }
 
 type Variable struct {
-	cpp.Type
+	value.Type
 	Name
 }
 
 // GetType implements Expression.
-func (v *Variable) GetType() cpp.Type {
+func (v *Variable) GetType() value.Type {
 	return v.Type
 }
 
@@ -144,13 +145,13 @@ func (v *Variable) Lower() cpp.Expression {
 
 type FunctionCall struct {
 	Span
-	cpp.Type
+	value.Type
 	Function Expression
 	Argument Expression
 }
 
 // GetType implements Expression.
-func (f *FunctionCall) GetType() cpp.Type {
+func (f *FunctionCall) GetType() value.Type {
 	return f.Type
 }
 
@@ -245,7 +246,7 @@ func (t *Tuple) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (t *Tuple) GetType() cpp.Type {
+func (t *Tuple) GetType() value.Type {
 	return cpp.TupleType{
 		Elements: util.Map(t.Elements, Expression.GetType),
 	}
@@ -281,19 +282,19 @@ func (m *Macro) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (m *Macro) GetType() cpp.Type {
+func (m *Macro) GetType() value.Type {
 	return m.Result.GetType()
 }
 
 type UnaryExpression struct {
 	Span
-	cpp.Type
+	value.Type
 	Op         UnaryOp
 	Expression Expression
 }
 
 // GetType implements Expression.
-func (u *UnaryExpression) GetType() cpp.Type {
+func (u *UnaryExpression) GetType() value.Type {
 	return u.Type
 }
 
@@ -347,14 +348,14 @@ const (
 
 type BinaryExpression struct {
 	Span
-	cpp.Type
+	value.Type
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
 }
 
 // GetType implements Expression.
-func (b *BinaryExpression) GetType() cpp.Type {
+func (b *BinaryExpression) GetType() value.Type {
 	return b.Type
 }
 
@@ -472,7 +473,7 @@ type Expression interface {
 	Node
 	GetGlobalDependencies() []string
 	InferType(deps DeclarationTable) (errors Errors)
-	GetType() cpp.Type
+	GetType() value.Type
 	Lower() cpp.Expression
 }
 

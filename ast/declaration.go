@@ -2,7 +2,7 @@ package ast
 
 import (
 	"log"
-	"yune/cpp"
+	"yune/value"
 )
 
 type DeclarationTable struct {
@@ -57,12 +57,10 @@ type Declaration interface {
 
 	// --- compilation stage 1 ---
 
-	// Queries the names of types used in this declaration, including in the body.
-	GetTypeDependencies() []string
-	// Calculates the declaration's type, but does not touch the body.
-	CalcType(deps DeclarationTable) Errors
+	// Queries the type expressions used in this declaration, including in the body.
+	GetTypeDependencies() []*Type
 	// Returns the calculated type.
-	GetType() cpp.Type
+	GetType() value.Type
 
 	// --- compilation stage 2 ---
 

@@ -39,7 +39,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	// detect dependency cycles
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		typeDeps := m.Declarations[i].GetTypeDependencies()
+		typeExprs := m.Declarations[i].GetTypeDependencies()
 		valueDeps := m.Declarations[i].GetValueDependencies()
 
 		// TEMP (should be a unit test)

@@ -3,6 +3,7 @@ package ast
 import (
 	"yune/cpp"
 	"yune/util"
+	"yune/value"
 )
 
 type VariableDeclaration struct {
@@ -18,13 +19,13 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetTypeDependencies implements Statement.
-func (d *VariableDeclaration) GetTypeDependencies() []string {
-	return append(d.Type.GetValueDependencies(), d.Body.GetTypeDependencies()...)
+func (d *VariableDeclaration) GetTypeDependencies() []*Type {
+	return append([]Expression{d.Type.expression}, d.Body.GetTypeDependencies()...)
 }
 
 // GetValueDependencies implements Statement.
 func (d VariableDeclaration) GetValueDependencies() []string {
-	return append(d.Type.GetValueDependencies(), d.Body.GetValueDependencies()...)
+	return d.Body.GetValueDependencies()
 }
 
 // InferType implements Statement.
@@ -54,7 +55,7 @@ func (d *VariableDeclaration) CalcType(deps DeclarationTable) Errors {
 func (d VariableDeclaration) Lower() cpp.Statement {
 	return cpp.VariableDeclaration{
 		Name:  d.Name.String,
-		Type:  d.Type.Lower(),
+		Type:  d.Type.Lower(), // TODO: actually register the type too
 		Value: d.Body.LowerVariableBody(),
 	}
 }
@@ -63,7 +64,7 @@ func (d VariableDeclaration) GetName() string {
 	return d.Name.String
 }
 
-func (d VariableDeclaration) GetType() cpp.Type {
+func (d VariableDeclaration) GetType() value.Type {
 	return NilType
 }
 
@@ -112,7 +113,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	}
 }
 
-func (a Assignment) GetType() cpp.Type {
+func (a Assignment) GetType() value.Type {
 	return NilType
 }
 
@@ -130,14 +131,14 @@ const (
 // statements in a block are is in its .Else field.
 type BranchStatement struct {
 	Span
-	cpp.Type
+	value.Type
 	Condition Expression
 	Then      Block
 	Else      Block
 }
 
 // GetType implements Statement.
-func (b *BranchStatement) GetType() cpp.Type {
+func (b *BranchStatement) GetType() value.Type {
 	return b.Type
 }
 
@@ -197,7 +198,7 @@ type Block struct {
 	Statements []Statement
 }
 
-func (b Block) GetType() cpp.Type {
+func (b Block) GetType() value.Type {
 	return b.Statements[len(b.Statements)-1].GetType()
 }
 
@@ -219,7 +220,7 @@ func (b *Block) GetValueDependencies() (deps []string) {
 	return
 }
 
-func (b *Block) GetTypeDependencies() (deps []string) {
+func (b *Block) GetTypeDependencies() (deps []*Type) {
 	for _, stmt := range b.Statements {
 		decl, ok := stmt.(Declaration)
 		if ok {
@@ -294,7 +295,7 @@ type Types = []*Type
 type Statement interface {
 	Node
 	InferType(deps DeclarationTable) Errors
-	GetType() cpp.Type
+	GetType() value.Type
 	GetTypeDependencies() (deps []string)
 	GetValueDependencies() (deps []string)
 	Lower() cpp.Statement
