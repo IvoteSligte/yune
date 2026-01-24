@@ -34,14 +34,6 @@ constantDeclaration
 
 type: expression;
 
-tupleType
-    : LPAREN (COMMA type)* RPAREN
-    ;
-
-functionType
-    : FN tupleType COLON returnType=type
-    ;
-
 statementBody
     : statement
     | NEWLINE INDENT statement+ DEDENT

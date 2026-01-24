@@ -7,7 +7,7 @@ fibonacci(n: Int): Int =
 
 add(a: Int, b: Int): Int = a + b
 
-something(f: fn(): Int): Int = f()
+something(f: Fn((), Int)): Int = f()
 
 takeTuple(t: (Int, String)): String =
     "literal"

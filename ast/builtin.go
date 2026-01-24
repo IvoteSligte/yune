@@ -35,6 +35,8 @@ var NilDeclaration = BuiltinTypeDeclaration{
 	Of:    "void",
 }
 
+// TODO: builtin List, Fn
+
 type BuiltinFunctionDeclaration struct {
 	cpp.FunctionDeclaration
 }
