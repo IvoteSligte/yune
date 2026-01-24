@@ -20,7 +20,7 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 
 // GetTypeDependencies implements Statement.
 func (d *VariableDeclaration) GetTypeDependencies() []*Type {
-	return append([]Expression{d.Type.expression}, d.Body.GetTypeDependencies()...)
+	return append([]*Type{&d.Type}, d.Body.GetTypeDependencies()...)
 }
 
 // GetValueDependencies implements Statement.
@@ -30,7 +30,7 @@ func (d VariableDeclaration) GetValueDependencies() []string {
 
 // InferType implements Statement.
 func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(d.Type.Calc(deps), d.Body.InferType(deps)...)
+	errors = d.Body.InferType(deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -76,7 +76,7 @@ type Assignment struct {
 }
 
 // GetTypeDependencies implements Statement.
-func (a *Assignment) GetTypeDependencies() []string {
+func (a *Assignment) GetTypeDependencies() []*Type {
 	return a.Body.GetTypeDependencies()
 }
 
@@ -143,7 +143,7 @@ func (b *BranchStatement) GetType() value.Type {
 }
 
 // GetTypeDependencies implements Statement.
-func (b *BranchStatement) GetTypeDependencies() (deps []string) {
+func (b *BranchStatement) GetTypeDependencies() (deps []*Type) {
 	return append(b.Then.GetTypeDependencies(), b.Else.GetTypeDependencies()...)
 }
 
@@ -276,7 +276,7 @@ type ExpressionStatement struct {
 }
 
 // GetTypeDependencies implements Statement.
-func (e *ExpressionStatement) GetTypeDependencies() (deps []string) {
+func (e *ExpressionStatement) GetTypeDependencies() (deps []*Type) {
 	return
 }
 
@@ -296,7 +296,7 @@ type Statement interface {
 	Node
 	InferType(deps DeclarationTable) Errors
 	GetType() value.Type
-	GetTypeDependencies() (deps []string)
+	GetTypeDependencies() (deps []*Type)
 	GetValueDependencies() (deps []string)
 	Lower() cpp.Statement
 }

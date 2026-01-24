@@ -10,38 +10,29 @@ import (
 // due to `typedef A <expr>` not being valid C++. In general we need a way to
 // evaluate expressions used for types.
 type BuiltinTypeDeclaration struct {
-	cpp.TypeAlias
+	Alias string
+	Of    string
 }
 
 var IntDeclaration = BuiltinTypeDeclaration{
-	cpp.TypeAlias{
-		Alias: "Int",
-		Of:    "int",
-	},
+	Alias: "Int",
+	Of:    "int",
 }
 var FloatDeclaration = BuiltinTypeDeclaration{
-	cpp.TypeAlias{
-		Alias: "Float",
-		Of:    "float",
-	},
+	Alias: "Float",
+	Of:    "float",
 }
 var BoolDeclaration = BuiltinTypeDeclaration{
-	cpp.TypeAlias{
-		Alias: "Bool",
-		Of:    "bool",
-	},
+	Alias: "Bool",
+	Of:    "bool",
 }
 var StringDeclaration = BuiltinTypeDeclaration{
-	cpp.TypeAlias{
-		Alias: "String",
-		Of:    "std::string",
-	},
+	Alias: "String",
+	Of:    "std::string",
 }
 var NilDeclaration = BuiltinTypeDeclaration{
-	cpp.TypeAlias{
-		Alias: "Nil",
-		Of:    "void",
-	},
+	Alias: "Nil",
+	Of:    "void",
 }
 
 type BuiltinFunctionDeclaration struct {
@@ -78,7 +69,10 @@ func (d BuiltinTypeDeclaration) GetType() value.Type {
 
 // Lower implements TopLevelDeclaration.
 func (d BuiltinTypeDeclaration) Lower() cpp.TopLevelDeclaration {
-	return d.TypeAlias
+	return cpp.TypeAlias{
+		Alias: d.Alias,
+		Of:    d.Of,
+	}
 }
 
 // CalcType implements Declaration.
@@ -111,4 +105,8 @@ func (d BuiltinTypeDeclaration) GetSpan() Span {
 
 func (d BuiltinTypeDeclaration) InferType(DeclarationTable) (errors Errors) {
 	return
+}
+
+func (d BuiltinTypeDeclaration) Get() value.Type {
+	return value.Type(d.Of)
 }

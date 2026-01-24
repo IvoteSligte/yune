@@ -131,7 +131,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 		errors = append(errors, UndefinedVariable(v.Name))
 		return
 	}
-	if decl.GetType() == nil {
+	if decl.GetType() == value.Type("") {
 		log.Printf("WARN: Type queried before being calculated on declaration '%s'.", v.GetName())
 	}
 	v.Type = decl.GetType()
@@ -168,32 +168,32 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 	}
 	maybeFunctionType := f.Function.GetType()
 	argumentType := f.Argument.GetType()
-	functionType, isFunction := maybeFunctionType.(cpp.FunctionType)
-	if !isFunction {
+	if !maybeFunctionType.IsFunction() {
 		errors = append(errors, NotAFunction{
 			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
 		})
 		return
 	}
-	if !argumentType.Eq(functionType.Parameter) {
+	parameterType, returnType := maybeFunctionType.ToFunction()
+	if !argumentType.Eq(parameterType) {
 		errors = append(errors, ArgumentTypeMismatch{
-			Expected: functionType.Parameter,
+			Expected: parameterType,
 			Found:    argumentType,
 			At:       f.Argument.GetSpan(),
 		})
 		return
 	}
-	f.Type = functionType.ReturnType
+	f.Type = returnType
 	return
 }
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
-	tupleType, argumentIsTuple := f.Argument.GetType().(cpp.TupleType)
-	if argumentIsTuple {
+	argumentType := f.Argument.GetType()
+	if argumentType.IsTuple() {
 		// functions called with the empty tuple are lowered to functions called with nothing
-		if len(tupleType.Elements) == 0 {
+		if argumentType.IsEmptyTuple() {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
 				Arguments: []cpp.Expression{},
@@ -247,9 +247,7 @@ func (t *Tuple) Lower() cpp.Expression {
 
 // GetType implements Expression.
 func (t *Tuple) GetType() value.Type {
-	return cpp.TupleType{
-		Elements: util.Map(t.Elements, Expression.GetType),
-	}
+	return value.NewTupleType(util.Map(t.Elements, Expression.GetType))
 }
 
 type Macro struct {

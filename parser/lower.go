@@ -266,33 +266,8 @@ func LowerTuple(ctx ITupleContext) ast.Tuple {
 }
 
 func LowerType(ctx ITypeContext) ast.Type {
-	switch {
-	case ctx.FunctionType() != nil:
-		return LowerFunctionType(ctx.FunctionType())
-	case ctx.TupleType() != nil:
-		return LowerTupleType(ctx.TupleType())
-	case ctx.Name() != nil:
-		return &ast.NamedType{
-			Span: GetSpan(ctx),
-			Name: LowerName(ctx.Name()),
-		}
-	default:
-		panic("unreachable")
-	}
-}
-
-func LowerTupleType(ctx ITupleTypeContext) ast.Type {
-	return &ast.TupleType{
-		Span:     GetSpan(ctx),
-		Elements: util.Map(ctx.AllType_(), LowerType),
-	}
-}
-
-func LowerFunctionType(ctx IFunctionTypeContext) ast.Type {
-	return &ast.FunctionType{
-		Span:       GetSpan(ctx),
-		Argument:   LowerTupleType(ctx.TupleType()),
-		ReturnType: LowerType(ctx.GetReturnType()),
+	return ast.Type{
+		Expression: LowerExpression(ctx.Expression()),
 	}
 }
 

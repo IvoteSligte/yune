@@ -9,7 +9,7 @@ import (
 type Type struct {
 	// Evaluated expression
 	value      value.Type
-	expression Expression
+	Expression Expression
 }
 
 // TODO: rename to GetValue

@@ -32,11 +32,7 @@ constantDeclaration
     : name COLON type EQUAL statementBody
     ;
 
-type
-    : functionType
-    | tupleType
-    | name
-    ;
+type: expression;
 
 tupleType
     : LPAREN (COMMA type)* RPAREN
