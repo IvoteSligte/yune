@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"yune/util"
+	"yune/value"
 )
 
 func format(code string) (formatted string, err error) {
@@ -53,6 +55,8 @@ func writeFile(dir string, name string, contents string) *os.File {
 }
 
 func Run(module Module) {
+	// NOTE: main function is assumed to exist
+
 	dir, err := os.MkdirTemp("", "yune-build")
 	if err != nil {
 		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
@@ -61,7 +65,7 @@ func Run(module Module) {
 
 	header := module.GenHeader()
 	implementation := module.String()
-	writeFile(dir, "code.hpp", header)
+	writeFile(dir, "code.hpp", header) // TODO: close files
 	writeFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
@@ -76,5 +80,76 @@ func Run(module Module) {
 	if err != nil {
 		log.Fatalln("Failed to run code. Error:", err)
 	}
-	// NOTE: main function is assumed to exist
+}
+
+type RawCpp string
+
+func (r RawCpp) String() string {
+	return string(r)
+}
+
+func Evaluate(module Module, batch []Expression) []value.Value {
+	// NOTE: main function is assumed not to exist
+
+	outputFile, err := os.CreateTemp("", "yune-eval")
+	if err != nil {
+		log.Fatalln("Failed to create temporary file during compile-time C++ evaluation. Error:", err)
+	}
+	defer os.Remove(outputFile.Name()) // TODO: close file
+	makeSerializeFunction := func(type_ string, content string) FunctionDeclaration {
+		return FunctionDeclaration{
+			Name: "serialize_",
+			Parameters: []FunctionParameter{
+				{
+					Name: "file",
+					Type: Type("std::fstream"),
+				},
+				{
+					Name: "t",
+					Type: Type(type_),
+				},
+			},
+			ReturnType: "void",
+			Body: Block{
+				Statement(RawCpp(`file << ` + content + ` << '\0';`)),
+			},
+		}
+	}
+	// module.Declarations = append(module.Declarations, makeSerializeFunction("TupleType", `"std::tuple<" << t[TODO] << ">"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("ListType", `"std::vector<" << t << ">"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("IntType", `"int"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("FloatType", `"float"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("BoolType", `"bool"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("StringType", `"string"`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("Int", `t`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("Float", `t`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("Bool", `t`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("String", `<< '"' << t << '"' <<`))
+
+	statements := []Statement{
+		Statement(RawCpp(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
+	}
+	for _, e := range batch {
+		if e != nil {
+			statements = append(statements, Statement(RawCpp("serialize_(outputFile, "+e.String()+");")))
+		}
+	}
+	module.Declarations = append(module.Declarations, FunctionDeclaration{
+		Name:       "main",
+		Parameters: []FunctionParameter{},
+		ReturnType: "int",
+		Body:       Block(statements),
+	})
+	Run(module)
+	content, err := os.ReadFile(outputFile.Name())
+	if err != nil {
+		log.Fatalf("Failed to read compile-time evaluation output file '%s'. Error: %s", outputFile.Name(), err)
+	}
+	outputStrings := strings.Split(string(content), "\x00")
+	if len(outputStrings) != len(batch) {
+		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(outputStrings))
+	}
+	return util.Map(outputStrings, func(s string) value.Value {
+		return value.Value(s)
+	})
 }

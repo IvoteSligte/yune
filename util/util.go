@@ -41,6 +41,14 @@ func FlatMap[T, V any](slice []T, function func(T) []V) []V {
 	return result
 }
 
+func FlatMapPtr[T, V any](slice []T, function func(*T) []V) []V {
+	result := make([]V, 0, len(slice))
+	for i := range slice {
+		result = append(result, function(&slice[i])...)
+	}
+	return result
+}
+
 func Prepend[T any](element T, slice []T) []T {
 	return append([]T{element}, slice...)
 }

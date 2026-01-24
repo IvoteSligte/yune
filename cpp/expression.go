@@ -84,7 +84,7 @@ type String string
 
 // String implements Expression
 func (b String) String() string {
-	return `"` + string(b) + `"`
+	return `std::string("` + string(b) + `")`
 }
 
 type Expression fmt.Stringer

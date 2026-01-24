@@ -53,7 +53,7 @@ type BuiltinFunctionDeclaration struct {
 // 	cpp.FunctionDeclaration
 // };
 
-var BuiltinDeclarations = map[string]Declaration{
+var BuiltinDeclarations = map[string]TopLevelDeclaration{
 	IntDeclaration.GetName():    IntDeclaration,
 	FloatDeclaration.GetName():  FloatDeclaration,
 	BoolDeclaration.GetName():   BoolDeclaration,

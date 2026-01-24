@@ -17,7 +17,8 @@ func (m Module) GenHeader() string {
 	// <tuple> for std::tuple, std::apply
 	// <functional> for std::function
 	// <string> for std::string
-	return "#include <tuple>\n#include <functional>\n#include <string>\n" +
+	// <fstream> for std::fstream (only for evaluation right now)
+	return "#include <tuple>\n#include <functional>\n#include <string>\n#include <fstream>" +
 		strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
 }
 

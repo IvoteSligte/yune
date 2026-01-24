@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
@@ -80,9 +81,9 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []string) {
 }
 
 // GetTypeDependencies implements Declaration.
-func (d FunctionDeclaration) GetTypeDependencies() (deps []*Type) {
-	deps = util.FlatMap(d.Parameters, FunctionParameter.GetTypeDependencies)
-	deps = append(deps, d.ReturnType.expression)
+func (d *FunctionDeclaration) GetTypeDependencies() (deps []*Type) {
+	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
+	deps = append(deps, &d.ReturnType)
 	return
 }
 
@@ -102,17 +103,10 @@ func (d FunctionDeclaration) GetName() string {
 
 func (d FunctionDeclaration) GetType() value.Type {
 	if len(d.Parameters) == 1 {
-		return cpp.FunctionType{
-			Parameter:  d.Parameters[0].GetType(),
-			ReturnType: d.ReturnType.Get(),
-		}
+		return value.Type(fmt.Sprintf("std::function<%s(%s)>", d.ReturnType.Get(), d.Parameters[0].GetType()))
 	} else {
-		return cpp.FunctionType{
-			Parameter: cpp.TupleType{
-				Elements: util.Map(d.Parameters, FunctionParameter.GetType),
-			},
-			ReturnType: d.ReturnType.Get(),
-		}
+		params := util.Join(util.Map(d.Parameters, FunctionParameter.GetType), ", ")
+		return value.Type(fmt.Sprintf("std::function<%s(std::tuple<%s>)>", d.ReturnType.Get(), params))
 	}
 }
 

@@ -2,10 +2,9 @@ package ast
 
 import (
 	"log"
-	"maps"
-	"slices"
 	"yune/cpp"
 	"yune/util"
+	"yune/value"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -15,112 +14,155 @@ type Module struct {
 }
 
 func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
-	declarations := map[string]TopLevelDeclaration{}
+	stageNodes := mapset.NewSet[*stageNode]()
+	declarationToNode := map[string]*stageNode{}
+
+	for name, builtin := range BuiltinDeclarations {
+		node := &stageNode{
+			expression:  nil,
+			destination: nil,
+			declaration: builtin,
+			after:       nil,
+			requires:    nil,
+		}
+		stageNodes.Add(node)
+		declarationToNode[name] = node
+	}
 
 	// get unique mapping of name -> declaration
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		other, exists := declarations[name]
+		other, exists := declarationToNode[name]
 
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
-				First:  other,
+				First:  other.declaration,
 				Second: m.Declarations[i],
 			})
 		} else {
-			declarations[name] = m.Declarations[i]
+			node := &stageNode{
+				expression:  nil,
+				destination: nil,
+				declaration: m.Declarations[i],
+				after:       nil, // set later
+				requires:    nil, // set later
+			}
+			declarationToNode[name] = node
+			stageNodes.Add(node)
 		}
 	}
 	if len(errors) > 0 {
 		return
 	}
-	graph := map[string]stageNode{}
+	getDeclarationNode := func(name string) *stageNode {
+		node, exists := declarationToNode[name]
+		if !exists {
+			errors = append(errors, UndefinedType{
+				Span:   Span{}, // TODO: span
+				String: name,
+			})
+		}
+		return node
+	}
 
 	// detect dependency cycles
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		typeExprs := m.Declarations[i].GetTypeDependencies()
-		valueDeps := m.Declarations[i].GetValueDependencies()
+		typeDependencies := mapset.NewSet[*stageNode]()
+		valueDependencies := mapset.NewSet[*stageNode]()
 
-		// TEMP (should be a unit test)
-		for _, t := range typeDeps {
-			if len(t) == 0 {
-				log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
+		for _, typeExpression := range m.Declarations[i].GetTypeDependencies() {
+			depNames := typeExpression.expression.GetGlobalDependencies()
+			requires := mapset.NewSet[*stageNode]()
+			for _, depName := range depNames {
+				if len(depName) == 0 {
+					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
+				}
+				requires.Add(getDeclarationNode(depName))
 			}
+			typeDependencies.Add(&stageNode{
+				expression:  typeExpression.expression,
+				destination: &typeExpression.value,
+				declaration: nil,
+				after:       nil,
+				requires:    requires,
+			})
 		}
-		// TEMP (should be a unit test)
-		for _, t := range valueDeps {
-			if len(t) == 0 {
+		for _, d := range m.Declarations[i].GetValueDependencies() {
+			if len(d) == 0 {
 				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
-		}
-		graph[name] = stageNode{
-			priors: mapset.NewSet(typeDeps...),
-			simuls: mapset.NewSet(valueDeps...),
-		}
-	}
-	errors = append(errors, CheckUndefinedDependencies(declarations, graph)...)
-	if len(errors) > 0 {
-		return
-	}
-	errors = append(errors, CheckCyclicType(declarations, graph)...)
-	errors = append(errors, CheckCyclicConstant(declarations, graph)...)
-	if len(errors) > 0 {
-		return
-	}
-	table := DeclarationTable{
-		parent: &DeclarationTable{declarations: BuiltinDeclarations},
-		declarations: util.MapMap(declarations, func(name string, decl TopLevelDeclaration) (string, Declaration) {
-			return name, decl
-		}),
-	}
-	// remove links to builtins to prevent them from being calculated
-	for _, deps := range graph {
-		deps.priors.RemoveAll(slices.Collect(maps.Keys(BuiltinDeclarations))...)
-		deps.simuls.RemoveAll(slices.Collect(maps.Keys(BuiltinDeclarations))...)
-	}
-	ordering := stagedOrdering(graph)
-
-	if len(ordering) > 1 {
-		log.Fatalln("Multiple compilation stages are currently not supported.")
-	}
-	priorDeclarations := util.Map(
-		slices.Collect(maps.Values(BuiltinDeclarations)),
-		func(d Declaration) cpp.TopLevelDeclaration { return d.(TopLevelDeclaration).Lower() },
-	)
-	for i, stage := range ordering {
-		lowered = cpp.Module{
-			Declarations: priorDeclarations,
-		}
-		declarationNames := stage.extractSortedNames()
-		// compute signatures
-		for _, name := range declarationNames {
-			decl := declarations[name]
-			errors = append(errors, decl.CalcType(table)...)
+			valueDependencies.Add(getDeclarationNode(d))
 		}
 		if len(errors) > 0 {
 			return
 		}
-		// type check bodies
-		for _, name := range declarationNames {
-			decl := declarations[name]
-			errors = append(errors, decl.TypeCheckBody(table)...)
+		node := declarationToNode[name]
+		node.after = typeDependencies
+		node.requires = valueDependencies
+	}
+	errors = append(errors, CheckCyclicType(stageNodes)...)
+	errors = append(errors, CheckCyclicConstant(stageNodes)...)
+	if len(errors) > 0 {
+		return
+	}
+	table := DeclarationTable{
+		parent:       nil,
+		declarations: map[string]Declaration{},
+	}
+	for name, node := range declarationToNode {
+		table.declarations[name] = node.declaration
+	}
+	ordering := stagedOrdering(stageNodes)
+	for i, stage := range ordering {
+		evalNodes := extractSortedNames(stage)
+		// type check all expressions and declarations
+		for _, node := range evalNodes {
+			if node.expression != nil {
+				errors = append(errors, node.expression.InferType(table)...)
+				// TODO: allow other types as well
+				if len(errors) == 0 && !node.expression.GetType().Eq(TypeType) {
+					errors = append(errors, NotAType{
+						Found: node.expression.GetType(),
+						At:    node.expression.GetSpan(),
+					})
+				}
+			}
+			if node.declaration != nil {
+				errors = append(errors, node.declaration.TypeCheckBody(table)...)
+			}
 		}
 		if len(errors) > 0 {
 			return
 		}
 		// add the actual code
-		for _, name := range declarationNames {
-			decl := declarations[name]
-			// NOTE: declarations are added in a random order because of the map
-			cppDeclaration := decl.Lower()
-			lowered.Declarations = append(lowered.Declarations, cppDeclaration)
+		for _, node := range evalNodes {
+			if node.declaration != nil {
+				lowered.Declarations = append(lowered.Declarations, node.declaration.Lower())
+			}
 		}
 		// the last lowered stage is simply the runtime code
 		if i+1 == len(ordering) {
+			for _, node := range evalNodes {
+				if node.expression != nil {
+					// should be unreachable
+					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.expression)
+				}
+			}
 			return
 		}
-		priorDeclarations = append(priorDeclarations, lowered.Declarations...)
+		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *stageNode) cpp.Expression {
+			return node.expression.Lower()
+		}))
+		for i, v := range values {
+			if evalNodes[i].expression == nil {
+				if v != value.Value("") {
+					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
+				}
+			} else {
+				*evalNodes[i].destination = value.Type(string(v))
+			}
+		}
 	}
 	return
 }
@@ -130,49 +172,23 @@ func mapContains[K comparable, V any, M map[K]V](m M, key K) bool {
 	return exists
 }
 
-func CheckUndefinedDependencies(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
-	for _, node := range graph {
-		for _, prior := range node.priors.ToSlice() {
-			if !mapContains(declarations, prior) && !mapContains(BuiltinDeclarations, prior) {
-				errors = append(errors, UndefinedVariable{
-					// TODO: span
-					String: prior,
-				})
-			}
-		}
-		for _, simul := range node.simuls.ToSlice() {
-			if !mapContains(declarations, simul) && !mapContains(BuiltinDeclarations, simul) {
-				errors = append(errors, UndefinedVariable{
-					// TODO: span
-					String: simul,
-				})
-			}
-		}
-	}
-	return
-}
-
-func CheckCyclicType(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
-	for name, node := range graph {
-		queue := node.priors.ToSlice()
-		visited := mapset.NewSet[string]()
+func CheckCyclicType(stageNodes stage) (errors Errors) {
+	for node := range stageNodes.Iter() {
+		queue := node.after.ToSlice()
+		visited := mapset.NewSet[*stageNode]()
 
 		for len(queue) > 0 {
 			dep := queue[0]
 			queue = queue[1:]
-			_, isBuiltin := BuiltinDeclarations[dep]
-			if isBuiltin {
-				continue
-			}
 			if visited.Contains(dep) {
 				continue
 			}
 			visited.Add(dep)
-			queue = append(queue, graph[dep].priors.ToSlice()...)
+			queue = append(queue, dep.after.ToSlice()...)
 		}
-		if visited.Contains(name) {
+		if visited.Contains(node) {
 			errors = append(errors, CyclicTypeDependency{
-				In: declarations[name],
+				In: node.declaration,
 			})
 		}
 	}
@@ -186,33 +202,29 @@ func CheckCyclicType(declarations map[string]TopLevelDeclaration, graph map[stri
 // A: Int = B
 // B: Int = f()
 // ```
-func CheckCyclicConstant(declarations map[string]TopLevelDeclaration, graph map[string]stageNode) (errors Errors) {
-	for name, node := range graph {
-		if !isConstantDeclaration(declarations[name]) {
+func CheckCyclicConstant(stageNodes stage) (errors Errors) {
+	for node := range stageNodes.Iter() {
+		if !isConstantDeclaration(node.declaration) {
 			continue
 		}
-		queue := node.simuls.ToSlice()
-		visited := mapset.NewSet[string]()
+		queue := node.requires.ToSlice()
+		visited := mapset.NewSet[*stageNode]()
 
 		for len(queue) > 0 {
 			dep := queue[0]
 			queue = queue[1:]
-			_, isBuiltin := BuiltinDeclarations[dep]
-			if isBuiltin {
-				continue
-			}
-			if !isConstantDeclaration(declarations[dep]) {
+			if !isConstantDeclaration(dep.declaration) {
 				continue
 			}
 			if visited.Contains(dep) {
 				continue
 			}
 			visited.Add(dep)
-			queue = append(queue, graph[dep].simuls.ToSlice()...)
+			queue = append(queue, dep.requires.ToSlice()...)
 		}
-		if visited.Contains(name) {
+		if visited.Contains(node) {
 			errors = append(errors, CyclicConstantDependency{
-				In: declarations[name],
+				In: node.declaration,
 			})
 		}
 	}
