@@ -74,7 +74,9 @@ func stagedOrdering(currentStage stage) []stage {
 func extractSortedNames(s stage) (nodes []*stageNode) {
 	prevLen := s.Cardinality()
 	for s.Cardinality() > 0 {
-		for node := range s.Iter() {
+		// ToSlice() used to prevent a deadlock when calling s.Remove(node)
+		// which is caused by simultaneous iteration and removal
+		for _, node := range s.ToSlice() {
 			if node.requires.IsSubset(mapset.NewSet(nodes...)) {
 				nodes = append(nodes, node)
 				s.Remove(node)
