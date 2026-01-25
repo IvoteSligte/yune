@@ -22,8 +22,8 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			expression:  nil,
 			destination: nil,
 			declaration: builtin,
-			after:       nil,
-			requires:    nil,
+			after:       mapset.NewSet[*stageNode](),
+			requires:    mapset.NewSet[*stageNode](),
 		}
 		stageNodes.Add(node)
 		declarationToNode[builtin.GetName()] = node
@@ -84,7 +84,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				expression:  typeExpression.Expression,
 				destination: &typeExpression.value,
 				declaration: nil,
-				after:       nil,
+				after:       mapset.NewSet[*stageNode](),
 				requires:    requires,
 			})
 		}
@@ -165,11 +165,6 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		}
 	}
 	return
-}
-
-func mapContains[K comparable, V any, M map[K]V](m M, key K) bool {
-	_, exists := m[key]
-	return exists
 }
 
 func CheckCyclicType(stageNodes stage) (errors Errors) {
