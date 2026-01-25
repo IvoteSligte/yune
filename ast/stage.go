@@ -32,11 +32,6 @@ func tryMove(currentStage stage, afterStage stage, node *stageNode) {
 	// move node
 	afterStage.Add(node)
 	currentStage.Remove(node)
-	if node.Declaration != nil {
-		println("remove", node.Declaration.GetName())
-	} else {
-		println("remove expression")
-	}
 
 	// move all dependencies of node
 	for afterName := range node.After.Iter() {
@@ -50,7 +45,9 @@ func tryMove(currentStage stage, afterStage stage, node *stageNode) {
 // Produces a topological ordering by splitting the current stage into
 // multiple sub-stages as needed to satisfy the existing nodes' constraints.
 func stagedOrdering(currentStage stage) []stage {
-	afterStage := mapset.NewSet[*stageNode]()
+	// thread unsafe set used so that iteration and removal can be done simultaneously
+	// (deadlocks otherwise)
+	afterStage := mapset.NewThreadUnsafeSet[*stageNode]()
 
 	for node := range currentStage.Iter() {
 		// if any 'after's are in the current stage, then move them to afterStage
@@ -69,12 +66,11 @@ func stagedOrdering(currentStage stage) []stage {
 
 // Ensures dependencies within the stage are properly ordered to prevent C++ compiler errors.
 // Consumes the stage.
+// Requires that the set is a mapset thread unsafe set.
 func extractSortedNames(s stage) (nodes []*stageNode) {
 	prevLen := s.Cardinality()
 	for s.Cardinality() > 0 {
-		// ToSlice() used to prevent a deadlock when calling s.Remove(node)
-		// which is caused by simultaneous iteration and removal
-		for _, node := range s.ToSlice() {
+		for node := range s.Iter() {
 			if node.Requires.IsSubset(mapset.NewSet(nodes...)) {
 				nodes = append(nodes, node)
 				s.Remove(node)

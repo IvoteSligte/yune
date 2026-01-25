@@ -14,7 +14,9 @@ type Module struct {
 }
 
 func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
-	stageNodes := mapset.NewSet[*stageNode]()
+	// thread unsafe set used so that iteration and removal can be done simultaneously
+	// (deadlocks otherwise)
+	stageNodes := mapset.NewThreadUnsafeSet[*stageNode]()
 	declarationToNode := map[string]*stageNode{}
 
 	for _, builtin := range BuiltinDeclarations {
