@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"encoding/hex"
 	"yune/cpp"
 	"yune/value"
 )
@@ -20,5 +19,5 @@ func (t Type) Get() value.Type {
 }
 
 func (t Type) Lower() cpp.Type {
-	return cpp.Type(hex.EncodeToString([]byte(string(t.value))))
+	return cpp.Type(string(t.value))
 }

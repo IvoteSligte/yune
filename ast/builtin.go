@@ -251,7 +251,7 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: "Type",
-	Body:       `return Type{"std::vector<" + elementType + ">"};`,
+	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
 }
 
 // TODO: TupleDeclaration?
