@@ -239,6 +239,12 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
+	if t.GetType().IsTypeType() {
+		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
+			return fmt.Sprintf("(%s).id", e.Lower())
+		})
+		return cpp.RawCpp(fmt.Sprintf(`Type{"std::tuple<" + %s + ">"}`, elements))
+	}
 	return cpp.FunctionCall{
 		Function:  cpp.Variable("std::make_tuple"),
 		Arguments: util.Map(t.Elements, Expression.Lower),
