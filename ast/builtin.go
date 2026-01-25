@@ -23,11 +23,11 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 // though this may change in the future
 var MainType = value.Type("std::function<int()>")
 var TypeType = value.Type("Type")
-var IntType = IntDeclaration.GetType()
-var FloatType = FloatDeclaration.GetType()
-var BoolType = BoolDeclaration.GetType()
-var StringType = StringDeclaration.GetType()
-var NilType = NilDeclaration.GetType()
+var IntType = value.Type("int")
+var FloatType = value.Type("float")
+var BoolType = value.Type("bool")
+var StringType = value.Type("std::string")
+var NilType = value.Type("void")
 
 type BuiltinStructDeclaration struct {
 	Name   string
