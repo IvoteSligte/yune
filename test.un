@@ -1,9 +1,9 @@
 N: Int = 12
 
 fibonacci(n: Int): Int =
-	n == 0 -> 0
-	n == 1 -> 1
-	fibonacci(n - 1) + fibonacci(n - 2)
+    n == 0 -> 0
+    n == 1 -> 1
+    fibonacci(n - 1) + fibonacci(n - 2)
 
 add(a: Int, b: Int): Int = a + b
 
@@ -12,8 +12,15 @@ something(f: Fn((), Int)): Int = f()
 takeTuple(t: (Int, String)): String =
     "literal"
 
+// Macro signature: (text: String) -> (error: String, output: Expression)
+
+// Returns the given text as a string literal.
+// Facilitates creation of multiline strings.
+longString(text: String): (String, Expression) =
+    ("", text)
+
 main(): Int =
-	a: Int = fibonacci(add(N, N))
-	true and false
-	"string galore"
-	0
+    a: Int = fibonacci(add(N, N))
+    true and false
+    "string galore"
+    0
