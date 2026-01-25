@@ -24,6 +24,15 @@ func (m Module) GenHeader() string {
 #include <string>     // std::string
 #include <vector>     // std::vector
 #include <fstream>    // std::fstream
+
+// TODO: declare Type via ast/builtin.go?
+struct Type {
+    std::string id;
+};
+
+std::ostream& operator<<(std::ostream& out, const Type& t) {
+    return out << t.id;
+}
 `
 	return prefix + strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
 }

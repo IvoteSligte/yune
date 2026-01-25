@@ -101,42 +101,13 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		log.Fatalln("Failed to create temporary file during compile-time C++ evaluation. Error:", err)
 	}
 	defer os.Remove(outputFile.Name()) // TODO: close file
-	makeSerializeFunction := func(type_ string, content string) FunctionDeclaration {
-		return FunctionDeclaration{
-			Name: "serialize_",
-			Parameters: []FunctionParameter{
-				{
-					Name: "file",
-					Type: Type("std::fstream"),
-				},
-				{
-					Name: "t",
-					Type: Type(type_),
-				},
-			},
-			ReturnType: "void",
-			Body: Block{
-				Statement(RawCpp(`file << ` + content + ` << '\0';`)),
-			},
-		}
-	}
-	// module.Declarations = append(module.Declarations, makeSerializeFunction("TupleType", `"std::tuple<" << t[TODO] << ">"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("ListType", `"std::vector<" << t << ">"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("IntType", `"int"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("FloatType", `"float"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("BoolType", `"bool"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("StringType", `"string"`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("Int", `t`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("Float", `t`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("Bool", `t`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("String", `'"' << t << '"'`))
 
 	statements := []Statement{
 		Statement(RawCpp(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
 	}
 	for _, e := range batch {
 		if e != nil {
-			statements = append(statements, Statement(RawCpp("serialize_(outputFile, "+e.String()+");")))
+			statements = append(statements, Statement(RawCpp(`outputFile << `+e.String()+` << '\0';`)))
 		}
 	}
 	module.Declarations = append(module.Declarations, FunctionDeclaration{

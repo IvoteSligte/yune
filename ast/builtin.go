@@ -14,20 +14,14 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	BoolDeclaration,
 	StringDeclaration,
 	NilDeclaration,
-	IntTypeDeclaration,
-	FloatTypeDeclaration,
-	BoolTypeDeclaration,
-	StringTypeDeclaration,
-	NilTypeDeclaration,
-	ListTypeDeclaration,
-	FnTypeDeclaration,
 	ListDeclaration,
 	FnDeclaration,
+	// TypeDeclaration,
 }
 
 // NOTE: main() returns int for compatibility with C++,
 // though this may change in the future
-var MainType = value.Type("std::function<Int()>")
+var MainType = value.Type("std::function<int()>")
 var TypeType = value.Type("Type")
 var IntType = IntDeclaration.GetType()
 var FloatType = FloatDeclaration.GetType()
@@ -87,37 +81,12 @@ type BuiltinFieldDeclaration struct {
 	Type string
 }
 
-var TypeDeclaration = BuiltinStructDeclaration{
-	Name: "Type",
-}
-var IntTypeDeclaration = BuiltinStructDeclaration{
-	Name: "IntType",
-}
-var FloatTypeDeclaration = BuiltinStructDeclaration{
-	Name: "FloatType",
-}
-var BoolTypeDeclaration = BuiltinStructDeclaration{
-	Name: "BoolType",
-}
-var StringTypeDeclaration = BuiltinStructDeclaration{
-	Name: "StringType",
-}
-var NilTypeDeclaration = BuiltinStructDeclaration{
-	Name: "NilType",
-}
-var ListTypeDeclaration = BuiltinStructDeclaration{
-	Name: "ListType",
-	Fields: []BuiltinFieldDeclaration{
-		{Name: "elementType", Type: "Type"},
-	},
-}
-var FnTypeDeclaration = BuiltinStructDeclaration{
-	Name: "FnType",
-	Fields: []BuiltinFieldDeclaration{
-		{Name: "argumentType", Type: "Type"},
-		{Name: "returnType", Type: "Type"},
-	},
-}
+// var TypeDeclaration = BuiltinStructDeclaration{
+// 	Name: "Type",
+// 	Fields: []BuiltinFieldDeclaration{
+// 		{Name: "id", Type: "std::string"},
+// 	},
+// }
 
 type BuiltinConstantDeclaration struct {
 	Name  string
@@ -168,28 +137,28 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  TypeDeclaration.Name,
-	Value: "IntType{}",
+	Type:  "Type",
+	Value: `Type{"int"}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  TypeDeclaration.Name,
-	Value: "FloatType{}",
+	Type:  "Type",
+	Value: `Type{"float"}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  TypeDeclaration.Name,
-	Value: "BoolType{}",
+	Type:  "Type",
+	Value: `Type{"bool"}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  TypeDeclaration.Name,
-	Value: "StringType{}",
+	Type:  "Type",
+	Value: `Type{"std::string"}`,
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
-	Type:  TypeDeclaration.Name,
-	Value: "NilType{}",
+	Type:  "Type",
+	Value: `Type{"void"}`,
 }
 
 type BuiltinFunctionDeclaration struct {
@@ -260,7 +229,8 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: "Type",
-	Body:       `return FnType{argumentType, returnType};`,
+	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
+	Body: `return Type{"std::function<" + returnType.id + "(" + argumentType.id + ")>"};`,
 }
 
 var ListDeclaration = BuiltinFunctionDeclaration{
@@ -272,8 +242,10 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: "Type",
-	Body:       `return ListType{elementType};`,
+	Body:       `return Type{"std::vector<" + elementType + ">"};`,
 }
+
+// TODO: TupleDeclaration?
 
 var _ TopLevelDeclaration = BuiltinFunctionDeclaration{}
 
