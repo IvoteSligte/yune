@@ -511,7 +511,7 @@ type Expression interface {
 	Node
 	GetGlobalDependencies() []string
 	// Infers type, with an optional `expected` type for backwards inference.
-	InferType(expected value.Type, deps DeclarationTable) (errors Errors)
+	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() value.Type
 	Lower() cpp.Expression
 }
