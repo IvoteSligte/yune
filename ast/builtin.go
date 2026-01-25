@@ -230,7 +230,16 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 	},
 	ReturnType: "Type",
 	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
-	Body: `return Type{"std::function<" + returnType.id + "(" + argumentType.id + ")>"};`,
+	Body: `
+std::string tuplePrefix("std::tuple<");
+if (argumentType.id.substr(0, tuplePrefix.size()) == tuplePrefix) {
+    argumentType = Type{argumentType.id.substr(
+        tuplePrefix.size(),
+        argumentType.id.size() - 1 - tuplePrefix.size()
+    )};
+}
+return Type{"std::function<" + returnType.id + "(" + argumentType.id + ")>"};
+`,
 }
 
 var ListDeclaration = BuiltinFunctionDeclaration{

@@ -24,6 +24,7 @@ func (m Module) GenHeader() string {
 #include <string>     // std::string
 #include <vector>     // std::vector
 #include <fstream>    // std::fstream
+#include <iostream>   // std::cout
 
 // TODO: declare Type via ast/builtin.go?
 struct Type {
