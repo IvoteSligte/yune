@@ -132,7 +132,9 @@ func TakeExisting[Map ~map[K]V, K comparable, V any](m Map, keys ...K) iter.Seq2
 	}
 }
 
-func PrettyPrint(b any) {
-	s, _ := json.MarshalIndent(b, "", "   ")
-	fmt.Println(string(s))
+func PrettyPrint(bs ...any) {
+	for _, b := range bs {
+		s, _ := json.MarshalIndent(b, "", "   ")
+		fmt.Println(string(s))
+	}
 }
