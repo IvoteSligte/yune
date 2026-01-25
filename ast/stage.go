@@ -8,24 +8,18 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-type eval struct {
-	Expression Expression
-	After      mapset.Set[*eval]
-	Requires   []TopLevelDeclaration
-}
-
 type stageNode struct {
 	// Expression to be evaluated. May be nil.
-	expression Expression
+	Expression Expression
 	// Destination to write the expression's evaluated value to. Required if expression is non-nil.
 	// TODO: non-types
-	destination *value.Type
-	// The associated top-level declaration. May be nil.
-	declaration TopLevelDeclaration
+	Destination *value.Type
+	// The associated top-level Declaration. May be nil.
+	Declaration TopLevelDeclaration
 	// Names of nodes that must be in an earlier stage than this node.
-	after mapset.Set[*stageNode]
+	After mapset.Set[*stageNode]
 	// Names of nodes that must be in the same or an earlier stage than this node.
-	requires mapset.Set[*stageNode]
+	Requires mapset.Set[*stageNode]
 }
 
 type stage = mapset.Set[*stageNode]
@@ -40,10 +34,10 @@ func tryMove(currentStage stage, afterStage stage, node *stageNode) {
 	currentStage.Remove(node)
 
 	// move all dependencies of node
-	for afterName := range node.after.Iter() {
+	for afterName := range node.After.Iter() {
 		tryMove(currentStage, afterStage, afterName)
 	}
-	for simulName := range node.requires.Iter() {
+	for simulName := range node.Requires.Iter() {
 		tryMove(currentStage, afterStage, simulName)
 	}
 }
@@ -56,7 +50,7 @@ func stagedOrdering(currentStage stage) []stage {
 	for node := range currentStage.Iter() {
 		// if any afters are in the current stage,
 		// then move them to afterStage
-		for afterName := range node.after.Iter() {
+		for afterName := range node.After.Iter() {
 			tryMove(currentStage, afterStage, afterName)
 		}
 	}
@@ -77,7 +71,7 @@ func extractSortedNames(s stage) (nodes []*stageNode) {
 		// ToSlice() used to prevent a deadlock when calling s.Remove(node)
 		// which is caused by simultaneous iteration and removal
 		for _, node := range s.ToSlice() {
-			if node.requires.IsSubset(mapset.NewSet(nodes...)) {
+			if node.Requires.IsSubset(mapset.NewSet(nodes...)) {
 				nodes = append(nodes, node)
 				s.Remove(node)
 			}

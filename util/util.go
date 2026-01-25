@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"iter"
 	"slices"
@@ -129,4 +130,9 @@ func TakeExisting[Map ~map[K]V, K comparable, V any](m Map, keys ...K) iter.Seq2
 			}
 		}
 	}
+}
+
+func PrettyPrint(b any) {
+	s, _ := json.MarshalIndent(b, "", "   ")
+	fmt.Println(string(s))
 }

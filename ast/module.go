@@ -19,11 +19,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 
 	for _, builtin := range BuiltinDeclarations {
 		node := &stageNode{
-			expression:  nil,
-			destination: nil,
-			declaration: builtin,
-			after:       mapset.NewSet[*stageNode](),
-			requires:    mapset.NewSet[*stageNode](),
+			Expression:  nil,
+			Destination: nil,
+			Declaration: builtin,
+			After:       mapset.NewSet[*stageNode](),
+			Requires:    mapset.NewSet[*stageNode](),
 		}
 		stageNodes.Add(node)
 		declarationToNode[builtin.GetName()] = node
@@ -36,16 +36,16 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
-				First:  other.declaration,
+				First:  other.Declaration,
 				Second: m.Declarations[i],
 			})
 		} else {
 			node := &stageNode{
-				expression:  nil,
-				destination: nil,
-				declaration: m.Declarations[i],
-				after:       nil, // set later
-				requires:    nil, // set later
+				Expression:  nil,
+				Destination: nil,
+				Declaration: m.Declarations[i],
+				After:       nil, // set later
+				Requires:    nil, // set later
 			}
 			declarationToNode[name] = node
 			stageNodes.Add(node)
@@ -81,11 +81,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				requires.Add(getDeclarationNode(depName))
 			}
 			typeDependencies.Add(&stageNode{
-				expression:  typeExpression.Expression,
-				destination: &typeExpression.value,
-				declaration: nil,
-				after:       mapset.NewSet[*stageNode](),
-				requires:    requires,
+				Expression:  typeExpression.Expression,
+				Destination: &typeExpression.value,
+				Declaration: nil,
+				After:       mapset.NewSet[*stageNode](),
+				Requires:    requires,
 			})
 		}
 		for _, d := range m.Declarations[i].GetValueDependencies() {
@@ -98,8 +98,8 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		node := declarationToNode[name]
-		node.after = typeDependencies
-		node.requires = valueDependencies
+		node.After = typeDependencies
+		node.Requires = valueDependencies
 	}
 	errors = append(errors, CheckCyclicType(stageNodes)...)
 	errors = append(errors, CheckCyclicConstant(stageNodes)...)
@@ -111,25 +111,28 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		declarations: map[string]Declaration{},
 	}
 	for name, node := range declarationToNode {
-		table.declarations[name] = node.declaration
+		table.declarations[name] = node.Declaration
 	}
 	ordering := stagedOrdering(stageNodes)
 	for i, stage := range ordering {
 		evalNodes := extractSortedNames(stage)
+
+		// util.PrettyPrint(evalNodes)
+
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
-			if node.expression != nil {
-				errors = append(errors, node.expression.InferType(table)...)
+			if node.Expression != nil {
+				errors = append(errors, node.Expression.InferType(table)...)
 				// TODO: allow other types as well
-				if len(errors) == 0 && !node.expression.GetType().Eq(TypeType) {
+				if len(errors) == 0 && !node.Expression.GetType().Eq(TypeType) {
 					errors = append(errors, NotAType{
-						Found: node.expression.GetType(),
-						At:    node.expression.GetSpan(),
+						Found: node.Expression.GetType(),
+						At:    node.Expression.GetSpan(),
 					})
 				}
 			}
-			if node.declaration != nil {
-				errors = append(errors, node.declaration.TypeCheckBody(table)...)
+			if node.Declaration != nil {
+				errors = append(errors, node.Declaration.TypeCheckBody(table)...)
 			}
 		}
 		if len(errors) > 0 {
@@ -137,30 +140,30 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		}
 		// add the actual code
 		for _, node := range evalNodes {
-			if node.declaration != nil {
-				lowered.Declarations = append(lowered.Declarations, node.declaration.Lower())
+			if node.Declaration != nil {
+				lowered.Declarations = append(lowered.Declarations, node.Declaration.Lower())
 			}
 		}
 		// the last lowered stage is simply the runtime code
 		if i+1 == len(ordering) {
 			for _, node := range evalNodes {
-				if node.expression != nil {
+				if node.Expression != nil {
 					// should be unreachable
-					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.expression)
+					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.Expression)
 				}
 			}
 			return
 		}
 		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *stageNode) cpp.Expression {
-			return node.expression.Lower()
+			return node.Expression.Lower()
 		}))
 		for i, v := range values {
-			if evalNodes[i].expression == nil {
+			if evalNodes[i].Expression == nil {
 				if v != value.Value("") {
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 			} else {
-				*evalNodes[i].destination = value.Type(string(v))
+				*evalNodes[i].Destination = value.Type(string(v))
 			}
 		}
 	}
@@ -169,7 +172,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 
 func CheckCyclicType(stageNodes stage) (errors Errors) {
 	for node := range stageNodes.Iter() {
-		queue := node.after.ToSlice()
+		queue := node.After.ToSlice()
 		visited := mapset.NewSet[*stageNode]()
 
 		for len(queue) > 0 {
@@ -179,11 +182,11 @@ func CheckCyclicType(stageNodes stage) (errors Errors) {
 				continue
 			}
 			visited.Add(dep)
-			queue = append(queue, dep.after.ToSlice()...)
+			queue = append(queue, dep.After.ToSlice()...)
 		}
 		if visited.Contains(node) {
 			errors = append(errors, CyclicTypeDependency{
-				In: node.declaration,
+				In: node.Declaration,
 			})
 		}
 	}
@@ -199,27 +202,27 @@ func CheckCyclicType(stageNodes stage) (errors Errors) {
 // ```
 func CheckCyclicConstant(stageNodes stage) (errors Errors) {
 	for node := range stageNodes.Iter() {
-		if !isConstantDeclaration(node.declaration) {
+		if !isConstantDeclaration(node.Declaration) {
 			continue
 		}
-		queue := node.requires.ToSlice()
+		queue := node.Requires.ToSlice()
 		visited := mapset.NewSet[*stageNode]()
 
 		for len(queue) > 0 {
 			dep := queue[0]
 			queue = queue[1:]
-			if !isConstantDeclaration(dep.declaration) {
+			if !isConstantDeclaration(dep.Declaration) {
 				continue
 			}
 			if visited.Contains(dep) {
 				continue
 			}
 			visited.Add(dep)
-			queue = append(queue, dep.requires.ToSlice()...)
+			queue = append(queue, dep.Requires.ToSlice()...)
 		}
 		if visited.Contains(node) {
 			errors = append(errors, CyclicConstantDependency{
-				In: node.declaration,
+				In: node.Declaration,
 			})
 		}
 	}
