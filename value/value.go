@@ -18,29 +18,6 @@ func (t Type) Eq(other Type) bool {
 	return string(t) == string(other)
 }
 
-func (t Type) IsSubType(other Type) bool {
-	if t.Eq(other) {
-		return true
-	}
-	if string(other) == "Type" {
-		return true // t is also a type
-	}
-	tElements, tIsTuple := t.ToTuple()
-	otherElements, otherIsTuple := other.ToTuple()
-	if tIsTuple && otherIsTuple {
-		if len(tElements) != len(otherElements) {
-			return false
-		}
-		for i, tElem := range tElements {
-			if !tElem.IsSubType(otherElements[i]) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
-
 func (t Type) String() string {
 	return string(t)
 }
@@ -87,17 +64,4 @@ func (t Type) IsTuple() bool {
 
 func (t Type) IsEmptyTuple() bool {
 	return string(t) == "std::tuple<>"
-}
-
-func (t Type) IsTypeType() bool {
-	if string(t) == "Type" {
-		return true
-	}
-	// Unlike for other values, the type of a tuple of elements never becomes "Type" itself.
-	// (0, "string") -> (Int, String) -> (Type, Type) -> (Type, Type) -> ...
-	elements, isTuple := t.ToTuple()
-	if isTuple && util.All(Type.IsTypeType, elements...) {
-		return true
-	}
-	return false
 }

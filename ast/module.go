@@ -126,7 +126,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			if node.Expression != nil {
 				// TODO: allow other types for expressions as well
 				errors = append(errors, node.Expression.InferType(TypeType, table)...)
-				if len(errors) == 0 && !node.Expression.GetType().IsTypeType() {
+				if len(errors) == 0 && !node.Expression.GetType().Eq(TypeType) {
 					errors = append(errors, NotAType{
 						Found: node.Expression.GetType(),
 						At:    node.Expression.GetSpan(),
