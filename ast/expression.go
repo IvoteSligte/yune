@@ -239,8 +239,11 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	if t.GetType().IsTypeType() {
-		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
+	if t.GetType().IsTypeType() { // FIXME: Fn(Type, Type) now takes Fn(Type) because of this rule, is that correct?
+		if len(t.Elements) == 0 {
+			return cpp.RawCpp(`Type{"std::tuple<>"}`)
+		}
+		elements := util.JoinFunction(t.Elements, ` + ", " + `, func(e Expression) string {
 			return fmt.Sprintf("(%s).id", e.Lower())
 		})
 		return cpp.RawCpp(fmt.Sprintf(`Type{"std::tuple<" + %s + ">"}`, elements))
@@ -253,7 +256,8 @@ func (t *Tuple) Lower() cpp.Expression {
 
 // GetType implements Expression.
 func (t *Tuple) GetType() value.Type {
-	return value.NewTupleType(util.Map(t.Elements, Expression.GetType))
+	_type := value.NewTupleType(util.Map(t.Elements, Expression.GetType))
+	return _type
 }
 
 type Macro struct {

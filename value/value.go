@@ -3,13 +3,14 @@ package value
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"yune/util"
 )
 
 type Value string
 
 var functionTypeRegexp = regexp.MustCompile(`^std::function<(.*?)\((.*?)\)>$`)
-var tupleTypeRegexp = regexp.MustCompile(`^std::tuple<(.*?)(, .*?)*>$`)
+var tupleTypeRegexp = regexp.MustCompile(`^std::tuple<(.*?)>$`)
 
 type Type string
 
@@ -71,11 +72,10 @@ func (t Type) ToTuple() (elements []Type, isTuple bool) {
 	}
 	isTuple = true
 	_ = matches[0] // full string
-	for i, elem := range matches[1:] {
-		if i > 0 {
-			elem = elem[2:] // strip ", "
+	if len(matches[1]) > 0 {
+		for elem := range strings.SplitSeq(matches[1], ", ") {
+			elements = append(elements, Type(elem))
 		}
-		elements = append(elements, Type(elem))
 	}
 	return
 }
