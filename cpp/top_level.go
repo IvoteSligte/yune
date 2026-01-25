@@ -18,8 +18,14 @@ func (m Module) GenHeader() string {
 	// <functional> for std::function
 	// <string> for std::string
 	// <fstream> for std::fstream (only for evaluation right now)
-	return "#include <tuple>\n#include <functional>\n#include <string>\n#include <fstream>" +
-		strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
+	prefix := `
+#include <tuple>      // std::tuple, std::apply
+#include <functional> // std::function
+#include <string>     // std::string
+#include <vector>     // std::vector
+#include <fstream>    // std::fstream
+`
+	return prefix + strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
 }
 
 func (m Module) String() string {

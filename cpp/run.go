@@ -64,7 +64,15 @@ func Run(module Module) {
 	defer os.RemoveAll(dir)
 
 	header := module.GenHeader()
+	fmt.Println("-- Header --")
+	fmt.Println(header)
+	fmt.Println("-- End Header --")
+
 	implementation := module.String()
+	fmt.Println("-- Implementation --")
+	fmt.Println(implementation)
+	fmt.Println("-- End Implementation --")
+
 	writeFile(dir, "code.hpp", header) // TODO: close files
 	writeFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
 	implementationPath := path.Join(dir, "code.cpp")
@@ -84,6 +92,9 @@ func Run(module Module) {
 
 func Evaluate(module Module, batch []Expression) []value.Value {
 	// NOTE: main function is assumed not to exist
+
+	fmt.Println("--- Start Evaluation ---")
+	defer fmt.Println("--- End Evaluation ---")
 
 	outputFile, err := os.CreateTemp("", "yune-eval")
 	if err != nil {
