@@ -6,6 +6,8 @@ import (
 	"yune/value"
 )
 
+var unknownType = value.Type("")
+
 type Type struct {
 	// Evaluated expression
 	value      value.Type

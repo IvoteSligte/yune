@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"log"
+	"slices"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
@@ -19,7 +20,7 @@ func (i Integer) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (i Integer) InferType(deps DeclarationTable) (errors Errors) {
+func (i Integer) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	return
 }
 
@@ -44,7 +45,7 @@ func (f Float) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (f Float) InferType(deps DeclarationTable) (errors Errors) {
+func (f Float) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	return
 }
 
@@ -69,7 +70,7 @@ func (f Bool) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (f Bool) InferType(deps DeclarationTable) (errors Errors) {
+func (f Bool) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	return
 }
 
@@ -94,7 +95,7 @@ func (f String) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (f String) InferType(deps DeclarationTable) (errors Errors) {
+func (f String) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	return
 }
 
@@ -125,7 +126,7 @@ func (v *Variable) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
+func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	decl, ok := deps.Get(v.GetName())
 	if !ok {
 		errors = append(errors, UndefinedVariable(v.Name))
@@ -161,13 +162,12 @@ func (f *FunctionCall) GetGlobalDependencies() []string {
 }
 
 // InferType implements Expression.
-func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(f.Function.InferType(deps), f.Argument.InferType(deps)...)
+func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+	errors = f.Function.InferType(unknownType, deps)
 	if len(errors) > 0 {
 		return
 	}
 	maybeFunctionType := f.Function.GetType()
-	argumentType := f.Argument.GetType()
 	parameterType, returnType, isFunction := maybeFunctionType.ToFunction()
 	if !isFunction {
 		errors = append(errors, NotAFunction{
@@ -176,7 +176,12 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 		})
 		return
 	}
-	if !argumentType.IsSubType(parameterType) {
+	errors = f.Argument.InferType(parameterType, deps)
+	if len(errors) > 0 {
+		return
+	}
+	argumentType := f.Argument.GetType()
+	if !argumentType.Eq(parameterType) {
 		errors = append(errors, ArgumentTypeMismatch{
 			Expected: parameterType,
 			Found:    argumentType,
@@ -218,6 +223,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 
 type Tuple struct {
 	Span
+	Type     value.Type
 	Elements []Expression
 }
 
@@ -230,16 +236,33 @@ func (t *Tuple) GetGlobalDependencies() (deps []string) {
 }
 
 // InferType implements Expression.
-func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
-	for _, elem := range t.Elements {
-		elem.InferType(deps)
+func (t *Tuple) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+	expectedElementTypes := slices.Repeat([]value.Type{unknownType}, len(t.Elements))
+	if expected.Eq(TypeType) {
+		expectedElementTypes = slices.Repeat([]value.Type{TypeType}, len(t.Elements))
+	} else {
+		elementTypes, isTuple := expected.ToTuple()
+		// if false, type checking is done by the caller
+		if isTuple && len(elementTypes) == len(t.Elements) {
+			expectedElementTypes = elementTypes
+		}
+	}
+	for i, elem := range t.Elements {
+		errors = append(errors, elem.InferType(expectedElementTypes[i], deps)...)
+	}
+	if expected.Eq(TypeType) {
+		t.Type = TypeType
+	} else {
+		t.Type = value.NewTupleType(util.Map(t.Elements, func(e Expression) value.Type {
+			return e.GetType()
+		}))
 	}
 	return
 }
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	if t.GetType().IsTypeType() { // FIXME: Fn(Type, Type) now takes Fn(Type) because of this rule, is that correct?
+	if t.Type.Eq(TypeType) {
 		if len(t.Elements) == 0 {
 			return cpp.RawCpp(`Type{"std::tuple<>"}`)
 		}
@@ -247,17 +270,17 @@ func (t *Tuple) Lower() cpp.Expression {
 			return fmt.Sprintf("(%s).id", e.Lower())
 		})
 		return cpp.RawCpp(fmt.Sprintf(`Type{"std::tuple<" + %s + ">"}`, elements))
-	}
-	return cpp.FunctionCall{
-		Function:  cpp.Variable("std::make_tuple"),
-		Arguments: util.Map(t.Elements, Expression.Lower),
+	} else {
+		return cpp.FunctionCall{
+			Function:  cpp.Variable("std::make_tuple"),
+			Arguments: util.Map(t.Elements, Expression.Lower),
+		}
 	}
 }
 
 // GetType implements Expression.
 func (t *Tuple) GetType() value.Type {
-	_type := value.NewTupleType(util.Map(t.Elements, Expression.GetType))
-	return _type
+	return t.Type
 }
 
 type Macro struct {
@@ -279,7 +302,7 @@ func (m *Macro) GetGlobalDependencies() []string {
 }
 
 // InferType implements Expression.
-func (m *Macro) InferType(deps DeclarationTable) (errors Errors) {
+func (m *Macro) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	// NOTE: this should already evaluate the macro
 	panic("unimplemented")
 }
@@ -312,8 +335,8 @@ func (u *UnaryExpression) GetGlobalDependencies() []string {
 }
 
 // InferType implements Expression.
-func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
-	errors = u.Expression.InferType(deps)
+func (u *UnaryExpression) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+	errors = u.Expression.InferType(expected, deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -373,8 +396,8 @@ func (b *BinaryExpression) GetGlobalDependencies() []string {
 }
 
 // InferType implements Expression.
-func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(b.Left.InferType(deps), b.Right.InferType(deps)...)
+func (b *BinaryExpression) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+	errors = append(b.Left.InferType(expected, deps), b.Right.InferType(expected, deps)...)
 	if len(errors) > 0 {
 		return
 	}
@@ -480,7 +503,8 @@ const (
 type Expression interface {
 	Node
 	GetGlobalDependencies() []string
-	InferType(deps DeclarationTable) (errors Errors)
+	// Infers type, with an optional `expected` type for backwards inference.
+	InferType(expected value.Type, deps DeclarationTable) (errors Errors)
 	GetType() value.Type
 	Lower() cpp.Expression
 }

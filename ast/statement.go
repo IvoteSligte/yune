@@ -87,7 +87,7 @@ func (a *Assignment) GetValueDependencies() []string {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(deps), a.Body.InferType(deps.NewScope())...)
+	errors = append(a.Target.InferType(unknownType, deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -157,7 +157,7 @@ func (b *BranchStatement) GetValueDependencies() (deps []string) {
 
 // InferType implements Statement.
 func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
-	errors = b.Condition.InferType(deps)
+	errors = b.Condition.InferType(BoolType, deps)
 	errors = append(errors, b.Then.InferType(deps.NewScope())...)
 	errors = append(errors, b.Else.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
@@ -273,6 +273,12 @@ var _ Node = &Block{}
 
 type ExpressionStatement struct {
 	Expression
+}
+
+// InferType implements Statement.
+// Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
+func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
+	return e.Expression.InferType(unknownType, deps)
 }
 
 // GetTypeDependencies implements Statement.

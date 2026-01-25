@@ -124,8 +124,8 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
 			if node.Expression != nil {
-				errors = append(errors, node.Expression.InferType(table)...)
-				// TODO: allow other types as well
+				// TODO: allow other types for expressions as well
+				errors = append(errors, node.Expression.InferType(TypeType, table)...)
 				if len(errors) == 0 && !node.Expression.GetType().IsTypeType() {
 					errors = append(errors, NotAType{
 						Found: node.Expression.GetType(),
