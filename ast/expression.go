@@ -180,7 +180,14 @@ func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (er
 	if len(errors) > 0 {
 		return
 	}
+	// single-argument functions still expect a std::tuple type for comparison
 	argumentType := f.Argument.GetType()
+	if argumentType.Eq(NilType) {
+		// NOTE: should functions return () instead of Nil?
+		argumentType = value.Type("std::tuple<>")
+	} else if !argumentType.IsTuple() {
+		argumentType = value.NewTupleType([]value.Type{argumentType})
+	}
 	if !argumentType.Eq(parameterType) {
 		errors = append(errors, ArgumentTypeMismatch{
 			Expected: parameterType,
@@ -201,7 +208,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 		if argumentType.IsEmptyTuple() {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
-				Arguments: []cpp.Expression{},
+				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
 			}
 		}
 		// calls the function with a tuple of arguments
