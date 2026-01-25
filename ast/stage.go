@@ -32,6 +32,7 @@ func tryMove(currentStage stage, afterStage stage, node *stageNode) {
 	// move node
 	afterStage.Add(node)
 	currentStage.Remove(node)
+	println("remove", node.Declaration.GetName())
 
 	// move all dependencies of node
 	for afterName := range node.After.Iter() {
@@ -48,10 +49,15 @@ func stagedOrdering(currentStage stage) []stage {
 	afterStage := mapset.NewSet[*stageNode]()
 
 	for node := range currentStage.Iter() {
-		// if any afters are in the current stage,
-		// then move them to afterStage
-		for afterName := range node.After.Iter() {
-			tryMove(currentStage, afterStage, afterName)
+		if node.Declaration != nil {
+			println("iter", node.Declaration.GetName(), len(node.After.ToSlice()), len(node.Requires.ToSlice()))
+		}
+		// if any 'after's are in the current stage, then move them to afterStage
+		for after := range node.After.Iter() {
+			if after.Declaration != nil {
+				println("after", after.Declaration.GetName())
+			}
+			tryMove(currentStage, afterStage, after)
 		}
 	}
 	if afterStage.Cardinality() == 0 {

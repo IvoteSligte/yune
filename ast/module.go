@@ -117,7 +117,13 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	for i, stage := range ordering {
 		evalNodes := extractSortedNames(stage)
 
-		util.PrettyPrint(evalNodes, len(evalNodes), len(BuiltinDeclarations))
+		// util.PrettyPrint(evalNodes, util.Map(evalNodes, func(node *stageNode) string {
+		// 	if node.Declaration != nil {
+		// 		return node.Declaration.GetName()
+		// 	} else {
+		// 		return "<no_name>"
+		// 	}
+		// }), len(evalNodes), len(ordering))
 
 		// type check all expressions and declarations
 		for _, node := range evalNodes {

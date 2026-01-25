@@ -84,6 +84,7 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []string) {
 func (d *FunctionDeclaration) GetTypeDependencies() (deps []*Type) {
 	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
 	deps = append(deps, &d.ReturnType)
+	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
 }
 
