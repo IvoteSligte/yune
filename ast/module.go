@@ -80,13 +80,15 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				}
 				requires.Add(getDeclarationNode(depName))
 			}
-			typeDependencies.Add(&stageNode{
+			node := &stageNode{
 				Expression:  typeExpression.Expression,
 				Destination: &typeExpression.value,
 				Declaration: nil,
 				After:       mapset.NewSet[*stageNode](),
 				Requires:    requires,
-			})
+			}
+			typeDependencies.Add(node)
+			stageNodes.Add(node)
 		}
 		for _, d := range m.Declarations[i].GetValueDependencies() {
 			if len(d) == 0 {
