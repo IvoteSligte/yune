@@ -168,27 +168,27 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  IntTypeDeclaration.Name,
+	Type:  TypeDeclaration.Name,
 	Value: "IntType{}",
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  FloatTypeDeclaration.Name,
+	Type:  TypeDeclaration.Name,
 	Value: "FloatType{}",
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  BoolTypeDeclaration.Name,
+	Type:  TypeDeclaration.Name,
 	Value: "BoolType{}",
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  StringTypeDeclaration.Name,
+	Type:  TypeDeclaration.Name,
 	Value: "StringType{}",
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
-	Type:  NilTypeDeclaration.Name,
+	Type:  TypeDeclaration.Name,
 	Value: "NilType{}",
 }
 

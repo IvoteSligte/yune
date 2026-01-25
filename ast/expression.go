@@ -168,15 +168,15 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 	}
 	maybeFunctionType := f.Function.GetType()
 	argumentType := f.Argument.GetType()
-	if !maybeFunctionType.IsFunction() {
+	parameterType, returnType, isFunction := maybeFunctionType.ToFunction()
+	if !isFunction {
 		errors = append(errors, NotAFunction{
 			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
 		})
 		return
 	}
-	parameterType, returnType := maybeFunctionType.ToFunction()
-	if !argumentType.Eq(parameterType) {
+	if !argumentType.IsSubType(parameterType) {
 		errors = append(errors, ArgumentTypeMismatch{
 			Expected: parameterType,
 			Found:    argumentType,

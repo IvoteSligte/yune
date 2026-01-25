@@ -121,20 +121,12 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	for i, stage := range ordering {
 		evalNodes := extractSortedNames(stage)
 
-		// util.PrettyPrint(evalNodes, util.Map(evalNodes, func(node *stageNode) string {
-		// 	if node.Declaration != nil {
-		// 		return node.Declaration.GetName()
-		// 	} else {
-		// 		return "<no_name>"
-		// 	}
-		// }), len(evalNodes), len(ordering))
-
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
 			if node.Expression != nil {
 				errors = append(errors, node.Expression.InferType(table)...)
 				// TODO: allow other types as well
-				if len(errors) == 0 && !node.Expression.GetType().Eq(TypeType) {
+				if len(errors) == 0 && !node.Expression.GetType().IsTypeType() {
 					errors = append(errors, NotAType{
 						Found: node.Expression.GetType(),
 						At:    node.Expression.GetSpan(),
