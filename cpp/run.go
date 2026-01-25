@@ -106,9 +106,11 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		Statement(RawCpp(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
 	}
 	for _, e := range batch {
+		statement := `outputFile << '\0';`
 		if e != nil {
-			statements = append(statements, Statement(RawCpp(`outputFile << `+e.String()+` << '\0';`)))
+			statement = `outputFile << ` + e.String() + ` << '\0';`
 		}
+		statements = append(statements, Statement(RawCpp(statement)))
 	}
 	module.Declarations = append(module.Declarations, FunctionDeclaration{
 		Name:       "main",
@@ -122,6 +124,7 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		log.Fatalf("Failed to read compile-time evaluation output file '%s'. Error: %s", outputFile.Name(), err)
 	}
 	outputStrings := strings.Split(string(content), "\x00")
+	outputStrings = outputStrings[:len(outputStrings)-1] // skip last empty string
 	if len(outputStrings) != len(batch) {
 		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(outputStrings))
 	}
