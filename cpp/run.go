@@ -118,7 +118,7 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 	module.Declarations = append(module.Declarations, makeSerializeFunction("Int", `t`))
 	module.Declarations = append(module.Declarations, makeSerializeFunction("Float", `t`))
 	module.Declarations = append(module.Declarations, makeSerializeFunction("Bool", `t`))
-	module.Declarations = append(module.Declarations, makeSerializeFunction("String", `<< '"' << t << '"' <<`))
+	module.Declarations = append(module.Declarations, makeSerializeFunction("String", `'"' << t << '"'`))
 
 	statements := []Statement{
 		Statement(RawCpp(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
@@ -144,6 +144,7 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(outputStrings))
 	}
 	return util.Map(outputStrings, func(s string) value.Value {
+		println(s) // TEMP
 		return value.Value(s)
 	})
 }
