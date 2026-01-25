@@ -157,7 +157,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *stageNode) cpp.Expression {
-			return node.Expression.Lower()
+			if node.Expression != nil {
+				return node.Expression.Lower()
+			} else {
+				return nil
+			}
 		}))
 		for i, v := range values {
 			if evalNodes[i].Expression == nil {

@@ -71,7 +71,10 @@ func (t Type) ToTuple() (elements []Type, isTuple bool) {
 	}
 	isTuple = true
 	_ = matches[0] // full string
-	for _, elem := range matches[1:] {
+	for i, elem := range matches[1:] {
+		if i > 0 {
+			elem = elem[2:] // strip ", "
+		}
 		elements = append(elements, Type(elem))
 	}
 	return

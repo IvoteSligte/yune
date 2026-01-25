@@ -259,7 +259,7 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 			Type: "Type",
 		},
 	},
-	ReturnType: "FnType",
+	ReturnType: "Type",
 	Body:       `return FnType{argumentType, returnType};`,
 }
 
@@ -271,7 +271,7 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 			Type: "Type",
 		},
 	},
-	ReturnType: "ListType",
+	ReturnType: "Type",
 	Body:       `return ListType{elementType};`,
 }
 
