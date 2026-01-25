@@ -30,7 +30,7 @@ func PrintFormatted(code string) {
 	formatted, err := format(code)
 	if err != nil {
 		log.Println("Error formatting C++ with clang-format:", err)
-		log.Println("Unformatted C++:")
+		fmt.Println("Unformatted C++:")
 		fmt.Println(code)
 	} else {
 		fmt.Println(formatted)
@@ -65,12 +65,12 @@ func Run(module Module) {
 
 	header := module.GenHeader()
 	fmt.Println("-- Header --")
-	fmt.Println(header)
+	PrintFormatted(header)
 	fmt.Println("-- End Header --")
 
 	implementation := module.String()
 	fmt.Println("-- Implementation --")
-	fmt.Println(implementation)
+	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
 
 	writeFile(dir, "code.hpp", header) // TODO: close files
