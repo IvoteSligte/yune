@@ -66,6 +66,31 @@ func (c ConstantDeclaration) String() string {
 	return fmt.Sprintf("%s %s = %s;", c.Type, c.Name, c.Value)
 }
 
+type StructDeclaration struct {
+	Name   string
+	Fields []Field
+}
+
+// GenHeader implements TopLevelDeclaration.
+func (s StructDeclaration) GenHeader() string {
+	fields := util.Join(s.Fields, "\n")
+	return fmt.Sprintf("struct %s {\n%s\n};", s.Name, fields)
+}
+
+// String implements TopLevelDeclaration.
+func (s StructDeclaration) String() string {
+	return "" // already declared in header
+}
+
+type Field struct {
+	Name string
+	Type Type
+}
+
+func (f Field) String() string {
+	return fmt.Sprintf("%s %s;", f.Type, f.Name)
+}
+
 // Alias of an existing type.
 type TypeAlias struct {
 	Alias string
@@ -82,7 +107,7 @@ func (t TypeAlias) Get() Type {
 }
 
 func (t TypeAlias) String() string {
-	return fmt.Sprintf("typedef %s %s;", t.Of, t.Alias)
+	return "" // already declared in header
 }
 
 type TopLevelDeclaration interface {
@@ -92,4 +117,5 @@ type TopLevelDeclaration interface {
 
 var _ TopLevelDeclaration = FunctionDeclaration{}
 var _ TopLevelDeclaration = ConstantDeclaration{}
+var _ TopLevelDeclaration = StructDeclaration{}
 var _ TopLevelDeclaration = TypeAlias{}

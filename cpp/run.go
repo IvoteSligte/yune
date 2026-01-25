@@ -82,12 +82,6 @@ func Run(module Module) {
 	}
 }
 
-type RawCpp string
-
-func (r RawCpp) String() string {
-	return string(r)
-}
-
 func Evaluate(module Module, batch []Expression) []value.Value {
 	// NOTE: main function is assumed not to exist
 

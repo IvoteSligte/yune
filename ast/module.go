@@ -17,7 +17,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	stageNodes := mapset.NewSet[*stageNode]()
 	declarationToNode := map[string]*stageNode{}
 
-	for name, builtin := range BuiltinDeclarations {
+	for _, builtin := range BuiltinDeclarations {
 		node := &stageNode{
 			expression:  nil,
 			destination: nil,
@@ -26,7 +26,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			requires:    nil,
 		}
 		stageNodes.Add(node)
-		declarationToNode[name] = node
+		declarationToNode[builtin.GetName()] = node
 	}
 
 	// get unique mapping of name -> declaration

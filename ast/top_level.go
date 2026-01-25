@@ -102,12 +102,8 @@ func (d FunctionDeclaration) GetName() string {
 }
 
 func (d FunctionDeclaration) GetType() value.Type {
-	if len(d.Parameters) == 1 {
-		return value.Type(fmt.Sprintf("std::function<%s(%s)>", d.ReturnType.Get(), d.Parameters[0].GetType()))
-	} else {
-		params := util.Join(util.Map(d.Parameters, FunctionParameter.GetType), ", ")
-		return value.Type(fmt.Sprintf("std::function<%s(std::tuple<%s>)>", d.ReturnType.Get(), params))
-	}
+	params := util.Join(util.Map(d.Parameters, FunctionParameter.GetType), ", ")
+	return value.Type(fmt.Sprintf("std::function<%s(%s)>", d.ReturnType.Get(), params))
 }
 
 type FunctionParameter struct {
