@@ -70,9 +70,9 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				if len(depName.String) == 0 {
 					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
 				}
-				requiredNode, exists := declarationToNode[name.String]
+				requiredNode, exists := declarationToNode[depName.String]
 				if !exists {
-					errors = append(errors, UndefinedType(name))
+					errors = append(errors, UndefinedType(depName))
 				}
 				requires.Add(requiredNode)
 			}
@@ -86,15 +86,15 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			typeDependencies.Add(node)
 			stageNodes.Add(node)
 		}
-		for _, d := range m.Declarations[i].GetValueDependencies() {
-			if len(d.String) == 0 {
+		for _, depName := range m.Declarations[i].GetValueDependencies() {
+			if len(depName.String) == 0 {
 				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
-			requiredNode, exists := declarationToNode[name.String]
+			depNode, exists := declarationToNode[depName.String]
 			if !exists {
-				errors = append(errors, UndefinedVariable(name))
+				errors = append(errors, UndefinedVariable(depName))
 			}
-			valueDependencies.Add(requiredNode)
+			valueDependencies.Add(depNode)
 		}
 		if len(errors) > 0 {
 			return

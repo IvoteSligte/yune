@@ -34,11 +34,11 @@ func tryMove(currentStage stage, afterStage stage, node *stageNode) {
 	currentStage.Remove(node)
 
 	// move all dependencies of node
-	for afterName := range node.After.Iter() {
-		tryMove(currentStage, afterStage, afterName)
+	for after := range node.After.Iter() {
+		tryMove(currentStage, afterStage, after)
 	}
-	for simulName := range node.Requires.Iter() {
-		tryMove(currentStage, afterStage, simulName)
+	for required := range node.Requires.Iter() {
+		tryMove(currentStage, afterStage, required)
 	}
 }
 
