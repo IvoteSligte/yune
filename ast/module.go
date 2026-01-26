@@ -58,7 +58,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		valueDependencies := mapset.NewThreadUnsafeSet[*stageNode]()
 
 		for _, typeExpression := range m.Declarations[i].GetTypeDependencies() {
-			depNames := typeExpression.Expression.GetGlobalDependencies()
+			depNames := typeExpression.Expression.GetValueDependencies()
 			requires := mapset.NewThreadUnsafeSet[*stageNode]()
 			for _, depName := range depNames {
 				if len(depName.String) == 0 {

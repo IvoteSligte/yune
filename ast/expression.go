@@ -14,8 +14,8 @@ type Integer struct {
 	Value int64
 }
 
-// GetGlobalDependencies implements Expression.
-func (i Integer) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (i Integer) GetValueDependencies() (deps []Name) {
 	return
 }
 
@@ -39,8 +39,8 @@ type Float struct {
 	Value float64
 }
 
-// GetGlobalDependencies implements Expression.
-func (f Float) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (f Float) GetValueDependencies() (deps []Name) {
 	return
 }
 
@@ -64,8 +64,8 @@ type Bool struct {
 	Value bool
 }
 
-// GetGlobalDependencies implements Expression.
-func (f Bool) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (f Bool) GetValueDependencies() (deps []Name) {
 	return
 }
 
@@ -89,8 +89,8 @@ type String struct {
 	Value string
 }
 
-// GetGlobalDependencies implements Expression.
-func (f String) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (f String) GetValueDependencies() (deps []Name) {
 	return
 }
 
@@ -119,8 +119,8 @@ func (v *Variable) GetType() value.Type {
 	return v.Type
 }
 
-// GetGlobalDependencies implements Expression.
-func (v *Variable) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (v *Variable) GetValueDependencies() (deps []Name) {
 	return []Name{v.Name}
 }
 
@@ -155,9 +155,9 @@ func (f *FunctionCall) GetType() value.Type {
 	return f.Type
 }
 
-// GetGlobalDependencies implements Expression.
-func (f *FunctionCall) GetGlobalDependencies() []Name {
-	return append(f.Function.GetGlobalDependencies(), f.Argument.GetGlobalDependencies()...)
+// GetValueDependencies implements Expression.
+func (f *FunctionCall) GetValueDependencies() []Name {
+	return append(f.Function.GetValueDependencies(), f.Argument.GetValueDependencies()...)
 }
 
 // InferType implements Expression.
@@ -233,10 +233,10 @@ type Tuple struct {
 	Elements []Expression
 }
 
-// GetGlobalDependencies implements Expression.
-func (t *Tuple) GetGlobalDependencies() (deps []Name) {
+// GetValueDependencies implements Expression.
+func (t *Tuple) GetValueDependencies() (deps []Name) {
 	for i := range t.Elements {
-		deps = append(deps, t.Elements[i].GetGlobalDependencies()...)
+		deps = append(deps, t.Elements[i].GetValueDependencies()...)
 	}
 	return
 }
@@ -302,9 +302,9 @@ type MacroLine struct {
 	Text string
 }
 
-// GetGlobalDependencies implements Expression.
-func (m *Macro) GetGlobalDependencies() []Name {
-	return m.Language.GetGlobalDependencies()
+// GetValueDependencies implements Expression.
+func (m *Macro) GetValueDependencies() []Name {
+	return m.Language.GetValueDependencies()
 }
 
 // InferType implements Expression.
@@ -335,9 +335,9 @@ func (u *UnaryExpression) GetType() value.Type {
 	return u.Type
 }
 
-// GetGlobalDependencies implements Expression.
-func (u *UnaryExpression) GetGlobalDependencies() []Name {
-	return u.Expression.GetGlobalDependencies()
+// GetValueDependencies implements Expression.
+func (u *UnaryExpression) GetValueDependencies() []Name {
+	return u.Expression.GetValueDependencies()
 }
 
 // InferType implements Expression.
@@ -396,9 +396,9 @@ func (b *BinaryExpression) GetType() value.Type {
 	return b.Type
 }
 
-// GetGlobalDependencies implements Expression.
-func (b *BinaryExpression) GetGlobalDependencies() []Name {
-	return append(b.Left.GetGlobalDependencies(), b.Right.GetGlobalDependencies()...)
+// GetValueDependencies implements Expression.
+func (b *BinaryExpression) GetValueDependencies() []Name {
+	return append(b.Left.GetValueDependencies(), b.Right.GetValueDependencies()...)
 }
 
 // InferType implements Expression.
@@ -508,7 +508,7 @@ const (
 
 type Expression interface {
 	Node
-	GetGlobalDependencies() []Name
+	GetValueDependencies() []Name
 	// Infers type, with an optional `expected` type for backwards inference.
 	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() value.Type

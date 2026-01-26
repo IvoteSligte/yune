@@ -82,7 +82,7 @@ func (a *Assignment) GetTypeDependencies() []*Type {
 
 // GetValueDependencies implements Statement.
 func (a *Assignment) GetValueDependencies() []Name {
-	return append(a.Target.GetGlobalDependencies(), a.Body.GetValueDependencies()...)
+	return append(a.Target.GetValueDependencies(), a.Body.GetValueDependencies()...)
 }
 
 // InferType implements Statement.
@@ -149,7 +149,7 @@ func (b *BranchStatement) GetTypeDependencies() (deps []*Type) {
 
 // GetValueDependencies implements Statement.
 func (b *BranchStatement) GetValueDependencies() (deps []Name) {
-	deps = b.Condition.GetGlobalDependencies()
+	deps = b.Condition.GetValueDependencies()
 	deps = append(deps, b.Then.GetValueDependencies()...)
 	deps = append(deps, b.Else.GetValueDependencies()...)
 	return
@@ -288,7 +288,7 @@ func (e *ExpressionStatement) GetTypeDependencies() (deps []*Type) {
 
 // GetValueDependencies implements Statement.
 func (e *ExpressionStatement) GetValueDependencies() (deps []Name) {
-	return e.Expression.GetGlobalDependencies()
+	return e.Expression.GetValueDependencies()
 }
 
 // Lower implements Statement.
