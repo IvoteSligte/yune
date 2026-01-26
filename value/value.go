@@ -50,6 +50,7 @@ func (t Type) ToTuple() (elements []Type, isTuple bool) {
 	isTuple = true
 	_ = matches[0] // full string
 	if len(matches[1]) > 0 {
+		// FIXME: this breaks for nested multi-element std::tuple or std::function
 		for elem := range strings.SplitSeq(matches[1], ", ") {
 			elements = append(elements, Type(elem))
 		}
