@@ -61,9 +61,9 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 }
 
 func main() {
-	data := readFile()
-	println(data)
-	inputStream := antlr.NewInputStream(data)
+	sourceCode := readFile()
+	fmt.Println(sourceCode)
+	inputStream := antlr.NewInputStream(sourceCode)
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
