@@ -270,12 +270,12 @@ func (t *Tuple) InferType(expected value.Type, deps DeclarationTable) (errors Er
 func (t *Tuple) Lower() cpp.Expression {
 	if t.Type.Eq(TypeType) {
 		if len(t.Elements) == 0 {
-			return cpp.RawCpp(`Type{"std::tuple<>"}`)
+			return cpp.Raw(`Type{"std::tuple<>"}`)
 		}
 		elements := util.JoinFunction(t.Elements, ` + ", " + `, func(e Expression) string {
 			return fmt.Sprintf("(%s).id", e.Lower())
 		})
-		return cpp.RawCpp(fmt.Sprintf(`Type{"std::tuple<" + %s + ">"}`, elements))
+		return cpp.Raw(fmt.Sprintf(`Type{"std::tuple<" + %s + ">"}`, elements))
 	} else {
 		return cpp.FunctionCall{
 			Function:  cpp.Variable("std::make_tuple"),

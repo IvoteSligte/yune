@@ -103,14 +103,14 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 	defer os.Remove(outputFile.Name()) // TODO: close file
 
 	statements := []Statement{
-		Statement(RawCpp(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
+		Statement(Raw(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
 	}
 	for _, e := range batch {
 		statement := `outputFile << '\0';`
 		if e != nil {
 			statement = `outputFile << ` + e.String() + ` << '\0';`
 		}
-		statements = append(statements, Statement(RawCpp(statement)))
+		statements = append(statements, Statement(Raw(statement)))
 	}
 	module.Declarations = append(module.Declarations, FunctionDeclaration{
 		Name:       "main",

@@ -89,6 +89,22 @@ func (t TypeAlias) String() string {
 	return "" // already declared in header
 }
 
+// Declaration used for builtin types that cannot be described with Yune AST.
+type RawDeclaration struct {
+	Header         string
+	Implementation string
+}
+
+// GenHeader implements TopLevelDeclaration.
+func (r RawDeclaration) GenHeader() string {
+	return r.Header
+}
+
+// String implements TopLevelDeclaration.
+func (r RawDeclaration) String() string {
+	return r.Implementation
+}
+
 type TopLevelDeclaration interface {
 	fmt.Stringer
 	GenHeader() string
@@ -98,3 +114,4 @@ var _ TopLevelDeclaration = FunctionDeclaration{}
 var _ TopLevelDeclaration = ConstantDeclaration{}
 var _ TopLevelDeclaration = StructDeclaration{}
 var _ TopLevelDeclaration = TypeAlias{}
+var _ TopLevelDeclaration = RawDeclaration{}

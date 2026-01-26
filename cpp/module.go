@@ -1,7 +1,6 @@
 package cpp
 
 import (
-	"strings"
 	"yune/util"
 )
 
@@ -17,24 +16,14 @@ func (m Module) GenHeader() string {
 	// <functional> for std::function
 	// <string> for std::string
 	// <fstream> for std::fstream (only for evaluation right now)
-	prefix := `
+	return `
 #include <tuple>      // std::tuple, std::apply
 #include <functional> // std::function
 #include <string>     // std::string
 #include <vector>     // std::vector
 #include <fstream>    // std::fstream
 #include <iostream>   // std::cout
-
-// TODO: declare Type via ast/builtin.go?
-struct Type {
-    std::string id;
-};
-
-std::ostream& operator<<(std::ostream& out, const Type& t) {
-    return out << t.id;
-}
-`
-	return prefix + strings.Join(util.Map(m.Declarations, TopLevelDeclaration.GenHeader), "\n")
+` + util.JoinFunction(m.Declarations, "\n", TopLevelDeclaration.GenHeader)
 }
 
 func (m Module) String() string {

@@ -62,10 +62,4 @@ func (e ExpressionStatement) String() string {
 	return e.Expression.String() + ";"
 }
 
-type RawCpp string
-
-func (r RawCpp) String() string {
-	return string(r)
-}
-
 type Statement fmt.Stringer

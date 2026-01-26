@@ -16,7 +16,9 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	NilDeclaration,
 	ListDeclaration,
 	FnDeclaration,
-	// TypeDeclaration,
+	TypeDeclaration,
+	ExpressionDeclaration,
+	StringLiteralDeclaration,
 }
 
 // NOTE: main() returns int for compatibility with C++,
@@ -28,6 +30,93 @@ var FloatType = value.Type("float")
 var BoolType = value.Type("bool")
 var StringType = value.Type("std::string")
 var NilType = value.Type("void")
+
+var ExpressionType = value.Type("Expression")
+
+// Declares a type that will exist in the C++ code, but not in the Yune code.
+type BuiltinRawDeclaration struct {
+	Name           string
+	Type           string
+	Requires       []string
+	Header         string
+	Implementation string
+}
+
+// GetName implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetName() Name {
+	return Name{String: b.Name}
+}
+
+// GetSpan implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetSpan() Span {
+	return Span{}
+}
+
+// GetType implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetType() value.Type {
+	return value.Type(b.Type)
+}
+
+// GetTypeDependencies implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetTypeDependencies() []*Type {
+	return []*Type{}
+}
+
+// GetValueDependencies implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetValueDependencies() []Name {
+	return util.Map(b.Requires, func(s string) Name { return Name{String: s} })
+}
+
+// Lower implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) Lower() cpp.TopLevelDeclaration {
+	return cpp.RawDeclaration{
+		Header:         b.Header,
+		Implementation: b.Implementation,
+	}
+}
+
+// TypeCheckBody implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) TypeCheckBody(deps DeclarationTable) (errors []error) {
+	return
+}
+
+var _ TopLevelDeclaration = BuiltinRawDeclaration{}
+
+var TypeDeclaration = BuiltinRawDeclaration{
+	Name: "Type",
+	Type: "Type",
+	Header: `
+struct Type {
+    std::string id;
+};`,
+	Implementation: `
+std::ostream& operator<<(std::ostream& out, const Type& t) {
+    return out << t.id;
+}`,
+}
+
+var ExpressionDeclaration = BuiltinRawDeclaration{
+	Name: "Expression",
+	Type: "Type",
+	Header: `
+struct Expression {
+    std::string expr;
+};`,
+}
+
+var StringLiteralDeclaration = BuiltinRawDeclaration{
+	Name:     "stringLiteral",
+	Type:     "std::function<Expression(std::string)>",
+	Requires: []string{"Expression"},
+	Implementation: `
+Expression stringLiteral(std::string str) {
+    std::size_t found;
+    while ((found = str.find('"')) != std::string::npos) {
+        str = str.replace(found, 1, "\\\"");
+    }
+    return Expression{std::string("\"") + str + "\""};
+};`,
+}
 
 type BuiltinStructDeclaration struct {
 	Name   string
@@ -124,7 +213,7 @@ func (b BuiltinConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
 		Name:  b.Name,
 		Type:  cpp.Type(b.Type),
-		Value: cpp.RawCpp(b.Value),
+		Value: cpp.Raw(b.Value),
 	}
 }
 
@@ -206,7 +295,7 @@ func (b BuiltinFunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		}),
 		ReturnType: cpp.Type(b.ReturnType),
 		Body: cpp.Block(util.Map(strings.Split(b.Body, "\n"), func(s string) cpp.Statement {
-			return cpp.Statement(cpp.RawCpp(s))
+			return cpp.Statement(cpp.Raw(s))
 		})),
 	}
 }
