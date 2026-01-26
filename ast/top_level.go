@@ -69,12 +69,12 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 
 // GetValueDependencies implements Declaration.
 func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
-	for _, dep := range d.Body.GetValueDependencies() {
+	for _, depName := range d.Body.GetValueDependencies() {
 		equals := func(param FunctionParameter) bool {
-			return dep == param.GetName()
+			return depName.String == param.GetName().String
 		}
-		if dep != d.GetName() && !util.Any(equals, d.Parameters...) {
-			deps = append(deps, dep)
+		if depName.String != d.GetName().String && !util.Any(equals, d.Parameters...) {
+			deps = append(deps, depName)
 		}
 	}
 	return
