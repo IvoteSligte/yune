@@ -35,8 +35,8 @@ type BuiltinStructDeclaration struct {
 }
 
 // GetName implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetName() string {
-	return b.Name
+func (b BuiltinStructDeclaration) GetName() Name {
+	return Name{String: b.Name}
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -55,8 +55,8 @@ func (b BuiltinStructDeclaration) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetValueDependencies() []string {
-	return []string{}
+func (b BuiltinStructDeclaration) GetValueDependencies() []Name {
+	return []Name{}
 }
 
 // Lower implements TopLevelDeclaration.
@@ -95,8 +95,8 @@ type BuiltinConstantDeclaration struct {
 }
 
 // GetName implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetName() string {
-	return b.Name
+func (b BuiltinConstantDeclaration) GetName() Name {
+	return Name{String: b.Name}
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -115,8 +115,8 @@ func (b BuiltinConstantDeclaration) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetValueDependencies() []string {
-	return []string{}
+func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
+	return []Name{}
 }
 
 // Lower implements TopLevelDeclaration.
@@ -169,8 +169,8 @@ type BuiltinFunctionDeclaration struct {
 }
 
 // GetName implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetName() string {
-	return b.Name
+func (b BuiltinFunctionDeclaration) GetName() Name {
+	return Name{String: b.Name}
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -190,8 +190,8 @@ func (b BuiltinFunctionDeclaration) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetValueDependencies() []string {
-	return []string{}
+func (b BuiltinFunctionDeclaration) GetValueDependencies() []Name {
+	return []Name{}
 }
 
 // Lower implements TopLevelDeclaration.

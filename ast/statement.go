@@ -24,7 +24,7 @@ func (d *VariableDeclaration) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements Statement.
-func (d VariableDeclaration) GetValueDependencies() []string {
+func (d VariableDeclaration) GetValueDependencies() []Name {
 	return d.Body.GetValueDependencies()
 }
 
@@ -60,8 +60,8 @@ func (d VariableDeclaration) Lower() cpp.Statement {
 	}
 }
 
-func (d VariableDeclaration) GetName() string {
-	return d.Name.String
+func (d VariableDeclaration) GetName() Name {
+	return d.Name
 }
 
 func (d VariableDeclaration) GetType() value.Type {
@@ -81,7 +81,7 @@ func (a *Assignment) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements Statement.
-func (a *Assignment) GetValueDependencies() []string {
+func (a *Assignment) GetValueDependencies() []Name {
 	return append(a.Target.GetGlobalDependencies(), a.Body.GetValueDependencies()...)
 }
 
@@ -148,7 +148,7 @@ func (b *BranchStatement) GetTypeDependencies() (deps []*Type) {
 }
 
 // GetValueDependencies implements Statement.
-func (b *BranchStatement) GetValueDependencies() (deps []string) {
+func (b *BranchStatement) GetValueDependencies() (deps []Name) {
 	deps = b.Condition.GetGlobalDependencies()
 	deps = append(deps, b.Then.GetValueDependencies()...)
 	deps = append(deps, b.Else.GetValueDependencies()...)
@@ -202,11 +202,11 @@ func (b Block) GetType() value.Type {
 	return b.Statements[len(b.Statements)-1].GetType()
 }
 
-func (b *Block) GetValueDependencies() (deps []string) {
+func (b *Block) GetValueDependencies() (deps []Name) {
 	locals := map[string]Declaration{}
 	for _, stmt := range b.Statements {
 		for _, dep := range stmt.GetValueDependencies() {
-			_, ok := locals[dep]
+			_, ok := locals[dep.String]
 			if !ok {
 				deps = append(deps, dep)
 			}
@@ -214,7 +214,7 @@ func (b *Block) GetValueDependencies() (deps []string) {
 		// register local after getting dependencies to prevent cyclic definitions
 		decl, ok := stmt.(Declaration)
 		if ok {
-			locals[decl.GetName()] = decl
+			locals[decl.GetName().String] = decl
 		}
 	}
 	return
@@ -287,7 +287,7 @@ func (e *ExpressionStatement) GetTypeDependencies() (deps []*Type) {
 }
 
 // GetValueDependencies implements Statement.
-func (e *ExpressionStatement) GetValueDependencies() (deps []string) {
+func (e *ExpressionStatement) GetValueDependencies() (deps []Name) {
 	return e.Expression.GetGlobalDependencies()
 }
 
@@ -303,7 +303,7 @@ type Statement interface {
 	InferType(deps DeclarationTable) Errors
 	GetType() value.Type
 	GetTypeDependencies() (deps []*Type)
-	GetValueDependencies() (deps []string)
+	GetValueDependencies() (deps []Name)
 	Lower() cpp.Statement
 }
 

@@ -28,13 +28,13 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			Requires:    mapset.NewSet[*stageNode](),
 		}
 		stageNodes.Add(node)
-		declarationToNode[builtin.GetName()] = node
+		declarationToNode[builtin.GetName().String] = node
 	}
 
 	// get unique mapping of name -> declaration
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		other, exists := declarationToNode[name]
+		other, exists := declarationToNode[name.String]
 
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
@@ -49,20 +49,17 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				After:       nil, // set later
 				Requires:    nil, // set later
 			}
-			declarationToNode[name] = node
+			declarationToNode[name.String] = node
 			stageNodes.Add(node)
 		}
 	}
 	if len(errors) > 0 {
 		return
 	}
-	getDeclarationNode := func(name string) *stageNode {
-		node, exists := declarationToNode[name]
+	getDeclarationNode := func(name Name) *stageNode {
+		node, exists := declarationToNode[name.String]
 		if !exists {
-			errors = append(errors, UndefinedType{
-				Span:   Span{}, // TODO: span
-				String: name,
-			})
+			errors = append(errors, UndefinedType(name))
 		}
 		return node
 	}
@@ -77,7 +74,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			depNames := typeExpression.Expression.GetGlobalDependencies()
 			requires := mapset.NewSet[*stageNode]()
 			for _, depName := range depNames {
-				if len(depName) == 0 {
+				if len(depName.String) == 0 {
 					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
 				}
 				requires.Add(getDeclarationNode(depName))
@@ -93,7 +90,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			stageNodes.Add(node)
 		}
 		for _, d := range m.Declarations[i].GetValueDependencies() {
-			if len(d) == 0 {
+			if len(d.String) == 0 {
 				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
 			valueDependencies.Add(getDeclarationNode(d))
@@ -101,7 +98,7 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 		if len(errors) > 0 {
 			return
 		}
-		node := declarationToNode[name]
+		node := declarationToNode[name.String]
 		node.After = typeDependencies
 		node.Requires = valueDependencies
 	}

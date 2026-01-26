@@ -15,7 +15,7 @@ type Integer struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (i Integer) GetGlobalDependencies() (deps []string) {
+func (i Integer) GetGlobalDependencies() (deps []Name) {
 	return
 }
 
@@ -40,7 +40,7 @@ type Float struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f Float) GetGlobalDependencies() (deps []string) {
+func (f Float) GetGlobalDependencies() (deps []Name) {
 	return
 }
 
@@ -65,7 +65,7 @@ type Bool struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f Bool) GetGlobalDependencies() (deps []string) {
+func (f Bool) GetGlobalDependencies() (deps []Name) {
 	return
 }
 
@@ -90,7 +90,7 @@ type String struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f String) GetGlobalDependencies() (deps []string) {
+func (f String) GetGlobalDependencies() (deps []Name) {
 	return
 }
 
@@ -120,9 +120,8 @@ func (v *Variable) GetType() value.Type {
 }
 
 // GetGlobalDependencies implements Expression.
-func (v *Variable) GetGlobalDependencies() (deps []string) {
-	deps = append(deps, v.GetName())
-	return
+func (v *Variable) GetGlobalDependencies() (deps []Name) {
+	return []Name{v.Name}
 }
 
 // InferType implements Expression.
@@ -157,7 +156,7 @@ func (f *FunctionCall) GetType() value.Type {
 }
 
 // GetGlobalDependencies implements Expression.
-func (f *FunctionCall) GetGlobalDependencies() []string {
+func (f *FunctionCall) GetGlobalDependencies() []Name {
 	return append(f.Function.GetGlobalDependencies(), f.Argument.GetGlobalDependencies()...)
 }
 
@@ -235,7 +234,7 @@ type Tuple struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (t *Tuple) GetGlobalDependencies() (deps []string) {
+func (t *Tuple) GetGlobalDependencies() (deps []Name) {
 	for i := range t.Elements {
 		deps = append(deps, t.Elements[i].GetGlobalDependencies()...)
 	}
@@ -304,7 +303,7 @@ type MacroLine struct {
 }
 
 // GetGlobalDependencies implements Expression.
-func (m *Macro) GetGlobalDependencies() []string {
+func (m *Macro) GetGlobalDependencies() []Name {
 	return m.Language.GetGlobalDependencies()
 }
 
@@ -337,7 +336,7 @@ func (u *UnaryExpression) GetType() value.Type {
 }
 
 // GetGlobalDependencies implements Expression.
-func (u *UnaryExpression) GetGlobalDependencies() []string {
+func (u *UnaryExpression) GetGlobalDependencies() []Name {
 	return u.Expression.GetGlobalDependencies()
 }
 
@@ -398,7 +397,7 @@ func (b *BinaryExpression) GetType() value.Type {
 }
 
 // GetGlobalDependencies implements Expression.
-func (b *BinaryExpression) GetGlobalDependencies() []string {
+func (b *BinaryExpression) GetGlobalDependencies() []Name {
 	return append(b.Left.GetGlobalDependencies(), b.Right.GetGlobalDependencies()...)
 }
 
@@ -509,7 +508,7 @@ const (
 
 type Expression interface {
 	Node
-	GetGlobalDependencies() []string
+	GetGlobalDependencies() []Name
 	// Infers type, with an optional `expected` type for backwards inference.
 	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() value.Type

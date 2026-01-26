@@ -27,7 +27,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	paramNames := map[string]*FunctionParameter{}
 	for i := range d.Parameters {
 		param := &d.Parameters[i]
-		prev, exists := paramNames[param.GetName()]
+		prev, exists := paramNames[param.GetName().String]
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
 				First:  prev,
@@ -39,10 +39,10 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 		return
 	}
 	deps = deps.NewScope()
-	deps.declarations = map[string]Declaration{d.GetName(): d}
+	deps.declarations = map[string]Declaration{d.GetName().String: d}
 	for i := range d.Parameters {
 		param := &d.Parameters[i]
-		deps.declarations[param.GetName()] = param
+		deps.declarations[param.GetName().String] = param
 	}
 	errors = append(errors, d.Body.InferType(deps)...)
 	if len(errors) > 0 {
@@ -58,7 +58,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName() == "main" && !d.GetType().Eq(MainType) {
+	if d.GetName().String == "main" && !d.GetType().Eq(MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetType(),
 			At:    d.Name.GetSpan(),
@@ -68,7 +68,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetValueDependencies implements Declaration.
-func (d FunctionDeclaration) GetValueDependencies() (deps []string) {
+func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 	for _, dep := range d.Body.GetValueDependencies() {
 		equals := func(param FunctionParameter) bool {
 			return dep == param.GetName()
@@ -98,8 +98,8 @@ func (d FunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 	}
 }
 
-func (d FunctionDeclaration) GetName() string {
-	return d.Name.String
+func (d FunctionDeclaration) GetName() Name {
+	return d.Name
 }
 
 func (d FunctionDeclaration) GetType() value.Type {
@@ -126,8 +126,8 @@ func (d FunctionParameter) Lower() cpp.FunctionParameter {
 }
 
 // GetName implements Declaration
-func (d FunctionParameter) GetName() string {
-	return d.Name.String
+func (d FunctionParameter) GetName() Name {
+	return d.Name
 }
 
 // GetType implements Declaration
@@ -141,7 +141,7 @@ func (d *FunctionParameter) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements Declaration
-func (d FunctionParameter) GetValueDependencies() (deps []string) {
+func (d FunctionParameter) GetValueDependencies() (deps []Name) {
 	return
 }
 
@@ -182,7 +182,7 @@ func (d *ConstantDeclaration) GetTypeDependencies() []*Type {
 }
 
 // GetValueDependencies implements Declaration.
-func (d ConstantDeclaration) GetValueDependencies() []string {
+func (d ConstantDeclaration) GetValueDependencies() []Name {
 	return d.Body.GetValueDependencies()
 }
 
@@ -200,8 +200,8 @@ func (d ConstantDeclaration) GetType() value.Type {
 	return d.Type.Get()
 }
 
-func (d ConstantDeclaration) GetName() string {
-	return d.Name.String
+func (d ConstantDeclaration) GetName() Name {
+	return d.Name
 }
 
 func (d ConstantDeclaration) GetDeclarationType() Type {

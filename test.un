@@ -12,10 +12,6 @@ something(f: Fn((), Int)): Int = f()
 takeTuple(t: (Int, String)): String =
     "literal"
 
-// Macro signature: (text: String) -> (error: String, output: Expression)
-
-// Returns the given text as a string literal.
-// Facilitates creation of multiline strings.
 longString(text: String): (String, Expression) =
     ("", text)
 

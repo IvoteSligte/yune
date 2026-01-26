@@ -11,7 +11,7 @@ type DeclarationTable struct {
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
-	prev, exists := table.declarations[decl.GetName()]
+	prev, exists := table.declarations[decl.GetName().String]
 	if exists {
 		return DuplicateDeclaration{
 			First:  prev,
@@ -20,7 +20,7 @@ func (table *DeclarationTable) Add(decl Declaration) error {
 	}
 	if table.declarations == nil {
 		table.declarations = map[string]Declaration{}
-		table.declarations[decl.GetName()] = decl
+		table.declarations[decl.GetName().String] = decl
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func (table *DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bo
 
 type Declaration interface {
 	Node
-	GetName() string
+	GetName() Name
 
 	// --- compilation stage 1 ---
 
@@ -66,7 +66,7 @@ type Declaration interface {
 
 	// Queries the names of constants such as global variables and functions
 	// used in this declaration's body.
-	GetValueDependencies() []string
+	GetValueDependencies() []Name
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.
 	TypeCheckBody(deps DeclarationTable) (errors Errors)

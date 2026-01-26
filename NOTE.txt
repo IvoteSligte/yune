@@ -38,3 +38,10 @@ parser(s: String): (type_dependencies, Fn(resolved_type_dependencies) -> (value_
 	  info = preprocessor(s, "::")
 	  ...
 
+
+FIXME: comments don't work
+
+// Macro signature: (text: String) -> (error: String, output: Expression)
+//
+// Returns the given text as a string literal.
+// Facilitates creation of multiline strings.
