@@ -126,13 +126,13 @@ func (v *Variable) GetGlobalDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	decl, ok := deps.Get(v.GetName())
+	decl, ok := deps.Get(v.Name.String)
 	if !ok {
 		errors = append(errors, UndefinedVariable(v.Name))
 		return
 	}
 	if decl.GetType() == value.Type("") {
-		log.Printf("WARN: Type queried before being calculated on declaration '%s'.", v.GetName())
+		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Span, v.Name.String)
 	}
 	v.Type = decl.GetType()
 	return
@@ -140,7 +140,7 @@ func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors
 
 // Lower implements Expression.
 func (v *Variable) Lower() cpp.Expression {
-	return cpp.Variable(v.GetName())
+	return cpp.Variable(v.Name.String)
 }
 
 type FunctionCall struct {

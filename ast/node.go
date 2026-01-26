@@ -22,10 +22,6 @@ type Name struct {
 	String string
 }
 
-func (n Name) GetName() string {
-	return n.String
-}
-
 type Node interface {
 	GetSpan() Span
 }

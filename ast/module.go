@@ -56,13 +56,6 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	getDeclarationNode := func(name Name) *stageNode {
-		node, exists := declarationToNode[name.String]
-		if !exists {
-			errors = append(errors, UndefinedType(name))
-		}
-		return node
-	}
 
 	// detect dependency cycles
 	for i := range m.Declarations {
@@ -77,7 +70,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				if len(depName.String) == 0 {
 					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
 				}
-				requires.Add(getDeclarationNode(depName))
+				requiredNode, exists := declarationToNode[name.String]
+				if !exists {
+					errors = append(errors, UndefinedType(name))
+				}
+				requires.Add(requiredNode)
 			}
 			node := &stageNode{
 				Expression:  typeExpression.Expression,
@@ -93,7 +90,11 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 			if len(d.String) == 0 {
 				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
-			valueDependencies.Add(getDeclarationNode(d))
+			requiredNode, exists := declarationToNode[name.String]
+			if !exists {
+				errors = append(errors, UndefinedVariable(name))
+			}
+			valueDependencies.Add(requiredNode)
 		}
 		if len(errors) > 0 {
 			return

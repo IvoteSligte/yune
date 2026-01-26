@@ -107,7 +107,7 @@ func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
 // Lower implements Statement.
 func (a *Assignment) Lower() cpp.Statement {
 	return cpp.Assignment{
-		Target: a.Target.GetName(),
+		Target: a.Target.Name.String,
 		Op:     cpp.AssignmentOp(a.Op),
 		Value:  a.Body.LowerVariableBody(),
 	}
