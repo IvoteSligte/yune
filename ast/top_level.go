@@ -81,9 +81,12 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 }
 
 // GetTypeDependencies implements Declaration.
-func (d *FunctionDeclaration) GetTypeDependencies() (deps []*Type) {
+func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
-	deps = append(deps, &d.ReturnType)
+	deps = append(deps, Query{
+		Expression:  d.ReturnType.Expression,
+		Destination: &d.ReturnType.value,
+	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
 }
@@ -136,8 +139,12 @@ func (d FunctionParameter) GetType() value.Type {
 }
 
 // GetTypeDependencies implements Declaration
-func (d *FunctionParameter) GetTypeDependencies() []*Type {
-	return []*Type{&d.Type}
+func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
+	deps = append(deps, Query{
+		Expression:  d.Type.Expression,
+		Destination: &d.Type.value,
+	})
+	return
 }
 
 // GetValueDependencies implements Declaration
@@ -177,8 +184,13 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetTypeDependencies implements Declaration.
-func (d *ConstantDeclaration) GetTypeDependencies() []*Type {
-	return append([]*Type{&d.Type}, d.Body.GetTypeDependencies()...)
+func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
+	deps = append(deps, Query{
+		Expression:  d.Type.Expression,
+		Destination: &d.Type.value,
+	})
+	deps = append(deps, d.Body.GetTypeDependencies()...)
+	return
 }
 
 // GetValueDependencies implements Declaration.

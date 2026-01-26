@@ -35,8 +35,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		} else {
 			_, isRawBuiltin := m.Declarations[i].(BuiltinRawDeclaration)
 			node := &stageNode{
-				Expression:  nil,
-				Destination: nil,
+				Query:       Query{},
 				Declaration: m.Declarations[i],
 				After:       nil, // set later
 				Requires:    nil, // set later
@@ -57,8 +56,8 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		typeDependencies := mapset.NewThreadUnsafeSet[*stageNode]()
 		valueDependencies := mapset.NewThreadUnsafeSet[*stageNode]()
 
-		for _, typeExpression := range m.Declarations[i].GetTypeDependencies() {
-			depNames := typeExpression.Expression.GetValueDependencies()
+		for _, query := range m.Declarations[i].GetTypeDependencies() {
+			depNames := query.Expression.GetValueDependencies()
 			requires := mapset.NewThreadUnsafeSet[*stageNode]()
 			for _, depName := range depNames {
 				if len(depName.String) == 0 {
@@ -71,8 +70,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				requires.Add(requiredNode)
 			}
 			node := &stageNode{
-				Expression:  typeExpression.Expression,
-				Destination: &typeExpression.value,
+				Query:       query,
 				Declaration: nil,
 				After:       mapset.NewThreadUnsafeSet[*stageNode](),
 				Requires:    requires,
@@ -119,13 +117,14 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
-			if node.Expression != nil {
+			query := node.Query
+			if query.Expression != nil {
 				// TODO: allow other types for expressions as well
-				errors = append(errors, node.Expression.InferType(TypeType, table)...)
-				if len(errors) == 0 && !node.Expression.GetType().Eq(TypeType) {
+				errors = append(errors, query.Expression.InferType(TypeType, table)...)
+				if len(errors) == 0 && !query.Expression.GetType().Eq(TypeType) {
 					errors = append(errors, NotAType{
-						Found: node.Expression.GetType(),
-						At:    node.Expression.GetSpan(),
+						Found: query.Expression.GetType(),
+						At:    query.Expression.GetSpan(),
 					})
 				}
 			}
@@ -145,27 +144,27 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		// the last lowered stage is simply the runtime code
 		if i+1 == len(ordering) {
 			for _, node := range evalNodes {
-				if node.Expression != nil {
+				if node.Query.Expression != nil {
 					// should be unreachable
-					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.Expression)
+					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.Query.Expression)
 				}
 			}
 			return
 		}
 		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *stageNode) cpp.Expression {
-			if node.Expression != nil {
-				return node.Expression.Lower()
+			if node.Query.Expression != nil {
+				return node.Query.Expression.Lower()
 			} else {
 				return nil
 			}
 		}))
 		for i, v := range values {
-			if evalNodes[i].Expression == nil {
+			if evalNodes[i].Query.Expression == nil {
 				if v != value.Value("") {
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 			} else {
-				*evalNodes[i].Destination = value.Type(string(v))
+				evalNodes[i].Query.SetValue(string(v))
 			}
 		}
 		evaluatedNodes.Append(evalNodes...)

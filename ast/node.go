@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"yune/value"
 )
 
 type Span struct {
@@ -31,6 +32,9 @@ type IName interface {
 	GetSpan() Span
 }
 
-type Query = Name
-type Queries = []Query
 type Errors = []error
+
+type Query struct {
+	Expression
+	value.Destination
+}

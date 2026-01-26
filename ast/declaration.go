@@ -58,7 +58,7 @@ type Declaration interface {
 	// --- compilation stage 1 ---
 
 	// Queries the type expressions used in this declaration, including in the body.
-	GetTypeDependencies() []*Type
+	GetTypeDependencies() []Query
 	// Returns the calculated type.
 	GetType() value.Type
 

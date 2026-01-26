@@ -9,10 +9,19 @@ import (
 
 type Value string
 
+type Destination interface {
+	SetValue(s string)
+}
+
 var functionTypeRegexp = regexp.MustCompile(`^std::function<(.*?)\((.*?)\)>$`)
 var tupleTypeRegexp = regexp.MustCompile(`^std::tuple<(.*?)>$`)
 
 type Type string
+
+// SetValue implements Destination.
+func (t *Type) SetValue(s string) {
+	*t = Type(s)
+}
 
 func (t Type) Eq(other Type) bool {
 	return string(t) == string(other)
@@ -66,3 +75,5 @@ func (t Type) IsTuple() bool {
 func (t Type) IsEmptyTuple() bool {
 	return string(t) == "std::tuple<>"
 }
+
+var _ Destination = (*Type)(nil)

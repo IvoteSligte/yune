@@ -14,6 +14,11 @@ type Integer struct {
 	Value int64
 }
 
+// GetTypeDependencies implements Expression.
+func (i Integer) GetTypeDependencies() []Query {
+	return []Query{}
+}
+
 // GetValueDependencies implements Expression.
 func (i Integer) GetValueDependencies() (deps []Name) {
 	return
@@ -37,6 +42,11 @@ func (i Integer) GetType() value.Type {
 type Float struct {
 	Span
 	Value float64
+}
+
+// GetTypeDependencies implements Expression.
+func (f Float) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetValueDependencies implements Expression.
@@ -64,6 +74,11 @@ type Bool struct {
 	Value bool
 }
 
+// GetTypeDependencies implements Expression.
+func (f Bool) GetTypeDependencies() []Query {
+	return []Query{}
+}
+
 // GetValueDependencies implements Expression.
 func (f Bool) GetValueDependencies() (deps []Name) {
 	return
@@ -89,6 +104,11 @@ type String struct {
 	Value string
 }
 
+// GetTypeDependencies implements Expression.
+func (f String) GetTypeDependencies() []Query {
+	return []Query{}
+}
+
 // GetValueDependencies implements Expression.
 func (f String) GetValueDependencies() (deps []Name) {
 	return
@@ -112,6 +132,11 @@ func (f String) GetType() value.Type {
 type Variable struct {
 	value.Type
 	Name
+}
+
+// GetTypeDependencies implements Expression.
+func (v *Variable) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetType implements Expression.
@@ -148,6 +173,11 @@ type FunctionCall struct {
 	value.Type
 	Function Expression
 	Argument Expression
+}
+
+// GetTypeDependencies implements Expression.
+func (f *FunctionCall) GetTypeDependencies() []Query {
+	return append(f.Function.GetTypeDependencies(), f.Argument.GetTypeDependencies()...)
 }
 
 // GetType implements Expression.
@@ -229,8 +259,14 @@ func (f *FunctionCall) Lower() cpp.Expression {
 
 type Tuple struct {
 	Span
+	// Inferred type
 	Type     value.Type
 	Elements []Expression
+}
+
+// GetTypeDependencies implements Expression.
+func (t *Tuple) GetTypeDependencies() []Query {
+	return util.FlatMap(t.Elements, Expression.GetTypeDependencies)
 }
 
 // GetValueDependencies implements Expression.
@@ -297,6 +333,11 @@ type Macro struct {
 	Result Expression
 }
 
+// GetTypeDependencies implements Expression.
+func (m *Macro) GetTypeDependencies() []Query {
+	panic("unimplemented")
+}
+
 type MacroLine struct {
 	Span
 	Text string
@@ -328,6 +369,11 @@ type UnaryExpression struct {
 	value.Type
 	Op         UnaryOp
 	Expression Expression
+}
+
+// GetTypeDependencies implements Expression.
+func (u *UnaryExpression) GetTypeDependencies() []Query {
+	return u.Expression.GetTypeDependencies()
 }
 
 // GetType implements Expression.
@@ -389,6 +435,11 @@ type BinaryExpression struct {
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
+}
+
+// GetTypeDependencies implements Expression.
+func (b *BinaryExpression) GetTypeDependencies() []Query {
+	return append(b.Left.GetTypeDependencies(), b.Right.GetTypeDependencies()...)
 }
 
 // GetType implements Expression.
@@ -508,6 +559,7 @@ const (
 
 type Expression interface {
 	Node
+	GetTypeDependencies() []Query
 	GetValueDependencies() []Name
 	// Infers type, with an optional `expected` type for backwards inference.
 	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
@@ -519,6 +571,8 @@ type Variables = []*Variable
 
 var _ Expression = Integer{}
 var _ Expression = Float{}
+var _ Expression = Bool{}
+var _ Expression = String{}
 var _ Expression = &Variable{}
 var _ Expression = &FunctionCall{}
 var _ Expression = &Tuple{}

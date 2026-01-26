@@ -56,8 +56,8 @@ func (b BuiltinRawDeclaration) GetType() value.Type {
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetTypeDependencies() []*Type {
-	return []*Type{}
+func (b BuiltinRawDeclaration) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
@@ -143,8 +143,8 @@ func (b BuiltinStructDeclaration) GetType() value.Type {
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetTypeDependencies() []*Type {
-	return []*Type{}
+func (b BuiltinStructDeclaration) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
@@ -203,8 +203,8 @@ func (b BuiltinConstantDeclaration) GetType() value.Type {
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetTypeDependencies() []*Type {
-	return []*Type{}
+func (b BuiltinConstantDeclaration) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetValueDependencies implements TopLevelDeclaration.
@@ -278,8 +278,8 @@ func (b BuiltinFunctionDeclaration) GetType() value.Type {
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetTypeDependencies() []*Type {
-	return []*Type{}
+func (b BuiltinFunctionDeclaration) GetTypeDependencies() []Query {
+	return []Query{}
 }
 
 // GetValueDependencies implements TopLevelDeclaration.

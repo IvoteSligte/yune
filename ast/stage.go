@@ -3,17 +3,13 @@ package ast
 import (
 	"encoding/json"
 	"log"
-	"yune/value"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
 type stageNode struct {
-	// Expression to be evaluated. May be nil.
-	Expression Expression
-	// Destination to write the expression's evaluated value to. Required if expression is non-nil.
-	// TODO: non-types
-	Destination *value.Type
+	// Query to be evaluated. May be empty.
+	Query Query
 	// The associated top-level Declaration. May be nil.
 	Declaration TopLevelDeclaration
 	// Names of nodes that must be in an earlier stage than this node.

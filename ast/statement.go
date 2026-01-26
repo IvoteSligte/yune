@@ -19,8 +19,12 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // GetTypeDependencies implements Statement.
-func (d *VariableDeclaration) GetTypeDependencies() []*Type {
-	return append([]*Type{&d.Type}, d.Body.GetTypeDependencies()...)
+func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
+	deps = append(deps, Query{
+		Expression:  d.Type.Expression,
+		Destination: &d.Type.value,
+	})
+	return append(deps, d.Body.GetTypeDependencies()...)
 }
 
 // GetValueDependencies implements Statement.
@@ -76,7 +80,7 @@ type Assignment struct {
 }
 
 // GetTypeDependencies implements Statement.
-func (a *Assignment) GetTypeDependencies() []*Type {
+func (a *Assignment) GetTypeDependencies() []Query {
 	return a.Body.GetTypeDependencies()
 }
 
@@ -143,7 +147,7 @@ func (b *BranchStatement) GetType() value.Type {
 }
 
 // GetTypeDependencies implements Statement.
-func (b *BranchStatement) GetTypeDependencies() (deps []*Type) {
+func (b *BranchStatement) GetTypeDependencies() (deps []Query) {
 	return append(b.Then.GetTypeDependencies(), b.Else.GetTypeDependencies()...)
 }
 
@@ -220,7 +224,7 @@ func (b *Block) GetValueDependencies() (deps []Name) {
 	return
 }
 
-func (b *Block) GetTypeDependencies() (deps []*Type) {
+func (b *Block) GetTypeDependencies() (deps []Query) {
 	for _, stmt := range b.Statements {
 		decl, ok := stmt.(Declaration)
 		if ok {
@@ -282,8 +286,8 @@ func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
 }
 
 // GetTypeDependencies implements Statement.
-func (e *ExpressionStatement) GetTypeDependencies() (deps []*Type) {
-	return
+func (e *ExpressionStatement) GetTypeDependencies() (deps []Query) {
+	return e.Expression.GetTypeDependencies()
 }
 
 // GetValueDependencies implements Statement.
@@ -302,7 +306,7 @@ type Statement interface {
 	Node
 	InferType(deps DeclarationTable) Errors
 	GetType() value.Type
-	GetTypeDependencies() (deps []*Type)
+	GetTypeDependencies() (deps []Query)
 	GetValueDependencies() (deps []Name)
 	Lower() cpp.Statement
 }
