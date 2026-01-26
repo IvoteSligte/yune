@@ -13,7 +13,7 @@ takeTuple(t: (Int, String)): String =
     "literal"
 
 longString(text: String): (String, Expression) =
-    ("", text)
+    ("", stringLiteral(text))
 
 main(): Int =
     a: Int = fibonacci(add(N, N))

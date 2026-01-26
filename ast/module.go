@@ -13,26 +13,14 @@ type Module struct {
 	Declarations []TopLevelDeclaration
 }
 
-func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
+func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	// thread unsafe set used so that iteration and removal can be done simultaneously
 	// (deadlocks otherwise)
 	stageNodes := mapset.NewThreadUnsafeSet[*stageNode]()
 	declarationToNode := map[string]*stageNode{}
 
-	for _, builtin := range BuiltinDeclarations {
-		_, isRaw := builtin.(BuiltinRawDeclaration)
-		node := &stageNode{
-			Expression:  nil,
-			Destination: nil,
-			Declaration: builtin,
-			After:       mapset.NewThreadUnsafeSet[*stageNode](),
-			Requires:    mapset.NewThreadUnsafeSet[*stageNode](),
-			// Raw nodes are expected to be calculated by other nodes.
-			ExecuteFirst: isRaw,
-		}
-		stageNodes.Add(node)
-		declarationToNode[builtin.GetName().String] = node
-	}
+	// Add builtin declarations to the module's list of  declarations.
+	m.Declarations = append(BuiltinDeclarations, m.Declarations...)
 
 	// get unique mapping of name -> declaration
 	for i := range m.Declarations {
@@ -45,12 +33,15 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 				Second: m.Declarations[i],
 			})
 		} else {
+			_, isRawBuiltin := m.Declarations[i].(BuiltinRawDeclaration)
 			node := &stageNode{
 				Expression:  nil,
 				Destination: nil,
 				Declaration: m.Declarations[i],
 				After:       nil, // set later
 				Requires:    nil, // set later
+				// Raw nodes are precalculated and expected to be available by other nodes.
+				ExecuteFirst: isRawBuiltin,
 			}
 			declarationToNode[name.String] = node
 			stageNodes.Add(node)
@@ -122,6 +113,9 @@ func (m *Module) Lower() (lowered cpp.Module, errors Errors) {
 	ordering := stagedOrdering(stageNodes)
 	for i, stage := range ordering {
 		evalNodes := extractSortedNames(stage, evaluatedNodes)
+		if i == 0 {
+			util.PrettyPrint(evalNodes)
+		}
 
 		// type check all expressions and declarations
 		for _, node := range evalNodes {

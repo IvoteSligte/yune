@@ -31,7 +31,7 @@ var BoolType = value.Type("bool")
 var StringType = value.Type("std::string")
 var NilType = value.Type("void")
 
-var ExpressionType = value.Type("Expression")
+var ExpressionType = value.Type("Expression_type_")
 
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
@@ -96,10 +96,13 @@ std::ostream& operator<<(std::ostream& out, const Type& t) {
 }
 
 var ExpressionDeclaration = BuiltinRawDeclaration{
-	Name: "Expression",
-	Type: "Type",
+	Name:     "Expression",
+	Type:     "Type",
+	Requires: []string{"Type"},
 	Header: `
-struct Expression {
+Type Expression = Type{"Expression_type_"};
+
+struct Expression_type_ {
     std::string expr;
 };`,
 }
@@ -109,12 +112,12 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Type:     "std::function<Expression(std::string)>",
 	Requires: []string{"Expression"},
 	Implementation: `
-Expression stringLiteral(std::string str) {
+Expression_type_ stringLiteral(std::string str) {
     std::size_t found;
     while ((found = str.find('"')) != std::string::npos) {
         str = str.replace(found, 1, "\\\"");
     }
-    return Expression{std::string("\"") + str + "\""};
+    return Expression_type_{std::string("\"") + str + "\""};
 };`,
 }
 
