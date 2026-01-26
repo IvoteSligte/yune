@@ -37,4 +37,6 @@ type Errors = []error
 type Query struct {
 	Expression
 	value.Destination
+	// The type this query expects. May be value.Type("") to indicate absence.
+	ExpectedType value.Type
 }

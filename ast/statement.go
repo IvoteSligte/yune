@@ -21,8 +21,9 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 // GetTypeDependencies implements Statement.
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: &d.Type.value,
+		Expression:   d.Type.Expression,
+		Destination:  &d.Type.value,
+		ExpectedType: TypeType,
 	})
 	return append(deps, d.Body.GetTypeDependencies()...)
 }

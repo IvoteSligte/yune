@@ -84,8 +84,9 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
 	deps = append(deps, Query{
-		Expression:  d.ReturnType.Expression,
-		Destination: &d.ReturnType.value,
+		Expression:   d.ReturnType.Expression,
+		Destination:  &d.ReturnType.value,
+		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -141,8 +142,9 @@ func (d FunctionParameter) GetType() value.Type {
 // GetTypeDependencies implements Declaration
 func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: &d.Type.value,
+		Expression:   d.Type.Expression,
+		Destination:  &d.Type.value,
+		ExpectedType: TypeType,
 	})
 	return
 }
@@ -186,8 +188,9 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 // GetTypeDependencies implements Declaration.
 func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: &d.Type.value,
+		Expression:   d.Type.Expression,
+		Destination:  &d.Type.value,
+		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return

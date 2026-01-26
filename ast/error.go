@@ -67,13 +67,18 @@ func (e NotAFunction) Error() string {
 	return fmt.Sprintf("Function call on non-function type '%s' at %s.", e.Found, e.At)
 }
 
-type NotAType struct {
-	Found value.Type
-	At    Span
+type UnexpectedType struct {
+	Expected value.Type
+	Found    value.Type
+	At       Span
 }
 
-func (e NotAType) Error() string {
-	return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
+func (e UnexpectedType) Error() string {
+	if e.Expected.Eq(TypeType) {
+		return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
+	} else {
+		return fmt.Sprintf("Expected type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	}
 }
 
 type AssignmentTypeMismatch struct {

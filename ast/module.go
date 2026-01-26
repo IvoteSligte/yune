@@ -119,12 +119,12 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		for _, node := range evalNodes {
 			query := node.Query
 			if query.Expression != nil {
-				// TODO: allow other types for expressions as well
-				errors = append(errors, query.Expression.InferType(TypeType, table)...)
-				if len(errors) == 0 && !query.Expression.GetType().Eq(TypeType) {
-					errors = append(errors, NotAType{
-						Found: query.Expression.GetType(),
-						At:    query.Expression.GetSpan(),
+				errors = append(errors, query.Expression.InferType(query.ExpectedType, table)...)
+				if len(errors) == 0 && !query.GetType().Eq(query.ExpectedType) {
+					errors = append(errors, UnexpectedType{
+						Expected: query.ExpectedType,
+						Found:    query.GetType(),
+						At:       query.GetSpan(),
 					})
 				}
 			}
