@@ -60,6 +60,16 @@ func (b BuiltinRawDeclaration) GetType() value.Type {
 	return value.Type(b.Type)
 }
 
+// GetMacroTypeDependencies implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetMacroValueDependencies() []Name {
+	return []Name{}
+}
+
 // GetTypeDependencies implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) GetTypeDependencies() []Query {
 	return []Query{}
@@ -152,6 +162,16 @@ func (b BuiltinStructDeclaration) GetType() value.Type {
 	return TypeType
 }
 
+// GetMacroTypeDependencies implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) GetMacroValueDependencies() []Name {
+	return []Name{}
+}
+
 // GetTypeDependencies implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetTypeDependencies() []Query {
 	return []Query{}
@@ -215,6 +235,16 @@ func (b BuiltinConstantDeclaration) GetSpan() Span {
 // GetType implements TopLevelDeclaration.
 func (b BuiltinConstantDeclaration) GetType() value.Type {
 	return value.Type(b.Type)
+}
+
+// GetMacroTypeDependencies implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) GetMacroValueDependencies() []Name {
+	return []Name{}
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.
@@ -295,6 +325,16 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 func (b BuiltinFunctionDeclaration) GetType() value.Type {
 	params := util.JoinFunction(b.Parameters, ", ", func(p BuiltinFunctionParameter) string { return p.Type })
 	return value.Type(fmt.Sprintf("std::function<%s(%s)>", b.ReturnType, params))
+}
+
+// GetMacroTypeDependencies implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) GetMacroValueDependencies() []Name {
+	return []Name{}
 }
 
 // GetTypeDependencies implements TopLevelDeclaration.

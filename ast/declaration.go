@@ -55,19 +55,18 @@ type Declaration interface {
 	Node
 	GetName() Name
 
-	// --- compilation stage 1 ---
+	GetMacroTypeDependencies() []Query
+	GetMacroValueDependencies() []Name
 
 	GetMacros() []*Macro
 	// Queries the type expressions used in this declaration, including in the body.
 	GetTypeDependencies() []Query
-	// Returns the calculated type.
-	GetType() value.Type
-
-	// --- compilation stage 2 ---
-
 	// Queries the names of constants such as global variables and functions
 	// used in this declaration's body.
 	GetValueDependencies() []Name
+
+	// Returns the calculated type.
+	GetType() value.Type
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.
 	TypeCheckBody(deps DeclarationTable) (errors Errors)

@@ -74,6 +74,26 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	return
 }
 
+// GetMacroValueDependencies implements Declaration.
+func (d FunctionDeclaration) GetMacroValueDependencies() (deps []Name) {
+	for _, depName := range d.Body.GetMacroValueDependencies() {
+		equals := func(param FunctionParameter) bool {
+			return depName.String == param.GetName().String
+		}
+		if depName.String != d.GetName().String && !util.Any(equals, d.Parameters...) {
+			deps = append(deps, depName)
+		}
+	}
+	return
+}
+
+// GetMacroTypeDependencies implements Declaration.
+func (d *FunctionDeclaration) GetMacroTypeDependencies() (deps []Query) {
+	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetMacroTypeDependencies)
+	deps = append(deps, d.Body.GetMacroTypeDependencies()...)
+	return
+}
+
 // GetValueDependencies implements Declaration.
 func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 	for _, depName := range d.Body.GetValueDependencies() {
@@ -151,6 +171,16 @@ func (d FunctionParameter) GetType() value.Type {
 	return d.Type.Get()
 }
 
+// GetMacroTypeDependencies implements Declaration
+func (d *FunctionParameter) GetMacroTypeDependencies() (deps []Query) {
+	return
+}
+
+// GetMacroValueDependencies implements Declaration
+func (d FunctionParameter) GetMacroValueDependencies() (deps []Name) {
+	return
+}
+
 // GetTypeDependencies implements Declaration
 func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
@@ -200,6 +230,17 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 		})
 	}
 	return
+}
+
+// GetMacroTypeDependencies implements Declaration.
+func (d *ConstantDeclaration) GetMacroTypeDependencies() (deps []Query) {
+	deps = append(deps, d.Body.GetMacroTypeDependencies()...)
+	return
+}
+
+// GetMacroValueDependencies implements Declaration.
+func (d ConstantDeclaration) GetMacroValueDependencies() []Name {
+	return d.Body.GetMacroValueDependencies()
 }
 
 // GetTypeDependencies implements Declaration.

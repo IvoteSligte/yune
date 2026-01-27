@@ -19,6 +19,16 @@ func (i Integer) GetMacros() []*Macro {
 	return []*Macro{}
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (i Integer) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements Expression.
+func (i Integer) GetMacroValueDependencies() (deps []Name) {
+	return
+}
+
 // GetTypeDependencies implements Expression.
 func (i Integer) GetTypeDependencies() []Query {
 	return []Query{}
@@ -52,6 +62,16 @@ type Float struct {
 // GetMacros implements Expression.
 func (f Float) GetMacros() []*Macro {
 	return []*Macro{}
+}
+
+// GetMacroTypeDependencies implements Expression.
+func (f Float) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements Expression.
+func (f Float) GetMacroValueDependencies() (deps []Name) {
+	return
 }
 
 // GetTypeDependencies implements Expression.
@@ -89,6 +109,16 @@ func (f Bool) GetMacros() []*Macro {
 	return []*Macro{}
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (f Bool) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements Expression.
+func (f Bool) GetMacroValueDependencies() (deps []Name) {
+	return
+}
+
 // GetTypeDependencies implements Expression.
 func (f Bool) GetTypeDependencies() []Query {
 	return []Query{}
@@ -122,6 +152,16 @@ type String struct {
 // GetMacros implements Expression.
 func (f String) GetMacros() []*Macro {
 	return []*Macro{}
+}
+
+// GetMacroTypeDependencies implements Expression.
+func (f String) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
+// GetMacroValueDependencies implements Expression.
+func (f String) GetMacroValueDependencies() (deps []Name) {
+	return
 }
 
 // GetTypeDependencies implements Expression.
@@ -159,6 +199,11 @@ func (v *Variable) GetMacros() []*Macro {
 	return []*Macro{}
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (v *Variable) GetMacroTypeDependencies() []Query {
+	return []Query{}
+}
+
 // GetTypeDependencies implements Expression.
 func (v *Variable) GetTypeDependencies() []Query {
 	return []Query{}
@@ -167,6 +212,11 @@ func (v *Variable) GetTypeDependencies() []Query {
 // GetType implements Expression.
 func (v *Variable) GetType() value.Type {
 	return v.Type
+}
+
+// GetMacroValueDependencies implements Expression.
+func (v *Variable) GetMacroValueDependencies() (deps []Name) {
+	return []Name{v.Name}
 }
 
 // GetValueDependencies implements Expression.
@@ -205,6 +255,11 @@ func (f *FunctionCall) GetMacros() []*Macro {
 	return append(f.Function.GetMacros(), f.Argument.GetMacros()...)
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (f *FunctionCall) GetMacroTypeDependencies() []Query {
+	return append(f.Function.GetMacroTypeDependencies(), f.Argument.GetMacroTypeDependencies()...)
+}
+
 // GetTypeDependencies implements Expression.
 func (f *FunctionCall) GetTypeDependencies() []Query {
 	return append(f.Function.GetTypeDependencies(), f.Argument.GetTypeDependencies()...)
@@ -213,6 +268,11 @@ func (f *FunctionCall) GetTypeDependencies() []Query {
 // GetType implements Expression.
 func (f *FunctionCall) GetType() value.Type {
 	return f.Type
+}
+
+// GetMacroValueDependencies implements Expression.
+func (f *FunctionCall) GetMacroValueDependencies() []Name {
+	return append(f.Function.GetMacroValueDependencies(), f.Argument.GetMacroValueDependencies()...)
 }
 
 // GetValueDependencies implements Expression.
@@ -299,6 +359,19 @@ func (t *Tuple) GetMacros() []*Macro {
 	return util.FlatMap(t.Elements, Expression.GetMacros)
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (t *Tuple) GetMacroTypeDependencies() []Query {
+	return util.FlatMap(t.Elements, Expression.GetMacroTypeDependencies)
+}
+
+// GetMacroValueDependencies implements Expression.
+func (t *Tuple) GetMacroValueDependencies() (deps []Name) {
+	for i := range t.Elements {
+		deps = append(deps, t.Elements[i].GetMacroValueDependencies()...)
+	}
+	return
+}
+
 // GetTypeDependencies implements Expression.
 func (t *Tuple) GetTypeDependencies() []Query {
 	return util.FlatMap(t.Elements, Expression.GetTypeDependencies)
@@ -374,22 +447,24 @@ func (m *Macro) GetMacros() []*Macro {
 	return []*Macro{m}
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (m *Macro) GetMacroTypeDependencies() []Query {
+	return m.Result.GetTypeDependencies()
+}
+
+// GetMacroValueDependencies implements Expression.
+func (m *Macro) GetMacroValueDependencies() []Name {
+	return m.Result.GetValueDependencies()
+}
+
 // GetTypeDependencies implements Expression.
 func (m *Macro) GetTypeDependencies() []Query {
-	if m.Result != nil {
-		return m.Result.GetTypeDependencies()
-	} else {
-		return []Query{}
-	}
+	return []Query{}
 }
 
 // GetValueDependencies implements Expression.
 func (m *Macro) GetValueDependencies() []Name {
-	if m.Result != nil {
-		return m.Result.GetValueDependencies()
-	} else {
-		return []Name{}
-	}
+	return []Name{}
 }
 
 // InferType implements Expression.
@@ -429,6 +504,11 @@ func (u *UnaryExpression) GetMacros() []*Macro {
 	return u.Expression.GetMacros()
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (u *UnaryExpression) GetMacroTypeDependencies() []Query {
+	return u.Expression.GetMacroTypeDependencies()
+}
+
 // GetTypeDependencies implements Expression.
 func (u *UnaryExpression) GetTypeDependencies() []Query {
 	return u.Expression.GetTypeDependencies()
@@ -437,6 +517,11 @@ func (u *UnaryExpression) GetTypeDependencies() []Query {
 // GetType implements Expression.
 func (u *UnaryExpression) GetType() value.Type {
 	return u.Type
+}
+
+// GetMacroValueDependencies implements Expression.
+func (u *UnaryExpression) GetMacroValueDependencies() []Name {
+	return u.Expression.GetMacroValueDependencies()
 }
 
 // GetValueDependencies implements Expression.
@@ -500,6 +585,11 @@ func (b *BinaryExpression) GetMacros() []*Macro {
 	return append(b.Left.GetMacros(), b.Right.GetMacros()...)
 }
 
+// GetMacroTypeDependencies implements Expression.
+func (b *BinaryExpression) GetMacroTypeDependencies() []Query {
+	return append(b.Left.GetMacroTypeDependencies(), b.Right.GetMacroTypeDependencies()...)
+}
+
 // GetTypeDependencies implements Expression.
 func (b *BinaryExpression) GetTypeDependencies() []Query {
 	return append(b.Left.GetTypeDependencies(), b.Right.GetTypeDependencies()...)
@@ -508,6 +598,11 @@ func (b *BinaryExpression) GetTypeDependencies() []Query {
 // GetType implements Expression.
 func (b *BinaryExpression) GetType() value.Type {
 	return b.Type
+}
+
+// GetMacroValueDependencies implements Expression.
+func (b *BinaryExpression) GetMacroValueDependencies() []Name {
+	return append(b.Left.GetMacroValueDependencies(), b.Right.GetMacroValueDependencies()...)
 }
 
 // GetValueDependencies implements Expression.
@@ -623,8 +718,14 @@ const (
 type Expression interface {
 	Node
 	GetMacros() []*Macro
+
+	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
+	GetMacroTypeDependencies() []Query
+	GetMacroValueDependencies() []Name
+
 	GetTypeDependencies() []Query // TODO: remove, as it is always empty (unless blocks in expressions are allowed!!!)
 	GetValueDependencies() []Name
+
 	// Infers type, with an optional `expected` type for backwards inference.
 	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() value.Type

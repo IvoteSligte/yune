@@ -7,6 +7,8 @@ import (
 
 var unknownType = value.Type("")
 
+// TODO: macros in types
+
 type Type struct {
 	// Evaluated expression
 	value      value.Type

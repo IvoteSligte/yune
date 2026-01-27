@@ -23,6 +23,11 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	panic("TypeCheckBody should not be called on VariableDeclaration (use InferType).")
 }
 
+// GetMacroTypeDependencies implements Statement.
+func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
+	return append(deps, d.Body.GetMacroTypeDependencies()...)
+}
+
 // GetTypeDependencies implements Statement.
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
@@ -31,6 +36,11 @@ func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
 		ExpectedType: TypeType,
 	})
 	return append(deps, d.Body.GetTypeDependencies()...)
+}
+
+// GetMacroValueDependencies implements Statement.
+func (d VariableDeclaration) GetMacroValueDependencies() []Name {
+	return d.Body.GetMacroValueDependencies()
 }
 
 // GetValueDependencies implements Statement.
@@ -84,6 +94,16 @@ type Assignment struct {
 // GetMacros implements Statement.
 func (a *Assignment) GetMacros() []*Macro {
 	return a.Body.GetMacros()
+}
+
+// GetMacroTypeDependencies implements Statement.
+func (a *Assignment) GetMacroTypeDependencies() []Query {
+	return a.Body.GetMacroTypeDependencies()
+}
+
+// GetMacroValueDependencies implements Statement.
+func (a *Assignment) GetMacroValueDependencies() []Name {
+	return append(a.Target.GetMacroValueDependencies(), a.Body.GetMacroValueDependencies()...)
 }
 
 // GetTypeDependencies implements Statement.
@@ -160,6 +180,19 @@ func (b *BranchStatement) GetType() value.Type {
 	return b.Type
 }
 
+// GetMacroTypeDependencies implements Statement.
+func (b *BranchStatement) GetMacroTypeDependencies() (deps []Query) {
+	return append(b.Then.GetMacroTypeDependencies(), b.Else.GetMacroTypeDependencies()...)
+}
+
+// GetMacroValueDependencies implements Statement.
+func (b *BranchStatement) GetMacroValueDependencies() (deps []Name) {
+	deps = b.Condition.GetMacroValueDependencies()
+	deps = append(deps, b.Then.GetMacroValueDependencies()...)
+	deps = append(deps, b.Else.GetMacroValueDependencies()...)
+	return
+}
+
 // GetTypeDependencies implements Statement.
 func (b *BranchStatement) GetTypeDependencies() (deps []Query) {
 	return append(b.Then.GetTypeDependencies(), b.Else.GetTypeDependencies()...)
@@ -220,6 +253,24 @@ func (b Block) GetType() value.Type {
 	return b.Statements[len(b.Statements)-1].GetType()
 }
 
+func (b *Block) GetMacroValueDependencies() (deps []Name) {
+	locals := map[string]Declaration{}
+	for _, stmt := range b.Statements {
+		for _, dep := range stmt.GetMacroValueDependencies() {
+			_, ok := locals[dep.String]
+			if !ok {
+				deps = append(deps, dep)
+			}
+		}
+		// register local after getting dependencies to prevent cyclic definitions
+		decl, ok := stmt.(Declaration)
+		if ok {
+			locals[decl.GetName().String] = decl
+		}
+	}
+	return
+}
+
 func (b *Block) GetValueDependencies() (deps []Name) {
 	locals := map[string]Declaration{}
 	for _, stmt := range b.Statements {
@@ -240,6 +291,16 @@ func (b *Block) GetValueDependencies() (deps []Name) {
 
 func (b *Block) GetMacros() []*Macro {
 	return util.FlatMap(b.Statements, Statement.GetMacros)
+}
+
+func (b *Block) GetMacroTypeDependencies() (deps []Query) {
+	for _, stmt := range b.Statements {
+		decl, ok := stmt.(Declaration)
+		if ok {
+			deps = append(deps, decl.GetMacroTypeDependencies()...)
+		}
+	}
+	return
 }
 
 func (b *Block) GetTypeDependencies() (deps []Query) {
@@ -303,16 +364,6 @@ func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
 	return e.Expression.InferType(unknownType, deps)
 }
 
-// GetTypeDependencies implements Statement.
-func (e *ExpressionStatement) GetTypeDependencies() (deps []Query) {
-	return e.Expression.GetTypeDependencies()
-}
-
-// GetValueDependencies implements Statement.
-func (e *ExpressionStatement) GetValueDependencies() (deps []Name) {
-	return e.Expression.GetValueDependencies()
-}
-
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower() cpp.Statement {
 	return cpp.ExpressionStatement{Expression: e.Expression.Lower()}
@@ -325,8 +376,13 @@ type Statement interface {
 	InferType(deps DeclarationTable) Errors
 	GetType() value.Type
 	GetMacros() []*Macro
+
+	GetMacroTypeDependencies() (deps []Query)
+	GetMacroValueDependencies() (deps []Name)
+
 	GetTypeDependencies() (deps []Query)
 	GetValueDependencies() (deps []Name)
+
 	Lower() cpp.Statement
 }
 
