@@ -123,7 +123,16 @@ struct Expression_type_ {
 };`,
 	Implementation: `
 Type Expression = Type{"Expression_type_"};
-`,
+
+// TODO: Lisp/JSON style serialization or something
+std::ostream& operator<<(std::ostream& out, const Expression_type_& e) {
+    return out << e.expr;
+}
+
+// TEMP (macro return type)
+std::ostream& operator<<(std::ostream& out, const std::tuple<std::string, Expression_type_>& t) {
+    return out << std::get<0>(t) << "; " << std::get<1>(t);
+}`,
 }
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
