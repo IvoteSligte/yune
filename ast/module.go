@@ -23,22 +23,22 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	m.Declarations = append(BuiltinDeclarations, m.Declarations...)
 
 	// get unique mapping of name -> declaration
-	for i := range m.Declarations {
-		name := m.Declarations[i].GetName()
+	for _, decl := range m.Declarations {
+		name := decl.GetName()
 		other, exists := declarationToNode[name.String]
 
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
 				First:  other.Declaration,
-				Second: m.Declarations[i],
+				Second: decl,
 			})
 		} else {
-			_, isRawBuiltin := m.Declarations[i].(BuiltinRawDeclaration)
+			_, isRawBuiltin := decl.(BuiltinRawDeclaration)
 			node := &evalNode{
 				Query:         Query{},
-				Declaration:   m.Declarations[i],
-				After:         nil, // set later
-				Requires:      nil, // set later
+				Declaration:   decl,
+				After:         mapset.NewThreadUnsafeSet[*evalNode](), // filled later
+				Requires:      mapset.NewThreadUnsafeSet[*evalNode](), // filled later
 				IsPrecomputed: isRawBuiltin,
 			}
 			declarationToNode[name.String] = node
@@ -49,12 +49,12 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		return
 	}
 
-	for i := range m.Declarations {
-		name := m.Declarations[i].GetName()
-		typeDependencies := mapset.NewThreadUnsafeSet[*evalNode]()
-		valueDependencies := mapset.NewThreadUnsafeSet[*evalNode]()
+	for name, node := range declarationToNode {
+		decl := node.Declaration
 
-		for _, query := range m.Declarations[i].GetTypeDependencies() {
+		// for _, macro := range decl.GetMacros() {
+		// }
+		for _, query := range decl.GetTypeDependencies() {
 			depNames := query.Expression.GetValueDependencies()
 			requires := mapset.NewThreadUnsafeSet[*evalNode]()
 			for _, depName := range depNames {
@@ -67,16 +67,16 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				}
 				requires.Add(requiredNode)
 			}
-			node := &evalNode{
+			depNode := &evalNode{
 				Query:       query,
 				Declaration: nil,
 				After:       mapset.NewThreadUnsafeSet[*evalNode](),
 				Requires:    requires,
 			}
-			typeDependencies.Add(node)
-			stageNodes.Add(node)
+			node.After.Add(depNode)
+			stageNodes.Add(depNode)
 		}
-		for _, depName := range m.Declarations[i].GetValueDependencies() {
+		for _, depName := range decl.GetValueDependencies() {
 			if len(depName.String) == 0 {
 				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
 			}
@@ -84,14 +84,11 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			if !exists {
 				errors = append(errors, UndefinedVariable(depName))
 			}
-			valueDependencies.Add(depNode)
+			node.Requires.Add(depNode)
 		}
 		if len(errors) > 0 {
 			return
 		}
-		node := declarationToNode[name.String]
-		node.After = typeDependencies
-		node.Requires = valueDependencies
 	}
 	errors = append(errors, CheckCyclicType(stageNodes)...)
 	errors = append(errors, CheckCyclicConstant(stageNodes)...)
