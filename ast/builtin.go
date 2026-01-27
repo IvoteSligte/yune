@@ -19,6 +19,7 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	TypeDeclaration,
 	ExpressionDeclaration,
 	StringLiteralDeclaration,
+	PrintStringDeclaration,
 }
 
 // NOTE: main() returns int for compatibility with C++,
@@ -417,6 +418,18 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 	},
 	ReturnType: "Type",
 	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
+}
+
+var PrintStringDeclaration = BuiltinFunctionDeclaration{
+	Name: "printlnString",
+	Parameters: []BuiltinFunctionParameter{
+		{
+			Name: "string",
+			Type: "std::string",
+		},
+	},
+	ReturnType: "void",
+	Body:       `std::cout << string << std::endl;`,
 }
 
 // TODO: TupleDeclaration?

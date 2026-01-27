@@ -22,4 +22,5 @@ main(): Int =
     s: String = longString#This is a very long,
         multi-line string.
         It contains several newlines.
+    printlnString s
     0

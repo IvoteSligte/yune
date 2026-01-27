@@ -20,8 +20,8 @@ func (table *DeclarationTable) Add(decl Declaration) error {
 	}
 	if table.declarations == nil {
 		table.declarations = map[string]Declaration{}
-		table.declarations[decl.GetName().String] = decl
 	}
+	table.declarations[decl.GetName().String] = decl
 	return nil
 }
 

@@ -229,7 +229,10 @@ func (v *Variable) GetValueDependencies() (deps []Name) {
 func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
 	decl, ok := deps.Get(v.Name.String)
 	if !ok {
-		errors = append(errors, UndefinedVariable(v.Name))
+		log.Panicf(
+			"Despite variable '%s' at '%s' existing, it was not provided in the declaration table.",
+			v.Name.String, v.Name.Span,
+		)
 		return
 	}
 	if decl.GetType() == value.Type("") {

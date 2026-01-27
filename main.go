@@ -67,7 +67,7 @@ func main() {
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
-	printTokens(lexer, tokenStream)
+	// printTokens(lexer, tokenStream)
 
 	yuneParser := parser.NewYuneParser(tokenStream)
 	parseTreeModule := yuneParser.Module()

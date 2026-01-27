@@ -321,12 +321,10 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 		}
 		decl, ok := b.Statements[i].(Declaration)
 		if ok {
-			err := deps.Add(decl)
-			if err != nil {
+			if err := deps.Add(decl); err != nil {
 				errors = append(errors, err)
 			}
 		}
-		b.Statements[i].InferType(deps)
 	}
 	return
 }

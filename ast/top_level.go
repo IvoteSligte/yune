@@ -51,7 +51,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 		param := &d.Parameters[i]
 		deps.declarations[param.GetName().String] = param
 	}
-	errors = append(errors, d.Body.InferType(deps)...)
+	errors = append(errors, d.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -215,7 +215,7 @@ func (d *ConstantDeclaration) GetSpan() Span {
 
 // TypeCheckBody implements TopLevelDeclaration.
 func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
-	errors = d.Body.InferType(deps)
+	errors = d.Body.InferType(deps.NewScope())
 	if len(errors) > 0 {
 		return
 	}
