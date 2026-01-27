@@ -84,7 +84,7 @@ func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode
 			// e.g. A executes after B, but B requires A to execute
 			missing := node.Requires.Difference(accessible).ToSlice()
 			// TODO: return proper error
-			log.Fatalf("'after' and 'requires' loop: %s misses required dependencies %v", node, missing)
+			log.Fatalf("'after' and 'requires' loop: %s misses required dependencies %v of which the first executes after %v", node, missing, missing[0].After.ToSlice())
 		}
 	}
 	// sort nodes to execute

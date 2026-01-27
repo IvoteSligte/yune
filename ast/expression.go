@@ -476,12 +476,12 @@ func (m *Macro) GetMacroValueDependencies() []Name {
 
 // GetTypeDependencies implements Expression.
 func (m *Macro) GetTypeDependencies() []Query {
-	return []Query{}
+	return m.Function.GetTypeDependencies()
 }
 
 // GetValueDependencies implements Expression.
 func (m *Macro) GetValueDependencies() []Name {
-	return []Name{}
+	return m.Function.GetValueDependencies()
 }
 
 // InferType implements Expression.

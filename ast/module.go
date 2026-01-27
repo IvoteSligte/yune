@@ -141,7 +141,9 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		},
 	)
 	// iteratively evaluate nodes
+	iteration := 0
 	for unevaluated.Cardinality() > 0 {
+		log.Printf("Compilation iteration: %d\n", iteration)
 		evalNodes := extractEvaluatableNodes(unevaluated, evaluated)
 
 		// type check all expressions and declarations
@@ -224,6 +226,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		evaluated.Append(evalNodes...)
+		iteration += 1
 	}
 	return
 }
