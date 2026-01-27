@@ -433,6 +433,7 @@ func (t *Tuple) GetType() value.Type {
 	return t.Type
 }
 
+// TODO: type check Function
 type Macro struct {
 	Span
 	// Function that evaluates the macro.

@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"log"
+	"yune/util"
+
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
@@ -54,7 +57,7 @@ func sortedEvaluatableNodes(unsorted evalSet, evaluated evalSet) (sorted []*eval
 		if !anyChange {
 			// there must be a loop with "requires" relations
 			// e.g. A requires B, but B requires A, which prevents a proper ordering
-			panic("'requires' loop") // TODO: return proper error
+			panic("Cannot sort evaluation nodes due to 'required' dependency loop") // TODO: return proper error
 		}
 	}
 	return
@@ -78,6 +81,7 @@ func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode
 				anyChange = true
 				candidates.Remove(node)
 				available.Remove(node)
+				unevaluated.Add(node)
 			}
 		}
 		if !anyChange {
@@ -86,6 +90,16 @@ func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode
 	}
 	// check for errors
 	if unevaluated.Cardinality() > 0 && candidates.Cardinality() == 0 {
+		log.Printf("Evaluated: %v\n", evaluated.ToSlice())
+		log.Fatalf("Dependency loop in evaluation with nodes: %v. After (unevaluated): %v. Requires (unevaluated): %v.", unevaluated.ToSlice(),
+			util.Map(unevaluated.ToSlice(), func(node *evalNode) []*evalNode {
+				return node.After.Difference(unevaluated).ToSlice()
+			}),
+			util.Map(unevaluated.ToSlice(), func(node *evalNode) []*evalNode {
+				return node.Requires.Difference(available).ToSlice()
+			}),
+		)
+
 		// there must be a loop with "after" relations
 		// e.g. A executes after B, but B executes after A as well
 		panic("'after-after' or 'after-requires' loop") // TODO: return proper error
