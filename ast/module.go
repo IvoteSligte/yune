@@ -9,6 +9,34 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
+func newQueryEvalNode(query Query, declarationToNode map[string]*evalNode, stageNodes evalSet) (node *evalNode, errors Errors) {
+	if len(query.Expression.GetMacros()) != 0 {
+		panic("Query expressions are assumed to not contain macros.")
+	}
+	if len(query.Expression.GetTypeDependencies()) != 0 {
+		panic("Query expression type dependencies are assumed to not exist.")
+	}
+	depNames := query.Expression.GetValueDependencies()
+	requires := mapset.NewThreadUnsafeSet[*evalNode]()
+	for _, depName := range depNames {
+		if len(depName.String) == 0 {
+			log.Printf("WARN: Empty string name in dependency of query.")
+		}
+		requiredNode, exists := declarationToNode[depName.String]
+		if !exists {
+			errors = append(errors, UndefinedType(depName))
+		}
+		requires.Add(requiredNode)
+	}
+	node = &evalNode{
+		Query:    query,
+		After:    mapset.NewThreadUnsafeSet[*evalNode](),
+		Requires: requires,
+	}
+	stageNodes.Add(node)
+	return
+}
+
 type Module struct {
 	Declarations []TopLevelDeclaration
 }
@@ -35,7 +63,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		} else {
 			_, isRawBuiltin := decl.(BuiltinRawDeclaration)
 			node := &evalNode{
-				Query:         Query{},
 				Declaration:   decl,
 				After:         mapset.NewThreadUnsafeSet[*evalNode](), // filled later
 				Requires:      mapset.NewThreadUnsafeSet[*evalNode](), // filled later
@@ -48,33 +75,31 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-
 	for name, node := range declarationToNode {
 		decl := node.Declaration
 
-		// for _, macro := range decl.GetMacros() {
-		// }
-		for _, query := range decl.GetTypeDependencies() {
-			depNames := query.Expression.GetValueDependencies()
-			requires := mapset.NewThreadUnsafeSet[*evalNode]()
-			for _, depName := range depNames {
-				if len(depName.String) == 0 {
-					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
-				}
-				requiredNode, exists := declarationToNode[depName.String]
-				if !exists {
-					errors = append(errors, UndefinedType(depName))
-				}
-				requires.Add(requiredNode)
+		for _, macro := range decl.GetMacros() {
+			call := macro.AsFunctionCall()
+			query := Query{
+				Expression:   &call,
+				Destination:  macro,
+				ExpectedType: MacroReturnType,
 			}
+			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
+			errors = append(errors, _errors...)
+			// another node for delay because the macro needs to be executed 2 stages
+			// before the declaration itself (as it can add type dependencies to the declaration)
 			depNode := &evalNode{
-				Query:       query,
-				Declaration: nil,
-				After:       mapset.NewThreadUnsafeSet[*evalNode](),
-				Requires:    requires,
+				After:    mapset.NewThreadUnsafeSet[*evalNode](macroNode),
+				Requires: mapset.NewThreadUnsafeSet[*evalNode](),
 			}
 			node.After.Add(depNode)
 			stageNodes.Add(depNode)
+		}
+		for _, query := range decl.GetTypeDependencies() {
+			depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
+			errors = append(errors, _errors...)
+			node.After.Add(depNode)
 		}
 		for _, depName := range decl.GetValueDependencies() {
 			if len(depName.String) == 0 {
@@ -86,12 +111,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 			node.Requires.Add(depNode)
 		}
-		if len(errors) > 0 {
-			return
-		}
 	}
-	errors = append(errors, CheckCyclicType(stageNodes)...)
-	errors = append(errors, CheckCyclicConstant(stageNodes)...)
 	if len(errors) > 0 {
 		return
 	}
@@ -105,16 +125,47 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	evaluated := mapset.NewThreadUnsafeSet[*evalNode]()
 	unevaluated := stageNodes
 
-	// handle precomputed nodes
+	// add precomputed nodes to 'evaluated'
 	for node := range unevaluated.Iter() {
 		if node.IsPrecomputed {
 			unevaluated.Remove(node)
 			evaluated.Add(node)
-			lowered.Declarations = append(lowered.Declarations, node.Declaration.Lower())
 		}
 	}
+	// sort precomputed nodes
+	lowered.Declarations = util.Map(
+		sortedEvaluatableNodes(evaluated, mapset.NewThreadUnsafeSet[*evalNode]()),
+		func(node *evalNode) cpp.TopLevelDeclaration {
+			return node.Declaration.Lower()
+		},
+	)
 	// iteratively evaluate nodes
 	for unevaluated.Cardinality() > 0 {
+		for node := range unevaluated.Iter() {
+			decl := node.Declaration
+			if decl == nil {
+				// NOTE: can non-declarations also contain macros?
+				continue
+			}
+			for _, query := range decl.GetMacroTypeDependencies() {
+				depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
+				errors = append(errors, _errors...)
+				node.After.Add(depNode)
+			}
+			for _, depName := range decl.GetMacroValueDependencies() {
+				if len(depName.String) == 0 {
+					log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", decl.GetName().String)
+				}
+				depNode, exists := declarationToNode[depName.String]
+				if !exists {
+					errors = append(errors, UndefinedVariable(depName))
+				}
+				node.Requires.Add(depNode)
+			}
+		}
+		if len(errors) > 0 {
+			return
+		}
 		evalNodes := extractEvaluatableNodes(unevaluated, evaluated)
 
 		// type check all expressions and declarations
@@ -171,65 +222,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 		}
 		evaluated.Append(evalNodes...)
-	}
-	return
-}
-
-func CheckCyclicType(stageNodes evalSet) (errors Errors) {
-	for node := range stageNodes.Iter() {
-		queue := node.After.ToSlice()
-		visited := mapset.NewThreadUnsafeSet[*evalNode]()
-
-		for len(queue) > 0 {
-			dep := queue[0]
-			queue = queue[1:]
-			if visited.Contains(dep) {
-				continue
-			}
-			visited.Add(dep)
-			queue = append(queue, dep.After.ToSlice()...)
-		}
-		if visited.Contains(node) {
-			errors = append(errors, CyclicTypeDependency{
-				In: node.Declaration,
-			})
-		}
-	}
-	return
-}
-
-// NOTE: an uncommon edge case that is currently not handled is when a constant depends on another constant
-// through a function call and that forms a cycle
-// ```
-// f(): Int = A
-// A: Int = B
-// B: Int = f()
-// ```
-func CheckCyclicConstant(stageNodes evalSet) (errors Errors) {
-	for node := range stageNodes.Iter() {
-		if !isConstantDeclaration(node.Declaration) {
-			continue
-		}
-		queue := node.Requires.ToSlice()
-		visited := mapset.NewThreadUnsafeSet[*evalNode]()
-
-		for len(queue) > 0 {
-			dep := queue[0]
-			queue = queue[1:]
-			if !isConstantDeclaration(dep.Declaration) {
-				continue
-			}
-			if visited.Contains(dep) {
-				continue
-			}
-			visited.Add(dep)
-			queue = append(queue, dep.Requires.ToSlice()...)
-		}
-		if visited.Contains(node) {
-			errors = append(errors, CyclicConstantDependency{
-				In: node.Declaration,
-			})
-		}
 	}
 	return
 }

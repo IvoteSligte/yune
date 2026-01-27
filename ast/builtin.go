@@ -31,6 +31,9 @@ var BoolType = value.Type("bool")
 var StringType = value.Type("std::string")
 var NilType = value.Type("void")
 
+// TODO: List(errors), List(value dependencies), List(type dependencies)
+var MacroReturnType = value.Type("std::tuple<std::string, Expression_type_>")
+
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
 	Name           string

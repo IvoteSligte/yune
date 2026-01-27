@@ -20,6 +20,28 @@ type evalNode struct {
 
 type evalSet = mapset.Set[*evalNode]
 
+func sortedEvaluatableNodes(unsorted evalSet, evaluated evalSet) (sorted []*evalNode) {
+	// TODO: allow mutual recursion for functions
+	existing := evaluated.Clone()
+	for unsorted.Cardinality() > 0 {
+		anyChange := false
+		for node := range unsorted.Iter() {
+			if node.Requires.IsSubset(existing) {
+				unsorted.Remove(node)
+				sorted = append(sorted, node)
+				existing.Add(node)
+				anyChange = true
+			}
+		}
+		if !anyChange {
+			// there must be a loop with "requires" relations
+			// e.g. A requires B, but B requires A, which prevents a proper ordering
+			panic("'requires' loop")
+		}
+	}
+	return
+}
+
 func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode {
 	// determine nodes to execute
 	queued := mapset.NewThreadUnsafeSet[*evalNode]()
@@ -44,25 +66,5 @@ func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode
 		}
 	}
 	// sort nodes to execute
-	// TODO: allow mutual recursion for functions
-	unsorted := queued
-	sorted := []*evalNode{}
-	existing := evaluated.Clone()
-	for unsorted.Cardinality() > 0 {
-		anyChange := false
-		for node := range unsorted.Iter() {
-			if node.Requires.IsSubset(existing) {
-				unsorted.Remove(node)
-				sorted = append(sorted, node)
-				existing.Add(node)
-				anyChange = true
-			}
-		}
-		if !anyChange {
-			// there must be a loop with "requires" relations
-			// e.g. A requires B, but B requires A, which prevents a proper ordering
-			panic("'requires' loop")
-		}
-	}
-	return sorted
+	return sortedEvaluatableNodes(queued, evaluated)
 }

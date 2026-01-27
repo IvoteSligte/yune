@@ -442,6 +442,23 @@ type Macro struct {
 	Result Expression
 }
 
+func (m *Macro) GetText() string {
+	return util.JoinFunction(m.Lines, "\n", func(l MacroLine) string {
+		return l.Text
+	})
+}
+
+func (m *Macro) AsFunctionCall() FunctionCall {
+	return FunctionCall{
+		Span:     m.Span,
+		Function: &m.Function,
+		Argument: String{
+			Span:  m.Lines[0].Span,
+			Value: m.GetText(),
+		},
+	}
+}
+
 // GetMacros implements Expression.
 func (m *Macro) GetMacros() []*Macro {
 	return []*Macro{m}
