@@ -49,7 +49,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		return
 	}
 
-	// detect dependency cycles
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
 		typeDependencies := mapset.NewThreadUnsafeSet[*evalNode]()

@@ -45,3 +45,12 @@ FIXME: comments don't work
 //
 // Returns the given text as a string literal.
 // Facilitates creation of multiline strings.
+
+
+
+	// Returns the dependencies required for evaluation.
+	// Macros are required to be evaluated before everything else, as they generate code.
+	// The queries are things that need to be evaluated before type checking, such as types.
+	// Then lastly the variables describe global variables and functions used at evaluation time.
+	Dependencies() (macros []*Macro, queries []Query, variables []Name)
+
