@@ -16,6 +16,13 @@ type FunctionDeclaration struct {
 	Value      cpp.FunctionDeclaration
 }
 
+// GetMacros implements Declaration.
+func (d *FunctionDeclaration) GetMacros() (macros []*Macro) {
+	macros = util.FlatMap(d.Parameters, FunctionParameter.GetMacros)
+	macros = append(macros, d.Body.GetMacros()...)
+	return
+}
+
 // GetSpan implements TopLevelDeclaration.
 func (d *FunctionDeclaration) GetSpan() Span {
 	return d.Name.GetSpan()
@@ -117,6 +124,11 @@ type FunctionParameter struct {
 	Type Type
 }
 
+// GetMacros implements Declaration.
+func (d FunctionParameter) GetMacros() []*Macro {
+	return []*Macro{}
+}
+
 // TypeCheckBody implements Declaration.
 func (d FunctionParameter) TypeCheckBody(deps DeclarationTable) (errors Errors) {
 	return
@@ -159,6 +171,11 @@ type ConstantDeclaration struct {
 	Name Name
 	Type Type
 	Body Block
+}
+
+// GetMacros implements Declaration.
+func (d *ConstantDeclaration) GetMacros() []*Macro {
+	return d.Body.GetMacros()
 }
 
 // GetSpan implements TopLevelDeclaration.

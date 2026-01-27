@@ -13,6 +13,11 @@ type VariableDeclaration struct {
 	Body Block
 }
 
+// GetMacros implements Statement.
+func (d *VariableDeclaration) GetMacros() []*Macro {
+	return d.Body.GetMacros()
+}
+
 // TypeCheckBody implements Declaration.
 func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
 	panic("TypeCheckBody should not be called on VariableDeclaration (use InferType).")
@@ -52,10 +57,6 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 	return
 }
 
-func (d *VariableDeclaration) CalcType(deps DeclarationTable) Errors {
-	panic("CalcType should not be called on VariableDeclaration (use InferType).")
-}
-
 // Lower implements Statement.
 func (d VariableDeclaration) Lower() cpp.Statement {
 	return cpp.VariableDeclaration{
@@ -78,6 +79,11 @@ type Assignment struct {
 	Target Variable
 	Op     AssignmentOp
 	Body   Block
+}
+
+// GetMacros implements Statement.
+func (a *Assignment) GetMacros() []*Macro {
+	return a.Body.GetMacros()
 }
 
 // GetTypeDependencies implements Statement.
@@ -140,6 +146,13 @@ type BranchStatement struct {
 	Condition Expression
 	Then      Block
 	Else      Block
+}
+
+// GetMacros implements Statement.
+func (b *BranchStatement) GetMacros() (macros []*Macro) {
+	macros = append(b.Condition.GetMacros(), b.Then.GetMacros()...)
+	macros = append(macros, b.Else.GetMacros()...)
+	return
 }
 
 // GetType implements Statement.
@@ -225,6 +238,10 @@ func (b *Block) GetValueDependencies() (deps []Name) {
 	return
 }
 
+func (b *Block) GetMacros() []*Macro {
+	return util.FlatMap(b.Statements, Statement.GetMacros)
+}
+
 func (b *Block) GetTypeDependencies() (deps []Query) {
 	for _, stmt := range b.Statements {
 		decl, ok := stmt.(Declaration)
@@ -307,6 +324,7 @@ type Statement interface {
 	Node
 	InferType(deps DeclarationTable) Errors
 	GetType() value.Type
+	GetMacros() []*Macro
 	GetTypeDependencies() (deps []Query)
 	GetValueDependencies() (deps []Name)
 	Lower() cpp.Statement

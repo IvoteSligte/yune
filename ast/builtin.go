@@ -40,6 +40,11 @@ type BuiltinRawDeclaration struct {
 	Implementation string
 }
 
+// GetMacros implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetMacros() []*Macro {
+	return []*Macro{}
+}
+
 // GetName implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -127,6 +132,11 @@ type BuiltinStructDeclaration struct {
 	Fields []BuiltinFieldDeclaration
 }
 
+// GetMacros implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) GetMacros() []*Macro {
+	return []*Macro{}
+}
+
 // GetName implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -185,6 +195,11 @@ type BuiltinConstantDeclaration struct {
 	Name  string
 	Type  string
 	Value string
+}
+
+// GetMacros implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) GetMacros() []*Macro {
+	return []*Macro{}
 }
 
 // GetName implements TopLevelDeclaration.
@@ -259,6 +274,11 @@ type BuiltinFunctionDeclaration struct {
 	Parameters []BuiltinFunctionParameter
 	ReturnType string
 	Body       string
+}
+
+// GetMacros implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) GetMacros() []*Macro {
+	return []*Macro{}
 }
 
 // GetName implements TopLevelDeclaration.

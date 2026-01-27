@@ -57,6 +57,7 @@ type Declaration interface {
 
 	// --- compilation stage 1 ---
 
+	GetMacros() []*Macro
 	// Queries the type expressions used in this declaration, including in the body.
 	GetTypeDependencies() []Query
 	// Returns the calculated type.
