@@ -86,6 +86,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				ExpectedType: MacroReturnType,
 			}
 			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
+			macroNode.UpdateHook = node
 			errors = append(errors, _errors...)
 			// another node for delay because the macro needs to be executed 2 stages
 			// before the declaration itself (as it can add type dependencies to the declaration)
@@ -141,31 +142,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	)
 	// iteratively evaluate nodes
 	for unevaluated.Cardinality() > 0 {
-		for node := range unevaluated.Iter() {
-			decl := node.Declaration
-			if decl == nil {
-				// NOTE: can non-declarations also contain macros?
-				continue
-			}
-			for _, query := range decl.GetMacroTypeDependencies() {
-				depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
-				errors = append(errors, _errors...)
-				node.After.Add(depNode)
-			}
-			for _, depName := range decl.GetMacroValueDependencies() {
-				if len(depName.String) == 0 {
-					log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", decl.GetName().String)
-				}
-				depNode, exists := declarationToNode[depName.String]
-				if !exists {
-					errors = append(errors, UndefinedVariable(depName))
-				}
-				node.Requires.Add(depNode)
-			}
-		}
-		if len(errors) > 0 {
-			return
-		}
 		evalNodes := extractEvaluatableNodes(unevaluated, evaluated)
 
 		// type check all expressions and declarations
@@ -217,9 +193,35 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				if v != value.Value("") {
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
-			} else {
-				evalNodes[i].Query.SetValue(string(v))
+				continue
 			}
+			evalNodes[i].Query.SetValue(string(v))
+
+			// Update node that depends on the result of this query.
+			node := evalNodes[i].UpdateHook
+			decl := node.Declaration
+			if decl == nil {
+				// NOTE: can non-declarations also contain macros?
+				continue
+			}
+			for _, query := range decl.GetMacroTypeDependencies() {
+				depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
+				errors = append(errors, _errors...)
+				node.After.Add(depNode)
+			}
+			for _, depName := range decl.GetMacroValueDependencies() {
+				if len(depName.String) == 0 {
+					log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", decl.GetName().String)
+				}
+				depNode, exists := declarationToNode[depName.String]
+				if !exists {
+					errors = append(errors, UndefinedVariable(depName))
+				}
+				node.Requires.Add(depNode)
+			}
+		}
+		if len(errors) > 0 {
+			return
 		}
 		evaluated.Append(evalNodes...)
 	}
