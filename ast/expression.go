@@ -327,7 +327,8 @@ func (t *Tuple) GetType() value.Type {
 
 type Macro struct {
 	Span
-	Language Variable
+	// Function that evaluates the macro.
+	Function Variable
 	Lines    []MacroLine
 	// Result after evaluating the macro.
 	Result Expression
@@ -345,7 +346,7 @@ type MacroLine struct {
 
 // GetValueDependencies implements Expression.
 func (m *Macro) GetValueDependencies() []Name {
-	return m.Language.GetValueDependencies()
+	return m.Function.GetValueDependencies()
 }
 
 // InferType implements Expression.

@@ -140,7 +140,7 @@ func LowerVariable(ctx IVariableContext) ast.Variable {
 func LowerMacro(ctx IMacroContext) ast.Macro {
 	return ast.Macro{
 		Span:     GetSpan(ctx),
-		Language: LowerVariable(ctx.Variable()),
+		Function: LowerVariable(ctx.Variable()),
 		Lines: util.Map(ctx.AllMACROLINE(), func(macroLine antlr.TerminalNode) ast.MacroLine {
 			return ast.MacroLine{
 				Span: ast.Span{
