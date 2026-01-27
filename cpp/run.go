@@ -78,16 +78,22 @@ func Run(module Module) {
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
 
+	fmt.Println("-- Clang++ log --")
 	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
 		log.Fatalln("Failed to compile code. Error:", err)
 	}
-	err = exec.Command(binaryPath).Run()
+	fmt.Println("-- Output --")
+	cmd = exec.Command(binaryPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		log.Fatalln("Failed to run code. Error:", err)
 	}
+	fmt.Println("-- Completed --")
 }
 
 // TODO: skip evaluation if batch is all-nil
@@ -104,7 +110,7 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 	defer os.Remove(outputFile.Name()) // TODO: close file
 
 	statements := []Statement{
-		Statement(Raw(fmt.Sprintf(`std::fstream outputFile("%s");`, outputFile.Name()))),
+		Statement(Raw(fmt.Sprintf(`std::ofstream outputFile("%s");`, outputFile.Name()))),
 	}
 	for _, e := range batch {
 		statement := `outputFile << '\0';`
@@ -113,6 +119,8 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		}
 		statements = append(statements, Statement(Raw(statement)))
 	}
+	statements = append(statements, Statement(Raw(`outputFile.close();`)))
+
 	module.Declarations = append(module.Declarations, FunctionDeclaration{
 		Name:       "main",
 		Parameters: []FunctionParameter{},

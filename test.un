@@ -22,5 +22,6 @@ main(): Int =
     s: String = longString#This is a very long,
         multi-line string.
         It contains several newlines.
+        Something fancy it supports is quotes ""!
     printlnString s
     0

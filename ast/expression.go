@@ -516,6 +516,8 @@ func (m *Macro) SetValue(s string) {
 	}
 	expressionString := splits[1]
 	stringLiteral := expressionString[1 : len(expressionString)-1]
+	stringLiteral = strings.ReplaceAll(stringLiteral, `\"`, `"`)
+	// stringLiteral = strings.ReplaceAll(stringLiteral, `\\`, `\`)
 	m.Result = String{
 		Span:  Span{}, // TODO: span
 		Value: stringLiteral,
