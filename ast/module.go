@@ -201,10 +201,13 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 
 			// Update node that depends on the result of this query.
 			node := evalNodes[i].UpdateHook
+			if node == nil {
+				continue
+			}
 			decl := node.Declaration
 			if decl == nil {
 				// NOTE: can non-declarations also contain macros?
-				continue
+				panic("only declaration nodes should be used as macro update hooks")
 			}
 			for _, query := range decl.GetMacroTypeDependencies() {
 				depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)

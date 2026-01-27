@@ -90,6 +90,7 @@ func Run(module Module) {
 	}
 }
 
+// TODO: skip evaluation if batch is all-nil
 func Evaluate(module Module, batch []Expression) []value.Value {
 	// NOTE: main function is assumed not to exist
 
