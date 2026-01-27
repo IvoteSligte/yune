@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
@@ -507,7 +508,17 @@ type MacroLine struct {
 
 // SetValue implements value.Destination.
 func (m *Macro) SetValue(s string) {
-	panic("unimplemented")
+	splits := strings.Split(s, "; ")
+	errorMessage := splits[0]
+	if errorMessage != "" {
+		panic("Macro error message: " + errorMessage)
+	}
+	expressionString := splits[1]
+	stringLiteral := expressionString[1 : len(expressionString)-1]
+	m.Result = String{
+		Span:  Span{}, // TODO: span
+		Value: stringLiteral,
+	}
 }
 
 type UnaryExpression struct {
