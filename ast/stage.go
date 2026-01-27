@@ -90,7 +90,6 @@ func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode
 	}
 	// check for errors
 	if unevaluated.Cardinality() > 0 && candidates.Cardinality() == 0 {
-		log.Printf("Evaluated: %v\n", evaluated.ToSlice())
 		log.Fatalf("Dependency loop in evaluation with nodes: %v. After (unevaluated): %v. Requires (unevaluated): %v.", unevaluated.ToSlice(),
 			util.Map(unevaluated.ToSlice(), func(node *evalNode) []*evalNode {
 				return node.After.Difference(unevaluated).ToSlice()

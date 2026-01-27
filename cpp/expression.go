@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"strings"
 	"yune/util"
 )
 
@@ -84,7 +85,11 @@ type String string
 
 // String implements Expression
 func (b String) String() string {
-	return `std::string("` + string(b) + `")`
+	s := string(b)
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	return `std::string("` + s + `")`
 }
 
 type Expression fmt.Stringer
