@@ -65,9 +65,9 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName().String == "main" && !d.GetType().Eq(MainType) {
+	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(MainType) {
 		errors = append(errors, InvalidMainSignature{
-			Found: d.GetType(),
+			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
 		})
 	}
@@ -133,8 +133,8 @@ func (d FunctionDeclaration) GetName() Name {
 	return d.Name
 }
 
-func (d FunctionDeclaration) GetType() value.Type {
-	params := util.Join(util.Map(d.Parameters, FunctionParameter.GetType), ", ")
+func (d FunctionDeclaration) GetDeclaredType() value.Type {
+	params := util.Join(util.Map(d.Parameters, FunctionParameter.GetDeclaredType), ", ")
 	return value.Type(fmt.Sprintf("std::function<%s(%s)>", d.ReturnType.Get(), params))
 }
 
@@ -166,8 +166,8 @@ func (d FunctionParameter) GetName() Name {
 	return d.Name
 }
 
-// GetType implements Declaration
-func (d FunctionParameter) GetType() value.Type {
+// GetDeclaredType implements Declaration
+func (d FunctionParameter) GetDeclaredType() value.Type {
 	return d.Type.Get()
 }
 
@@ -269,7 +269,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 }
 
 // GetType implements Declaration.
-func (d ConstantDeclaration) GetType() value.Type {
+func (d ConstantDeclaration) GetDeclaredType() value.Type {
 	return d.Type.Get()
 }
 

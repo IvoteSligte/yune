@@ -59,8 +59,8 @@ func (b BuiltinRawDeclaration) GetSpan() Span {
 	return Span{}
 }
 
-// GetType implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetType() value.Type {
+// GetDeclaredType implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetDeclaredType() value.Type {
 	return value.Type(b.Type)
 }
 
@@ -170,8 +170,8 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 	return Span{}
 }
 
-// GetType implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetType() value.Type {
+// GetDeclaredType implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) GetDeclaredType() value.Type {
 	return TypeType
 }
 
@@ -245,8 +245,8 @@ func (b BuiltinConstantDeclaration) GetSpan() Span {
 	return Span{}
 }
 
-// GetType implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetType() value.Type {
+// GetDeclaredType implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) GetDeclaredType() value.Type {
 	return value.Type(b.Type)
 }
 
@@ -334,8 +334,8 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 	return Span{}
 }
 
-// GetType implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetType() value.Type {
+// GetDeclaredType implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) GetDeclaredType() value.Type {
 	params := util.JoinFunction(b.Parameters, ", ", func(p BuiltinFunctionParameter) string { return p.Type })
 	return value.Type(fmt.Sprintf("std::function<%s(%s)>", b.ReturnType, params))
 }

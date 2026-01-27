@@ -65,8 +65,9 @@ type Declaration interface {
 	// used in this declaration's body.
 	GetValueDependencies() []Name
 
-	// Returns the calculated type.
-	GetType() value.Type
+	// Returns the type of this declaration.
+	GetDeclaredType() value.Type
+
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.
 	TypeCheckBody(deps DeclarationTable) (errors Errors)

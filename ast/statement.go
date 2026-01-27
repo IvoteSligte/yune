@@ -84,6 +84,10 @@ func (d VariableDeclaration) GetType() value.Type {
 	return NilType
 }
 
+func (d VariableDeclaration) GetDeclaredType() value.Type {
+	return d.Type.Get()
+}
+
 type Assignment struct {
 	Span
 	Target Variable

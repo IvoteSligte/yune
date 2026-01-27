@@ -235,10 +235,10 @@ func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors
 		)
 		return
 	}
-	if decl.GetType() == value.Type("") {
+	if decl.GetDeclaredType() == value.Type("") {
 		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Span, v.Name.String)
 	}
-	v.Type = decl.GetType()
+	v.Type = decl.GetDeclaredType()
 	return
 }
 
@@ -305,10 +305,8 @@ func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (er
 	}
 	// single-argument functions still expect a std::tuple type for comparison
 	argumentType := f.Argument.GetType()
-	if argumentType.Eq(NilType) {
-		// NOTE: should functions return () instead of Nil?
-		argumentType = value.Type("std::tuple<>")
-	} else if !argumentType.IsTuple() {
+	// NOTE: should functions return () instead of Nil?
+	if !argumentType.IsTuple() {
 		argumentType = value.NewTupleType([]value.Type{argumentType})
 	}
 	if !argumentType.Eq(parameterType) {
