@@ -1,103 +1,68 @@
 package ast
 
 import (
-	"encoding/json"
-	"log"
-
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-type stageNode struct {
+type evalNode struct {
 	// Query to be evaluated. May be empty.
 	Query Query
 	// The associated top-level Declaration. May be nil.
 	Declaration TopLevelDeclaration
 	// Names of nodes that must be in an earlier stage than this node.
-	After mapset.Set[*stageNode]
+	After mapset.Set[*evalNode]
 	// Names of nodes that must be in the same or an earlier stage than this node.
-	Requires mapset.Set[*stageNode]
-	// Forces this node to execute in the earliest stage.
-	ExecuteFirst bool
+	Requires mapset.Set[*evalNode]
+	// Precomputed nodes are not executed again.
+	// Declaration should be non-nil if this is true.
+	IsPrecomputed bool
 }
 
-type stage = mapset.Set[*stageNode]
+type evalSet = mapset.Set[*evalNode]
 
-func tryMove(currentStage stage, afterStage stage, node *stageNode) {
-	if !currentStage.Contains(node) {
-		// does not exist, no need to move
-		return
-	}
-	// move node
-	afterStage.Add(node)
-	currentStage.Remove(node)
-
-	// move all dependencies of node
-	for after := range node.After.Iter() {
-		tryMove(currentStage, afterStage, after)
-	}
-	for required := range node.Requires.Iter() {
-		tryMove(currentStage, afterStage, required)
-	}
-}
-
-// Produces a topological ordering by splitting the current stage into
-// multiple sub-stages as needed to satisfy the existing nodes' constraints.
-//
-// Expects currentStage to be a mapset thread unsafe set (i.e. map[*stageNode]struct{}).
-func stagedOrdering(currentStage stage) []stage {
-	firstStage := mapset.NewThreadUnsafeSet[*stageNode]()
-
-	for node := range currentStage.Iter() {
-		if node.ExecuteFirst {
-			firstStage.Add(node)
-			currentStage.Remove(node)
+func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode {
+	// determine nodes to execute
+	queued := mapset.NewThreadUnsafeSet[*evalNode]()
+	for node := range unevaluated.Iter() {
+		if node.After.IsSubset(evaluated) {
+			unevaluated.Remove(node)
+			queued.Add(node)
 		}
 	}
-	return append([]stage{firstStage}, partialStagedOrdering(currentStage)...)
-}
-
-// The recursive part of stagedOrdering
-func partialStagedOrdering(currentStage stage) []stage {
-	// thread unsafe set used so that iteration and removal can be done simultaneously
-	// (deadlocks otherwise)
-	afterStage := mapset.NewThreadUnsafeSet[*stageNode]()
-
-	for node := range currentStage.Iter() {
-		// if any 'after's are in the current stage, then move them to afterStage
-		for after := range node.After.Iter() {
-			tryMove(currentStage, afterStage, after)
+	// check for errors
+	if unevaluated.Cardinality() > 0 && queued.Cardinality() == 0 {
+		// there must be a loop with "after" relations
+		// e.g. A executes after B, but B executes after A as well
+		panic("'after' loop")
+	}
+	accessible := evaluated.Union(queued)
+	for node := range queued.Iter() {
+		if !node.Requires.IsSubset(accessible) {
+			// there must be a loop with "after" and "requires" relations
+			// e.g. A executes after B, but B requires A to execute
+			panic("'after' and 'requires' loop")
 		}
 	}
-	if afterStage.Cardinality() == 0 {
-		// no elements were moved, so the current stage is the first stage
-		return []stage{currentStage}
-	}
-	// elements were moved and the after stage still needs to be ordered
-	return append(partialStagedOrdering(afterStage), currentStage)
-}
-
-// Ensures dependencies within the stage are properly ordered to prevent C++ compiler errors.
-// Consumes the stage.
-// Requires that the set arguments are a mapset thread unsafe sets.
-func extractSortedNames(s stage, evaluated mapset.Set[*stageNode]) (nodes []*stageNode) {
-	prevLen := s.Cardinality()
-	for s.Cardinality() > 0 {
-		for node := range s.Iter() {
-			existing := mapset.NewThreadUnsafeSet(nodes...).Union(evaluated)
+	// sort nodes to execute
+	// TODO: allow mutual recursion for functions
+	unsorted := queued
+	sorted := []*evalNode{}
+	existing := evaluated.Clone()
+	for unsorted.Cardinality() > 0 {
+		anyChange := false
+		for node := range unsorted.Iter() {
 			if node.Requires.IsSubset(existing) {
-				nodes = append(nodes, node)
-				s.Remove(node)
+				unsorted.Remove(node)
+				sorted = append(sorted, node)
+				existing.Add(node)
+				anyChange = true
 			}
 		}
-		if s.Cardinality() == prevLen {
-			// The compiler should have errored before reaching this point.
-			jsonStr, err := json.MarshalIndent(s, "", "    ")
-			if err != nil {
-				log.Fatalln("Infinite loop in extractSortedNames and JSON serialization error:", err)
-			}
-			log.Fatalf("Infinite loop in extractSortedNames with remaining keys %s.", jsonStr)
+		if !anyChange {
+			// there must be a loop with "requires" relations
+			// e.g. A requires B, but B requires A, which prevents a proper ordering
+			panic("'requires' loop")
 		}
-		prevLen = s.Cardinality()
 	}
-	return
+	return sorted
 }

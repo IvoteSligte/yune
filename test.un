@@ -19,7 +19,4 @@ main(): Int =
     a: Int = fibonacci(add(N, N))
     true and false
     "string galore"
-    s: String = longString#This is a very long,
-        multi-line string.
-        It contains several newlines.
     0

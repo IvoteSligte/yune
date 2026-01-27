@@ -16,8 +16,8 @@ type Module struct {
 func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	// thread unsafe set used so that iteration and removal can be done simultaneously
 	// (deadlocks otherwise)
-	stageNodes := mapset.NewThreadUnsafeSet[*stageNode]()
-	declarationToNode := map[string]*stageNode{}
+	stageNodes := mapset.NewThreadUnsafeSet[*evalNode]()
+	declarationToNode := map[string]*evalNode{}
 
 	// Add builtin declarations to the module's list of  declarations.
 	m.Declarations = append(BuiltinDeclarations, m.Declarations...)
@@ -34,13 +34,12 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			})
 		} else {
 			_, isRawBuiltin := m.Declarations[i].(BuiltinRawDeclaration)
-			node := &stageNode{
-				Query:       Query{},
-				Declaration: m.Declarations[i],
-				After:       nil, // set later
-				Requires:    nil, // set later
-				// Raw nodes are precalculated and expected to be available by other nodes.
-				ExecuteFirst: isRawBuiltin,
+			node := &evalNode{
+				Query:         Query{},
+				Declaration:   m.Declarations[i],
+				After:         nil, // set later
+				Requires:      nil, // set later
+				IsPrecomputed: isRawBuiltin,
 			}
 			declarationToNode[name.String] = node
 			stageNodes.Add(node)
@@ -53,12 +52,12 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	// detect dependency cycles
 	for i := range m.Declarations {
 		name := m.Declarations[i].GetName()
-		typeDependencies := mapset.NewThreadUnsafeSet[*stageNode]()
-		valueDependencies := mapset.NewThreadUnsafeSet[*stageNode]()
+		typeDependencies := mapset.NewThreadUnsafeSet[*evalNode]()
+		valueDependencies := mapset.NewThreadUnsafeSet[*evalNode]()
 
 		for _, query := range m.Declarations[i].GetTypeDependencies() {
 			depNames := query.Expression.GetValueDependencies()
-			requires := mapset.NewThreadUnsafeSet[*stageNode]()
+			requires := mapset.NewThreadUnsafeSet[*evalNode]()
 			for _, depName := range depNames {
 				if len(depName.String) == 0 {
 					log.Printf("WARN: Empty string name of type dependency of declaration '%s'.", name)
@@ -69,10 +68,10 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				}
 				requires.Add(requiredNode)
 			}
-			node := &stageNode{
+			node := &evalNode{
 				Query:       query,
 				Declaration: nil,
-				After:       mapset.NewThreadUnsafeSet[*stageNode](),
+				After:       mapset.NewThreadUnsafeSet[*evalNode](),
 				Requires:    requires,
 			}
 			typeDependencies.Add(node)
@@ -107,13 +106,20 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	for name, node := range declarationToNode {
 		table.declarations[name] = node.Declaration
 	}
-	evaluatedNodes := mapset.NewThreadUnsafeSet[*stageNode]()
-	ordering := stagedOrdering(stageNodes)
-	for i, stage := range ordering {
-		evalNodes := extractSortedNames(stage, evaluatedNodes)
-		if i == 0 {
-			util.PrettyPrint(evalNodes)
+	evaluated := mapset.NewThreadUnsafeSet[*evalNode]()
+	unevaluated := stageNodes
+
+	// handle precomputed nodes
+	for node := range unevaluated.Iter() {
+		if node.IsPrecomputed {
+			unevaluated.Remove(node)
+			evaluated.Add(node)
+			lowered.Declarations = append(lowered.Declarations, node.Declaration.Lower())
 		}
+	}
+	// iteratively evaluate nodes
+	for unevaluated.Cardinality() > 0 {
+		evalNodes := extractEvaluatableNodes(unevaluated, evaluated)
 
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
@@ -142,7 +148,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 		}
 		// the last lowered stage is simply the runtime code
-		if i+1 == len(ordering) {
+		if unevaluated.Cardinality() == 0 {
 			for _, node := range evalNodes {
 				if node.Query.Expression != nil {
 					// should be unreachable
@@ -151,7 +157,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			}
 			return
 		}
-		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *stageNode) cpp.Expression {
+		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
@@ -167,15 +173,15 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				evalNodes[i].Query.SetValue(string(v))
 			}
 		}
-		evaluatedNodes.Append(evalNodes...)
+		evaluated.Append(evalNodes...)
 	}
 	return
 }
 
-func CheckCyclicType(stageNodes stage) (errors Errors) {
+func CheckCyclicType(stageNodes evalSet) (errors Errors) {
 	for node := range stageNodes.Iter() {
 		queue := node.After.ToSlice()
-		visited := mapset.NewThreadUnsafeSet[*stageNode]()
+		visited := mapset.NewThreadUnsafeSet[*evalNode]()
 
 		for len(queue) > 0 {
 			dep := queue[0]
@@ -202,13 +208,13 @@ func CheckCyclicType(stageNodes stage) (errors Errors) {
 // A: Int = B
 // B: Int = f()
 // ```
-func CheckCyclicConstant(stageNodes stage) (errors Errors) {
+func CheckCyclicConstant(stageNodes evalSet) (errors Errors) {
 	for node := range stageNodes.Iter() {
 		if !isConstantDeclaration(node.Declaration) {
 			continue
 		}
 		queue := node.Requires.ToSlice()
-		visited := mapset.NewThreadUnsafeSet[*stageNode]()
+		visited := mapset.NewThreadUnsafeSet[*evalNode]()
 
 		for len(queue) > 0 {
 			dep := queue[0]
