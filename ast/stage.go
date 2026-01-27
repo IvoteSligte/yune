@@ -1,8 +1,6 @@
 package ast
 
 import (
-	"log"
-
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
@@ -63,30 +61,46 @@ func sortedEvaluatableNodes(unsorted evalSet, evaluated evalSet) (sorted []*eval
 }
 
 func extractEvaluatableNodes(unevaluated evalSet, evaluated evalSet) []*evalNode {
-	// determine nodes to execute
-	queued := mapset.NewThreadUnsafeSet[*evalNode]()
+	// determine nodes to execute based only on whether their 'after's are evaluated
+	candidates := mapset.NewThreadUnsafeSet[*evalNode]()
 	for node := range unevaluated.Iter() {
 		if node.After.IsSubset(evaluated) {
 			unevaluated.Remove(node)
-			queued.Add(node)
+			candidates.Add(node)
+		}
+	}
+	available := evaluated.Union(candidates)
+	// retain only nodes that can execute based on the availability of their 'required' nodes
+	for candidates.Cardinality() > 0 {
+		anyChange := false
+		for node := range candidates.Iter() {
+			if !node.Requires.IsSubset(available) {
+				anyChange = true
+				candidates.Remove(node)
+				available.Remove(node)
+			}
+		}
+		if !anyChange {
+			break // successfully removed all invalid nodes
 		}
 	}
 	// check for errors
-	if unevaluated.Cardinality() > 0 && queued.Cardinality() == 0 {
+	if unevaluated.Cardinality() > 0 && candidates.Cardinality() == 0 {
 		// there must be a loop with "after" relations
 		// e.g. A executes after B, but B executes after A as well
-		panic("'after' loop") // TODO: return proper error
+		panic("'after-after' or 'after-requires' loop") // TODO: return proper error
+
+		// // there must be a loop with "after" and "requires" relations
+		// // e.g. A executes after B, but B requires A to execute
+		// missing := node.Requires.Difference(available).ToSlice()
+		// // TODO: return proper error
+		// missingAfterUnevaluated := missing[0].After.Intersect(unevaluated).ToSlice()
+		// log.Fatalf(
+		// 	"'after' and 'requires' loop: %s misses required dependencies %v of which the first executes after unevaluated %v",
+		// 	node, missing, missingAfterUnevaluated,
+		// )
 	}
-	accessible := evaluated.Union(queued)
-	for node := range queued.Iter() {
-		if !node.Requires.IsSubset(accessible) {
-			// there must be a loop with "after" and "requires" relations
-			// e.g. A executes after B, but B requires A to execute
-			missing := node.Requires.Difference(accessible).ToSlice()
-			// TODO: return proper error
-			log.Fatalf("'after' and 'requires' loop: %s misses required dependencies %v of which the first executes after %v", node, missing, missing[0].After.ToSlice())
-		}
-	}
+
 	// sort nodes to execute
-	return sortedEvaluatableNodes(queued, evaluated)
+	return sortedEvaluatableNodes(candidates, evaluated)
 }
