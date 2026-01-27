@@ -20,6 +20,8 @@ type evalNode struct {
 
 type evalSet = mapset.Set[*evalNode]
 
+// Returns a sorted list of the 'unsorted' set.
+// Clears the 'unsorted' set.
 func sortedEvaluatableNodes(unsorted evalSet, evaluated evalSet) (sorted []*evalNode) {
 	// TODO: allow mutual recursion for functions
 	existing := evaluated.Clone()

@@ -134,7 +134,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	}
 	// sort precomputed nodes
 	lowered.Declarations = util.Map(
-		sortedEvaluatableNodes(evaluated, mapset.NewThreadUnsafeSet[*evalNode]()),
+		sortedEvaluatableNodes(evaluated.Clone(), mapset.NewThreadUnsafeSet[*evalNode]()),
 		func(node *evalNode) cpp.TopLevelDeclaration {
 			return node.Declaration.Lower()
 		},
