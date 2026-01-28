@@ -10,39 +10,81 @@ import (
 	"yune/value"
 )
 
-type Integer struct {
-	Span
-	Value int64
+type Expression interface {
+	Node
+	GetMacros() []*Macro
+
+	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
+	GetMacroTypeDependencies() []Query
+	GetMacroValueDependencies() []Name
+
+	GetTypeDependencies() []Query // TODO: remove, as it is always empty (unless blocks in expressions are allowed!!!)
+	GetValueDependencies() []Name
+
+	// Infers type, with an optional `expected` type for backwards inference.
+	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
+	GetType() value.Type
+	Lower() cpp.Expression
 }
 
-// GetMacros implements Expression.
-func (i Integer) GetMacros() []*Macro {
-	return []*Macro{}
-}
+type DefaultExpression struct{}
 
 // GetMacroTypeDependencies implements Expression.
-func (i Integer) GetMacroTypeDependencies() []Query {
+func (d DefaultExpression) GetMacroTypeDependencies() []Query {
 	return []Query{}
 }
 
 // GetMacroValueDependencies implements Expression.
-func (i Integer) GetMacroValueDependencies() (deps []Name) {
-	return
+func (d DefaultExpression) GetMacroValueDependencies() []Name {
+	return []Name{}
+}
+
+// GetMacros implements Expression.
+func (d DefaultExpression) GetMacros() []*Macro {
+	return []*Macro{}
+}
+
+// GetSpan implements Expression.
+func (d DefaultExpression) GetSpan() Span {
+	panic("DefaultExpression.GetSpan() should be overridden")
+}
+
+// GetType implements Expression.
+func (d DefaultExpression) GetType() value.Type {
+	panic("DefaultExpression.GetType() should be overridden")
 }
 
 // GetTypeDependencies implements Expression.
-func (i Integer) GetTypeDependencies() []Query {
+func (d DefaultExpression) GetTypeDependencies() []Query {
 	return []Query{}
 }
 
 // GetValueDependencies implements Expression.
-func (i Integer) GetValueDependencies() (deps []Name) {
-	return
+func (d DefaultExpression) GetValueDependencies() []Name {
+	return []Name{}
 }
 
 // InferType implements Expression.
-func (i Integer) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (d DefaultExpression) InferType(expected value.Type, deps DeclarationTable) (errors []error) {
 	return
+}
+
+// Lower implements Expression.
+func (d DefaultExpression) Lower() cpp.Expression {
+	panic("DefaultExpression.Lower() should be overridden")
+}
+
+var _ Expression = DefaultExpression{}
+
+type Integer struct {
+	DefaultExpression
+	Span  Span
+	Value int64
+}
+
+// GetSpan implements Expression.
+func (i Integer) GetSpan() Span {
+	return i.Span
 }
 
 // Lower implements Expression.
@@ -56,38 +98,14 @@ func (i Integer) GetType() value.Type {
 }
 
 type Float struct {
-	Span
+	DefaultExpression
+	Span  Span
 	Value float64
 }
 
-// GetMacros implements Expression.
-func (f Float) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (f Float) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements Expression.
-func (f Float) GetMacroValueDependencies() (deps []Name) {
-	return
-}
-
-// GetTypeDependencies implements Expression.
-func (f Float) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements Expression.
-func (f Float) GetValueDependencies() (deps []Name) {
-	return
-}
-
-// InferType implements Expression.
-func (f Float) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	return
+// GetSpan implements Expression.
+func (f Float) GetSpan() Span {
+	return f.Span
 }
 
 // Lower implements Expression.
@@ -101,113 +119,56 @@ func (f Float) GetType() value.Type {
 }
 
 type Bool struct {
-	Span
+	DefaultExpression
+	Span  Span
 	Value bool
 }
 
-// GetMacros implements Expression.
-func (f Bool) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (f Bool) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements Expression.
-func (f Bool) GetMacroValueDependencies() (deps []Name) {
-	return
-}
-
-// GetTypeDependencies implements Expression.
-func (f Bool) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements Expression.
-func (f Bool) GetValueDependencies() (deps []Name) {
-	return
-}
-
-// InferType implements Expression.
-func (f Bool) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	return
+// GetSpan implements Expression.
+func (b Bool) GetSpan() Span {
+	return b.Span
 }
 
 // Lower implements Expression.
-func (f Bool) Lower() cpp.Expression {
-	return cpp.Bool(f.Value)
+func (b Bool) Lower() cpp.Expression {
+	return cpp.Bool(b.Value)
 }
 
 // GetType implements Expression.
-func (f Bool) GetType() value.Type {
+func (b Bool) GetType() value.Type {
 	return BoolType
 }
 
 type String struct {
-	Span
+	DefaultExpression
+	Span  Span
 	Value string
 }
 
-// GetMacros implements Expression.
-func (f String) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (f String) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements Expression.
-func (f String) GetMacroValueDependencies() (deps []Name) {
-	return
-}
-
-// GetTypeDependencies implements Expression.
-func (f String) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements Expression.
-func (f String) GetValueDependencies() (deps []Name) {
-	return
-}
-
-// InferType implements Expression.
-func (f String) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	return
+// GetSpan implements Expression.
+func (s String) GetSpan() Span {
+	return s.Span
 }
 
 // Lower implements Expression.
-func (f String) Lower() cpp.Expression {
-	return cpp.String(f.Value)
+func (s String) Lower() cpp.Expression {
+	return cpp.String(s.Value)
 }
 
 // GetType implements Expression.
-func (f String) GetType() value.Type {
+func (s String) GetType() value.Type {
 	return StringType
 }
 
 type Variable struct {
-	value.Type
-	Name
+	DefaultExpression
+	Type value.Type
+	Name Name
 }
 
-// GetMacros implements Expression.
-func (v *Variable) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (v *Variable) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetTypeDependencies implements Expression.
-func (v *Variable) GetTypeDependencies() []Query {
-	return []Query{}
+// GetSpan implements Expression.
+func (v *Variable) GetSpan() Span {
+	return v.Name.Span
 }
 
 // GetType implements Expression.
@@ -227,16 +188,9 @@ func (v *Variable) GetValueDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	decl, ok := deps.Get(v.Name.String)
-	if !ok {
-		log.Panicf(
-			"Despite variable '%s' at '%s' existing, it was not provided in the declaration table.",
-			v.Name.String, v.Name.Span,
-		)
-		return
-	}
+	decl, _ := deps.Get(v.Name.String)
 	if decl.GetDeclaredType() == value.Type("") {
-		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Span, v.Name.String)
+		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
 	}
 	v.Type = decl.GetDeclaredType()
 	return
@@ -248,10 +202,15 @@ func (v *Variable) Lower() cpp.Expression {
 }
 
 type FunctionCall struct {
-	Span
-	value.Type
+	Span     Span
+	Type     value.Type
 	Function Expression
 	Argument Expression
+}
+
+// GetSpan implements Expression.
+func (f *FunctionCall) GetSpan() Span {
+	return f.Span
 }
 
 // GetMacros implements Expression.
@@ -350,10 +309,15 @@ func (f *FunctionCall) Lower() cpp.Expression {
 }
 
 type Tuple struct {
-	Span
+	Span Span
 	// Inferred type
 	Type     value.Type
 	Elements []Expression
+}
+
+// GetSpan implements Expression.
+func (t *Tuple) GetSpan() Span {
+	return t.Span
 }
 
 // GetMacros implements Expression.
@@ -437,12 +401,17 @@ func (t *Tuple) GetType() value.Type {
 
 // TODO: type check Function
 type Macro struct {
-	Span
+	Span Span
 	// Function that evaluates the macro.
 	Function Variable
 	Lines    []MacroLine
 	// Result after evaluating the macro.
 	Result Expression
+}
+
+// GetSpan implements Expression.
+func (m *Macro) GetSpan() Span {
+	return m.Span
 }
 
 func (m *Macro) GetText() string {
@@ -525,10 +494,15 @@ func (m *Macro) SetValue(s string) {
 }
 
 type UnaryExpression struct {
-	Span
-	value.Type
+	Span       Span
+	Type       value.Type
 	Op         UnaryOp
 	Expression Expression
+}
+
+// GetSpan implements Expression.
+func (u *UnaryExpression) GetSpan() Span {
+	return u.Span
 }
 
 // GetMacros implements Expression.
@@ -605,11 +579,16 @@ const (
 )
 
 type BinaryExpression struct {
-	Span
-	value.Type
+	Span  Span
+	Type  value.Type
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
+}
+
+// GetSpan implements Expression.
+func (b *BinaryExpression) GetSpan() Span {
+	return b.Span
 }
 
 // GetMacros implements Expression.
@@ -746,23 +725,6 @@ const (
 	Or           BinaryOp = "or"
 	And          BinaryOp = "and"
 )
-
-type Expression interface {
-	Node
-	GetMacros() []*Macro
-
-	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
-	GetMacroTypeDependencies() []Query
-	GetMacroValueDependencies() []Name
-
-	GetTypeDependencies() []Query // TODO: remove, as it is always empty (unless blocks in expressions are allowed!!!)
-	GetValueDependencies() []Name
-
-	// Infers type, with an optional `expected` type for backwards inference.
-	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
-	GetType() value.Type
-	Lower() cpp.Expression
-}
 
 var _ Expression = Integer{}
 var _ Expression = Float{}
