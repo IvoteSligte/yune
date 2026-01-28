@@ -1,11 +1,44 @@
+
 package value
 
 import (
 	"fmt"
+	"json"
 	"regexp"
 	"strings"
 	"yune/util"
 )
+
+type Lisp string
+
+type Lisper interface {
+	LispTag() string
+	ToLisps() []ToLisp
+	FromLisps(lisps []ToLisp) Lisper
+}
+
+func Serialize(t ToLisp) string {
+	if 	s, ok := t.(string); ok {
+		return json.Marshal(s)
+	}
+	if i, ok := t.(int); ok {
+		return json.Marshal(i)
+	}
+	if f, ok := t.(float); ok {
+		return json.Marshal(f)
+	}
+		if b, ok := t.(bool); ok {
+		return json.Marshal(f)
+	}
+	return fmt.Sprintf("(%s %s)", t.LispTag(), util.JoinFunction(t.SubLisps(), " ", Serialize))
+}
+
+func Deserialize[T ToLisp](lisp string) T {
+	if lisp[0] == "(" {
+		panic("unimplemented")
+	}
+			panic("unimplemented")
+}
 
 type Value string
 
