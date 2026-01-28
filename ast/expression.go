@@ -160,11 +160,6 @@ func ExpressionUnmarshalJSON(data []byte, e *Expression) error {
 
 type DefaultExpression struct{}
 
-// MarshalJSON implements Expression.
-func (d DefaultExpression) MarshalJSON() ([]byte, error) {
-	panic("DefaultExpression.MarshalJSON() should be overridden")
-}
-
 var _ Expression = DefaultExpression{}
 
 // GetMacroTypeDependencies implements Expression.
@@ -218,11 +213,6 @@ type Integer struct {
 	Value int64
 }
 
-// MarshalJSON implements json.Marshaler.
-func (i Integer) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("Integer", i)
-}
-
 // GetSpan implements Expression.
 func (i Integer) GetSpan() Span {
 	return i.Span
@@ -244,11 +234,6 @@ type Float struct {
 	Value float64
 }
 
-// MarshalJSON implements json.Marshaler.
-func (f Float) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("Float", f)
-}
-
 // GetSpan implements Expression.
 func (f Float) GetSpan() Span {
 	return f.Span
@@ -268,11 +253,6 @@ type Bool struct {
 	DefaultExpression
 	Span  Span
 	Value bool
-}
-
-// MarshalJSON implements json.Marshaler.
-func (b Bool) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("Bool", b)
 }
 
 // GetSpan implements Expression.
@@ -315,11 +295,6 @@ type Variable struct {
 	DefaultExpression
 	Type value.Type
 	Name Name
-}
-
-// MarshalJSON implements Expression.
-func (f *Variable) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("Variable", f)
 }
 
 // GetSpan implements Expression.
@@ -374,11 +349,6 @@ func (f *FunctionCall) UnmarshalJSON(data []byte) error {
 		ExpressionUnmarshalJSON(m["Function"], &f.Function),
 		ExpressionUnmarshalJSON(m["Argument"], &f.Argument),
 	)
-}
-
-// MarshalJSON implements Expression.
-func (f *FunctionCall) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("FunctionCall", f)
 }
 
 // GetSpan implements Expression.
@@ -488,16 +458,6 @@ type Tuple struct {
 	Elements []Expression
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (t *Tuple) UnmarshalJSON([]byte) error {
-	panic("unimplemented")
-}
-
-// MarshalJSON implements Expression.
-func (t *Tuple) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("Tuple", t)
-}
-
 // GetSpan implements Expression.
 func (t *Tuple) GetSpan() Span {
 	return t.Span
@@ -592,11 +552,6 @@ type Macro struct {
 	Result Expression
 }
 
-// MarshalJSON implements Expression.
-func (m *Macro) MarshalJSON() ([]byte, error) {
-	panic("Called MarshalJSON() on Macro, but macros are not serializable")
-}
-
 // GetSpan implements Expression.
 func (m *Macro) GetSpan() Span {
 	return m.Span
@@ -688,16 +643,6 @@ type UnaryExpression struct {
 	Expression Expression
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
-func (u *UnaryExpression) UnmarshalJSON([]byte) error {
-	panic("unimplemented")
-}
-
-// MarshalJSON implements Expression.
-func (u *UnaryExpression) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("UnaryExpression", u)
-}
-
 // GetSpan implements Expression.
 func (u *UnaryExpression) GetSpan() Span {
 	return u.Span
@@ -782,16 +727,6 @@ type BinaryExpression struct {
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (b *BinaryExpression) UnmarshalJSON([]byte) error {
-	panic("unimplemented")
-}
-
-// MarshalJSON implements Expression.
-func (b *BinaryExpression) MarshalJSON() ([]byte, error) {
-	return TaggedMarshalJSON("BinaryExpression", b)
 }
 
 // GetSpan implements Expression.
@@ -944,9 +879,3 @@ var _ Expression = &Tuple{}
 var _ Expression = &Macro{}
 var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
-
-// All types containing Expressions
-var _ json.Unmarshaler = (*FunctionCall)(nil)
-var _ json.Unmarshaler = (*Tuple)(nil)
-var _ json.Unmarshaler = (*UnaryExpression)(nil)
-var _ json.Unmarshaler = (*BinaryExpression)(nil)
