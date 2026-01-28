@@ -6,6 +6,24 @@ import (
 	"yune/value"
 )
 
+type StatementBase interface {
+	Node
+	InferType(deps DeclarationTable) Errors
+	GetType() value.Type
+	GetMacros() []*Macro
+
+	GetMacroTypeDependencies() (deps []Query)
+	GetMacroValueDependencies() (deps []Name)
+
+	GetTypeDependencies() (deps []Query)
+	GetValueDependencies() (deps []Name)
+}
+
+type Statement interface {
+	StatementBase
+	Lower() cpp.Statement
+}
+
 type VariableDeclaration struct {
 	Span
 	Name Name
@@ -371,24 +389,8 @@ func (e *ExpressionStatement) Lower() cpp.Statement {
 	return cpp.ExpressionStatement{Expression: e.Expression.Lower()}
 }
 
-type Types = []*Type
-
-type Statement interface {
-	Node
-	InferType(deps DeclarationTable) Errors
-	GetType() value.Type
-	GetMacros() []*Macro
-
-	GetMacroTypeDependencies() (deps []Query)
-	GetMacroValueDependencies() (deps []Name)
-
-	GetTypeDependencies() (deps []Query)
-	GetValueDependencies() (deps []Name)
-
-	Lower() cpp.Statement
-}
-
 var _ Statement = &VariableDeclaration{}
 var _ Statement = &Assignment{}
 var _ Statement = &BranchStatement{}
 var _ Statement = &ExpressionStatement{}
+var _ StatementBase = &Block{}
