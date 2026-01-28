@@ -1,86 +1,11 @@
 package value
 
 import (
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 	"yune/util"
 )
-
-var LispTagMap map[string]reflect.Type = map[string]reflect.Type{}
-
-type Lisper interface {
-	LispTag() string
-}
-
-func Serialize(v any) (serialized string) {
-	switch t := v.(type) {
-	case int, float64, bool, string:
-		bytes, _ := json.Marshal(t) // handles character escapes and such
-		return string(bytes)
-	}
-	r := reflect.ValueOf(v)
-	t := r.Type()
-	tag := t.String()
-	if l, ok := v.(Lisper); ok {
-		tag = l.LispTag()
-	}
-	LispTagMap[tag] = t
-	serialized = "(" + tag
-	switch t.Kind() {
-	case reflect.Struct:
-		for i := 0; i < r.NumField(); i++ {
-			field := Serialize(r.Field(i))
-			serialized += " " + field
-		}
-	default:
-		panic("Tried to serialize unsupported type kind: " + t.Kind().String())
-	}
-	serialized += ")"
-	return
-}
-
-func deserializeFirst(s string) (any, string) {
-	if s[0] == ')' {
-		return nil, ""
-	}
-	if s[0] == '(' {
-		s = s[1 : len(s)-1] // strip ()
-		tagEnd := strings.IndexRune(s, ' ')
-		tag := s[:tagEnd]
-		s = s[tagEnd+1:]
-		sublisps := []any{}
-		for {
-			var sublisp any
-			sublisp, s = deserializeFirst(s)
-			if sublisp == nil {
-				break
-			}
-			sublisps = append(sublisps, sublisp)
-		}
-		t := LispTagMap[tag]
-		return delispers[tag](sublisps), ""
-	}
-	literalEnd := strings.IndexRune(s, ' ')
-	literal := s[:literalEnd]
-	s = s[literalEnd+1:]
-	var v any
-	err := json.Unmarshal([]byte(literal), &v)
-	if err != nil {
-		panic("JSON error deserializing Lisp literal: " + err.Error())
-	}
-	return v, s
-}
-
-func Deserialize(s string) any {
-	v, s := deserializeFirst(s)
-	if s != "" {
-		panic("More than one Lisp expression in string. Remaining: " + s)
-	}
-	return v
-}
 
 type Value string
 
