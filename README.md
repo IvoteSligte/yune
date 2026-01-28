@@ -2,6 +2,6 @@
 
 ## Dependencies
 
-clang
+clang++
 clang-format
 llvm-objcopy
