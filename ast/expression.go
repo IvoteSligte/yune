@@ -1,14 +1,115 @@
 package ast
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"slices"
 	"strings"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
 )
+
+func TaggedMarshalJSON(tag string, value any) ([]byte, error) {
+	type Alias any
+	return json.Marshal(&struct {
+		Tag string `json:"$tag"`
+		Alias
+	}{
+		Tag:   tag,
+		Alias: Alias(value),
+	})
+}
+
+var typeToTag = map[reflect.Type]string{
+	// Expressions
+	reflect.TypeFor[Integer]():          "Integer",
+	reflect.TypeFor[Float]():            "Float",
+	reflect.TypeFor[Bool]():             "Bool",
+	reflect.TypeFor[String]():           "String",
+	reflect.TypeFor[Variable]():         "Variable",
+	reflect.TypeFor[FunctionCall]():     "FunctionCall",
+	reflect.TypeFor[Tuple]():            "Tuple",
+	reflect.TypeFor[UnaryExpression]():  "UnaryExpression",
+	reflect.TypeFor[BinaryExpression](): "BinaryExpression",
+}
+
+var tagToType = util.MapMap(typeToTag, func(_type reflect.Type, tag string) (string, reflect.Type) {
+	return tag, _type
+})
+
+func Marshal(v any) (_ []byte, err error) {
+	r := reflect.ValueOf(v)
+	t := r.Type()
+	switch t.Kind() {
+	case reflect.Interface, reflect.Pointer:
+		return Marshal(r.Elem())
+	case reflect.Struct:
+		tag, ok := typeToTag[t]
+		if !ok {
+			panic("Tried to serialize struct type " + t.String() + " that does not have known tag.")
+		}
+		m := map[string][]byte{}
+		m["$tag"] = []byte(tag)
+		for i := range t.NumField() {
+			field := t.Field(i)
+			m[field.Name], err = Marshal(r.Field(i))
+			if err != nil {
+				return
+			}
+		}
+		return json.Marshal(m)
+	case reflect.Int, reflect.Float64, reflect.Bool, reflect.String:
+		return json.Marshal(v)
+	default:
+		panic("Tried to serialize unserializable type " + t.String())
+	}
+}
+
+func Unmarshal(data []byte) (v any, err error) {
+	var tagged struct {
+		Tag string `json:"$tag"`
+	}
+	err = json.Unmarshal(data, &tagged)
+	if err != nil {
+		return
+	}
+	if tagged.Tag == "" {
+		// assume unambiguous
+		err = json.Unmarshal(data, &v)
+		return
+	}
+	t, ok := tagToType[tagged.Tag]
+	if !ok {
+		panic("Tried to deserialize JSON with unknown tag " + tagged.Tag)
+	}
+	m := map[string]json.RawMessage{}
+	if err = json.Unmarshal(data, &v); err != nil {
+		return
+	}
+	var r = reflect.Zero(t)
+	for i := range t.NumField() {
+		field := r.Field(i)
+		v, err = Unmarshal(m[t.Field(i).Name])
+		if err != nil {
+			return
+		}
+		field.Set(reflect.ValueOf(v))
+	}
+	v = r.Interface()
+	return
+}
+
+func GetJSONTag(data []byte) (tag string, err error) {
+	var tagged struct {
+		Tag string `json:"$tag"`
+	}
+	err = json.Unmarshal(data, &tagged)
+	tag = tagged.Tag
+	return
+}
 
 type Expression interface {
 	Node
@@ -27,7 +128,44 @@ type Expression interface {
 	Lower() cpp.Expression
 }
 
+func ExpressionUnmarshalJSON(data []byte, e *Expression) error {
+	tag, err := GetJSONTag(data)
+	if err != nil {
+		return err
+	}
+	switch tag {
+	case "Integer":
+		*e = Integer{}
+	case "Float":
+		*e = Float{}
+	case "Bool":
+		*e = Bool{}
+	case "String":
+		*e = String{}
+	case "Variable":
+		*e = &Variable{}
+	case "FunctionCall":
+		*e = &FunctionCall{}
+	case "Tuple":
+		*e = &Tuple{}
+	case "UnaryExpression":
+		*e = &UnaryExpression{}
+	case "BinaryExpression":
+		*e = &BinaryExpression{}
+	default:
+		panic("Invalid JSON Expression tag: " + tag)
+	}
+	return json.Unmarshal(data, e)
+}
+
 type DefaultExpression struct{}
+
+// MarshalJSON implements Expression.
+func (d DefaultExpression) MarshalJSON() ([]byte, error) {
+	panic("DefaultExpression.MarshalJSON() should be overridden")
+}
+
+var _ Expression = DefaultExpression{}
 
 // GetMacroTypeDependencies implements Expression.
 func (d DefaultExpression) GetMacroTypeDependencies() []Query {
@@ -74,12 +212,15 @@ func (d DefaultExpression) Lower() cpp.Expression {
 	panic("DefaultExpression.Lower() should be overridden")
 }
 
-var _ Expression = DefaultExpression{}
-
 type Integer struct {
 	DefaultExpression
 	Span  Span
 	Value int64
+}
+
+// MarshalJSON implements json.Marshaler.
+func (i Integer) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("Integer", i)
 }
 
 // GetSpan implements Expression.
@@ -103,6 +244,11 @@ type Float struct {
 	Value float64
 }
 
+// MarshalJSON implements json.Marshaler.
+func (f Float) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("Float", f)
+}
+
 // GetSpan implements Expression.
 func (f Float) GetSpan() Span {
 	return f.Span
@@ -122,6 +268,11 @@ type Bool struct {
 	DefaultExpression
 	Span  Span
 	Value bool
+}
+
+// MarshalJSON implements json.Marshaler.
+func (b Bool) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("Bool", b)
 }
 
 // GetSpan implements Expression.
@@ -166,6 +317,11 @@ type Variable struct {
 	Name Name
 }
 
+// MarshalJSON implements Expression.
+func (f *Variable) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("Variable", f)
+}
+
 // GetSpan implements Expression.
 func (v *Variable) GetSpan() Span {
 	return v.Name.Span
@@ -206,6 +362,23 @@ type FunctionCall struct {
 	Type     value.Type
 	Function Expression
 	Argument Expression
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (f *FunctionCall) UnmarshalJSON(data []byte) error {
+	var m map[string]json.RawMessage
+	return util.FirstError(
+		json.Unmarshal(data, &m),
+		json.Unmarshal(m["Span"], &f.Span),
+		json.Unmarshal(m["Type"], &f.Type),
+		ExpressionUnmarshalJSON(m["Function"], &f.Function),
+		ExpressionUnmarshalJSON(m["Argument"], &f.Argument),
+	)
+}
+
+// MarshalJSON implements Expression.
+func (f *FunctionCall) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("FunctionCall", f)
 }
 
 // GetSpan implements Expression.
@@ -315,6 +488,16 @@ type Tuple struct {
 	Elements []Expression
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (t *Tuple) UnmarshalJSON([]byte) error {
+	panic("unimplemented")
+}
+
+// MarshalJSON implements Expression.
+func (t *Tuple) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("Tuple", t)
+}
+
 // GetSpan implements Expression.
 func (t *Tuple) GetSpan() Span {
 	return t.Span
@@ -409,6 +592,11 @@ type Macro struct {
 	Result Expression
 }
 
+// MarshalJSON implements Expression.
+func (m *Macro) MarshalJSON() ([]byte, error) {
+	panic("Called MarshalJSON() on Macro, but macros are not serializable")
+}
+
 // GetSpan implements Expression.
 func (m *Macro) GetSpan() Span {
 	return m.Span
@@ -500,6 +688,16 @@ type UnaryExpression struct {
 	Expression Expression
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
+func (u *UnaryExpression) UnmarshalJSON([]byte) error {
+	panic("unimplemented")
+}
+
+// MarshalJSON implements Expression.
+func (u *UnaryExpression) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("UnaryExpression", u)
+}
+
 // GetSpan implements Expression.
 func (u *UnaryExpression) GetSpan() Span {
 	return u.Span
@@ -584,6 +782,16 @@ type BinaryExpression struct {
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (b *BinaryExpression) UnmarshalJSON([]byte) error {
+	panic("unimplemented")
+}
+
+// MarshalJSON implements Expression.
+func (b *BinaryExpression) MarshalJSON() ([]byte, error) {
+	return TaggedMarshalJSON("BinaryExpression", b)
 }
 
 // GetSpan implements Expression.
@@ -736,3 +944,9 @@ var _ Expression = &Tuple{}
 var _ Expression = &Macro{}
 var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
+
+// All types containing Expressions
+var _ json.Unmarshaler = (*FunctionCall)(nil)
+var _ json.Unmarshaler = (*Tuple)(nil)
+var _ json.Unmarshaler = (*UnaryExpression)(nil)
+var _ json.Unmarshaler = (*BinaryExpression)(nil)

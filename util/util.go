@@ -138,3 +138,12 @@ func PrettyPrint(bs ...any) {
 		fmt.Println(string(s))
 	}
 }
+
+func FirstError(s ...error) error {
+	for _, t := range s {
+		if t != nil {
+			return t
+		}
+	}
+	return nil
+}
