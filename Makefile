@@ -11,5 +11,12 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-run: parser
+# compile protobuf files that changed
+pb/%.pb.go: proto/%.proto
+	protoc -I=. --go_out=. $<
+
+# shorthand for compiling all protobuf files that changed
+protobuf: $(patsubst proto/%.proto,pb/%.pb.go,$(wildcard proto/*.proto))
+
+run: parser protobuf
 	go run .

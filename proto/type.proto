@@ -1,0 +1,32 @@
+syntax = "proto3";
+package yune;
+
+option go_package = "./pb";
+
+message Type {
+  message Int {}
+  message Float {}
+  message Bool {}
+  message String {}
+  message Fn {
+    Type argumentType = 1;
+    Type returnType = 2;
+  }
+  message Tuple {
+    repeated Type elements = 1;
+  }
+  message List {
+    Type element = 1;
+  }
+
+  oneof is {
+    Int int = 1;
+    Float float = 2;
+    Bool bool = 3;
+    String string = 4;
+    Fn fn = 5;
+    Tuple tuple = 6;
+    List list = 7;
+  }
+}
+

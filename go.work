@@ -5,6 +5,7 @@ use (
 	./ast
 	./cpp
 	./parser
+	./pb
 	./util
 	./value
 )
