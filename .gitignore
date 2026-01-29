@@ -11,5 +11,6 @@ parser/YuneLexer.interp
 parser/YuneParser.interp
 
 # generated (protobuf)
-pb/*
-cpp/includes/proto/*
+cpp/includes/proto/*.pb.h
+cpp/includes/proto/*.pb.cc
+pb/*.pb.go
