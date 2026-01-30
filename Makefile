@@ -11,23 +11,11 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-CPP_INCLUDES := cpp/includes
+# compile Go Cap'n Proto files
+pb/schema.capnp.go: schema.capnp
+	capnp compile -ogo:pb schema.capnp
 
-# protobuf files
-PB_FILES := $(wildcard proto/*.proto) # source files
-GO_PB_FILES := $(patsubst proto/%.proto,pb/%.pb.go,$(PB_FILES)) # generated Go
-CPP_PB_FILES := $(patsubst proto/%.proto,$(CPP_INCLUDES)/proto/%.pb.cc,$(PB_FILES)) # generated C++
+pb: pb/schema.capnp.go
 
-# compile Go protobuf files
-pb/%.pb.go: proto/%.proto
-	protoc -I=. --go_out=. $<
-
-# compile C++ protobuf files
-$(CPP_INCLUDES)/proto/%.pb.cc: proto/%.proto
-	protoc -I=. --cpp_out=$(CPP_INCLUDES) $<
-
-# shorthand for compiling all protobuf files that changed
-protobuf: $(GO_PB_FILES) $(CPP_PB_FILES)
-
-run: parser protobuf
+run: parser pb
 	go run .

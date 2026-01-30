@@ -5,28 +5,21 @@ import (
 	"yune/cpp"
 	"yune/pb"
 	"yune/util"
-
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Destination interface {
-	SetValue(v *anypb.Any)
-}
-
-type Type struct {
-	pb *pb.Type
+	SetValue(v pb.Value)
 }
 
 // Uninitialized type (not an actual Yune type)
-var UninitType = Type{}
+var UninitType = pb.Type{}
 
-var TypeType = Type{&pb.Type{Kind: pb.Type_TYPE}}
-var IntType = Type{&pb.Type{Kind: pb.Type_INT}}
-var FloatType = Type{&pb.Type{Kind: pb.Type_FLOAT}}
-var BoolType = Type{&pb.Type{Kind: pb.Type_BOOL}}
-var StringType = Type{&pb.Type{Kind: pb.Type_STRING}}
-var NilType = Type{&pb.Type{Kind: pb.Type_NIL}}
+var TypeType = pb.NewUnitType(pb.Type.SetType)
+var IntType = pb.NewUnitType(pb.Type.SetInt)
+var FloatType = pb.NewUnitType(pb.Type.SetFloat)
+var BoolType = pb.NewUnitType(pb.Type.SetBool)
+var StringType = pb.NewUnitType(pb.Type.SetString_)
+var NilType = pb.NewUnitType(pb.Type.SetNil)
 
 var EmptyTupleType = NewTupleType()
 
@@ -41,7 +34,8 @@ var ExpressionType = NewStructType("Expression")
 var MacroReturnType = NewTupleType(StringType, ExpressionType)
 
 // SetValue implements Destination.
-func (t *Type) SetValue(v *anypb.Any) {
+func (t *Type) SetValue(v pb.Value) {
+
 	if err := v.UnmarshalTo(t.pb); err != nil {
 		panic("Protobuf unmarshalling error: " + err.Error())
 	}

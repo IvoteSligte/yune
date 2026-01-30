@@ -5,5 +5,4 @@
 clang++
 clang-format
 
-protobuf 3 with dev files and the Go plugin (`go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`)
-
+cap'n proto with the Go plugin (`go install capnproto.org/go/capnp/v3/capnpc-go@latest`)

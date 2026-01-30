@@ -7,10 +7,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"yune/pb"
-
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func format(code string) (formatted string, err error) {
@@ -96,50 +92,4 @@ func Run(module Module) {
 		log.Fatalln("Failed to run code. Error:", err)
 	}
 	fmt.Println("-- Completed --")
-}
-
-// TODO: skip evaluation if batch is all-nil
-func Evaluate(module Module, batch []Expression) []*anypb.Any {
-	// NOTE: main function is assumed not to exist
-
-	fmt.Println("--- Start Evaluation ---")
-	defer fmt.Println("--- End Evaluation ---")
-
-	outputFile, err := os.CreateTemp("", "yune-eval")
-	if err != nil {
-		log.Fatalln("Failed to create temporary file during compile-time C++ evaluation. Error:", err)
-	}
-	defer os.Remove(outputFile.Name()) // TODO: close file
-
-	statements := []Statement{
-		Statement(Raw(fmt.Sprintf(`std::ofstream outputFile("%s");`, outputFile.Name()))),
-	}
-	for _, e := range batch {
-		statement := `outputFile << '\0';`
-		if e != nil {
-			statement = `outputFile << ` + e.String() + ` << '\0';`
-		}
-		statements = append(statements, Statement(Raw(statement)))
-	}
-	statements = append(statements, Statement(Raw(`outputFile.close();`)))
-
-	module.Declarations = append(module.Declarations, FunctionDeclaration{
-		Name:       "main",
-		Parameters: []FunctionParameter{},
-		ReturnType: "int",
-		Body:       Block(statements),
-	})
-	Run(module)
-	outputBytes, err := os.ReadFile(outputFile.Name())
-	if err != nil {
-		log.Fatalf("Failed to read compile-time evaluation output file '%s'. Error: %s", outputFile.Name(), err)
-	}
-	var pbMessages pb.Messages
-	if err = proto.Unmarshal(outputBytes, &pbMessages); err != nil {
-		log.Fatalf("Failed to parse compile-time evaluation outputs. Error: %s", err)
-	}
-	if len(pbMessages.Messages) != len(batch) {
-		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(pbMessages.Messages))
-	}
-	return pbMessages.Messages
 }
