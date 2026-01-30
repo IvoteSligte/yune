@@ -105,17 +105,7 @@ var ExpressionDeclaration = BuiltinRawDeclaration{
 	Header: `
 extern Type Expression;`,
 	Implementation: `
-Type Expression = Type{"pb::Value::Expression"};
-
-// TODO: Lisp/JSON style serialization or something
-std::ostream& operator<<(std::ostream& out, const Expression_type_& e) {
-    return out << e.expr;
-}
-
-// TEMP (macro return type)
-std::ostream& operator<<(std::ostream& out, const std::tuple<std::string, Expression_type_>& t) {
-    return out << std::get<0>(t) << "; " << std::get<1>(t);
-}`,
+Type Expression = Type{"pb::Expression"};`,
 }
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
@@ -123,8 +113,9 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Type:     pb.NewFnType(pb.StringType, pb.ExpressionType),
 	Requires: []string{"Expression"},
 	Implementation: `
-Expression_type_ stringLiteral(std::string str) {
-    return Expression_type_{str};
+pb::Expression stringLiteral(std::string str) {
+    
+    return pb::Expression{str};
 };`,
 }
 

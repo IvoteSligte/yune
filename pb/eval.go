@@ -22,15 +22,20 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 	}
 	defer os.Remove(outputFile.Name()) // TODO: close file
 
-	statements := []cpp.Statement{
-		cpp.Statement(cpp.Raw(fmt.Sprintf(`std::ofstream outputFile("%s");`, outputFile.Name()))),
+	statements := []cpp.Statement{}
+
+	addStmt := func(s string) {
+		statements = append(statements, cpp.Statement(cpp.Raw(s)))
 	}
+	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFile.Name()))
+
 	for _, e := range batch {
-		statement := `outputFile << '\0';`
+		addStmt(`::capnp::MallocMessage:Builder message;`)
+		addStmt(`pb::Value value = message.initRoot<pb::Value>();`)
 		if e != nil {
 			statement = `outputFile << ` + e.String() + ` << '\0';`
 		}
-		statements = append(statements, cpp.Statement(cpp.Raw(statement)))
+		addStmt(`::capnp::writeMessage(outputFile, message);`)
 	}
 	statements = append(statements, cpp.Statement(cpp.Raw(`outputFile.close();`)))
 

@@ -84,7 +84,11 @@ func Run(module Module) {
 
 	writeFile(dir, "schema.capnp.h", schemaHeader)
 	writeFile(dir, "schema.capnp.cpp", schemaImplementation)
-	writeFile(dir, "code.h", `#include "schema.capnp.h"`+header) // TODO: close files
+	writeFile(dir, "code.h", `
+#include "schema.capnp.h"
+#include <capnp/serialize.h>
+#include <capnp/message.h>
+`+header) // TODO: close files
 	writeFile(dir, "code.cpp", `#include "code.h"`+implementation)
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
