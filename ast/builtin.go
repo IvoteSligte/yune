@@ -324,7 +324,7 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 func (b BuiltinFunctionDeclaration) GetDeclaredType() value.Type {
 	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
 	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) value.Type { return p.Type })
-	return value.NewFnType(b.ReturnType, value.NewTupleType(params...))
+	return value.NewFnType(value.NewTupleType(params...), b.ReturnType)
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
