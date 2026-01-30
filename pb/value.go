@@ -53,11 +53,11 @@ var _ Destination = &Type{}
 
 func (t Type) Lower() cpp.Type {
 	switch t.Which() {
-	case Value_Type_Which_bool:
+	case Type_Which_bool:
 		return cpp.Type("bool")
-	case Value_Type_Which_float:
+	case Type_Which_float:
 		return cpp.Type("float")
-	case Value_Type_Which_fn:
+	case Type_Which_fn:
 		fn := t.Fn()
 		_return, _ := fn.Return()
 		var args string
@@ -74,19 +74,19 @@ func (t Type) Lower() cpp.Type {
 			args = arg.Lower().String()
 		}
 		return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return.Lower(), args))
-	case Value_Type_Which_int:
+	case Type_Which_int:
 		return cpp.Type("int")
-	case Value_Type_Which_list:
+	case Type_Which_list:
 		element, _ := t.List()
 		return cpp.Type(fmt.Sprintf("std::vector<%s>", element))
-	case Value_Type_Which_nil:
+	case Type_Which_nil:
 		return cpp.Type("void")
-	case Value_Type_Which_string_:
+	case Type_Which_string_:
 		return cpp.Type("std::string")
-	case Value_Type_Which_struc:
+	case Type_Which_struc:
 		name, _ := t.Struc().Name()
 		return cpp.Type(fmt.Sprintf("%s_type_", name))
-	case Value_Type_Which_tuple:
+	case Type_Which_tuple:
 		elements, _ := t.Tuple()
 		s := elements.At(0).Lower().String()
 		for i := 1; i < elements.Len(); i++ {
@@ -94,10 +94,10 @@ func (t Type) Lower() cpp.Type {
 			s += elements.At(i).Lower().String()
 		}
 		return cpp.Type(fmt.Sprintf("std::tuple<%s>", s))
-	case Value_Type_Which_type:
+	case Type_Which_type:
 		return cpp.Type("Type")
 	default:
-		panic("unexpected pb.Value_Type_Which")
+		panic("unexpected pb.Type_Which")
 	}
 }
 
@@ -107,7 +107,7 @@ func (left Type) Eq(right Type) bool {
 }
 
 func (t Type) ToFunction() (fn FnType, ok bool) {
-	if ok = (t.Which() == Value_Type_Which_fn); !ok {
+	if ok = (t.Which() == Type_Which_fn); !ok {
 		return
 	}
 	rawFn := t.Fn()
@@ -121,7 +121,7 @@ func (t Type) ToFunction() (fn FnType, ok bool) {
 }
 
 func (t Type) ToTuple() (tuple TupleType, ok bool) {
-	if ok = (t.Which() == Value_Type_Which_tuple); !ok {
+	if ok = (t.Which() == Type_Which_tuple); !ok {
 		return
 	}
 	rawTuple, _ := t.Tuple()
@@ -148,7 +148,7 @@ type TupleType struct {
 }
 
 func NewFnType(argumentType Type, returnType Type) Type {
-	if argumentType.Which() != Value_Type_Which_tuple {
+	if argumentType.Which() != Type_Which_tuple {
 		argumentType = NewTupleType(argumentType)
 	}
 	t := newType()

@@ -10,21 +10,27 @@ func (v Value) IsEmpty() bool {
 	return v.Which() == Value_Which_empty
 }
 
-type Type = Value_Type
-type TypeList = Value_Type_List
+func newValue() Value {
+	_, s := capnp.NewSingleSegmentMessage(nil)
+	v, err := NewRootValue(s)
+	if err != nil {
+		log.Fatalf("Failed to create Capnp root: %s", err)
+	}
+	return v
+}
 
 func newType() Type {
 	_, s := capnp.NewSingleSegmentMessage(nil)
-	t, err := NewRootValue_Type(s)
+	t, err := NewRootType(s)
 	if err != nil {
 		log.Fatalf("Failed to create Capnp root: %s", err)
 	}
 	return t
 }
 
-func newTypeList(types ...Type) TypeList {
+func newTypeList(types ...Type) Type_List {
 	_, s := capnp.NewSingleSegmentMessage(nil)
-	tl, err := NewValue_Type_List(s, int32(len(types)))
+	tl, err := NewType_List(s, int32(len(types)))
 	if err != nil {
 		log.Fatalf("Failed to create Capnp type list: %s", err)
 	}

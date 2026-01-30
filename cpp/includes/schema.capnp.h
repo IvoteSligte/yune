@@ -18,36 +18,18 @@ CAPNP_BEGIN_HEADER
 namespace capnp {
 namespace schemas {
 
+CAPNP_DECLARE_SCHEMA(b48b53f60af084bb);
+CAPNP_DECLARE_SCHEMA(9d614877676d64b6);
+CAPNP_DECLARE_SCHEMA(958fbe10c3930e1d);
+CAPNP_DECLARE_SCHEMA(e86639df1af797f5);
 CAPNP_DECLARE_SCHEMA(ad454f2956d96537);
-CAPNP_DECLARE_SCHEMA(e6a9443313a9ccd0);
-CAPNP_DECLARE_SCHEMA(dedda0837830d1e1);
-CAPNP_DECLARE_SCHEMA(808c155f1add2002);
 
 }  // namespace schemas
 }  // namespace capnp
 
+namespace pb {
 
-struct Value {
-  Value() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-  enum Which: uint16_t {
-    EMPTY,
-    TYPE,
-  };
-  struct Type;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(ad454f2956d96537, 1, 1)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
-struct Value::Type {
+struct Type {
   Type() = delete;
 
   class Reader;
@@ -69,14 +51,14 @@ struct Value::Type {
   struct Struc;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(e6a9443313a9ccd0, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(b48b53f60af084bb, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Value::Type::Fn {
+struct Type::Fn {
   Fn() = delete;
 
   class Reader;
@@ -84,14 +66,14 @@ struct Value::Type::Fn {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(dedda0837830d1e1, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(9d614877676d64b6, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Value::Type::Struc {
+struct Type::Struc {
   Struc() = delete;
 
   class Reader;
@@ -99,7 +81,48 @@ struct Value::Type::Struc {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(808c155f1add2002, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(958fbe10c3930e1d, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Expression {
+  Expression() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  enum Which: uint16_t {
+    INT,
+    FLOAT,
+    BOOL,
+    STRING,
+  };
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(e86639df1af797f5, 2, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Value {
+  Value() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  enum Which: uint16_t {
+    EMPTY,
+    TYPE,
+    EXPRESSION,
+  };
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(ad454f2956d96537, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -108,99 +131,7 @@ struct Value::Type::Struc {
 
 // =======================================================================================
 
-class Value::Reader {
-public:
-  typedef Value Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline Which which() const;
-  inline bool isEmpty() const;
-  inline  ::capnp::Void getEmpty() const;
-
-  inline bool isType() const;
-  inline bool hasType() const;
-  inline  ::Value::Type::Reader getType() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class Value::Builder {
-public:
-  typedef Value Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline Which which();
-  inline bool isEmpty();
-  inline  ::capnp::Void getEmpty();
-  inline void setEmpty( ::capnp::Void value = ::capnp::VOID);
-
-  inline bool isType();
-  inline bool hasType();
-  inline  ::Value::Type::Builder getType();
-  inline void setType( ::Value::Type::Reader value);
-  inline  ::Value::Type::Builder initType();
-  inline void adoptType(::capnp::Orphan< ::Value::Type>&& value);
-  inline ::capnp::Orphan< ::Value::Type> disownType();
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class Value::Pipeline {
-public:
-  typedef Value Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
-class Value::Type::Reader {
+class Type::Reader {
 public:
   typedef Type Reads;
 
@@ -241,11 +172,11 @@ public:
 
   inline bool isTuple() const;
   inline bool hasTuple() const;
-  inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Reader getTuple() const;
+  inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Reader getTuple() const;
 
   inline bool isList() const;
   inline bool hasList() const;
-  inline  ::Value::Type::Reader getList() const;
+  inline  ::pb::Type::Reader getList() const;
 
   inline bool isStruc() const;
   inline typename Struc::Reader getStruc() const;
@@ -262,7 +193,7 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Value::Type::Builder {
+class Type::Builder {
 public:
   typedef Type Builds;
 
@@ -309,19 +240,19 @@ public:
 
   inline bool isTuple();
   inline bool hasTuple();
-  inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Builder getTuple();
-  inline void setTuple( ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Builder initTuple(unsigned int size);
-  inline void adoptTuple(::capnp::Orphan< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>> disownTuple();
+  inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Builder getTuple();
+  inline void setTuple( ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Builder initTuple(unsigned int size);
+  inline void adoptTuple(::capnp::Orphan< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>> disownTuple();
 
   inline bool isList();
   inline bool hasList();
-  inline  ::Value::Type::Builder getList();
-  inline void setList( ::Value::Type::Reader value);
-  inline  ::Value::Type::Builder initList();
-  inline void adoptList(::capnp::Orphan< ::Value::Type>&& value);
-  inline ::capnp::Orphan< ::Value::Type> disownList();
+  inline  ::pb::Type::Builder getList();
+  inline void setList( ::pb::Type::Reader value);
+  inline  ::pb::Type::Builder initList();
+  inline void adoptList(::capnp::Orphan< ::pb::Type>&& value);
+  inline ::capnp::Orphan< ::pb::Type> disownList();
 
   inline bool isStruc();
   inline typename Struc::Builder getStruc();
@@ -337,7 +268,7 @@ private:
 };
 
 #if !CAPNP_LITE
-class Value::Type::Pipeline {
+class Type::Pipeline {
 public:
   typedef Type Pipelines;
 
@@ -353,7 +284,7 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Value::Type::Fn::Reader {
+class Type::Fn::Reader {
 public:
   typedef Fn Reads;
 
@@ -371,10 +302,10 @@ public:
 #endif  // !CAPNP_LITE
 
   inline bool hasArgument() const;
-  inline  ::Value::Type::Reader getArgument() const;
+  inline  ::pb::Type::Reader getArgument() const;
 
   inline bool hasReturn() const;
-  inline  ::Value::Type::Reader getReturn() const;
+  inline  ::pb::Type::Reader getReturn() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -388,7 +319,7 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Value::Type::Fn::Builder {
+class Type::Fn::Builder {
 public:
   typedef Fn Builds;
 
@@ -405,18 +336,18 @@ public:
 #endif  // !CAPNP_LITE
 
   inline bool hasArgument();
-  inline  ::Value::Type::Builder getArgument();
-  inline void setArgument( ::Value::Type::Reader value);
-  inline  ::Value::Type::Builder initArgument();
-  inline void adoptArgument(::capnp::Orphan< ::Value::Type>&& value);
-  inline ::capnp::Orphan< ::Value::Type> disownArgument();
+  inline  ::pb::Type::Builder getArgument();
+  inline void setArgument( ::pb::Type::Reader value);
+  inline  ::pb::Type::Builder initArgument();
+  inline void adoptArgument(::capnp::Orphan< ::pb::Type>&& value);
+  inline ::capnp::Orphan< ::pb::Type> disownArgument();
 
   inline bool hasReturn();
-  inline  ::Value::Type::Builder getReturn();
-  inline void setReturn( ::Value::Type::Reader value);
-  inline  ::Value::Type::Builder initReturn();
-  inline void adoptReturn(::capnp::Orphan< ::Value::Type>&& value);
-  inline ::capnp::Orphan< ::Value::Type> disownReturn();
+  inline  ::pb::Type::Builder getReturn();
+  inline void setReturn( ::pb::Type::Reader value);
+  inline  ::pb::Type::Builder initReturn();
+  inline void adoptReturn(::capnp::Orphan< ::pb::Type>&& value);
+  inline ::capnp::Orphan< ::pb::Type> disownReturn();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -428,7 +359,7 @@ private:
 };
 
 #if !CAPNP_LITE
-class Value::Type::Fn::Pipeline {
+class Type::Fn::Pipeline {
 public:
   typedef Fn Pipelines;
 
@@ -436,8 +367,8 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
-  inline  ::Value::Type::Pipeline getArgument();
-  inline  ::Value::Type::Pipeline getReturn();
+  inline  ::pb::Type::Pipeline getArgument();
+  inline  ::pb::Type::Pipeline getReturn();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -446,7 +377,7 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Value::Type::Struc::Reader {
+class Type::Struc::Reader {
 public:
   typedef Struc Reads;
 
@@ -478,7 +409,7 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Value::Type::Struc::Builder {
+class Type::Struc::Builder {
 public:
   typedef Struc Builds;
 
@@ -511,7 +442,7 @@ private:
 };
 
 #if !CAPNP_LITE
-class Value::Type::Struc::Pipeline {
+class Type::Struc::Pipeline {
 public:
   typedef Struc Pipelines;
 
@@ -527,13 +458,794 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class Expression::Reader {
+public:
+  typedef Expression Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline Which which() const;
+  inline bool isInt() const;
+  inline  ::int64_t getInt() const;
+
+  inline bool isFloat() const;
+  inline double getFloat() const;
+
+  inline bool isBool() const;
+  inline bool getBool() const;
+
+  inline bool isString() const;
+  inline bool hasString() const;
+  inline  ::capnp::Text::Reader getString() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Expression::Builder {
+public:
+  typedef Expression Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline Which which();
+  inline bool isInt();
+  inline  ::int64_t getInt();
+  inline void setInt( ::int64_t value);
+
+  inline bool isFloat();
+  inline double getFloat();
+  inline void setFloat(double value);
+
+  inline bool isBool();
+  inline bool getBool();
+  inline void setBool(bool value);
+
+  inline bool isString();
+  inline bool hasString();
+  inline  ::capnp::Text::Builder getString();
+  inline void setString( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initString(unsigned int size);
+  inline void adoptString(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownString();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Expression::Pipeline {
+public:
+  typedef Expression Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Value::Reader {
+public:
+  typedef Value Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline Which which() const;
+  inline bool isEmpty() const;
+  inline  ::capnp::Void getEmpty() const;
+
+  inline bool isType() const;
+  inline bool hasType() const;
+  inline  ::pb::Type::Reader getType() const;
+
+  inline bool isExpression() const;
+  inline bool hasExpression() const;
+  inline  ::pb::Expression::Reader getExpression() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Value::Builder {
+public:
+  typedef Value Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline Which which();
+  inline bool isEmpty();
+  inline  ::capnp::Void getEmpty();
+  inline void setEmpty( ::capnp::Void value = ::capnp::VOID);
+
+  inline bool isType();
+  inline bool hasType();
+  inline  ::pb::Type::Builder getType();
+  inline void setType( ::pb::Type::Reader value);
+  inline  ::pb::Type::Builder initType();
+  inline void adoptType(::capnp::Orphan< ::pb::Type>&& value);
+  inline ::capnp::Orphan< ::pb::Type> disownType();
+
+  inline bool isExpression();
+  inline bool hasExpression();
+  inline  ::pb::Expression::Builder getExpression();
+  inline void setExpression( ::pb::Expression::Reader value);
+  inline  ::pb::Expression::Builder initExpression();
+  inline void adoptExpression(::capnp::Orphan< ::pb::Expression>&& value);
+  inline ::capnp::Orphan< ::pb::Expression> disownExpression();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Value::Pipeline {
+public:
+  typedef Value Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 // =======================================================================================
 
-inline  ::Value::Which Value::Reader::which() const {
+inline  ::pb::Type::Which Type::Reader::which() const {
   return _reader.getDataField<Which>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline  ::Value::Which Value::Builder::which() {
+inline  ::pb::Type::Which Type::Builder::which() {
+  return _builder.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline bool Type::Reader::isType() const {
+  return which() == Type::TYPE;
+}
+inline bool Type::Builder::isType() {
+  return which() == Type::TYPE;
+}
+inline  ::capnp::Void Type::Reader::getType() const {
+  KJ_IREQUIRE((which() == Type::TYPE),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getType() {
+  KJ_IREQUIRE((which() == Type::TYPE),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setType( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::TYPE);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isInt() const {
+  return which() == Type::INT;
+}
+inline bool Type::Builder::isInt() {
+  return which() == Type::INT;
+}
+inline  ::capnp::Void Type::Reader::getInt() const {
+  KJ_IREQUIRE((which() == Type::INT),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getInt() {
+  KJ_IREQUIRE((which() == Type::INT),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setInt( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::INT);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isFloat() const {
+  return which() == Type::FLOAT;
+}
+inline bool Type::Builder::isFloat() {
+  return which() == Type::FLOAT;
+}
+inline  ::capnp::Void Type::Reader::getFloat() const {
+  KJ_IREQUIRE((which() == Type::FLOAT),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getFloat() {
+  KJ_IREQUIRE((which() == Type::FLOAT),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setFloat( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::FLOAT);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isBool() const {
+  return which() == Type::BOOL;
+}
+inline bool Type::Builder::isBool() {
+  return which() == Type::BOOL;
+}
+inline  ::capnp::Void Type::Reader::getBool() const {
+  KJ_IREQUIRE((which() == Type::BOOL),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getBool() {
+  KJ_IREQUIRE((which() == Type::BOOL),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setBool( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::BOOL);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isString() const {
+  return which() == Type::STRING;
+}
+inline bool Type::Builder::isString() {
+  return which() == Type::STRING;
+}
+inline  ::capnp::Void Type::Reader::getString() const {
+  KJ_IREQUIRE((which() == Type::STRING),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getString() {
+  KJ_IREQUIRE((which() == Type::STRING),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setString( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::STRING);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isNil() const {
+  return which() == Type::NIL;
+}
+inline bool Type::Builder::isNil() {
+  return which() == Type::NIL;
+}
+inline  ::capnp::Void Type::Reader::getNil() const {
+  KJ_IREQUIRE((which() == Type::NIL),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::capnp::Void Type::Builder::getNil() {
+  KJ_IREQUIRE((which() == Type::NIL),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Type::Builder::setNil( ::capnp::Void value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::NIL);
+  _builder.setDataField< ::capnp::Void>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Type::Reader::isFn() const {
+  return which() == Type::FN;
+}
+inline bool Type::Builder::isFn() {
+  return which() == Type::FN;
+}
+inline typename Type::Fn::Reader Type::Reader::getFn() const {
+  KJ_IREQUIRE((which() == Type::FN),
+              "Must check which() before get()ing a union member.");
+  return typename Type::Fn::Reader(_reader);
+}
+inline typename Type::Fn::Builder Type::Builder::getFn() {
+  KJ_IREQUIRE((which() == Type::FN),
+              "Must check which() before get()ing a union member.");
+  return typename Type::Fn::Builder(_builder);
+}
+inline typename Type::Fn::Builder Type::Builder::initFn() {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::FN);
+  _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS).clear();
+  _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS).clear();
+  return typename Type::Fn::Builder(_builder);
+}
+inline bool Type::Reader::isTuple() const {
+  return which() == Type::TUPLE;
+}
+inline bool Type::Builder::isTuple() {
+  return which() == Type::TUPLE;
+}
+inline bool Type::Reader::hasTuple() const {
+  if (which() != Type::TUPLE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Type::Builder::hasTuple() {
+  if (which() != Type::TUPLE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Reader Type::Reader::getTuple() const {
+  KJ_IREQUIRE((which() == Type::TUPLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Builder Type::Builder::getTuple() {
+  KJ_IREQUIRE((which() == Type::TUPLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Type::Builder::setTuple( ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Reader value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::TUPLE);
+  ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>::Builder Type::Builder::initTuple(unsigned int size) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::TUPLE);
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void Type::Builder::adoptTuple(
+    ::capnp::Orphan< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>&& value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::TUPLE);
+  ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>> Type::Builder::disownTuple() {
+  KJ_IREQUIRE((which() == Type::TUPLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::pb::Type,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Type::Reader::isList() const {
+  return which() == Type::LIST;
+}
+inline bool Type::Builder::isList() {
+  return which() == Type::LIST;
+}
+inline bool Type::Reader::hasList() const {
+  if (which() != Type::LIST) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Type::Builder::hasList() {
+  if (which() != Type::LIST) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::pb::Type::Reader Type::Reader::getList() const {
+  KJ_IREQUIRE((which() == Type::LIST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::pb::Type::Builder Type::Builder::getList() {
+  KJ_IREQUIRE((which() == Type::LIST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Type::Builder::setList( ::pb::Type::Reader value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::LIST);
+  ::capnp::_::PointerHelpers< ::pb::Type>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::pb::Type::Builder Type::Builder::initList() {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::LIST);
+  return ::capnp::_::PointerHelpers< ::pb::Type>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Type::Builder::adoptList(
+    ::capnp::Orphan< ::pb::Type>&& value) {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::LIST);
+  ::capnp::_::PointerHelpers< ::pb::Type>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::pb::Type> Type::Builder::disownList() {
+  KJ_IREQUIRE((which() == Type::LIST),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::pb::Type>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Type::Reader::isStruc() const {
+  return which() == Type::STRUC;
+}
+inline bool Type::Builder::isStruc() {
+  return which() == Type::STRUC;
+}
+inline typename Type::Struc::Reader Type::Reader::getStruc() const {
+  KJ_IREQUIRE((which() == Type::STRUC),
+              "Must check which() before get()ing a union member.");
+  return typename Type::Struc::Reader(_reader);
+}
+inline typename Type::Struc::Builder Type::Builder::getStruc() {
+  KJ_IREQUIRE((which() == Type::STRUC),
+              "Must check which() before get()ing a union member.");
+  return typename Type::Struc::Builder(_builder);
+}
+inline typename Type::Struc::Builder Type::Builder::initStruc() {
+  _builder.setDataField<Type::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Type::STRUC);
+  _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS).clear();
+  return typename Type::Struc::Builder(_builder);
+}
+inline bool Type::Fn::Reader::hasArgument() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Type::Fn::Builder::hasArgument() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::pb::Type::Reader Type::Fn::Reader::getArgument() const {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::pb::Type::Builder Type::Fn::Builder::getArgument() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::pb::Type::Pipeline Type::Fn::Pipeline::getArgument() {
+  return  ::pb::Type::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void Type::Fn::Builder::setArgument( ::pb::Type::Reader value) {
+  ::capnp::_::PointerHelpers< ::pb::Type>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::pb::Type::Builder Type::Fn::Builder::initArgument() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Type::Fn::Builder::adoptArgument(
+    ::capnp::Orphan< ::pb::Type>&& value) {
+  ::capnp::_::PointerHelpers< ::pb::Type>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::pb::Type> Type::Fn::Builder::disownArgument() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Type::Fn::Reader::hasReturn() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool Type::Fn::Builder::hasReturn() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::pb::Type::Reader Type::Fn::Reader::getReturn() const {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::pb::Type::Builder Type::Fn::Builder::getReturn() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::pb::Type::Pipeline Type::Fn::Pipeline::getReturn() {
+  return  ::pb::Type::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void Type::Fn::Builder::setReturn( ::pb::Type::Reader value) {
+  ::capnp::_::PointerHelpers< ::pb::Type>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::pb::Type::Builder Type::Fn::Builder::initReturn() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void Type::Fn::Builder::adoptReturn(
+    ::capnp::Orphan< ::pb::Type>&& value) {
+  ::capnp::_::PointerHelpers< ::pb::Type>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::pb::Type> Type::Fn::Builder::disownReturn() {
+  return ::capnp::_::PointerHelpers< ::pb::Type>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool Type::Struc::Reader::hasName() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Type::Struc::Builder::hasName() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader Type::Struc::Reader::getName() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder Type::Struc::Builder::getName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Type::Struc::Builder::setName( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder Type::Struc::Builder::initName(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void Type::Struc::Builder::adoptName(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> Type::Struc::Builder::disownName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::pb::Expression::Which Expression::Reader::which() const {
+  return _reader.getDataField<Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline  ::pb::Expression::Which Expression::Builder::which() {
+  return _builder.getDataField<Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline bool Expression::Reader::isInt() const {
+  return which() == Expression::INT;
+}
+inline bool Expression::Builder::isInt() {
+  return which() == Expression::INT;
+}
+inline  ::int64_t Expression::Reader::getInt() const {
+  KJ_IREQUIRE((which() == Expression::INT),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField< ::int64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int64_t Expression::Builder::getInt() {
+  KJ_IREQUIRE((which() == Expression::INT),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField< ::int64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Expression::Builder::setInt( ::int64_t value) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::INT);
+  _builder.setDataField< ::int64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Expression::Reader::isFloat() const {
+  return which() == Expression::FLOAT;
+}
+inline bool Expression::Builder::isFloat() {
+  return which() == Expression::FLOAT;
+}
+inline double Expression::Reader::getFloat() const {
+  KJ_IREQUIRE((which() == Expression::FLOAT),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField<double>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline double Expression::Builder::getFloat() {
+  KJ_IREQUIRE((which() == Expression::FLOAT),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField<double>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Expression::Builder::setFloat(double value) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::FLOAT);
+  _builder.setDataField<double>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Expression::Reader::isBool() const {
+  return which() == Expression::BOOL;
+}
+inline bool Expression::Builder::isBool() {
+  return which() == Expression::BOOL;
+}
+inline bool Expression::Reader::getBool() const {
+  KJ_IREQUIRE((which() == Expression::BOOL),
+              "Must check which() before get()ing a union member.");
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline bool Expression::Builder::getBool() {
+  KJ_IREQUIRE((which() == Expression::BOOL),
+              "Must check which() before get()ing a union member.");
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Expression::Builder::setBool(bool value) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::BOOL);
+  _builder.setDataField<bool>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Expression::Reader::isString() const {
+  return which() == Expression::STRING;
+}
+inline bool Expression::Builder::isString() {
+  return which() == Expression::STRING;
+}
+inline bool Expression::Reader::hasString() const {
+  if (which() != Expression::STRING) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Expression::Builder::hasString() {
+  if (which() != Expression::STRING) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader Expression::Reader::getString() const {
+  KJ_IREQUIRE((which() == Expression::STRING),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder Expression::Builder::getString() {
+  KJ_IREQUIRE((which() == Expression::STRING),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Expression::Builder::setString( ::capnp::Text::Reader value) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::STRING);
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder Expression::Builder::initString(unsigned int size) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::STRING);
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void Expression::Builder::adoptString(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  _builder.setDataField<Expression::Which>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, Expression::STRING);
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> Expression::Builder::disownString() {
+  KJ_IREQUIRE((which() == Expression::STRING),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::pb::Value::Which Value::Reader::which() const {
+  return _reader.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline  ::pb::Value::Which Value::Builder::which() {
   return _builder.getDataField<Which>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
@@ -580,474 +1292,99 @@ inline bool Value::Builder::hasType() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Value::Type::Reader Value::Reader::getType() const {
+inline  ::pb::Type::Reader Value::Reader::getType() const {
   KJ_IREQUIRE((which() == Value::TYPE),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_reader.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Value::Type::Builder Value::Builder::getType() {
+inline  ::pb::Type::Builder Value::Builder::getType() {
   KJ_IREQUIRE((which() == Value::TYPE),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_builder.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Type>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Value::Builder::setType( ::Value::Type::Reader value) {
+inline void Value::Builder::setType( ::pb::Type::Reader value) {
   _builder.setDataField<Value::Which>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::TYPE);
-  ::capnp::_::PointerHelpers< ::Value::Type>::set(_builder.getPointerField(
+  ::capnp::_::PointerHelpers< ::pb::Type>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Value::Type::Builder Value::Builder::initType() {
+inline  ::pb::Type::Builder Value::Builder::initType() {
   _builder.setDataField<Value::Which>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::TYPE);
-  return ::capnp::_::PointerHelpers< ::Value::Type>::init(_builder.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Type>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 inline void Value::Builder::adoptType(
-    ::capnp::Orphan< ::Value::Type>&& value) {
+    ::capnp::Orphan< ::pb::Type>&& value) {
   _builder.setDataField<Value::Which>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::TYPE);
-  ::capnp::_::PointerHelpers< ::Value::Type>::adopt(_builder.getPointerField(
+  ::capnp::_::PointerHelpers< ::pb::Type>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Value::Type> Value::Builder::disownType() {
+inline ::capnp::Orphan< ::pb::Type> Value::Builder::disownType() {
   KJ_IREQUIRE((which() == Value::TYPE),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::disown(_builder.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Type>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::Value::Type::Which Value::Type::Reader::which() const {
-  return _reader.getDataField<Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+inline bool Value::Reader::isExpression() const {
+  return which() == Value::EXPRESSION;
 }
-inline  ::Value::Type::Which Value::Type::Builder::which() {
-  return _builder.getDataField<Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+inline bool Value::Builder::isExpression() {
+  return which() == Value::EXPRESSION;
 }
-
-inline bool Value::Type::Reader::isType() const {
-  return which() == Value::Type::TYPE;
-}
-inline bool Value::Type::Builder::isType() {
-  return which() == Value::Type::TYPE;
-}
-inline  ::capnp::Void Value::Type::Reader::getType() const {
-  KJ_IREQUIRE((which() == Value::Type::TYPE),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getType() {
-  KJ_IREQUIRE((which() == Value::Type::TYPE),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setType( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::TYPE);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isInt() const {
-  return which() == Value::Type::INT;
-}
-inline bool Value::Type::Builder::isInt() {
-  return which() == Value::Type::INT;
-}
-inline  ::capnp::Void Value::Type::Reader::getInt() const {
-  KJ_IREQUIRE((which() == Value::Type::INT),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getInt() {
-  KJ_IREQUIRE((which() == Value::Type::INT),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setInt( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::INT);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isFloat() const {
-  return which() == Value::Type::FLOAT;
-}
-inline bool Value::Type::Builder::isFloat() {
-  return which() == Value::Type::FLOAT;
-}
-inline  ::capnp::Void Value::Type::Reader::getFloat() const {
-  KJ_IREQUIRE((which() == Value::Type::FLOAT),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getFloat() {
-  KJ_IREQUIRE((which() == Value::Type::FLOAT),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setFloat( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::FLOAT);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isBool() const {
-  return which() == Value::Type::BOOL;
-}
-inline bool Value::Type::Builder::isBool() {
-  return which() == Value::Type::BOOL;
-}
-inline  ::capnp::Void Value::Type::Reader::getBool() const {
-  KJ_IREQUIRE((which() == Value::Type::BOOL),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getBool() {
-  KJ_IREQUIRE((which() == Value::Type::BOOL),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setBool( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::BOOL);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isString() const {
-  return which() == Value::Type::STRING;
-}
-inline bool Value::Type::Builder::isString() {
-  return which() == Value::Type::STRING;
-}
-inline  ::capnp::Void Value::Type::Reader::getString() const {
-  KJ_IREQUIRE((which() == Value::Type::STRING),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getString() {
-  KJ_IREQUIRE((which() == Value::Type::STRING),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setString( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::STRING);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isNil() const {
-  return which() == Value::Type::NIL;
-}
-inline bool Value::Type::Builder::isNil() {
-  return which() == Value::Type::NIL;
-}
-inline  ::capnp::Void Value::Type::Reader::getNil() const {
-  KJ_IREQUIRE((which() == Value::Type::NIL),
-              "Must check which() before get()ing a union member.");
-  return _reader.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::capnp::Void Value::Type::Builder::getNil() {
-  KJ_IREQUIRE((which() == Value::Type::NIL),
-              "Must check which() before get()ing a union member.");
-  return _builder.getDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Value::Type::Builder::setNil( ::capnp::Void value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::NIL);
-  _builder.setDataField< ::capnp::Void>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Value::Type::Reader::isFn() const {
-  return which() == Value::Type::FN;
-}
-inline bool Value::Type::Builder::isFn() {
-  return which() == Value::Type::FN;
-}
-inline typename Value::Type::Fn::Reader Value::Type::Reader::getFn() const {
-  KJ_IREQUIRE((which() == Value::Type::FN),
-              "Must check which() before get()ing a union member.");
-  return typename Value::Type::Fn::Reader(_reader);
-}
-inline typename Value::Type::Fn::Builder Value::Type::Builder::getFn() {
-  KJ_IREQUIRE((which() == Value::Type::FN),
-              "Must check which() before get()ing a union member.");
-  return typename Value::Type::Fn::Builder(_builder);
-}
-inline typename Value::Type::Fn::Builder Value::Type::Builder::initFn() {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::FN);
-  _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS).clear();
-  _builder.getPointerField(::capnp::bounded<1>() * ::capnp::POINTERS).clear();
-  return typename Value::Type::Fn::Builder(_builder);
-}
-inline bool Value::Type::Reader::isTuple() const {
-  return which() == Value::Type::TUPLE;
-}
-inline bool Value::Type::Builder::isTuple() {
-  return which() == Value::Type::TUPLE;
-}
-inline bool Value::Type::Reader::hasTuple() const {
-  if (which() != Value::Type::TUPLE) return false;
+inline bool Value::Reader::hasExpression() const {
+  if (which() != Value::EXPRESSION) return false;
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Value::Type::Builder::hasTuple() {
-  if (which() != Value::Type::TUPLE) return false;
+inline bool Value::Builder::hasExpression() {
+  if (which() != Value::EXPRESSION) return false;
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Reader Value::Type::Reader::getTuple() const {
-  KJ_IREQUIRE((which() == Value::Type::TUPLE),
+inline  ::pb::Expression::Reader Value::Reader::getExpression() const {
+  KJ_IREQUIRE((which() == Value::EXPRESSION),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Expression>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Builder Value::Type::Builder::getTuple() {
-  KJ_IREQUIRE((which() == Value::Type::TUPLE),
+inline  ::pb::Expression::Builder Value::Builder::getExpression() {
+  KJ_IREQUIRE((which() == Value::EXPRESSION),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Expression>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Value::Type::Builder::setTuple( ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Reader value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::TUPLE);
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+inline void Value::Builder::setExpression( ::pb::Expression::Reader value) {
+  _builder.setDataField<Value::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::EXPRESSION);
+  ::capnp::_::PointerHelpers< ::pb::Expression>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>::Builder Value::Type::Builder::initTuple(unsigned int size) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::TUPLE);
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+inline  ::pb::Expression::Builder Value::Builder::initExpression() {
+  _builder.setDataField<Value::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::EXPRESSION);
+  return ::capnp::_::PointerHelpers< ::pb::Expression>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Value::Type::Builder::adoptTuple(
-    ::capnp::Orphan< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>&& value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::TUPLE);
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+inline void Value::Builder::adoptExpression(
+    ::capnp::Orphan< ::pb::Expression>&& value) {
+  _builder.setDataField<Value::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::EXPRESSION);
+  ::capnp::_::PointerHelpers< ::pb::Expression>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>> Value::Type::Builder::disownTuple() {
-  KJ_IREQUIRE((which() == Value::Type::TUPLE),
+inline ::capnp::Orphan< ::pb::Expression> Value::Builder::disownExpression() {
+  KJ_IREQUIRE((which() == Value::EXPRESSION),
               "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Value::Type,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+  return ::capnp::_::PointerHelpers< ::pb::Expression>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline bool Value::Type::Reader::isList() const {
-  return which() == Value::Type::LIST;
-}
-inline bool Value::Type::Builder::isList() {
-  return which() == Value::Type::LIST;
-}
-inline bool Value::Type::Reader::hasList() const {
-  if (which() != Value::Type::LIST) return false;
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool Value::Type::Builder::hasList() {
-  if (which() != Value::Type::LIST) return false;
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Value::Type::Reader Value::Type::Reader::getList() const {
-  KJ_IREQUIRE((which() == Value::Type::LIST),
-              "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::Value::Type::Builder Value::Type::Builder::getList() {
-  KJ_IREQUIRE((which() == Value::Type::LIST),
-              "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void Value::Type::Builder::setList( ::Value::Type::Reader value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::LIST);
-  ::capnp::_::PointerHelpers< ::Value::Type>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::Value::Type::Builder Value::Type::Builder::initList() {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::LIST);
-  return ::capnp::_::PointerHelpers< ::Value::Type>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void Value::Type::Builder::adoptList(
-    ::capnp::Orphan< ::Value::Type>&& value) {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::LIST);
-  ::capnp::_::PointerHelpers< ::Value::Type>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Value::Type> Value::Type::Builder::disownList() {
-  KJ_IREQUIRE((which() == Value::Type::LIST),
-              "Must check which() before get()ing a union member.");
-  return ::capnp::_::PointerHelpers< ::Value::Type>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline bool Value::Type::Reader::isStruc() const {
-  return which() == Value::Type::STRUC;
-}
-inline bool Value::Type::Builder::isStruc() {
-  return which() == Value::Type::STRUC;
-}
-inline typename Value::Type::Struc::Reader Value::Type::Reader::getStruc() const {
-  KJ_IREQUIRE((which() == Value::Type::STRUC),
-              "Must check which() before get()ing a union member.");
-  return typename Value::Type::Struc::Reader(_reader);
-}
-inline typename Value::Type::Struc::Builder Value::Type::Builder::getStruc() {
-  KJ_IREQUIRE((which() == Value::Type::STRUC),
-              "Must check which() before get()ing a union member.");
-  return typename Value::Type::Struc::Builder(_builder);
-}
-inline typename Value::Type::Struc::Builder Value::Type::Builder::initStruc() {
-  _builder.setDataField<Value::Type::Which>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Value::Type::STRUC);
-  _builder.getPointerField(::capnp::bounded<0>() * ::capnp::POINTERS).clear();
-  return typename Value::Type::Struc::Builder(_builder);
-}
-inline bool Value::Type::Fn::Reader::hasArgument() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool Value::Type::Fn::Builder::hasArgument() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Value::Type::Reader Value::Type::Fn::Reader::getArgument() const {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::Value::Type::Builder Value::Type::Fn::Builder::getArgument() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Value::Type::Pipeline Value::Type::Fn::Pipeline::getArgument() {
-  return  ::Value::Type::Pipeline(_typeless.getPointerField(0));
-}
-#endif  // !CAPNP_LITE
-inline void Value::Type::Fn::Builder::setArgument( ::Value::Type::Reader value) {
-  ::capnp::_::PointerHelpers< ::Value::Type>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::Value::Type::Builder Value::Type::Fn::Builder::initArgument() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void Value::Type::Fn::Builder::adoptArgument(
-    ::capnp::Orphan< ::Value::Type>&& value) {
-  ::capnp::_::PointerHelpers< ::Value::Type>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Value::Type> Value::Type::Fn::Builder::disownArgument() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline bool Value::Type::Fn::Reader::hasReturn() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline bool Value::Type::Fn::Builder::hasReturn() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Value::Type::Reader Value::Type::Fn::Reader::getReturn() const {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline  ::Value::Type::Builder Value::Type::Fn::Builder::getReturn() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Value::Type::Pipeline Value::Type::Fn::Pipeline::getReturn() {
-  return  ::Value::Type::Pipeline(_typeless.getPointerField(1));
-}
-#endif  // !CAPNP_LITE
-inline void Value::Type::Fn::Builder::setReturn( ::Value::Type::Reader value) {
-  ::capnp::_::PointerHelpers< ::Value::Type>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
-}
-inline  ::Value::Type::Builder Value::Type::Fn::Builder::initReturn() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline void Value::Type::Fn::Builder::adoptReturn(
-    ::capnp::Orphan< ::Value::Type>&& value) {
-  ::capnp::_::PointerHelpers< ::Value::Type>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Value::Type> Value::Type::Fn::Builder::disownReturn() {
-  return ::capnp::_::PointerHelpers< ::Value::Type>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-
-inline bool Value::Type::Struc::Reader::hasName() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool Value::Type::Struc::Builder::hasName() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::capnp::Text::Reader Value::Type::Struc::Reader::getName() const {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::capnp::Text::Builder Value::Type::Struc::Builder::getName() {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void Value::Type::Struc::Builder::setName( ::capnp::Text::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::capnp::Text::Builder Value::Type::Struc::Builder::initName(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
-}
-inline void Value::Type::Struc::Builder::adoptName(
-    ::capnp::Orphan< ::capnp::Text>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::capnp::Text> Value::Type::Struc::Builder::disownName() {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
+}  // namespace
 
 CAPNP_END_HEADER
 

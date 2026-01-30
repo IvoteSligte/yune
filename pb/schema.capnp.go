@@ -6,24 +6,513 @@ import (
 	capnp "capnproto.org/go/capnp/v3"
 	text "capnproto.org/go/capnp/v3/encoding/text"
 	schemas "capnproto.org/go/capnp/v3/schemas"
+	math "math"
 	strconv "strconv"
 )
+
+type Type capnp.Struct
+type Type_fn Type
+type Type_struc Type
+type Type_Which uint16
+
+const (
+	Type_Which_type    Type_Which = 0
+	Type_Which_int     Type_Which = 1
+	Type_Which_float   Type_Which = 2
+	Type_Which_bool    Type_Which = 3
+	Type_Which_string_ Type_Which = 4
+	Type_Which_nil     Type_Which = 5
+	Type_Which_fn      Type_Which = 6
+	Type_Which_tuple   Type_Which = 7
+	Type_Which_list    Type_Which = 8
+	Type_Which_struc   Type_Which = 9
+)
+
+func (w Type_Which) String() string {
+	const s = "typeintfloatboolstring_nilfntupleliststruc"
+	switch w {
+	case Type_Which_type:
+		return s[0:4]
+	case Type_Which_int:
+		return s[4:7]
+	case Type_Which_float:
+		return s[7:12]
+	case Type_Which_bool:
+		return s[12:16]
+	case Type_Which_string_:
+		return s[16:23]
+	case Type_Which_nil:
+		return s[23:26]
+	case Type_Which_fn:
+		return s[26:28]
+	case Type_Which_tuple:
+		return s[28:33]
+	case Type_Which_list:
+		return s[33:37]
+	case Type_Which_struc:
+		return s[37:42]
+
+	}
+	return "Type_Which(" + strconv.FormatUint(uint64(w), 10) + ")"
+}
+
+// Type_TypeID is the unique identifier for the type Type.
+const Type_TypeID = 0xb48b53f60af084bb
+
+func NewType(s *capnp.Segment) (Type, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2})
+	return Type(st), err
+}
+
+func NewRootType(s *capnp.Segment) (Type, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2})
+	return Type(st), err
+}
+
+func ReadRootType(msg *capnp.Message) (Type, error) {
+	root, err := msg.Root()
+	return Type(root.Struct()), err
+}
+
+func (s Type) String() string {
+	str, _ := text.Marshal(0xb48b53f60af084bb, capnp.Struct(s))
+	return str
+}
+
+func (s Type) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (Type) DecodeFromPtr(p capnp.Ptr) Type {
+	return Type(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s Type) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+
+func (s Type) Which() Type_Which {
+	return Type_Which(capnp.Struct(s).Uint16(0))
+}
+func (s Type) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s Type) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s Type) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s Type) SetType() {
+	capnp.Struct(s).SetUint16(0, 0)
+
+}
+
+func (s Type) SetInt() {
+	capnp.Struct(s).SetUint16(0, 1)
+
+}
+
+func (s Type) SetFloat() {
+	capnp.Struct(s).SetUint16(0, 2)
+
+}
+
+func (s Type) SetBool() {
+	capnp.Struct(s).SetUint16(0, 3)
+
+}
+
+func (s Type) SetString_() {
+	capnp.Struct(s).SetUint16(0, 4)
+
+}
+
+func (s Type) SetNil() {
+	capnp.Struct(s).SetUint16(0, 5)
+
+}
+
+func (s Type) Fn() Type_fn { return Type_fn(s) }
+
+func (s Type) SetFn() {
+	capnp.Struct(s).SetUint16(0, 6)
+}
+
+func (s Type_fn) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s Type_fn) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s Type_fn) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s Type_fn) Argument() (Type, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return Type(p.Struct()), err
+}
+
+func (s Type_fn) HasArgument() bool {
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Type_fn) SetArgument(v Type) error {
+	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
+}
+
+// NewArgument sets the argument field to a newly
+// allocated Type struct, preferring placement in s's segment.
+func (s Type_fn) NewArgument() (Type, error) {
+	ss, err := NewType(capnp.Struct(s).Segment())
+	if err != nil {
+		return Type{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
+	return ss, err
+}
+
+func (s Type_fn) Return() (Type, error) {
+	p, err := capnp.Struct(s).Ptr(1)
+	return Type(p.Struct()), err
+}
+
+func (s Type_fn) HasReturn() bool {
+	return capnp.Struct(s).HasPtr(1)
+}
+
+func (s Type_fn) SetReturn(v Type) error {
+	return capnp.Struct(s).SetPtr(1, capnp.Struct(v).ToPtr())
+}
+
+// NewReturn sets the return field to a newly
+// allocated Type struct, preferring placement in s's segment.
+func (s Type_fn) NewReturn() (Type, error) {
+	ss, err := NewType(capnp.Struct(s).Segment())
+	if err != nil {
+		return Type{}, err
+	}
+	err = capnp.Struct(s).SetPtr(1, capnp.Struct(ss).ToPtr())
+	return ss, err
+}
+
+func (s Type) Tuple() (Type_List, error) {
+	if capnp.Struct(s).Uint16(0) != 7 {
+		panic("Which() != tuple")
+	}
+	p, err := capnp.Struct(s).Ptr(0)
+	return Type_List(p.List()), err
+}
+
+func (s Type) HasTuple() bool {
+	if capnp.Struct(s).Uint16(0) != 7 {
+		return false
+	}
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Type) SetTuple(v Type_List) error {
+	capnp.Struct(s).SetUint16(0, 7)
+	return capnp.Struct(s).SetPtr(0, v.ToPtr())
+}
+
+// NewTuple sets the tuple field to a newly
+// allocated Type_List, preferring placement in s's segment.
+func (s Type) NewTuple(n int32) (Type_List, error) {
+	capnp.Struct(s).SetUint16(0, 7)
+	l, err := NewType_List(capnp.Struct(s).Segment(), n)
+	if err != nil {
+		return Type_List{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
+	return l, err
+}
+func (s Type) List() (Type, error) {
+	if capnp.Struct(s).Uint16(0) != 8 {
+		panic("Which() != list")
+	}
+	p, err := capnp.Struct(s).Ptr(0)
+	return Type(p.Struct()), err
+}
+
+func (s Type) HasList() bool {
+	if capnp.Struct(s).Uint16(0) != 8 {
+		return false
+	}
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Type) SetList(v Type) error {
+	capnp.Struct(s).SetUint16(0, 8)
+	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
+}
+
+// NewList sets the list field to a newly
+// allocated Type struct, preferring placement in s's segment.
+func (s Type) NewList() (Type, error) {
+	capnp.Struct(s).SetUint16(0, 8)
+	ss, err := NewType(capnp.Struct(s).Segment())
+	if err != nil {
+		return Type{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
+	return ss, err
+}
+
+func (s Type) Struc() Type_struc { return Type_struc(s) }
+
+func (s Type) SetStruc() {
+	capnp.Struct(s).SetUint16(0, 9)
+}
+
+func (s Type_struc) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s Type_struc) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s Type_struc) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s Type_struc) Name() (string, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.Text(), err
+}
+
+func (s Type_struc) HasName() bool {
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Type_struc) NameBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.TextBytes(), err
+}
+
+func (s Type_struc) SetName(v string) error {
+	return capnp.Struct(s).SetText(0, v)
+}
+
+// Type_List is a list of Type.
+type Type_List = capnp.StructList[Type]
+
+// NewType creates a new list of Type.
+func NewType_List(s *capnp.Segment, sz int32) (Type_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2}, sz)
+	return capnp.StructList[Type](l), err
+}
+
+// Type_Future is a wrapper for a Type promised by a client call.
+type Type_Future struct{ *capnp.Future }
+
+func (f Type_Future) Struct() (Type, error) {
+	p, err := f.Future.Ptr()
+	return Type(p.Struct()), err
+}
+func (p Type_Future) Fn() Type_fn_Future { return Type_fn_Future{p.Future} }
+
+// Type_fn_Future is a wrapper for a Type_fn promised by a client call.
+type Type_fn_Future struct{ *capnp.Future }
+
+func (f Type_fn_Future) Struct() (Type_fn, error) {
+	p, err := f.Future.Ptr()
+	return Type_fn(p.Struct()), err
+}
+func (p Type_fn_Future) Argument() Type_Future {
+	return Type_Future{Future: p.Future.Field(0, nil)}
+}
+func (p Type_fn_Future) Return() Type_Future {
+	return Type_Future{Future: p.Future.Field(1, nil)}
+}
+func (p Type_Future) List() Type_Future {
+	return Type_Future{Future: p.Future.Field(0, nil)}
+}
+func (p Type_Future) Struc() Type_struc_Future { return Type_struc_Future{p.Future} }
+
+// Type_struc_Future is a wrapper for a Type_struc promised by a client call.
+type Type_struc_Future struct{ *capnp.Future }
+
+func (f Type_struc_Future) Struct() (Type_struc, error) {
+	p, err := f.Future.Ptr()
+	return Type_struc(p.Struct()), err
+}
+
+type Expression capnp.Struct
+type Expression_Which uint16
+
+const (
+	Expression_Which_int     Expression_Which = 0
+	Expression_Which_float   Expression_Which = 1
+	Expression_Which_bool    Expression_Which = 2
+	Expression_Which_string_ Expression_Which = 3
+)
+
+func (w Expression_Which) String() string {
+	const s = "intfloatboolstring_"
+	switch w {
+	case Expression_Which_int:
+		return s[0:3]
+	case Expression_Which_float:
+		return s[3:8]
+	case Expression_Which_bool:
+		return s[8:12]
+	case Expression_Which_string_:
+		return s[12:19]
+
+	}
+	return "Expression_Which(" + strconv.FormatUint(uint64(w), 10) + ")"
+}
+
+// Expression_TypeID is the unique identifier for the type Expression.
+const Expression_TypeID = 0xe86639df1af797f5
+
+func NewExpression(s *capnp.Segment) (Expression, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 1})
+	return Expression(st), err
+}
+
+func NewRootExpression(s *capnp.Segment) (Expression, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 1})
+	return Expression(st), err
+}
+
+func ReadRootExpression(msg *capnp.Message) (Expression, error) {
+	root, err := msg.Root()
+	return Expression(root.Struct()), err
+}
+
+func (s Expression) String() string {
+	str, _ := text.Marshal(0xe86639df1af797f5, capnp.Struct(s))
+	return str
+}
+
+func (s Expression) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (Expression) DecodeFromPtr(p capnp.Ptr) Expression {
+	return Expression(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s Expression) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+
+func (s Expression) Which() Expression_Which {
+	return Expression_Which(capnp.Struct(s).Uint16(8))
+}
+func (s Expression) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s Expression) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s Expression) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s Expression) Int() int64 {
+	if capnp.Struct(s).Uint16(8) != 0 {
+		panic("Which() != int")
+	}
+	return int64(capnp.Struct(s).Uint64(0))
+}
+
+func (s Expression) SetInt(v int64) {
+	capnp.Struct(s).SetUint16(8, 0)
+	capnp.Struct(s).SetUint64(0, uint64(v))
+}
+
+func (s Expression) Float() float64 {
+	if capnp.Struct(s).Uint16(8) != 1 {
+		panic("Which() != float")
+	}
+	return math.Float64frombits(capnp.Struct(s).Uint64(0))
+}
+
+func (s Expression) SetFloat(v float64) {
+	capnp.Struct(s).SetUint16(8, 1)
+	capnp.Struct(s).SetUint64(0, math.Float64bits(v))
+}
+
+func (s Expression) Bool() bool {
+	if capnp.Struct(s).Uint16(8) != 2 {
+		panic("Which() != bool")
+	}
+	return capnp.Struct(s).Bit(0)
+}
+
+func (s Expression) SetBool(v bool) {
+	capnp.Struct(s).SetUint16(8, 2)
+	capnp.Struct(s).SetBit(0, v)
+}
+
+func (s Expression) String_() (string, error) {
+	if capnp.Struct(s).Uint16(8) != 3 {
+		panic("Which() != string_")
+	}
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.Text(), err
+}
+
+func (s Expression) HasString_() bool {
+	if capnp.Struct(s).Uint16(8) != 3 {
+		return false
+	}
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Expression) String_Bytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.TextBytes(), err
+}
+
+func (s Expression) SetString_(v string) error {
+	capnp.Struct(s).SetUint16(8, 3)
+	return capnp.Struct(s).SetText(0, v)
+}
+
+// Expression_List is a list of Expression.
+type Expression_List = capnp.StructList[Expression]
+
+// NewExpression creates a new list of Expression.
+func NewExpression_List(s *capnp.Segment, sz int32) (Expression_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 16, PointerCount: 1}, sz)
+	return capnp.StructList[Expression](l), err
+}
+
+// Expression_Future is a wrapper for a Expression promised by a client call.
+type Expression_Future struct{ *capnp.Future }
+
+func (f Expression_Future) Struct() (Expression, error) {
+	p, err := f.Future.Ptr()
+	return Expression(p.Struct()), err
+}
 
 type Value capnp.Struct
 type Value_Which uint16
 
 const (
-	Value_Which_empty Value_Which = 0
-	Value_Which_type  Value_Which = 1
+	Value_Which_empty      Value_Which = 0
+	Value_Which_type       Value_Which = 1
+	Value_Which_expression Value_Which = 2
 )
 
 func (w Value_Which) String() string {
-	const s = "emptytype"
+	const s = "emptytypeexpression"
 	switch w {
 	case Value_Which_empty:
 		return s[0:5]
 	case Value_Which_type:
 		return s[5:9]
+	case Value_Which_expression:
+		return s[9:19]
 
 	}
 	return "Value_Which(" + strconv.FormatUint(uint64(w), 10) + ")"
@@ -83,12 +572,12 @@ func (s Value) SetEmpty() {
 
 }
 
-func (s Value) Type() (Value_Type, error) {
+func (s Value) Type() (Type, error) {
 	if capnp.Struct(s).Uint16(0) != 1 {
 		panic("Which() != type")
 	}
 	p, err := capnp.Struct(s).Ptr(0)
-	return Value_Type(p.Struct()), err
+	return Type(p.Struct()), err
 }
 
 func (s Value) HasType() bool {
@@ -98,18 +587,50 @@ func (s Value) HasType() bool {
 	return capnp.Struct(s).HasPtr(0)
 }
 
-func (s Value) SetType(v Value_Type) error {
+func (s Value) SetType(v Type) error {
 	capnp.Struct(s).SetUint16(0, 1)
 	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
 }
 
 // NewType sets the type field to a newly
-// allocated Value_Type struct, preferring placement in s's segment.
-func (s Value) NewType() (Value_Type, error) {
+// allocated Type struct, preferring placement in s's segment.
+func (s Value) NewType() (Type, error) {
 	capnp.Struct(s).SetUint16(0, 1)
-	ss, err := NewValue_Type(capnp.Struct(s).Segment())
+	ss, err := NewType(capnp.Struct(s).Segment())
 	if err != nil {
-		return Value_Type{}, err
+		return Type{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
+	return ss, err
+}
+
+func (s Value) Expression() (Expression, error) {
+	if capnp.Struct(s).Uint16(0) != 2 {
+		panic("Which() != expression")
+	}
+	p, err := capnp.Struct(s).Ptr(0)
+	return Expression(p.Struct()), err
+}
+
+func (s Value) HasExpression() bool {
+	if capnp.Struct(s).Uint16(0) != 2 {
+		return false
+	}
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s Value) SetExpression(v Expression) error {
+	capnp.Struct(s).SetUint16(0, 2)
+	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
+}
+
+// NewExpression sets the expression field to a newly
+// allocated Expression struct, preferring placement in s's segment.
+func (s Value) NewExpression() (Expression, error) {
+	capnp.Struct(s).SetUint16(0, 2)
+	ss, err := NewExpression(capnp.Struct(s).Segment())
+	if err != nil {
+		return Expression{}, err
 	}
 	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
 	return ss, err
@@ -131,386 +652,66 @@ func (f Value_Future) Struct() (Value, error) {
 	p, err := f.Future.Ptr()
 	return Value(p.Struct()), err
 }
-func (p Value_Future) Type() Value_Type_Future {
-	return Value_Type_Future{Future: p.Future.Field(0, nil)}
+func (p Value_Future) Type() Type_Future {
+	return Type_Future{Future: p.Future.Field(0, nil)}
+}
+func (p Value_Future) Expression() Expression_Future {
+	return Expression_Future{Future: p.Future.Field(0, nil)}
 }
 
-type Value_Type capnp.Struct
-type Value_Type_fn Value_Type
-type Value_Type_struc Value_Type
-type Value_Type_Which uint16
-
-const (
-	Value_Type_Which_type    Value_Type_Which = 0
-	Value_Type_Which_int     Value_Type_Which = 1
-	Value_Type_Which_float   Value_Type_Which = 2
-	Value_Type_Which_bool    Value_Type_Which = 3
-	Value_Type_Which_string_ Value_Type_Which = 4
-	Value_Type_Which_nil     Value_Type_Which = 5
-	Value_Type_Which_fn      Value_Type_Which = 6
-	Value_Type_Which_tuple   Value_Type_Which = 7
-	Value_Type_Which_list    Value_Type_Which = 8
-	Value_Type_Which_struc   Value_Type_Which = 9
-)
-
-func (w Value_Type_Which) String() string {
-	const s = "typeintfloatboolstring_nilfntupleliststruc"
-	switch w {
-	case Value_Type_Which_type:
-		return s[0:4]
-	case Value_Type_Which_int:
-		return s[4:7]
-	case Value_Type_Which_float:
-		return s[7:12]
-	case Value_Type_Which_bool:
-		return s[12:16]
-	case Value_Type_Which_string_:
-		return s[16:23]
-	case Value_Type_Which_nil:
-		return s[23:26]
-	case Value_Type_Which_fn:
-		return s[26:28]
-	case Value_Type_Which_tuple:
-		return s[28:33]
-	case Value_Type_Which_list:
-		return s[33:37]
-	case Value_Type_Which_struc:
-		return s[37:42]
-
-	}
-	return "Value_Type_Which(" + strconv.FormatUint(uint64(w), 10) + ")"
-}
-
-// Value_Type_TypeID is the unique identifier for the type Value_Type.
-const Value_Type_TypeID = 0xe6a9443313a9ccd0
-
-func NewValue_Type(s *capnp.Segment) (Value_Type, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2})
-	return Value_Type(st), err
-}
-
-func NewRootValue_Type(s *capnp.Segment) (Value_Type, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2})
-	return Value_Type(st), err
-}
-
-func ReadRootValue_Type(msg *capnp.Message) (Value_Type, error) {
-	root, err := msg.Root()
-	return Value_Type(root.Struct()), err
-}
-
-func (s Value_Type) String() string {
-	str, _ := text.Marshal(0xe6a9443313a9ccd0, capnp.Struct(s))
-	return str
-}
-
-func (s Value_Type) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
-	return capnp.Struct(s).EncodeAsPtr(seg)
-}
-
-func (Value_Type) DecodeFromPtr(p capnp.Ptr) Value_Type {
-	return Value_Type(capnp.Struct{}.DecodeFromPtr(p))
-}
-
-func (s Value_Type) ToPtr() capnp.Ptr {
-	return capnp.Struct(s).ToPtr()
-}
-
-func (s Value_Type) Which() Value_Type_Which {
-	return Value_Type_Which(capnp.Struct(s).Uint16(0))
-}
-func (s Value_Type) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s Value_Type) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s Value_Type) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s Value_Type) SetType() {
-	capnp.Struct(s).SetUint16(0, 0)
-
-}
-
-func (s Value_Type) SetInt() {
-	capnp.Struct(s).SetUint16(0, 1)
-
-}
-
-func (s Value_Type) SetFloat() {
-	capnp.Struct(s).SetUint16(0, 2)
-
-}
-
-func (s Value_Type) SetBool() {
-	capnp.Struct(s).SetUint16(0, 3)
-
-}
-
-func (s Value_Type) SetString_() {
-	capnp.Struct(s).SetUint16(0, 4)
-
-}
-
-func (s Value_Type) SetNil() {
-	capnp.Struct(s).SetUint16(0, 5)
-
-}
-
-func (s Value_Type) Fn() Value_Type_fn { return Value_Type_fn(s) }
-
-func (s Value_Type) SetFn() {
-	capnp.Struct(s).SetUint16(0, 6)
-}
-
-func (s Value_Type_fn) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s Value_Type_fn) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s Value_Type_fn) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s Value_Type_fn) Argument() (Value_Type, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return Value_Type(p.Struct()), err
-}
-
-func (s Value_Type_fn) HasArgument() bool {
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s Value_Type_fn) SetArgument(v Value_Type) error {
-	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
-}
-
-// NewArgument sets the argument field to a newly
-// allocated Value_Type struct, preferring placement in s's segment.
-func (s Value_Type_fn) NewArgument() (Value_Type, error) {
-	ss, err := NewValue_Type(capnp.Struct(s).Segment())
-	if err != nil {
-		return Value_Type{}, err
-	}
-	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
-	return ss, err
-}
-
-func (s Value_Type_fn) Return() (Value_Type, error) {
-	p, err := capnp.Struct(s).Ptr(1)
-	return Value_Type(p.Struct()), err
-}
-
-func (s Value_Type_fn) HasReturn() bool {
-	return capnp.Struct(s).HasPtr(1)
-}
-
-func (s Value_Type_fn) SetReturn(v Value_Type) error {
-	return capnp.Struct(s).SetPtr(1, capnp.Struct(v).ToPtr())
-}
-
-// NewReturn sets the return field to a newly
-// allocated Value_Type struct, preferring placement in s's segment.
-func (s Value_Type_fn) NewReturn() (Value_Type, error) {
-	ss, err := NewValue_Type(capnp.Struct(s).Segment())
-	if err != nil {
-		return Value_Type{}, err
-	}
-	err = capnp.Struct(s).SetPtr(1, capnp.Struct(ss).ToPtr())
-	return ss, err
-}
-
-func (s Value_Type) Tuple() (Value_Type_List, error) {
-	if capnp.Struct(s).Uint16(0) != 7 {
-		panic("Which() != tuple")
-	}
-	p, err := capnp.Struct(s).Ptr(0)
-	return Value_Type_List(p.List()), err
-}
-
-func (s Value_Type) HasTuple() bool {
-	if capnp.Struct(s).Uint16(0) != 7 {
-		return false
-	}
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s Value_Type) SetTuple(v Value_Type_List) error {
-	capnp.Struct(s).SetUint16(0, 7)
-	return capnp.Struct(s).SetPtr(0, v.ToPtr())
-}
-
-// NewTuple sets the tuple field to a newly
-// allocated Value_Type_List, preferring placement in s's segment.
-func (s Value_Type) NewTuple(n int32) (Value_Type_List, error) {
-	capnp.Struct(s).SetUint16(0, 7)
-	l, err := NewValue_Type_List(capnp.Struct(s).Segment(), n)
-	if err != nil {
-		return Value_Type_List{}, err
-	}
-	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
-	return l, err
-}
-func (s Value_Type) List() (Value_Type, error) {
-	if capnp.Struct(s).Uint16(0) != 8 {
-		panic("Which() != list")
-	}
-	p, err := capnp.Struct(s).Ptr(0)
-	return Value_Type(p.Struct()), err
-}
-
-func (s Value_Type) HasList() bool {
-	if capnp.Struct(s).Uint16(0) != 8 {
-		return false
-	}
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s Value_Type) SetList(v Value_Type) error {
-	capnp.Struct(s).SetUint16(0, 8)
-	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
-}
-
-// NewList sets the list field to a newly
-// allocated Value_Type struct, preferring placement in s's segment.
-func (s Value_Type) NewList() (Value_Type, error) {
-	capnp.Struct(s).SetUint16(0, 8)
-	ss, err := NewValue_Type(capnp.Struct(s).Segment())
-	if err != nil {
-		return Value_Type{}, err
-	}
-	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
-	return ss, err
-}
-
-func (s Value_Type) Struc() Value_Type_struc { return Value_Type_struc(s) }
-
-func (s Value_Type) SetStruc() {
-	capnp.Struct(s).SetUint16(0, 9)
-}
-
-func (s Value_Type_struc) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s Value_Type_struc) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s Value_Type_struc) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s Value_Type_struc) Name() (string, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.Text(), err
-}
-
-func (s Value_Type_struc) HasName() bool {
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s Value_Type_struc) NameBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.TextBytes(), err
-}
-
-func (s Value_Type_struc) SetName(v string) error {
-	return capnp.Struct(s).SetText(0, v)
-}
-
-// Value_Type_List is a list of Value_Type.
-type Value_Type_List = capnp.StructList[Value_Type]
-
-// NewValue_Type creates a new list of Value_Type.
-func NewValue_Type_List(s *capnp.Segment, sz int32) (Value_Type_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 2}, sz)
-	return capnp.StructList[Value_Type](l), err
-}
-
-// Value_Type_Future is a wrapper for a Value_Type promised by a client call.
-type Value_Type_Future struct{ *capnp.Future }
-
-func (f Value_Type_Future) Struct() (Value_Type, error) {
-	p, err := f.Future.Ptr()
-	return Value_Type(p.Struct()), err
-}
-func (p Value_Type_Future) Fn() Value_Type_fn_Future { return Value_Type_fn_Future{p.Future} }
-
-// Value_Type_fn_Future is a wrapper for a Value_Type_fn promised by a client call.
-type Value_Type_fn_Future struct{ *capnp.Future }
-
-func (f Value_Type_fn_Future) Struct() (Value_Type_fn, error) {
-	p, err := f.Future.Ptr()
-	return Value_Type_fn(p.Struct()), err
-}
-func (p Value_Type_fn_Future) Argument() Value_Type_Future {
-	return Value_Type_Future{Future: p.Future.Field(0, nil)}
-}
-func (p Value_Type_fn_Future) Return() Value_Type_Future {
-	return Value_Type_Future{Future: p.Future.Field(1, nil)}
-}
-func (p Value_Type_Future) List() Value_Type_Future {
-	return Value_Type_Future{Future: p.Future.Field(0, nil)}
-}
-func (p Value_Type_Future) Struc() Value_Type_struc_Future { return Value_Type_struc_Future{p.Future} }
-
-// Value_Type_struc_Future is a wrapper for a Value_Type_struc promised by a client call.
-type Value_Type_struc_Future struct{ *capnp.Future }
-
-func (f Value_Type_struc_Future) Struct() (Value_Type_struc, error) {
-	p, err := f.Future.Ptr()
-	return Value_Type_struc(p.Struct()), err
-}
-
-const schema_eaa1f06c3c8d5689 = "x\xda\x94\x92\xcfk\x13O\x00\xc5\xdf\x9b\xd9\xee\xa6%" +
-	"i\x12f\xcb\xb7\xdf\xa2\xa4\x95\x1e\xda`K\x9b\x0a\x95" +
-	"\xa2T\xc1\x1c\x14\x8a\x1d\"\xbdJ,\xdb\x1a\xd8l\x97" +
-	"d\x17\xedA\x10<\x09\xfa\x0fx\xd2c\x0f\xfe\x13^" +
-	"\xbcx\xd0c\x85\x0a^<x\x12\x0f\xfe\xd6\x91Yi" +
-	"\x1a\x8d\x17\xaf\xfbY>\xef\xcd\xcc[X\xe39g\xb1" +
-	"\xf0T@\xe8\xc9!\xd7\x88\xc9\x83\x89\xabc\xf7nC" +
-	"\x8f\x93\xe6\xf9\xb3=\xb5ta\xef\x0d\xc6\x84G@]" +
-	"\xe4{P\xadq\x154\xcb\xc1\xfe\xc6\xec\xe5\xfac\xe8" +
-	"\x02i\xeen\xdc?\x13\xbe{\xf4\x16uz\x02Pm" +
-	">P)\xff\x03\xd4-\xde\x00\xcd\xeb\x17\x0b7\xef<" +
-	"<x\xf5w\xef>_\x82\xea \xfb\xb3\xc7\xb4b_" +
-	"J]x#\x80:+\x9e\xa8\xba\xf0\x80\xa5\xf3bY" +
-	"`\xcet7\xaf\x07\xed\xe6\xfc\xa6h\xc6Q\xbc\xb2\xd1" +
-	"\x0c\xd3`\xfe\xcan\x1c\xccW\xbaI'\xdd\xd4\x8et" +
-	"\x00\x9f#@\xb9P\x05tNR\xfb\x82\xc5\xa8\xd9\x0e" +
-	"\x98\x87`\x1e\xecIx(\x91i\xa0\x9d\xfe\xa2eV" +
-	"\x8bV\xabs\xd2\xc9\x1b\xe3\x10(\xcf\xd6\x00=-\xa9" +
-	"\x17\x04\x0b\xfca|\xda\xafs6eFR\x9f\x12\xac" +
-	"\x04\xed8\xd9\x85[Lv\xe3\x80\xa5#\x1d\xc8R_" +
-	"\xee@y\xb9\x15\xd9$\xdb\xdc\xb5I\x97\x8e\x9ce\xd2" +
-	"\xa7\x07\x94\x17W\x00}RR\x9f\x164\xcd\xcev\xda" +
-	"\x0e\xa2\x04\xc0`\xcej'H\xd2N\xf4\x0f\x05\xb0N" +
-	"\xea\x99\xdeQ\xd50\xab@\xc3\xa1d\xa3\xc4\xbe\xd3\xaa" +
-	"\x02O\x00\x8d\x9c\x05\xbe\x05\xe2\xbb\xf1i\x07Pf\x0d" +
-	"h\xe4-\x18\xb7@~3>%\xa0\xc62U\xc9\x82" +
-	"c\x168_\x8dO\x07P\xffs\x05h\xf8\x16LZ" +
-	"0\xf4\xc5\xf8\x1c\x02\xd4\xf1,c\xdc\x82i\x0b\xdc\xcf" +
-	"\x86}\x8bRS\x9c\x80(x\x9f\x8c\xcf\\\xd6\xb5v" +
-	"\xd85\xf3\xe4>\x1a\x9f\xc3\x99\xa7\xfa\x9bg\xf8\x83\xf5" +
-	"\xf4\x16\xaf\xa6X\x83\xc8\x9e\x0a\xae\xd7\x8a\x12\xb8\x95\xad" +
-	"p\xa7\x99\xc0-^\xdb\xd9\x09\xe1\xaev\x93N+\xda" +
-	"\x86\xebE\xad\x10\xae\xdc\x8a*I\x1a\x87\x01G\xc1u" +
-	"\xc9?\xeew\x14,\x86\xadn2x\xed\xbf\xa6\xf93" +
-	"\x00\x00\xff\xff8\xdd\xd9P"
+const schema_eaa1f06c3c8d5689 = "x\xdalSOh\x1ce\x1c}\xef\xfb\xe6\xcfn\xba" +
+	"\x93\xdd\xf1\x9bB-\x96\xb5\xc5C\x1bJ\xb0\xabP\x0d" +
+	"B\x0a\xba\xa0\xd2b>\xb6\x06\x11\x0f\x8e\xe9l\xb20" +
+	";;\xec\xceR\xf7\xeeED\x04E\x04\xc1\x83WA" +
+	"\xbc\x88\x07\x05\x0f\xf5\\<{\xf2\xa8\x08\x81xH\xe2" +
+	"\xffO\xbeI\xb2\xd9lr\x9d\xf7\xfb\xbd\xdf{o\xde" +
+	"\xf7\xe4\xb7\xbc\xe5\xdc\x08~\x94\x10\xfa\xba\xeb\x99K\x8b" +
+	"\x1f\xfd\xd0\xf8\xfe\x83\x8f\xa1\x1f!\xcdw\xef\xec,\xec" +
+	"u\xde\xfb\x1a\xe7\x85O@=\xe4\x03P=\xe4*h" +
+	"\xbe\xb9\xd7\xdf\xbc\xffb\xfc\xd9\xd9\x93\xdb\xfc\x02T\xdb" +
+	"\xbc\x0f\x9a\x9b\xc9O\xeb\xd7^i\x7f\x09\x1d\x90\xe6\xdd" +
+	"\xf5\xf7\x9fKw>\xff\x0dm\xfa\x12Pw\xc4\xa7\xea" +
+	"U\xe1\x03J\x8b\xaf0\xc347-\xfc\x05\xcb+>" +
+	"T\xbbv\xfa\xa9\xdf\xc5M\x01\x9a\xddO\xf6/\xfe\xfc" +
+	"l\xf7W;.N\x90;t\x94\xeb>P\x81k\xc9" +
+	"\xab\xee/x\xde\x8c6\xb6\x92~\xbc\xbc!\xe2<\xcb" +
+	"W\xeeN\xf2dyT\x0c\xc7\x1b\xd0\x8et\x80\x88\x0b" +
+	"@\x18,\x01\xba\"\xa9#\xc1z\x16\xf7\x13\xd6 X" +
+	"\x03\xa7\xeb<Z\xaf'\xcb\xddLW\x0ev= \xbc" +
+	"\xf62\xa0\xafJ\xea\xa7\x05C2\xa2\x0f\x847V\x00" +
+	"}]R?#h\xe2\xe1\xe6\xb8\x9fd\x05\x006\x8e" +
+	"\xdd\x82l\x80\xab\xc3\xa4\x18\x0f\xb3\xd3\xc0\xdc\xe9\xf58" +
+	"\x95\xe3d\x8d\xd45\xe9\xd4\x8cq\x08\x84\xed\x16\xa0o" +
+	"I\xea\xdb\x82\x01\xff3\x11\xed\xd7\x97\xac\x9b\x17$\xf5" +
+	"\x9a` \xfe5\x11\x05\x10\xdey\x1d\xd0\xb7%\xf5k" +
+	"\x82\xcd\xa4\x9f\x17\x13x\xf5b\x92'g\x9cN\xde\xce" +
+	"\x87\xc9h\xd4\x83\x1cXe\xd3\xc4\xcfTvw\x92\xb3" +
+	"\x14vu*LU\xb9\x04t\x1cJv\x1a\x9c\xd1\xa6" +
+	"\x02^\x01:\x15\x0bD\x9c\x91\xa7B\xb6\x80N\xcd\x02" +
+	"\x17, \xff1\x11m[\xce\x97T\x0d\x0b<f\x01" +
+	"\xe7o\x13\xd1\x01\xd4\xa3\\\x01:\x91\x05\x1e\xb7\x80\xfb" +
+	"\x97\x89\xe8\x02\xeaRy\xe3\x82\x05\x9e\xb0\x80\xf7\xa7\xe1" +
+	"L{\xd5e^\x84\x08\xfc?L\xc4J\xa9\xb5u\xa4" +
+	"\xb5\xe4\xa9\xec\x9b\x88\xd5\x92g\xe9\x04Ou\xcf\xf2L" +
+	"\xdf\x8b\xba\xcc\x16D\x19!<\xbf\x97\x15\xf0\x9a\xddt" +
+	"\x10\x17\xf0\xeao\x0d\x06)\xbc\xd5Q1\xece\x9b\xf0" +
+	"\xfc\xac\x97\xc2\x93\xdd\xacY\x8c\xf34\xe1\"\xb8&9" +
+	"\x17\xfc\"XO{\xa3\xe2\xf4\xffh\x96\x8d\x9d\xabr" +
+	"\xfb\xf0\x1f\x0d2\xd8\xf0\x1b\xc7\xad\x88\xaf\x00\xfa\x0dI" +
+	"\xbd5\xdb\x8a\xc4v\xe5MI\x9d\xce\xb6\xa2g\xbbr" +
+	"OR\xe73\x99\x87}[\xdf-I]\x08Zgt" +
+	"!\xe8\x82\x07\xfex\x0e\x82\xe7\xc0\xd2%\x09A\x82\x87" +
+	"^\x8f\x1e\xce\xff\x01\x00\x00\xff\xff+\xed\x14H"
 
 func RegisterSchema(reg *schemas.Registry) {
 	reg.Register(&schemas.Schema{
 		String: schema_eaa1f06c3c8d5689,
 		Nodes: []uint64{
-			0x808c155f1add2002,
+			0x958fbe10c3930e1d,
+			0x9d614877676d64b6,
 			0xad454f2956d96537,
-			0xdedda0837830d1e1,
-			0xe6a9443313a9ccd0,
+			0xb48b53f60af084bb,
+			0xe86639df1af797f5,
 		},
 		Compressed: true,
 	})

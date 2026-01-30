@@ -103,13 +103,9 @@ var ExpressionDeclaration = BuiltinRawDeclaration{
 	Type:     pb.TypeType,
 	Requires: []string{"Type"},
 	Header: `
-extern Type Expression;
-
-struct Expression_type_ {
-    std::string expr;
-};`,
+extern Type Expression;`,
 	Implementation: `
-Type Expression = Type{"Expression_type_"};
+Type Expression = Type{"pb::Value::Expression"};
 
 // TODO: Lisp/JSON style serialization or something
 std::ostream& operator<<(std::ostream& out, const Expression_type_& e) {
