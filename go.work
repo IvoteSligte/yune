@@ -7,5 +7,4 @@ use (
 	./parser
 	./pb
 	./util
-	./value
 )

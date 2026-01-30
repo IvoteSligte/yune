@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"log"
 	"yune/cpp"
+	"yune/pb"
 	"yune/util"
-	"yune/value"
-
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Expression interface {
@@ -22,8 +20,8 @@ type Expression interface {
 	GetValueDependencies() []Name
 
 	// Infers type, with an optional `expected` type for backwards inference.
-	InferType(expected value.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
-	GetType() value.Type
+	InferType(expected pb.Type, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
+	GetType() pb.Type
 	Lower() cpp.Expression
 }
 
@@ -52,7 +50,7 @@ func (d DefaultExpression) GetSpan() Span {
 }
 
 // GetType implements Expression.
-func (d DefaultExpression) GetType() value.Type {
+func (d DefaultExpression) GetType() pb.Type {
 	panic("DefaultExpression.GetType() should be overridden")
 }
 
@@ -67,7 +65,7 @@ func (d DefaultExpression) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (d DefaultExpression) InferType(expected value.Type, deps DeclarationTable) (errors []error) {
+func (d DefaultExpression) InferType(expected pb.Type, deps DeclarationTable) (errors []error) {
 	return
 }
 
@@ -93,8 +91,8 @@ func (i Integer) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (i Integer) GetType() value.Type {
-	return value.IntType
+func (i Integer) GetType() pb.Type {
+	return pb.IntType
 }
 
 type Float struct {
@@ -114,8 +112,8 @@ func (f Float) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (f Float) GetType() value.Type {
-	return value.FloatType
+func (f Float) GetType() pb.Type {
+	return pb.FloatType
 }
 
 type Bool struct {
@@ -135,8 +133,8 @@ func (b Bool) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (b Bool) GetType() value.Type {
-	return value.BoolType
+func (b Bool) GetType() pb.Type {
+	return pb.BoolType
 }
 
 type String struct {
@@ -156,13 +154,13 @@ func (s String) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (s String) GetType() value.Type {
-	return value.StringType
+func (s String) GetType() pb.Type {
+	return pb.StringType
 }
 
 type Variable struct {
 	DefaultExpression
-	Type value.Type
+	Type pb.Type
 	Name Name
 }
 
@@ -172,7 +170,7 @@ func (v *Variable) GetSpan() Span {
 }
 
 // GetType implements Expression.
-func (v *Variable) GetType() value.Type {
+func (v *Variable) GetType() pb.Type {
 	return v.Type
 }
 
@@ -187,9 +185,9 @@ func (v *Variable) GetValueDependencies() (deps []Name) {
 }
 
 // InferType implements Expression.
-func (v *Variable) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (v *Variable) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
 	decl, _ := deps.Get(v.Name.String)
-	if decl.GetDeclaredType().Eq(value.UninitType) {
+	if decl.GetDeclaredType().Eq(pb.UninitType) {
 		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
 	}
 	v.Type = decl.GetDeclaredType()
@@ -203,7 +201,7 @@ func (v *Variable) Lower() cpp.Expression {
 
 type FunctionCall struct {
 	Span     Span
-	Type     value.Type
+	Type     pb.Type
 	Function Expression
 	Argument Expression
 }
@@ -229,7 +227,7 @@ func (f *FunctionCall) GetTypeDependencies() []Query {
 }
 
 // GetType implements Expression.
-func (f *FunctionCall) GetType() value.Type {
+func (f *FunctionCall) GetType() pb.Type {
 	return f.Type
 }
 
@@ -244,8 +242,8 @@ func (f *FunctionCall) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(value.UninitType, deps)
+func (f *FunctionCall) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
+	errors = f.Function.InferType(pb.UninitType, deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -265,7 +263,7 @@ func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (er
 	// single-argument functions still expect a tuple type for comparison
 	argumentType := f.Argument.GetType()
 	if !argumentType.IsTuple() {
-		argumentType = value.NewTupleType(argumentType)
+		argumentType = pb.NewTupleType(argumentType)
 	}
 	// NOTE: should functions return () instead of Nil?
 	if !argumentType.Eq(functionType.ArgumentType) {
@@ -285,7 +283,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	argumentType := f.Argument.GetType()
 	if argumentType.IsTuple() {
 		// functions called with the empty tuple are lowered to functions called with nothing
-		if argumentType.Eq(value.EmptyTupleType) {
+		if argumentType.Eq(pb.EmptyTupleType) {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
 				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
@@ -311,7 +309,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 type Tuple struct {
 	Span Span
 	// Inferred type
-	Type     value.Type
+	Type     pb.Type
 	Elements []Expression
 }
 
@@ -352,23 +350,23 @@ func (t *Tuple) GetValueDependencies() (deps []Name) {
 }
 
 // InferType implements Expression.
-func (t *Tuple) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (t *Tuple) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
 	expectedTupleType, isTuple := expected.ToTuple()
 
 	for i, elem := range t.Elements {
-		expectedElementType := value.UninitType
-		if expected.Eq(value.TypeType) {
-			expectedElementType = value.TypeType
+		expectedElementType := pb.UninitType
+		if expected.Eq(pb.TypeType) {
+			expectedElementType = pb.TypeType
 		}
 		if isTuple && len(expectedTupleType.Elements) == len(t.Elements) {
 			expectedElementType = expectedTupleType.Elements[i]
 		}
 		errors = append(errors, elem.InferType(expectedElementType, deps)...)
 	}
-	if expected.Eq(value.TypeType) {
-		t.Type = value.TypeType
+	if expected.Eq(pb.TypeType) {
+		t.Type = pb.TypeType
 	} else {
-		t.Type = value.NewTupleType(util.Map(t.Elements, func(e Expression) value.Type {
+		t.Type = pb.NewTupleType(util.Map(t.Elements, func(e Expression) pb.Type {
 			return e.GetType()
 		})...)
 	}
@@ -377,7 +375,7 @@ func (t *Tuple) InferType(expected value.Type, deps DeclarationTable) (errors Er
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	if t.Type.Eq(value.TypeType) {
+	if t.Type.Eq(pb.TypeType) {
 		if len(t.Elements) == 0 {
 			return cpp.Raw(`Type{"std::tuple<>"}`)
 		}
@@ -394,7 +392,7 @@ func (t *Tuple) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (t *Tuple) GetType() value.Type {
+func (t *Tuple) GetType() pb.Type {
 	return t.Type
 }
 
@@ -406,6 +404,14 @@ type Macro struct {
 	Lines    []MacroLine
 	// Result after evaluating the macro.
 	Result Expression
+}
+
+// SetValue implements pb.Destination.
+func (m *Macro) SetValue(v pb.Value) {
+	m.Result = String{
+		Span:  Span{}, // TODO: span
+		Value: "TODO: Macro SetValue (requires Expression serialization)",
+	}
 }
 
 // GetSpan implements Expression.
@@ -456,7 +462,7 @@ func (m *Macro) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (m *Macro) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (m *Macro) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
 	return m.Result.InferType(expected, deps)
 }
 
@@ -466,7 +472,7 @@ func (m *Macro) Lower() cpp.Expression {
 }
 
 // GetType implements Expression.
-func (m *Macro) GetType() value.Type {
+func (m *Macro) GetType() pb.Type {
 	return m.Result.GetType()
 }
 
@@ -475,17 +481,9 @@ type MacroLine struct {
 	Text string
 }
 
-// SetValue implements value.Destination.
-func (m *Macro) SetValue(v *anypb.Any) {
-	m.Result = String{
-		Span:  Span{}, // TODO: span
-		Value: "TODO: Macro SetValue (requires Expression serialization)",
-	}
-}
-
 type UnaryExpression struct {
 	Span       Span
-	Type       value.Type
+	Type       pb.Type
 	Op         UnaryOp
 	Expression Expression
 }
@@ -511,7 +509,7 @@ func (u *UnaryExpression) GetTypeDependencies() []Query {
 }
 
 // GetType implements Expression.
-func (u *UnaryExpression) GetType() value.Type {
+func (u *UnaryExpression) GetType() pb.Type {
 	return u.Type
 }
 
@@ -526,7 +524,7 @@ func (u *UnaryExpression) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (u *UnaryExpression) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (u *UnaryExpression) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
 	errors = u.Expression.InferType(expected, deps)
 	if len(errors) > 0 {
 		return
@@ -534,8 +532,8 @@ func (u *UnaryExpression) InferType(expected value.Type, deps DeclarationTable) 
 	expressionType := u.Expression.GetType()
 	switch {
 	case
-		expressionType.Eq(value.IntType),
-		expressionType.Eq(value.FloatType):
+		expressionType.Eq(pb.IntType),
+		expressionType.Eq(pb.FloatType):
 		break
 	default:
 		errors = append(errors, InvalidUnaryExpressionType{
@@ -570,7 +568,7 @@ const (
 
 type BinaryExpression struct {
 	Span  Span
-	Type  value.Type
+	Type  pb.Type
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
@@ -597,7 +595,7 @@ func (b *BinaryExpression) GetTypeDependencies() []Query {
 }
 
 // GetType implements Expression.
-func (b *BinaryExpression) GetType() value.Type {
+func (b *BinaryExpression) GetType() pb.Type {
 	return b.Type
 }
 
@@ -612,7 +610,7 @@ func (b *BinaryExpression) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (b *BinaryExpression) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
+func (b *BinaryExpression) InferType(expected pb.Type, deps DeclarationTable) (errors Errors) {
 	errors = append(b.Left.InferType(expected, deps), b.Right.InferType(expected, deps)...)
 	if len(errors) > 0 {
 		return
@@ -646,7 +644,7 @@ func (b *BinaryExpression) InferType(expected value.Type, deps DeclarationTable)
 		GreaterEqual,
 		Less,
 		LessEqual:
-		if !leftType.Eq(value.IntType) && !leftType.Eq(value.FloatType) {
+		if !leftType.Eq(pb.IntType) && !leftType.Eq(pb.FloatType) {
 			emitErr()
 			return
 		}
@@ -654,14 +652,14 @@ func (b *BinaryExpression) InferType(expected value.Type, deps DeclarationTable)
 	case
 		Equal,
 		NotEqual:
-		b.Type = value.BoolType
+		b.Type = pb.BoolType
 	case
 		Or, And:
-		if !leftType.Eq(value.BoolType) {
+		if !leftType.Eq(pb.BoolType) {
 			emitErr()
 			return
 		}
-		b.Type = value.BoolType
+		b.Type = pb.BoolType
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}

@@ -2,19 +2,19 @@ package ast
 
 import (
 	"yune/cpp"
-	"yune/value"
+	"yune/pb"
 )
 
 // TODO: macros in types
 
 type Type struct {
 	// Evaluated expression
-	value      value.Type
+	value      pb.Type
 	Expression Expression
 }
 
 // TODO: rename to GetValue
-func (t Type) Get() value.Type {
+func (t Type) Get() pb.Type {
 	return t.value
 }
 

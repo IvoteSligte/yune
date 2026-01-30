@@ -3,8 +3,8 @@ package ast
 import (
 	"log"
 	"yune/cpp"
+	"yune/pb"
 	"yune/util"
-	"yune/value"
 
 	mapset "github.com/deckarep/golang-set/v2"
 )
@@ -83,7 +83,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			query := Query{
 				Expression:   &call,
 				Destination:  macro,
-				ExpectedType: value.MacroReturnType,
+				ExpectedType: pb.MacroReturnType,
 			}
 			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
 			macroNode.UpdateHook = node
@@ -183,7 +183,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// TODO: make sure the main() function is always in the last stage
-		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
+		values := pb.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
@@ -192,7 +192,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		}))
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
-				if v != nil { // NOTE: not sure if this check is correct
+				if v.IsEmpty() { // NOTE: not sure if this check is correct
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 				continue

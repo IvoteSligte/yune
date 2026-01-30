@@ -6,6 +6,10 @@ import (
 	capnp "capnproto.org/go/capnp/v3"
 )
 
+func (v Value) IsEmpty() bool {
+	return v.Which() == Value_Which_empty
+}
+
 type Type = Value_Type
 type TypeList = Value_Type_List
 

@@ -24,7 +24,7 @@ struct Value {
     }
   }
   union {
-    nothing @0 :Void;
+    empty @0 :Void;
     type @1 :Type;
   }
 }

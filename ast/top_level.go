@@ -2,8 +2,8 @@ package ast
 
 import (
 	"yune/cpp"
+	"yune/pb"
 	"yune/util"
-	"yune/value"
 )
 
 type FunctionDeclaration struct {
@@ -64,7 +64,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(value.MainType) {
+	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(pb.MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
@@ -112,7 +112,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.ReturnType.Expression,
 		Destination:  &d.ReturnType.value,
-		ExpectedType: value.TypeType,
+		ExpectedType: pb.TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -132,9 +132,9 @@ func (d FunctionDeclaration) GetName() Name {
 	return d.Name
 }
 
-func (d FunctionDeclaration) GetDeclaredType() value.Type {
+func (d FunctionDeclaration) GetDeclaredType() pb.Type {
 	params := util.Map(d.Parameters, FunctionParameter.GetDeclaredType)
-	return value.NewFnType(value.NewTupleType(params...), d.ReturnType.Get())
+	return pb.NewFnType(pb.NewTupleType(params...), d.ReturnType.Get())
 }
 
 type FunctionParameter struct {
@@ -166,7 +166,7 @@ func (d FunctionParameter) GetName() Name {
 }
 
 // GetDeclaredType implements Declaration
-func (d FunctionParameter) GetDeclaredType() value.Type {
+func (d FunctionParameter) GetDeclaredType() pb.Type {
 	return d.Type.Get()
 }
 
@@ -185,7 +185,7 @@ func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  &d.Type.value,
-		ExpectedType: value.TypeType,
+		ExpectedType: pb.TypeType,
 	})
 	return
 }
@@ -247,7 +247,7 @@ func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  &d.Type.value,
-		ExpectedType: value.TypeType,
+		ExpectedType: pb.TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -268,7 +268,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 }
 
 // GetType implements Declaration.
-func (d ConstantDeclaration) GetDeclaredType() value.Type {
+func (d ConstantDeclaration) GetDeclaredType() pb.Type {
 	return d.Type.Get()
 }
 

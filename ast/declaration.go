@@ -2,7 +2,7 @@ package ast
 
 import (
 	"log"
-	"yune/value"
+	"yune/pb"
 )
 
 type DeclarationTable struct {
@@ -66,7 +66,7 @@ type Declaration interface {
 	GetValueDependencies() []Name
 
 	// Returns the type of this declaration.
-	GetDeclaredType() value.Type
+	GetDeclaredType() pb.Type
 
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.

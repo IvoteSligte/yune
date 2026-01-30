@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"yune/value"
+	"yune/pb"
 )
 
 type DuplicateDeclaration struct {
@@ -16,7 +16,7 @@ func (e DuplicateDeclaration) Error() string {
 
 type InvalidUnaryExpressionType struct {
 	Op   UnaryOp
-	Type value.Type
+	Type pb.Type
 	At   Span
 }
 
@@ -31,8 +31,8 @@ func (e InvalidUnaryExpressionType) Error() string {
 
 type InvalidBinaryExpressionTypes struct {
 	Op    BinaryOp
-	Left  value.Type
-	Right value.Type
+	Left  pb.Type
+	Right pb.Type
 	At    Span
 }
 
@@ -59,7 +59,7 @@ func (e UndefinedType) Error() string {
 }
 
 type NotAFunction struct {
-	Found value.Type
+	Found pb.Type
 	At    Span
 }
 
@@ -68,13 +68,13 @@ func (e NotAFunction) Error() string {
 }
 
 type UnexpectedType struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
 func (e UnexpectedType) Error() string {
-	if e.Expected.Eq(value.TypeType) {
+	if e.Expected.Eq(pb.TypeType) {
 		return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
 	} else {
 		return fmt.Sprintf("Expected type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
@@ -82,8 +82,8 @@ func (e UnexpectedType) Error() string {
 }
 
 type AssignmentTypeMismatch struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
@@ -92,8 +92,8 @@ func (e AssignmentTypeMismatch) Error() string {
 }
 
 type ReturnTypeMismatch struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
@@ -102,8 +102,8 @@ func (e ReturnTypeMismatch) Error() string {
 }
 
 type VariableTypeMismatch struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
@@ -112,8 +112,8 @@ func (e VariableTypeMismatch) Error() string {
 }
 
 type ConstantTypeMismatch struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
@@ -122,8 +122,8 @@ func (e ConstantTypeMismatch) Error() string {
 }
 
 type ArgumentTypeMismatch struct {
-	Expected value.Type
-	Found    value.Type
+	Expected pb.Type
+	Found    pb.Type
 	At       Span
 }
 
@@ -132,7 +132,7 @@ func (e ArgumentTypeMismatch) Error() string {
 }
 
 type InvalidConditionType struct {
-	Found value.Type
+	Found pb.Type
 	At    Span
 }
 
@@ -141,9 +141,9 @@ func (e InvalidConditionType) Error() string {
 }
 
 type BranchTypeNotEqual struct {
-	Then   value.Type
+	Then   pb.Type
 	ThenAt Span
-	Else   value.Type
+	Else   pb.Type
 	ElseAt Span
 }
 
@@ -158,12 +158,12 @@ func (e BranchTypeNotEqual) Error() string {
 }
 
 type InvalidMainSignature struct {
-	Found value.Type
+	Found pb.Type
 	At    Span
 }
 
 func (e InvalidMainSignature) Error() string {
-	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, value.MainType, e.Found)
+	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, pb.MainType, e.Found)
 }
 
 type CyclicTypeDependency struct {

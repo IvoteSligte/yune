@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"yune/value"
+	"yune/pb"
 )
 
 type Span struct {
@@ -36,7 +36,7 @@ type Errors = []error
 
 type Query struct {
 	Expression
-	value.Destination
-	// The type this query expects. May be value.Type("") to indicate absence.
-	ExpectedType value.Type
+	pb.Destination
+	// The type this query expects. May be pbType("") to indicate absence.
+	ExpectedType pb.Type
 }
