@@ -90,7 +90,7 @@ func Run(module Module) {
 	binaryPath := path.Join(dir, "code.bin")
 
 	fmt.Println("-- Clang++ log --")
-	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath, "-lcapnp"}...)
+	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath, "-lcapnp", "-lkj"}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
