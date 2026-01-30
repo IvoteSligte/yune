@@ -134,7 +134,7 @@ func (d FunctionDeclaration) GetName() Name {
 
 func (d FunctionDeclaration) GetDeclaredType() value.Type {
 	params := util.Map(d.Parameters, FunctionParameter.GetDeclaredType)
-	return value.NewFnType(d.ReturnType.Get(), value.NewTupleType(params))
+	return value.NewFnType(d.ReturnType.Get(), value.NewTupleType(params...))
 }
 
 type FunctionParameter struct {

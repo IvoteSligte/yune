@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"log"
-	"slices"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
@@ -263,12 +262,12 @@ func (f *FunctionCall) InferType(expected value.Type, deps DeclarationTable) (er
 	if len(errors) > 0 {
 		return
 	}
-	// single-argument functions still expect a std::tuple type for comparison
+	// single-argument functions still expect a tuple type for comparison
 	argumentType := f.Argument.GetType()
-	// NOTE: should functions return () instead of Nil?
 	if !argumentType.IsTuple() {
-		argumentType = value.NewTupleType([]value.Type{argumentType})
+		argumentType = value.NewTupleType(argumentType)
 	}
+	// NOTE: should functions return () instead of Nil?
 	if !argumentType.Eq(functionType.ArgumentType) {
 		errors = append(errors, ArgumentTypeMismatch{
 			Expected: functionType.ArgumentType,
@@ -354,25 +353,24 @@ func (t *Tuple) GetValueDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (t *Tuple) InferType(expected value.Type, deps DeclarationTable) (errors Errors) {
-	expectedElementTypes := slices.Repeat([]value.Type{value.UninitType}, len(t.Elements))
-	if expected.Eq(value.TypeType) {
-		expectedElementTypes = slices.Repeat([]value.Type{value.TypeType}, len(t.Elements))
-	} else {
-		expectedTupleType, isTuple := expected.ToTuple()
-		// if false, type checking is done by the caller
-		if isTuple && len(expectedTupleType.Elements) == len(t.Elements) {
-			expectedElementTypes = expectedTupleType.Elements
-		}
-	}
+	expectedTupleType, isTuple := expected.ToTuple()
+
 	for i, elem := range t.Elements {
-		errors = append(errors, elem.InferType(expectedElementTypes[i], deps)...)
+		expectedElementType := value.UninitType
+		if expected.Eq(value.TypeType) {
+			expectedElementType = value.TypeType
+		}
+		if isTuple && len(expectedTupleType.Elements) == len(t.Elements) {
+			expectedElementType = expectedTupleType.Elements[i]
+		}
+		errors = append(errors, elem.InferType(expectedElementType, deps)...)
 	}
 	if expected.Eq(value.TypeType) {
 		t.Type = value.TypeType
 	} else {
 		t.Type = value.NewTupleType(util.Map(t.Elements, func(e Expression) value.Type {
 			return e.GetType()
-		}))
+		})...)
 	}
 	return
 }
