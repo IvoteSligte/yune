@@ -74,7 +74,7 @@ type UnexpectedType struct {
 }
 
 func (e UnexpectedType) Error() string {
-	if e.Expected.Eq(TypeType) {
+	if e.Expected.Eq(value.TypeType) {
 		return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
 	} else {
 		return fmt.Sprintf("Expected type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
@@ -163,7 +163,7 @@ type InvalidMainSignature struct {
 }
 
 func (e InvalidMainSignature) Error() string {
-	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, MainType, e.Found)
+	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, value.MainType, e.Found)
 }
 
 type CyclicTypeDependency struct {

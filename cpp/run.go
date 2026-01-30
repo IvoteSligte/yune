@@ -7,8 +7,10 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"yune/util"
-	"yune/value"
+	"yune/pb"
+
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func format(code string) (formatted string, err error) {
@@ -97,7 +99,7 @@ func Run(module Module) {
 }
 
 // TODO: skip evaluation if batch is all-nil
-func Evaluate(module Module, batch []Expression) []value.Value {
+func Evaluate(module Module, batch []Expression) []*anypb.Any {
 	// NOTE: main function is assumed not to exist
 
 	fmt.Println("--- Start Evaluation ---")
@@ -128,17 +130,16 @@ func Evaluate(module Module, batch []Expression) []value.Value {
 		Body:       Block(statements),
 	})
 	Run(module)
-	content, err := os.ReadFile(outputFile.Name())
+	outputBytes, err := os.ReadFile(outputFile.Name())
 	if err != nil {
 		log.Fatalf("Failed to read compile-time evaluation output file '%s'. Error: %s", outputFile.Name(), err)
 	}
-	outputStrings := strings.Split(string(content), "\x00")
-	outputStrings = outputStrings[:len(outputStrings)-1] // skip last empty string
-	if len(outputStrings) != len(batch) {
-		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(outputStrings))
+	var pbMessages pb.Messages
+	if err = proto.Unmarshal(outputBytes, &pbMessages); err != nil {
+		log.Fatalf("Failed to parse compile-time evaluation outputs. Error: %s", err)
 	}
-	return util.Map(outputStrings, func(s string) value.Value {
-		println(s) // TEMP
-		return value.Value(s)
-	})
+	if len(pbMessages.Messages) != len(batch) {
+		log.Fatalf("Expected number of outputs of compile-time evaluation was '%d', found '%d'.", len(batch), len(pbMessages.Messages))
+	}
+	return pbMessages.Messages
 }

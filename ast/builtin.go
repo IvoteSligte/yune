@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
 	"yune/cpp"
 	"yune/util"
@@ -22,23 +21,10 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	PrintStringDeclaration,
 }
 
-// NOTE: main() returns int for compatibility with C++,
-// though this may change in the future
-var MainType = value.Type("std::function<int()>")
-var TypeType = value.Type("Type")
-var IntType = value.Type("int")
-var FloatType = value.Type("float")
-var BoolType = value.Type("bool")
-var StringType = value.Type("std::string")
-var NilType = value.Type("void")
-
-// TODO: List(errors), List(value dependencies), List(type dependencies)
-var MacroReturnType = value.Type("std::tuple<std::string, Expression_type_>")
-
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
 	Name           string
-	Type           string
+	Type           value.Type
 	Requires       []string
 	Header         string
 	Implementation string
@@ -61,7 +47,7 @@ func (b BuiltinRawDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) GetDeclaredType() value.Type {
-	return value.Type(b.Type)
+	return b.Type
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -101,7 +87,7 @@ var _ TopLevelDeclaration = BuiltinRawDeclaration{}
 
 var TypeDeclaration = BuiltinRawDeclaration{
 	Name: "Type",
-	Type: "Type",
+	Type: value.TypeType,
 	Header: `
 struct Type {
     std::string id;
@@ -114,7 +100,7 @@ std::ostream& operator<<(std::ostream& out, const Type& t) {
 
 var ExpressionDeclaration = BuiltinRawDeclaration{
 	Name:     "Expression",
-	Type:     "Type",
+	Type:     value.TypeType,
 	Requires: []string{"Type"},
 	Header: `
 extern Type Expression;
@@ -138,7 +124,7 @@ std::ostream& operator<<(std::ostream& out, const std::tuple<std::string, Expres
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
-	Type:     "std::function<Expression_type_(std::string)>",
+	Type:     value.NewFnType(value.StringType, value.ExpressionType),
 	Requires: []string{"Expression"},
 	Implementation: `
 Expression_type_ stringLiteral(std::string str) {
@@ -172,7 +158,7 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetDeclaredType() value.Type {
-	return TypeType
+	return value.TypeType
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -226,7 +212,7 @@ type BuiltinFieldDeclaration struct {
 
 type BuiltinConstantDeclaration struct {
 	Name  string
-	Type  string
+	Type  value.Type
 	Value string
 }
 
@@ -247,7 +233,7 @@ func (b BuiltinConstantDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinConstantDeclaration) GetDeclaredType() value.Type {
-	return value.Type(b.Type)
+	return b.Type
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -274,7 +260,7 @@ func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
 func (b BuiltinConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
 		Name:  b.Name,
-		Type:  cpp.Type(b.Type),
+		Type:  b.Type.Lower(),
 		Value: cpp.Raw(b.Value),
 	}
 }
@@ -288,34 +274,34 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  "Type",
+	Type:  value.TypeType,
 	Value: `Type{"int"}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  "Type",
+	Type:  value.TypeType,
 	Value: `Type{"float"}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  "Type",
+	Type:  value.TypeType,
 	Value: `Type{"bool"}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  "Type",
+	Type:  value.TypeType,
 	Value: `Type{"std::string"}`,
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
-	Type:  "Type",
+	Type:  value.TypeType,
 	Value: `Type{"void"}`,
 }
 
 type BuiltinFunctionDeclaration struct {
 	Name       string
 	Parameters []BuiltinFunctionParameter
-	ReturnType string
+	ReturnType value.Type
 	Body       string
 }
 
@@ -336,8 +322,9 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinFunctionDeclaration) GetDeclaredType() value.Type {
-	params := util.JoinFunction(b.Parameters, ", ", func(p BuiltinFunctionParameter) string { return p.Type })
-	return value.Type(fmt.Sprintf("std::function<%s(%s)>", b.ReturnType, params))
+	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
+	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) value.Type { return p.Type })
+	return value.NewFnType(b.ReturnType, value.NewTupleType(params))
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -367,10 +354,10 @@ func (b BuiltinFunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		Parameters: util.Map(b.Parameters, func(p BuiltinFunctionParameter) cpp.FunctionParameter {
 			return cpp.FunctionParameter{
 				Name: p.Name,
-				Type: cpp.Type(p.Type),
+				Type: p.Type.Lower(),
 			}
 		}),
-		ReturnType: cpp.Type(b.ReturnType),
+		ReturnType: b.ReturnType.Lower(),
 		Body: cpp.Block(util.Map(strings.Split(b.Body, "\n"), func(s string) cpp.Statement {
 			return cpp.Statement(cpp.Raw(s))
 		})),
@@ -387,14 +374,14 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "argumentType",
-			Type: "Type",
+			Type: value.TypeType,
 		},
 		{
 			Name: "returnType",
-			Type: "Type",
+			Type: value.TypeType,
 		},
 	},
-	ReturnType: "Type",
+	ReturnType: value.TypeType,
 	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
 	Body: `
 std::string tuplePrefix("std::tuple<");
@@ -413,10 +400,10 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "elementType",
-			Type: "Type",
+			Type: value.TypeType,
 		},
 	},
-	ReturnType: "Type",
+	ReturnType: value.TypeType,
 	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
 }
 
@@ -425,18 +412,16 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "string",
-			Type: "std::string",
+			Type: value.StringType,
 		},
 	},
-	ReturnType: "void",
+	ReturnType: value.NilType,
 	Body:       `std::cout << string << std::endl;`,
 }
-
-// TODO: TupleDeclaration?
 
 var _ TopLevelDeclaration = BuiltinFunctionDeclaration{}
 
 type BuiltinFunctionParameter struct {
 	Name string
-	Type string
+	Type value.Type
 }

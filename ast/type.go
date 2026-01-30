@@ -5,8 +5,6 @@ import (
 	"yune/value"
 )
 
-var unknownType = value.Type("")
-
 // TODO: macros in types
 
 type Type struct {
@@ -21,5 +19,5 @@ func (t Type) Get() value.Type {
 }
 
 func (t Type) Lower() cpp.Type {
-	return cpp.Type(string(t.value))
+	return t.value.Lower()
 }

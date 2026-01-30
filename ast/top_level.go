@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	"yune/cpp"
 	"yune/util"
 	"yune/value"
@@ -65,7 +64,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(MainType) {
+	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(value.MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
@@ -113,7 +112,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.ReturnType.Expression,
 		Destination:  &d.ReturnType.value,
-		ExpectedType: TypeType,
+		ExpectedType: value.TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -134,8 +133,8 @@ func (d FunctionDeclaration) GetName() Name {
 }
 
 func (d FunctionDeclaration) GetDeclaredType() value.Type {
-	params := util.Join(util.Map(d.Parameters, FunctionParameter.GetDeclaredType), ", ")
-	return value.Type(fmt.Sprintf("std::function<%s(%s)>", d.ReturnType.Get(), params))
+	params := util.Map(d.Parameters, FunctionParameter.GetDeclaredType)
+	return value.NewFnType(d.ReturnType.Get(), value.NewTupleType(params))
 }
 
 type FunctionParameter struct {
@@ -186,7 +185,7 @@ func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  &d.Type.value,
-		ExpectedType: TypeType,
+		ExpectedType: value.TypeType,
 	})
 	return
 }
@@ -248,7 +247,7 @@ func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  &d.Type.value,
-		ExpectedType: TypeType,
+		ExpectedType: value.TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return

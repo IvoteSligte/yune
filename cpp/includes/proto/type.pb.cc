@@ -17,50 +17,6 @@
 
 PROTOBUF_PRAGMA_INIT_SEG
 namespace yune {
-constexpr Type_Int::Type_Int(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized){}
-struct Type_IntDefaultTypeInternal {
-  constexpr Type_IntDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
-  ~Type_IntDefaultTypeInternal() {}
-  union {
-    Type_Int _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_IntDefaultTypeInternal _Type_Int_default_instance_;
-constexpr Type_Float::Type_Float(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized){}
-struct Type_FloatDefaultTypeInternal {
-  constexpr Type_FloatDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
-  ~Type_FloatDefaultTypeInternal() {}
-  union {
-    Type_Float _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_FloatDefaultTypeInternal _Type_Float_default_instance_;
-constexpr Type_Bool::Type_Bool(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized){}
-struct Type_BoolDefaultTypeInternal {
-  constexpr Type_BoolDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
-  ~Type_BoolDefaultTypeInternal() {}
-  union {
-    Type_Bool _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_BoolDefaultTypeInternal _Type_Bool_default_instance_;
-constexpr Type_String::Type_String(
-  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized){}
-struct Type_StringDefaultTypeInternal {
-  constexpr Type_StringDefaultTypeInternal()
-    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
-  ~Type_StringDefaultTypeInternal() {}
-  union {
-    Type_String _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_StringDefaultTypeInternal _Type_String_default_instance_;
 constexpr Type_Fn::Type_Fn(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
   : argumenttype_(nullptr)
@@ -98,9 +54,23 @@ struct Type_ListDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_ListDefaultTypeInternal _Type_List_default_instance_;
+constexpr Type_Struct::Type_Struct(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : name_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string){}
+struct Type_StructDefaultTypeInternal {
+  constexpr Type_StructDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~Type_StructDefaultTypeInternal() {}
+  union {
+    Type_Struct _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT Type_StructDefaultTypeInternal _Type_Struct_default_instance_;
 constexpr Type::Type(
   ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
-  : _oneof_case_{}{}
+  : kind_(0)
+
+  , _oneof_case_{}{}
 struct TypeDefaultTypeInternal {
   constexpr TypeDefaultTypeInternal()
     : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
@@ -110,36 +80,24 @@ struct TypeDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT TypeDefaultTypeInternal _Type_default_instance_;
+constexpr Messages::Messages(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : messages_(){}
+struct MessagesDefaultTypeInternal {
+  constexpr MessagesDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~MessagesDefaultTypeInternal() {}
+  union {
+    Messages _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT MessagesDefaultTypeInternal _Messages_default_instance_;
 }  // namespace yune
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_proto_2ftype_2eproto[8];
-static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_proto_2ftype_2eproto = nullptr;
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_proto_2ftype_2eproto[6];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_proto_2ftype_2eproto[1];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_proto_2ftype_2eproto = nullptr;
 
 const uint32_t TableStruct_proto_2ftype_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::yune::Type_Int, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::yune::Type_Float, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::yune::Type_Bool, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::yune::Type_String, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::yune::Type_Fn, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -163,60 +121,74 @@ const uint32_t TableStruct_proto_2ftype_2eproto::offsets[] PROTOBUF_SECTION_VARI
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::yune::Type_List, element_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::yune::Type_Struct, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::yune::Type_Struct, name_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::yune::Type, _internal_metadata_),
   ~0u,  // no _extensions_
   PROTOBUF_FIELD_OFFSET(::yune::Type, _oneof_case_[0]),
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::yune::Type, kind_),
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
-  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
-  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
-  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
-  PROTOBUF_FIELD_OFFSET(::yune::Type, is_),
+  PROTOBUF_FIELD_OFFSET(::yune::Type, Detail_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::yune::Messages, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::yune::Messages, messages_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, -1, sizeof(::yune::Type_Int)},
-  { 6, -1, -1, sizeof(::yune::Type_Float)},
-  { 12, -1, -1, sizeof(::yune::Type_Bool)},
-  { 18, -1, -1, sizeof(::yune::Type_String)},
-  { 24, -1, -1, sizeof(::yune::Type_Fn)},
-  { 32, -1, -1, sizeof(::yune::Type_Tuple)},
-  { 39, -1, -1, sizeof(::yune::Type_List)},
-  { 46, -1, -1, sizeof(::yune::Type)},
+  { 0, -1, -1, sizeof(::yune::Type_Fn)},
+  { 8, -1, -1, sizeof(::yune::Type_Tuple)},
+  { 15, -1, -1, sizeof(::yune::Type_List)},
+  { 22, -1, -1, sizeof(::yune::Type_Struct)},
+  { 29, -1, -1, sizeof(::yune::Type)},
+  { 41, -1, -1, sizeof(::yune::Messages)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Int_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Float_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Bool_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_String_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Fn_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Tuple_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_List_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_Struct_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Type_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::yune::_Messages_default_instance_),
 };
 
 const char descriptor_table_protodef_proto_2ftype_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\020proto/type.proto\022\004yune\"\253\003\n\004Type\022\035\n\003int"
-  "\030\001 \001(\0132\016.yune.Type.IntH\000\022!\n\005float\030\002 \001(\0132"
-  "\020.yune.Type.FloatH\000\022\037\n\004bool\030\003 \001(\0132\017.yune"
-  ".Type.BoolH\000\022#\n\006string\030\004 \001(\0132\021.yune.Type"
-  ".StringH\000\022\033\n\002fn\030\005 \001(\0132\r.yune.Type.FnH\000\022!"
-  "\n\005tuple\030\006 \001(\0132\020.yune.Type.TupleH\000\022\037\n\004lis"
-  "t\030\007 \001(\0132\017.yune.Type.ListH\000\032\005\n\003Int\032\007\n\005Flo"
-  "at\032\006\n\004Bool\032\010\n\006String\032F\n\002Fn\022 \n\014argumentTy"
-  "pe\030\001 \001(\0132\n.yune.Type\022\036\n\nreturnType\030\002 \001(\013"
-  "2\n.yune.Type\032%\n\005Tuple\022\034\n\010elements\030\001 \003(\0132"
-  "\n.yune.Type\032#\n\004List\022\033\n\007element\030\001 \001(\0132\n.y"
-  "une.TypeB\004\n\002isB\006Z\004./pbb\006proto3"
+  "\n\020proto/type.proto\022\004yune\032\031google/protobu"
+  "f/any.proto\"\317\003\n\004Type\022\035\n\004kind\030\001 \001(\0162\017.yun"
+  "e.Type.Kind\022\033\n\002fn\030\002 \001(\0132\r.yune.Type.FnH\000"
+  "\022!\n\005tuple\030\003 \001(\0132\020.yune.Type.TupleH\000\022\037\n\004l"
+  "ist\030\004 \001(\0132\017.yune.Type.ListH\000\022#\n\006struct\030\005"
+  " \001(\0132\021.yune.Type.StructH\000\032F\n\002Fn\022 \n\014argum"
+  "entType\030\001 \001(\0132\n.yune.Type\022\036\n\nreturnType\030"
+  "\002 \001(\0132\n.yune.Type\032%\n\005Tuple\022\034\n\010elements\030\001"
+  " \003(\0132\n.yune.Type\032#\n\004List\022\033\n\007element\030\001 \001("
+  "\0132\n.yune.Type\032\026\n\006Struct\022\014\n\004name\030\001 \001(\t\"l\n"
+  "\004Kind\022\010\n\004TYPE\020\000\022\007\n\003INT\020\001\022\t\n\005FLOAT\020\002\022\010\n\004B"
+  "OOL\020\003\022\n\n\006STRING\020\004\022\007\n\003NIL\020\005\022\006\n\002FN\020\006\022\t\n\005TU"
+  "PLE\020\007\022\010\n\004LIST\020\010\022\n\n\006STRUCT\020\tB\010\n\006Detail\"2\n"
+  "\010Messages\022&\n\010messages\030\001 \003(\0132\024.google.pro"
+  "tobuf.AnyB\006Z\004./pbb\006proto3"
   ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_proto_2ftype_2eproto_deps[1] = {
+  &::descriptor_table_google_2fprotobuf_2fany_2eproto,
+};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_proto_2ftype_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_proto_2ftype_2eproto = {
-  false, false, 470, descriptor_table_protodef_proto_2ftype_2eproto, "proto/type.proto", 
-  &descriptor_table_proto_2ftype_2eproto_once, nullptr, 0, 8,
+  false, false, 585, descriptor_table_protodef_proto_2ftype_2eproto, "proto/type.proto", 
+  &descriptor_table_proto_2ftype_2eproto_once, descriptor_table_proto_2ftype_2eproto_deps, 1, 6,
   schemas, file_default_instances, TableStruct_proto_2ftype_2eproto::offsets,
   file_level_metadata_proto_2ftype_2eproto, file_level_enum_descriptors_proto_2ftype_2eproto, file_level_service_descriptors_proto_2ftype_2eproto,
 };
@@ -227,162 +199,43 @@ PROTOBUF_ATTRIBUTE_WEAK const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable
 // Force running AddDescriptors() at dynamic initialization time.
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY static ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptorsRunner dynamic_init_dummy_proto_2ftype_2eproto(&descriptor_table_proto_2ftype_2eproto);
 namespace yune {
-
-// ===================================================================
-
-class Type_Int::_Internal {
- public:
-};
-
-Type_Int::Type_Int(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
-  // @@protoc_insertion_point(arena_constructor:yune.Type.Int)
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Type_Kind_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_proto_2ftype_2eproto);
+  return file_level_enum_descriptors_proto_2ftype_2eproto[0];
 }
-Type_Int::Type_Int(const Type_Int& from)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:yune.Type.Int)
-}
-
-
-
-
-
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Type_Int::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
-};
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Type_Int::GetClassData() const { return &_class_data_; }
-
-
-
-
-
-
-
-::PROTOBUF_NAMESPACE_ID::Metadata Type_Int::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
-      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[0]);
+bool Type_Kind_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+      return true;
+    default:
+      return false;
+  }
 }
 
-// ===================================================================
-
-class Type_Float::_Internal {
- public:
-};
-
-Type_Float::Type_Float(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
-  // @@protoc_insertion_point(arena_constructor:yune.Type.Float)
-}
-Type_Float::Type_Float(const Type_Float& from)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:yune.Type.Float)
-}
-
-
-
-
-
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Type_Float::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
-};
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Type_Float::GetClassData() const { return &_class_data_; }
-
-
-
-
-
-
-
-::PROTOBUF_NAMESPACE_ID::Metadata Type_Float::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
-      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[1]);
-}
-
-// ===================================================================
-
-class Type_Bool::_Internal {
- public:
-};
-
-Type_Bool::Type_Bool(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
-  // @@protoc_insertion_point(arena_constructor:yune.Type.Bool)
-}
-Type_Bool::Type_Bool(const Type_Bool& from)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:yune.Type.Bool)
-}
-
-
-
-
-
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Type_Bool::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
-};
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Type_Bool::GetClassData() const { return &_class_data_; }
-
-
-
-
-
-
-
-::PROTOBUF_NAMESPACE_ID::Metadata Type_Bool::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
-      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[2]);
-}
-
-// ===================================================================
-
-class Type_String::_Internal {
- public:
-};
-
-Type_String::Type_String(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
-  // @@protoc_insertion_point(arena_constructor:yune.Type.String)
-}
-Type_String::Type_String(const Type_String& from)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:yune.Type.String)
-}
-
-
-
-
-
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Type_String::_class_data_ = {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
-};
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Type_String::GetClassData() const { return &_class_data_; }
-
-
-
-
-
-
-
-::PROTOBUF_NAMESPACE_ID::Metadata Type_String::GetMetadata() const {
-  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
-      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[3]);
-}
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr Type_Kind Type::TYPE;
+constexpr Type_Kind Type::INT;
+constexpr Type_Kind Type::FLOAT;
+constexpr Type_Kind Type::BOOL;
+constexpr Type_Kind Type::STRING;
+constexpr Type_Kind Type::NIL;
+constexpr Type_Kind Type::FN;
+constexpr Type_Kind Type::TUPLE;
+constexpr Type_Kind Type::LIST;
+constexpr Type_Kind Type::STRUCT;
+constexpr Type_Kind Type::Kind_MIN;
+constexpr Type_Kind Type::Kind_MAX;
+constexpr int Type::Kind_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
 // ===================================================================
 
@@ -625,7 +478,7 @@ void Type_Fn::InternalSwap(Type_Fn* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata Type_Fn::GetMetadata() const {
   return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
       &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[4]);
+      file_level_metadata_proto_2ftype_2eproto[0]);
 }
 
 // ===================================================================
@@ -810,7 +663,7 @@ void Type_Tuple::InternalSwap(Type_Tuple* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata Type_Tuple::GetMetadata() const {
   return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
       &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[5]);
+      file_level_metadata_proto_2ftype_2eproto[1]);
 }
 
 // ===================================================================
@@ -1005,113 +858,241 @@ void Type_List::InternalSwap(Type_List* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata Type_List::GetMetadata() const {
   return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
       &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[6]);
+      file_level_metadata_proto_2ftype_2eproto[2]);
+}
+
+// ===================================================================
+
+class Type_Struct::_Internal {
+ public:
+};
+
+Type_Struct::Type_Struct(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor();
+  if (!is_message_owned) {
+    RegisterArenaDtor(arena);
+  }
+  // @@protoc_insertion_point(arena_constructor:yune.Type.Struct)
+}
+Type_Struct::Type_Struct(const Type_Struct& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_name().empty()) {
+    name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_name(), 
+      GetArenaForAllocation());
+  }
+  // @@protoc_insertion_point(copy_constructor:yune.Type.Struct)
+}
+
+inline void Type_Struct::SharedCtor() {
+name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+Type_Struct::~Type_Struct() {
+  // @@protoc_insertion_point(destructor:yune.Type.Struct)
+  if (GetArenaForAllocation() != nullptr) return;
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+inline void Type_Struct::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+}
+
+void Type_Struct::ArenaDtor(void* object) {
+  Type_Struct* _this = reinterpret_cast< Type_Struct* >(object);
+  (void)_this;
+}
+void Type_Struct::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void Type_Struct::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void Type_Struct::Clear() {
+// @@protoc_insertion_point(message_clear_start:yune.Type.Struct)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  name_.ClearToEmpty();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Type_Struct::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string name = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_name();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "yune.Type.Struct.name"));
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Type_Struct::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:yune.Type.Struct)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "yune.Type.Struct.name");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_name(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:yune.Type.Struct)
+  return target;
+}
+
+size_t Type_Struct::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:yune.Type.Struct)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (!this->_internal_name().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_name());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Type_Struct::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    Type_Struct::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Type_Struct::GetClassData() const { return &_class_data_; }
+
+void Type_Struct::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
+                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+  static_cast<Type_Struct *>(to)->MergeFrom(
+      static_cast<const Type_Struct &>(from));
+}
+
+
+void Type_Struct::MergeFrom(const Type_Struct& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:yune.Type.Struct)
+  GOOGLE_DCHECK_NE(&from, this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_name().empty()) {
+    _internal_set_name(from._internal_name());
+  }
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Type_Struct::CopyFrom(const Type_Struct& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:yune.Type.Struct)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Type_Struct::IsInitialized() const {
+  return true;
+}
+
+void Type_Struct::InternalSwap(Type_Struct* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      &name_, lhs_arena,
+      &other->name_, rhs_arena
+  );
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Type_Struct::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
+      file_level_metadata_proto_2ftype_2eproto[3]);
 }
 
 // ===================================================================
 
 class Type::_Internal {
  public:
-  static const ::yune::Type_Int& int_(const Type* msg);
-  static const ::yune::Type_Float& float_(const Type* msg);
-  static const ::yune::Type_Bool& bool_(const Type* msg);
-  static const ::yune::Type_String& string(const Type* msg);
   static const ::yune::Type_Fn& fn(const Type* msg);
   static const ::yune::Type_Tuple& tuple(const Type* msg);
   static const ::yune::Type_List& list(const Type* msg);
+  static const ::yune::Type_Struct& struct_(const Type* msg);
 };
 
-const ::yune::Type_Int&
-Type::_Internal::int_(const Type* msg) {
-  return *msg->is_.int__;
-}
-const ::yune::Type_Float&
-Type::_Internal::float_(const Type* msg) {
-  return *msg->is_.float__;
-}
-const ::yune::Type_Bool&
-Type::_Internal::bool_(const Type* msg) {
-  return *msg->is_.bool__;
-}
-const ::yune::Type_String&
-Type::_Internal::string(const Type* msg) {
-  return *msg->is_.string_;
-}
 const ::yune::Type_Fn&
 Type::_Internal::fn(const Type* msg) {
-  return *msg->is_.fn_;
+  return *msg->Detail_.fn_;
 }
 const ::yune::Type_Tuple&
 Type::_Internal::tuple(const Type* msg) {
-  return *msg->is_.tuple_;
+  return *msg->Detail_.tuple_;
 }
 const ::yune::Type_List&
 Type::_Internal::list(const Type* msg) {
-  return *msg->is_.list_;
+  return *msg->Detail_.list_;
 }
-void Type::set_allocated_int_(::yune::Type_Int* int_) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
-  if (int_) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Int>::GetOwningArena(int_);
-    if (message_arena != submessage_arena) {
-      int_ = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, int_, submessage_arena);
-    }
-    set_has_int_();
-    is_.int__ = int_;
-  }
-  // @@protoc_insertion_point(field_set_allocated:yune.Type.int)
-}
-void Type::set_allocated_float_(::yune::Type_Float* float_) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
-  if (float_) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Float>::GetOwningArena(float_);
-    if (message_arena != submessage_arena) {
-      float_ = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, float_, submessage_arena);
-    }
-    set_has_float_();
-    is_.float__ = float_;
-  }
-  // @@protoc_insertion_point(field_set_allocated:yune.Type.float)
-}
-void Type::set_allocated_bool_(::yune::Type_Bool* bool_) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
-  if (bool_) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Bool>::GetOwningArena(bool_);
-    if (message_arena != submessage_arena) {
-      bool_ = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, bool_, submessage_arena);
-    }
-    set_has_bool_();
-    is_.bool__ = bool_;
-  }
-  // @@protoc_insertion_point(field_set_allocated:yune.Type.bool)
-}
-void Type::set_allocated_string(::yune::Type_String* string) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
-  if (string) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_String>::GetOwningArena(string);
-    if (message_arena != submessage_arena) {
-      string = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, string, submessage_arena);
-    }
-    set_has_string();
-    is_.string_ = string;
-  }
-  // @@protoc_insertion_point(field_set_allocated:yune.Type.string)
+const ::yune::Type_Struct&
+Type::_Internal::struct_(const Type* msg) {
+  return *msg->Detail_.struct__;
 }
 void Type::set_allocated_fn(::yune::Type_Fn* fn) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
+  clear_Detail();
   if (fn) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
       ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Fn>::GetOwningArena(fn);
@@ -1120,13 +1101,13 @@ void Type::set_allocated_fn(::yune::Type_Fn* fn) {
           message_arena, fn, submessage_arena);
     }
     set_has_fn();
-    is_.fn_ = fn;
+    Detail_.fn_ = fn;
   }
   // @@protoc_insertion_point(field_set_allocated:yune.Type.fn)
 }
 void Type::set_allocated_tuple(::yune::Type_Tuple* tuple) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
+  clear_Detail();
   if (tuple) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
       ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Tuple>::GetOwningArena(tuple);
@@ -1135,13 +1116,13 @@ void Type::set_allocated_tuple(::yune::Type_Tuple* tuple) {
           message_arena, tuple, submessage_arena);
     }
     set_has_tuple();
-    is_.tuple_ = tuple;
+    Detail_.tuple_ = tuple;
   }
   // @@protoc_insertion_point(field_set_allocated:yune.Type.tuple)
 }
 void Type::set_allocated_list(::yune::Type_List* list) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_is();
+  clear_Detail();
   if (list) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
       ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_List>::GetOwningArena(list);
@@ -1150,9 +1131,24 @@ void Type::set_allocated_list(::yune::Type_List* list) {
           message_arena, list, submessage_arena);
     }
     set_has_list();
-    is_.list_ = list;
+    Detail_.list_ = list;
   }
   // @@protoc_insertion_point(field_set_allocated:yune.Type.list)
+}
+void Type::set_allocated_struct_(::yune::Type_Struct* struct_) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Detail();
+  if (struct_) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::yune::Type_Struct>::GetOwningArena(struct_);
+    if (message_arena != submessage_arena) {
+      struct_ = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, struct_, submessage_arena);
+    }
+    set_has_struct_();
+    Detail_.struct__ = struct_;
+  }
+  // @@protoc_insertion_point(field_set_allocated:yune.Type.struct)
 }
 Type::Type(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -1166,24 +1162,9 @@ Type::Type(::PROTOBUF_NAMESPACE_ID::Arena* arena,
 Type::Type(const Type& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  clear_has_is();
-  switch (from.is_case()) {
-    case kInt: {
-      _internal_mutable_int_()->::yune::Type_Int::MergeFrom(from._internal_int_());
-      break;
-    }
-    case kFloat: {
-      _internal_mutable_float_()->::yune::Type_Float::MergeFrom(from._internal_float_());
-      break;
-    }
-    case kBool: {
-      _internal_mutable_bool_()->::yune::Type_Bool::MergeFrom(from._internal_bool_());
-      break;
-    }
-    case kString: {
-      _internal_mutable_string()->::yune::Type_String::MergeFrom(from._internal_string());
-      break;
-    }
+  kind_ = from.kind_;
+  clear_has_Detail();
+  switch (from.Detail_case()) {
     case kFn: {
       _internal_mutable_fn()->::yune::Type_Fn::MergeFrom(from._internal_fn());
       break;
@@ -1196,7 +1177,11 @@ Type::Type(const Type& from)
       _internal_mutable_list()->::yune::Type_List::MergeFrom(from._internal_list());
       break;
     }
-    case IS_NOT_SET: {
+    case kStruct: {
+      _internal_mutable_struct_()->::yune::Type_Struct::MergeFrom(from._internal_struct_());
+      break;
+    }
+    case DETAIL_NOT_SET: {
       break;
     }
   }
@@ -1204,7 +1189,8 @@ Type::Type(const Type& from)
 }
 
 inline void Type::SharedCtor() {
-clear_has_is();
+kind_ = 0;
+clear_has_Detail();
 }
 
 Type::~Type() {
@@ -1216,8 +1202,8 @@ Type::~Type() {
 
 inline void Type::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (has_is()) {
-    clear_is();
+  if (has_Detail()) {
+    clear_Detail();
   }
 }
 
@@ -1231,56 +1217,38 @@ void Type::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
 
-void Type::clear_is() {
+void Type::clear_Detail() {
 // @@protoc_insertion_point(one_of_clear_start:yune.Type)
-  switch (is_case()) {
-    case kInt: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete is_.int__;
-      }
-      break;
-    }
-    case kFloat: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete is_.float__;
-      }
-      break;
-    }
-    case kBool: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete is_.bool__;
-      }
-      break;
-    }
-    case kString: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete is_.string_;
-      }
-      break;
-    }
+  switch (Detail_case()) {
     case kFn: {
       if (GetArenaForAllocation() == nullptr) {
-        delete is_.fn_;
+        delete Detail_.fn_;
       }
       break;
     }
     case kTuple: {
       if (GetArenaForAllocation() == nullptr) {
-        delete is_.tuple_;
+        delete Detail_.tuple_;
       }
       break;
     }
     case kList: {
       if (GetArenaForAllocation() == nullptr) {
-        delete is_.list_;
+        delete Detail_.list_;
       }
       break;
     }
-    case IS_NOT_SET: {
+    case kStruct: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Detail_.struct__;
+      }
+      break;
+    }
+    case DETAIL_NOT_SET: {
       break;
     }
   }
-  _oneof_case_[0] = IS_NOT_SET;
+  _oneof_case_[0] = DETAIL_NOT_SET;
 }
 
 
@@ -1290,7 +1258,8 @@ void Type::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  clear_is();
+  kind_ = 0;
+  clear_Detail();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1300,58 +1269,43 @@ const char* Type::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::inter
     uint32_t tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // .yune.Type.Int int = 1;
+      // .yune.Type.Kind kind = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
-          ptr = ctx->ParseMessage(_internal_mutable_int_(), ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
+          _internal_set_kind(static_cast<::yune::Type_Kind>(val));
         } else
           goto handle_unusual;
         continue;
-      // .yune.Type.Float float = 2;
+      // .yune.Type.Fn fn = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
-          ptr = ctx->ParseMessage(_internal_mutable_float_(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .yune.Type.Bool bool = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
-          ptr = ctx->ParseMessage(_internal_mutable_bool_(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .yune.Type.String string = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
-          ptr = ctx->ParseMessage(_internal_mutable_string(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .yune.Type.Fn fn = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_fn(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .yune.Type.Tuple tuple = 6;
-      case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+      // .yune.Type.Tuple tuple = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_tuple(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .yune.Type.List list = 7;
-      case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+      // .yune.Type.List list = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_list(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .yune.Type.Struct struct = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          ptr = ctx->ParseMessage(_internal_mutable_struct_(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1385,60 +1339,43 @@ uint8_t* Type::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .yune.Type.Int int = 1;
-  if (_internal_has_int_()) {
+  // .yune.Type.Kind kind = 1;
+  if (this->_internal_kind() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        1, _Internal::int_(this), target, stream);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_kind(), target);
   }
 
-  // .yune.Type.Float float = 2;
-  if (_internal_has_float_()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        2, _Internal::float_(this), target, stream);
-  }
-
-  // .yune.Type.Bool bool = 3;
-  if (_internal_has_bool_()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        3, _Internal::bool_(this), target, stream);
-  }
-
-  // .yune.Type.String string = 4;
-  if (_internal_has_string()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        4, _Internal::string(this), target, stream);
-  }
-
-  // .yune.Type.Fn fn = 5;
+  // .yune.Type.Fn fn = 2;
   if (_internal_has_fn()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        5, _Internal::fn(this), target, stream);
+        2, _Internal::fn(this), target, stream);
   }
 
-  // .yune.Type.Tuple tuple = 6;
+  // .yune.Type.Tuple tuple = 3;
   if (_internal_has_tuple()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        6, _Internal::tuple(this), target, stream);
+        3, _Internal::tuple(this), target, stream);
   }
 
-  // .yune.Type.List list = 7;
+  // .yune.Type.List list = 4;
   if (_internal_has_list()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        7, _Internal::list(this), target, stream);
+        4, _Internal::list(this), target, stream);
+  }
+
+  // .yune.Type.Struct struct = 5;
+  if (_internal_has_struct_()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        5, _Internal::struct_(this), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1457,57 +1394,42 @@ size_t Type::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  switch (is_case()) {
-    // .yune.Type.Int int = 1;
-    case kInt: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.int__);
-      break;
-    }
-    // .yune.Type.Float float = 2;
-    case kFloat: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.float__);
-      break;
-    }
-    // .yune.Type.Bool bool = 3;
-    case kBool: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.bool__);
-      break;
-    }
-    // .yune.Type.String string = 4;
-    case kString: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.string_);
-      break;
-    }
-    // .yune.Type.Fn fn = 5;
+  // .yune.Type.Kind kind = 1;
+  if (this->_internal_kind() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_kind());
+  }
+
+  switch (Detail_case()) {
+    // .yune.Type.Fn fn = 2;
     case kFn: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.fn_);
+          *Detail_.fn_);
       break;
     }
-    // .yune.Type.Tuple tuple = 6;
+    // .yune.Type.Tuple tuple = 3;
     case kTuple: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.tuple_);
+          *Detail_.tuple_);
       break;
     }
-    // .yune.Type.List list = 7;
+    // .yune.Type.List list = 4;
     case kList: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *is_.list_);
+          *Detail_.list_);
       break;
     }
-    case IS_NOT_SET: {
+    // .yune.Type.Struct struct = 5;
+    case kStruct: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Detail_.struct__);
+      break;
+    }
+    case DETAIL_NOT_SET: {
       break;
     }
   }
@@ -1533,23 +1455,10 @@ void Type::MergeFrom(const Type& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  switch (from.is_case()) {
-    case kInt: {
-      _internal_mutable_int_()->::yune::Type_Int::MergeFrom(from._internal_int_());
-      break;
-    }
-    case kFloat: {
-      _internal_mutable_float_()->::yune::Type_Float::MergeFrom(from._internal_float_());
-      break;
-    }
-    case kBool: {
-      _internal_mutable_bool_()->::yune::Type_Bool::MergeFrom(from._internal_bool_());
-      break;
-    }
-    case kString: {
-      _internal_mutable_string()->::yune::Type_String::MergeFrom(from._internal_string());
-      break;
-    }
+  if (from._internal_kind() != 0) {
+    _internal_set_kind(from._internal_kind());
+  }
+  switch (from.Detail_case()) {
     case kFn: {
       _internal_mutable_fn()->::yune::Type_Fn::MergeFrom(from._internal_fn());
       break;
@@ -1562,7 +1471,11 @@ void Type::MergeFrom(const Type& from) {
       _internal_mutable_list()->::yune::Type_List::MergeFrom(from._internal_list());
       break;
     }
-    case IS_NOT_SET: {
+    case kStruct: {
+      _internal_mutable_struct_()->::yune::Type_Struct::MergeFrom(from._internal_struct_());
+      break;
+    }
+    case DETAIL_NOT_SET: {
       break;
     }
   }
@@ -1583,31 +1496,208 @@ bool Type::IsInitialized() const {
 void Type::InternalSwap(Type* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(is_, other->is_);
+  swap(kind_, other->kind_);
+  swap(Detail_, other->Detail_);
   swap(_oneof_case_[0], other->_oneof_case_[0]);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata Type::GetMetadata() const {
   return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
       &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
-      file_level_metadata_proto_2ftype_2eproto[7]);
+      file_level_metadata_proto_2ftype_2eproto[4]);
+}
+
+// ===================================================================
+
+class Messages::_Internal {
+ public:
+};
+
+void Messages::clear_messages() {
+  messages_.Clear();
+}
+Messages::Messages(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
+  messages_(arena) {
+  SharedCtor();
+  if (!is_message_owned) {
+    RegisterArenaDtor(arena);
+  }
+  // @@protoc_insertion_point(arena_constructor:yune.Messages)
+}
+Messages::Messages(const Messages& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      messages_(from.messages_) {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:yune.Messages)
+}
+
+inline void Messages::SharedCtor() {
+}
+
+Messages::~Messages() {
+  // @@protoc_insertion_point(destructor:yune.Messages)
+  if (GetArenaForAllocation() != nullptr) return;
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+inline void Messages::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void Messages::ArenaDtor(void* object) {
+  Messages* _this = reinterpret_cast< Messages* >(object);
+  (void)_this;
+}
+void Messages::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void Messages::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void Messages::Clear() {
+// @@protoc_insertion_point(message_clear_start:yune.Messages)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  messages_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Messages::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // repeated .google.protobuf.Any messages = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_messages(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Messages::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:yune.Messages)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated .google.protobuf.Any messages = 1;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->_internal_messages_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, this->_internal_messages(i), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:yune.Messages)
+  return target;
+}
+
+size_t Messages::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:yune.Messages)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .google.protobuf.Any messages = 1;
+  total_size += 1UL * this->_internal_messages_size();
+  for (const auto& msg : this->messages_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Messages::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    Messages::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Messages::GetClassData() const { return &_class_data_; }
+
+void Messages::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
+                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+  static_cast<Messages *>(to)->MergeFrom(
+      static_cast<const Messages &>(from));
+}
+
+
+void Messages::MergeFrom(const Messages& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:yune.Messages)
+  GOOGLE_DCHECK_NE(&from, this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  messages_.MergeFrom(from.messages_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Messages::CopyFrom(const Messages& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:yune.Messages)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Messages::IsInitialized() const {
+  return true;
+}
+
+void Messages::InternalSwap(Messages* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  messages_.InternalSwap(&other->messages_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Messages::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_proto_2ftype_2eproto_getter, &descriptor_table_proto_2ftype_2eproto_once,
+      file_level_metadata_proto_2ftype_2eproto[5]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace yune
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::yune::Type_Int* Arena::CreateMaybeMessage< ::yune::Type_Int >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::yune::Type_Int >(arena);
-}
-template<> PROTOBUF_NOINLINE ::yune::Type_Float* Arena::CreateMaybeMessage< ::yune::Type_Float >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::yune::Type_Float >(arena);
-}
-template<> PROTOBUF_NOINLINE ::yune::Type_Bool* Arena::CreateMaybeMessage< ::yune::Type_Bool >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::yune::Type_Bool >(arena);
-}
-template<> PROTOBUF_NOINLINE ::yune::Type_String* Arena::CreateMaybeMessage< ::yune::Type_String >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::yune::Type_String >(arena);
-}
 template<> PROTOBUF_NOINLINE ::yune::Type_Fn* Arena::CreateMaybeMessage< ::yune::Type_Fn >(Arena* arena) {
   return Arena::CreateMessageInternal< ::yune::Type_Fn >(arena);
 }
@@ -1617,8 +1707,14 @@ template<> PROTOBUF_NOINLINE ::yune::Type_Tuple* Arena::CreateMaybeMessage< ::yu
 template<> PROTOBUF_NOINLINE ::yune::Type_List* Arena::CreateMaybeMessage< ::yune::Type_List >(Arena* arena) {
   return Arena::CreateMessageInternal< ::yune::Type_List >(arena);
 }
+template<> PROTOBUF_NOINLINE ::yune::Type_Struct* Arena::CreateMaybeMessage< ::yune::Type_Struct >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::yune::Type_Struct >(arena);
+}
 template<> PROTOBUF_NOINLINE ::yune::Type* Arena::CreateMaybeMessage< ::yune::Type >(Arena* arena) {
   return Arena::CreateMessageInternal< ::yune::Type >(arena);
+}
+template<> PROTOBUF_NOINLINE ::yune::Messages* Arena::CreateMaybeMessage< ::yune::Messages >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::yune::Messages >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

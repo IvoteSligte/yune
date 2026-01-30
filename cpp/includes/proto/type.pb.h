@@ -23,7 +23,6 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/arena.h>
 #include <google/protobuf/arenastring.h>
-#include <google/protobuf/generated_message_bases.h>
 #include <google/protobuf/generated_message_table_driven.h>
 #include <google/protobuf/generated_message_util.h>
 #include <google/protobuf/metadata_lite.h>
@@ -31,7 +30,9 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
+#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
+#include <google/protobuf/any.pb.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_proto_2ftype_2eproto
@@ -47,7 +48,7 @@ struct TableStruct_proto_2ftype_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[8]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[6]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -55,516 +56,69 @@ struct TableStruct_proto_2ftype_2eproto {
 };
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_proto_2ftype_2eproto;
 namespace yune {
+class Messages;
+struct MessagesDefaultTypeInternal;
+extern MessagesDefaultTypeInternal _Messages_default_instance_;
 class Type;
 struct TypeDefaultTypeInternal;
 extern TypeDefaultTypeInternal _Type_default_instance_;
-class Type_Bool;
-struct Type_BoolDefaultTypeInternal;
-extern Type_BoolDefaultTypeInternal _Type_Bool_default_instance_;
-class Type_Float;
-struct Type_FloatDefaultTypeInternal;
-extern Type_FloatDefaultTypeInternal _Type_Float_default_instance_;
 class Type_Fn;
 struct Type_FnDefaultTypeInternal;
 extern Type_FnDefaultTypeInternal _Type_Fn_default_instance_;
-class Type_Int;
-struct Type_IntDefaultTypeInternal;
-extern Type_IntDefaultTypeInternal _Type_Int_default_instance_;
 class Type_List;
 struct Type_ListDefaultTypeInternal;
 extern Type_ListDefaultTypeInternal _Type_List_default_instance_;
-class Type_String;
-struct Type_StringDefaultTypeInternal;
-extern Type_StringDefaultTypeInternal _Type_String_default_instance_;
+class Type_Struct;
+struct Type_StructDefaultTypeInternal;
+extern Type_StructDefaultTypeInternal _Type_Struct_default_instance_;
 class Type_Tuple;
 struct Type_TupleDefaultTypeInternal;
 extern Type_TupleDefaultTypeInternal _Type_Tuple_default_instance_;
 }  // namespace yune
 PROTOBUF_NAMESPACE_OPEN
+template<> ::yune::Messages* Arena::CreateMaybeMessage<::yune::Messages>(Arena*);
 template<> ::yune::Type* Arena::CreateMaybeMessage<::yune::Type>(Arena*);
-template<> ::yune::Type_Bool* Arena::CreateMaybeMessage<::yune::Type_Bool>(Arena*);
-template<> ::yune::Type_Float* Arena::CreateMaybeMessage<::yune::Type_Float>(Arena*);
 template<> ::yune::Type_Fn* Arena::CreateMaybeMessage<::yune::Type_Fn>(Arena*);
-template<> ::yune::Type_Int* Arena::CreateMaybeMessage<::yune::Type_Int>(Arena*);
 template<> ::yune::Type_List* Arena::CreateMaybeMessage<::yune::Type_List>(Arena*);
-template<> ::yune::Type_String* Arena::CreateMaybeMessage<::yune::Type_String>(Arena*);
+template<> ::yune::Type_Struct* Arena::CreateMaybeMessage<::yune::Type_Struct>(Arena*);
 template<> ::yune::Type_Tuple* Arena::CreateMaybeMessage<::yune::Type_Tuple>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace yune {
 
+enum Type_Kind : int {
+  Type_Kind_TYPE = 0,
+  Type_Kind_INT = 1,
+  Type_Kind_FLOAT = 2,
+  Type_Kind_BOOL = 3,
+  Type_Kind_STRING = 4,
+  Type_Kind_NIL = 5,
+  Type_Kind_FN = 6,
+  Type_Kind_TUPLE = 7,
+  Type_Kind_LIST = 8,
+  Type_Kind_STRUCT = 9,
+  Type_Kind_Type_Kind_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  Type_Kind_Type_Kind_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool Type_Kind_IsValid(int value);
+constexpr Type_Kind Type_Kind_Kind_MIN = Type_Kind_TYPE;
+constexpr Type_Kind Type_Kind_Kind_MAX = Type_Kind_STRUCT;
+constexpr int Type_Kind_Kind_ARRAYSIZE = Type_Kind_Kind_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Type_Kind_descriptor();
+template<typename T>
+inline const std::string& Type_Kind_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, Type_Kind>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function Type_Kind_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    Type_Kind_descriptor(), enum_t_value);
+}
+inline bool Type_Kind_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, Type_Kind* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Type_Kind>(
+    Type_Kind_descriptor(), name, value);
+}
 // ===================================================================
-
-class Type_Int final :
-    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:yune.Type.Int) */ {
- public:
-  inline Type_Int() : Type_Int(nullptr) {}
-  explicit constexpr Type_Int(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  Type_Int(const Type_Int& from);
-  Type_Int(Type_Int&& from) noexcept
-    : Type_Int() {
-    *this = ::std::move(from);
-  }
-
-  inline Type_Int& operator=(const Type_Int& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline Type_Int& operator=(Type_Int&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const Type_Int& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const Type_Int* internal_default_instance() {
-    return reinterpret_cast<const Type_Int*>(
-               &_Type_Int_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    0;
-
-  friend void swap(Type_Int& a, Type_Int& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(Type_Int* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(Type_Int* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  Type_Int* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<Type_Int>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const Type_Int& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(this, from);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const Type_Int& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(this, from);
-  }
-  public:
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "yune.Type.Int";
-  }
-  protected:
-  explicit Type_Int(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  private:
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // @@protoc_insertion_point(class_scope:yune.Type.Int)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  friend struct ::TableStruct_proto_2ftype_2eproto;
-};
-// -------------------------------------------------------------------
-
-class Type_Float final :
-    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:yune.Type.Float) */ {
- public:
-  inline Type_Float() : Type_Float(nullptr) {}
-  explicit constexpr Type_Float(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  Type_Float(const Type_Float& from);
-  Type_Float(Type_Float&& from) noexcept
-    : Type_Float() {
-    *this = ::std::move(from);
-  }
-
-  inline Type_Float& operator=(const Type_Float& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline Type_Float& operator=(Type_Float&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const Type_Float& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const Type_Float* internal_default_instance() {
-    return reinterpret_cast<const Type_Float*>(
-               &_Type_Float_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    1;
-
-  friend void swap(Type_Float& a, Type_Float& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(Type_Float* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(Type_Float* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  Type_Float* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<Type_Float>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const Type_Float& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(this, from);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const Type_Float& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(this, from);
-  }
-  public:
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "yune.Type.Float";
-  }
-  protected:
-  explicit Type_Float(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  private:
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // @@protoc_insertion_point(class_scope:yune.Type.Float)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  friend struct ::TableStruct_proto_2ftype_2eproto;
-};
-// -------------------------------------------------------------------
-
-class Type_Bool final :
-    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:yune.Type.Bool) */ {
- public:
-  inline Type_Bool() : Type_Bool(nullptr) {}
-  explicit constexpr Type_Bool(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  Type_Bool(const Type_Bool& from);
-  Type_Bool(Type_Bool&& from) noexcept
-    : Type_Bool() {
-    *this = ::std::move(from);
-  }
-
-  inline Type_Bool& operator=(const Type_Bool& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline Type_Bool& operator=(Type_Bool&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const Type_Bool& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const Type_Bool* internal_default_instance() {
-    return reinterpret_cast<const Type_Bool*>(
-               &_Type_Bool_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    2;
-
-  friend void swap(Type_Bool& a, Type_Bool& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(Type_Bool* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(Type_Bool* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  Type_Bool* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<Type_Bool>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const Type_Bool& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(this, from);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const Type_Bool& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(this, from);
-  }
-  public:
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "yune.Type.Bool";
-  }
-  protected:
-  explicit Type_Bool(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  private:
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // @@protoc_insertion_point(class_scope:yune.Type.Bool)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  friend struct ::TableStruct_proto_2ftype_2eproto;
-};
-// -------------------------------------------------------------------
-
-class Type_String final :
-    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:yune.Type.String) */ {
- public:
-  inline Type_String() : Type_String(nullptr) {}
-  explicit constexpr Type_String(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  Type_String(const Type_String& from);
-  Type_String(Type_String&& from) noexcept
-    : Type_String() {
-    *this = ::std::move(from);
-  }
-
-  inline Type_String& operator=(const Type_String& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline Type_String& operator=(Type_String&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const Type_String& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const Type_String* internal_default_instance() {
-    return reinterpret_cast<const Type_String*>(
-               &_Type_String_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    3;
-
-  friend void swap(Type_String& a, Type_String& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(Type_String* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(Type_String* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  Type_String* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<Type_String>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const Type_String& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(this, from);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const Type_String& from) {
-    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(this, from);
-  }
-  public:
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "yune.Type.String";
-  }
-  protected:
-  explicit Type_String(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  private:
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // @@protoc_insertion_point(class_scope:yune.Type.String)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  friend struct ::TableStruct_proto_2ftype_2eproto;
-};
-// -------------------------------------------------------------------
 
 class Type_Fn final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:yune.Type.Fn) */ {
@@ -614,7 +168,7 @@ class Type_Fn final :
                &_Type_Fn_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    0;
 
   friend void swap(Type_Fn& a, Type_Fn& b) {
     a.Swap(&b);
@@ -789,7 +343,7 @@ class Type_Tuple final :
                &_Type_Tuple_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    1;
 
   friend void swap(Type_Tuple& a, Type_Tuple& b) {
     a.Swap(&b);
@@ -944,7 +498,7 @@ class Type_List final :
                &_Type_List_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    2;
 
   friend void swap(Type_List& a, Type_List& b) {
     a.Swap(&b);
@@ -1051,6 +605,157 @@ class Type_List final :
 };
 // -------------------------------------------------------------------
 
+class Type_Struct final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:yune.Type.Struct) */ {
+ public:
+  inline Type_Struct() : Type_Struct(nullptr) {}
+  ~Type_Struct() override;
+  explicit constexpr Type_Struct(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Type_Struct(const Type_Struct& from);
+  Type_Struct(Type_Struct&& from) noexcept
+    : Type_Struct() {
+    *this = ::std::move(from);
+  }
+
+  inline Type_Struct& operator=(const Type_Struct& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Type_Struct& operator=(Type_Struct&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Type_Struct& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Type_Struct* internal_default_instance() {
+    return reinterpret_cast<const Type_Struct*>(
+               &_Type_Struct_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(Type_Struct& a, Type_Struct& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Type_Struct* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Type_Struct* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Type_Struct* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Type_Struct>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Type_Struct& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const Type_Struct& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Type_Struct* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "yune.Type.Struct";
+  }
+  protected:
+  explicit Type_Struct(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kNameFieldNumber = 1,
+  };
+  // string name = 1;
+  void clear_name();
+  const std::string& name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_name();
+  PROTOBUF_NODISCARD std::string* release_name();
+  void set_allocated_name(std::string* name);
+  private:
+  const std::string& _internal_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_name(const std::string& value);
+  std::string* _internal_mutable_name();
+  public:
+
+  // @@protoc_insertion_point(class_scope:yune.Type.Struct)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_proto_2ftype_2eproto;
+};
+// -------------------------------------------------------------------
+
 class Type final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:yune.Type) */ {
  public:
@@ -1094,15 +799,12 @@ class Type final :
   static const Type& default_instance() {
     return *internal_default_instance();
   }
-  enum IsCase {
-    kInt = 1,
-    kFloat = 2,
-    kBool = 3,
-    kString = 4,
-    kFn = 5,
-    kTuple = 6,
-    kList = 7,
-    IS_NOT_SET = 0,
+  enum DetailCase {
+    kFn = 2,
+    kTuple = 3,
+    kList = 4,
+    kStruct = 5,
+    DETAIL_NOT_SET = 0,
   };
 
   static inline const Type* internal_default_instance() {
@@ -1110,7 +812,7 @@ class Type final :
                &_Type_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    4;
 
   friend void swap(Type& a, Type& b) {
     a.Swap(&b);
@@ -1181,98 +883,76 @@ class Type final :
 
   // nested types ----------------------------------------------------
 
-  typedef Type_Int Int;
-  typedef Type_Float Float;
-  typedef Type_Bool Bool;
-  typedef Type_String String;
   typedef Type_Fn Fn;
   typedef Type_Tuple Tuple;
   typedef Type_List List;
+  typedef Type_Struct Struct;
+
+  typedef Type_Kind Kind;
+  static constexpr Kind TYPE =
+    Type_Kind_TYPE;
+  static constexpr Kind INT =
+    Type_Kind_INT;
+  static constexpr Kind FLOAT =
+    Type_Kind_FLOAT;
+  static constexpr Kind BOOL =
+    Type_Kind_BOOL;
+  static constexpr Kind STRING =
+    Type_Kind_STRING;
+  static constexpr Kind NIL =
+    Type_Kind_NIL;
+  static constexpr Kind FN =
+    Type_Kind_FN;
+  static constexpr Kind TUPLE =
+    Type_Kind_TUPLE;
+  static constexpr Kind LIST =
+    Type_Kind_LIST;
+  static constexpr Kind STRUCT =
+    Type_Kind_STRUCT;
+  static inline bool Kind_IsValid(int value) {
+    return Type_Kind_IsValid(value);
+  }
+  static constexpr Kind Kind_MIN =
+    Type_Kind_Kind_MIN;
+  static constexpr Kind Kind_MAX =
+    Type_Kind_Kind_MAX;
+  static constexpr int Kind_ARRAYSIZE =
+    Type_Kind_Kind_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  Kind_descriptor() {
+    return Type_Kind_descriptor();
+  }
+  template<typename T>
+  static inline const std::string& Kind_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, Kind>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function Kind_Name.");
+    return Type_Kind_Name(enum_t_value);
+  }
+  static inline bool Kind_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      Kind* value) {
+    return Type_Kind_Parse(name, value);
+  }
 
   // accessors -------------------------------------------------------
 
   enum : int {
-    kIntFieldNumber = 1,
-    kFloatFieldNumber = 2,
-    kBoolFieldNumber = 3,
-    kStringFieldNumber = 4,
-    kFnFieldNumber = 5,
-    kTupleFieldNumber = 6,
-    kListFieldNumber = 7,
+    kKindFieldNumber = 1,
+    kFnFieldNumber = 2,
+    kTupleFieldNumber = 3,
+    kListFieldNumber = 4,
+    kStructFieldNumber = 5,
   };
-  // .yune.Type.Int int = 1;
-  bool has_int_() const;
+  // .yune.Type.Kind kind = 1;
+  void clear_kind();
+  ::yune::Type_Kind kind() const;
+  void set_kind(::yune::Type_Kind value);
   private:
-  bool _internal_has_int_() const;
+  ::yune::Type_Kind _internal_kind() const;
+  void _internal_set_kind(::yune::Type_Kind value);
   public:
-  void clear_int_();
-  const ::yune::Type_Int& int_() const;
-  PROTOBUF_NODISCARD ::yune::Type_Int* release_int_();
-  ::yune::Type_Int* mutable_int_();
-  void set_allocated_int_(::yune::Type_Int* int_);
-  private:
-  const ::yune::Type_Int& _internal_int_() const;
-  ::yune::Type_Int* _internal_mutable_int_();
-  public:
-  void unsafe_arena_set_allocated_int_(
-      ::yune::Type_Int* int_);
-  ::yune::Type_Int* unsafe_arena_release_int_();
 
-  // .yune.Type.Float float = 2;
-  bool has_float_() const;
-  private:
-  bool _internal_has_float_() const;
-  public:
-  void clear_float_();
-  const ::yune::Type_Float& float_() const;
-  PROTOBUF_NODISCARD ::yune::Type_Float* release_float_();
-  ::yune::Type_Float* mutable_float_();
-  void set_allocated_float_(::yune::Type_Float* float_);
-  private:
-  const ::yune::Type_Float& _internal_float_() const;
-  ::yune::Type_Float* _internal_mutable_float_();
-  public:
-  void unsafe_arena_set_allocated_float_(
-      ::yune::Type_Float* float_);
-  ::yune::Type_Float* unsafe_arena_release_float_();
-
-  // .yune.Type.Bool bool = 3;
-  bool has_bool_() const;
-  private:
-  bool _internal_has_bool_() const;
-  public:
-  void clear_bool_();
-  const ::yune::Type_Bool& bool_() const;
-  PROTOBUF_NODISCARD ::yune::Type_Bool* release_bool_();
-  ::yune::Type_Bool* mutable_bool_();
-  void set_allocated_bool_(::yune::Type_Bool* bool_);
-  private:
-  const ::yune::Type_Bool& _internal_bool_() const;
-  ::yune::Type_Bool* _internal_mutable_bool_();
-  public:
-  void unsafe_arena_set_allocated_bool_(
-      ::yune::Type_Bool* bool_);
-  ::yune::Type_Bool* unsafe_arena_release_bool_();
-
-  // .yune.Type.String string = 4;
-  bool has_string() const;
-  private:
-  bool _internal_has_string() const;
-  public:
-  void clear_string();
-  const ::yune::Type_String& string() const;
-  PROTOBUF_NODISCARD ::yune::Type_String* release_string();
-  ::yune::Type_String* mutable_string();
-  void set_allocated_string(::yune::Type_String* string);
-  private:
-  const ::yune::Type_String& _internal_string() const;
-  ::yune::Type_String* _internal_mutable_string();
-  public:
-  void unsafe_arena_set_allocated_string(
-      ::yune::Type_String* string);
-  ::yune::Type_String* unsafe_arena_release_string();
-
-  // .yune.Type.Fn fn = 5;
+  // .yune.Type.Fn fn = 2;
   bool has_fn() const;
   private:
   bool _internal_has_fn() const;
@@ -1290,7 +970,7 @@ class Type final :
       ::yune::Type_Fn* fn);
   ::yune::Type_Fn* unsafe_arena_release_fn();
 
-  // .yune.Type.Tuple tuple = 6;
+  // .yune.Type.Tuple tuple = 3;
   bool has_tuple() const;
   private:
   bool _internal_has_tuple() const;
@@ -1308,7 +988,7 @@ class Type final :
       ::yune::Type_Tuple* tuple);
   ::yune::Type_Tuple* unsafe_arena_release_tuple();
 
-  // .yune.Type.List list = 7;
+  // .yune.Type.List list = 4;
   bool has_list() const;
   private:
   bool _internal_has_list() const;
@@ -1326,39 +1006,207 @@ class Type final :
       ::yune::Type_List* list);
   ::yune::Type_List* unsafe_arena_release_list();
 
-  void clear_is();
-  IsCase is_case() const;
+  // .yune.Type.Struct struct = 5;
+  bool has_struct_() const;
+  private:
+  bool _internal_has_struct_() const;
+  public:
+  void clear_struct_();
+  const ::yune::Type_Struct& struct_() const;
+  PROTOBUF_NODISCARD ::yune::Type_Struct* release_struct_();
+  ::yune::Type_Struct* mutable_struct_();
+  void set_allocated_struct_(::yune::Type_Struct* struct_);
+  private:
+  const ::yune::Type_Struct& _internal_struct_() const;
+  ::yune::Type_Struct* _internal_mutable_struct_();
+  public:
+  void unsafe_arena_set_allocated_struct_(
+      ::yune::Type_Struct* struct_);
+  ::yune::Type_Struct* unsafe_arena_release_struct_();
+
+  void clear_Detail();
+  DetailCase Detail_case() const;
   // @@protoc_insertion_point(class_scope:yune.Type)
  private:
   class _Internal;
-  void set_has_int_();
-  void set_has_float_();
-  void set_has_bool_();
-  void set_has_string();
   void set_has_fn();
   void set_has_tuple();
   void set_has_list();
+  void set_has_struct_();
 
-  inline bool has_is() const;
-  inline void clear_has_is();
+  inline bool has_Detail() const;
+  inline void clear_has_Detail();
 
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  union IsUnion {
-    constexpr IsUnion() : _constinit_{} {}
+  int kind_;
+  union DetailUnion {
+    constexpr DetailUnion() : _constinit_{} {}
       ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
-    ::yune::Type_Int* int__;
-    ::yune::Type_Float* float__;
-    ::yune::Type_Bool* bool__;
-    ::yune::Type_String* string_;
     ::yune::Type_Fn* fn_;
     ::yune::Type_Tuple* tuple_;
     ::yune::Type_List* list_;
-  } is_;
+    ::yune::Type_Struct* struct__;
+  } Detail_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   uint32_t _oneof_case_[1];
 
+  friend struct ::TableStruct_proto_2ftype_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Messages final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:yune.Messages) */ {
+ public:
+  inline Messages() : Messages(nullptr) {}
+  ~Messages() override;
+  explicit constexpr Messages(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Messages(const Messages& from);
+  Messages(Messages&& from) noexcept
+    : Messages() {
+    *this = ::std::move(from);
+  }
+
+  inline Messages& operator=(const Messages& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Messages& operator=(Messages&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Messages& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Messages* internal_default_instance() {
+    return reinterpret_cast<const Messages*>(
+               &_Messages_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  friend void swap(Messages& a, Messages& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Messages* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Messages* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Messages* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Messages>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Messages& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const Messages& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Messages* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "yune.Messages";
+  }
+  protected:
+  explicit Messages(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessagesFieldNumber = 1,
+  };
+  // repeated .google.protobuf.Any messages = 1;
+  int messages_size() const;
+  private:
+  int _internal_messages_size() const;
+  public:
+  void clear_messages();
+  ::PROTOBUF_NAMESPACE_ID::Any* mutable_messages(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PROTOBUF_NAMESPACE_ID::Any >*
+      mutable_messages();
+  private:
+  const ::PROTOBUF_NAMESPACE_ID::Any& _internal_messages(int index) const;
+  ::PROTOBUF_NAMESPACE_ID::Any* _internal_add_messages();
+  public:
+  const ::PROTOBUF_NAMESPACE_ID::Any& messages(int index) const;
+  ::PROTOBUF_NAMESPACE_ID::Any* add_messages();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PROTOBUF_NAMESPACE_ID::Any >&
+      messages() const;
+
+  // @@protoc_insertion_point(class_scope:yune.Messages)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PROTOBUF_NAMESPACE_ID::Any > messages_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_proto_2ftype_2eproto;
 };
 // ===================================================================
@@ -1370,22 +1218,6 @@ class Type final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// Type_Int
-
-// -------------------------------------------------------------------
-
-// Type_Float
-
-// -------------------------------------------------------------------
-
-// Type_Bool
-
-// -------------------------------------------------------------------
-
-// Type_String
-
-// -------------------------------------------------------------------
-
 // Type_Fn
 
 // .yune.Type argumentType = 1;
@@ -1708,307 +1540,86 @@ inline void Type_List::set_allocated_element(::yune::Type* element) {
 
 // -------------------------------------------------------------------
 
+// Type_Struct
+
+// string name = 1;
+inline void Type_Struct::clear_name() {
+  name_.ClearToEmpty();
+}
+inline const std::string& Type_Struct::name() const {
+  // @@protoc_insertion_point(field_get:yune.Type.Struct.name)
+  return _internal_name();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Type_Struct::set_name(ArgT0&& arg0, ArgT... args) {
+ 
+ name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:yune.Type.Struct.name)
+}
+inline std::string* Type_Struct::mutable_name() {
+  std::string* _s = _internal_mutable_name();
+  // @@protoc_insertion_point(field_mutable:yune.Type.Struct.name)
+  return _s;
+}
+inline const std::string& Type_Struct::_internal_name() const {
+  return name_.Get();
+}
+inline void Type_Struct::_internal_set_name(const std::string& value) {
+  
+  name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArenaForAllocation());
+}
+inline std::string* Type_Struct::_internal_mutable_name() {
+  
+  return name_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
+}
+inline std::string* Type_Struct::release_name() {
+  // @@protoc_insertion_point(field_release:yune.Type.Struct.name)
+  return name_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArenaForAllocation());
+}
+inline void Type_Struct::set_allocated_name(std::string* name) {
+  if (name != nullptr) {
+    
+  } else {
+    
+  }
+  name_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), name,
+      GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (name_.IsDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited())) {
+    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:yune.Type.Struct.name)
+}
+
+// -------------------------------------------------------------------
+
 // Type
 
-// .yune.Type.Int int = 1;
-inline bool Type::_internal_has_int_() const {
-  return is_case() == kInt;
+// .yune.Type.Kind kind = 1;
+inline void Type::clear_kind() {
+  kind_ = 0;
 }
-inline bool Type::has_int_() const {
-  return _internal_has_int_();
+inline ::yune::Type_Kind Type::_internal_kind() const {
+  return static_cast< ::yune::Type_Kind >(kind_);
 }
-inline void Type::set_has_int_() {
-  _oneof_case_[0] = kInt;
+inline ::yune::Type_Kind Type::kind() const {
+  // @@protoc_insertion_point(field_get:yune.Type.kind)
+  return _internal_kind();
 }
-inline void Type::clear_int_() {
-  if (_internal_has_int_()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete is_.int__;
-    }
-    clear_has_is();
-  }
+inline void Type::_internal_set_kind(::yune::Type_Kind value) {
+  
+  kind_ = value;
 }
-inline ::yune::Type_Int* Type::release_int_() {
-  // @@protoc_insertion_point(field_release:yune.Type.int)
-  if (_internal_has_int_()) {
-    clear_has_is();
-      ::yune::Type_Int* temp = is_.int__;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    is_.int__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::yune::Type_Int& Type::_internal_int_() const {
-  return _internal_has_int_()
-      ? *is_.int__
-      : reinterpret_cast< ::yune::Type_Int&>(::yune::_Type_Int_default_instance_);
-}
-inline const ::yune::Type_Int& Type::int_() const {
-  // @@protoc_insertion_point(field_get:yune.Type.int)
-  return _internal_int_();
-}
-inline ::yune::Type_Int* Type::unsafe_arena_release_int_() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.int)
-  if (_internal_has_int_()) {
-    clear_has_is();
-    ::yune::Type_Int* temp = is_.int__;
-    is_.int__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void Type::unsafe_arena_set_allocated_int_(::yune::Type_Int* int_) {
-  clear_is();
-  if (int_) {
-    set_has_int_();
-    is_.int__ = int_;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.int)
-}
-inline ::yune::Type_Int* Type::_internal_mutable_int_() {
-  if (!_internal_has_int_()) {
-    clear_is();
-    set_has_int_();
-    is_.int__ = CreateMaybeMessage< ::yune::Type_Int >(GetArenaForAllocation());
-  }
-  return is_.int__;
-}
-inline ::yune::Type_Int* Type::mutable_int_() {
-  ::yune::Type_Int* _msg = _internal_mutable_int_();
-  // @@protoc_insertion_point(field_mutable:yune.Type.int)
-  return _msg;
+inline void Type::set_kind(::yune::Type_Kind value) {
+  _internal_set_kind(value);
+  // @@protoc_insertion_point(field_set:yune.Type.kind)
 }
 
-// .yune.Type.Float float = 2;
-inline bool Type::_internal_has_float_() const {
-  return is_case() == kFloat;
-}
-inline bool Type::has_float_() const {
-  return _internal_has_float_();
-}
-inline void Type::set_has_float_() {
-  _oneof_case_[0] = kFloat;
-}
-inline void Type::clear_float_() {
-  if (_internal_has_float_()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete is_.float__;
-    }
-    clear_has_is();
-  }
-}
-inline ::yune::Type_Float* Type::release_float_() {
-  // @@protoc_insertion_point(field_release:yune.Type.float)
-  if (_internal_has_float_()) {
-    clear_has_is();
-      ::yune::Type_Float* temp = is_.float__;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    is_.float__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::yune::Type_Float& Type::_internal_float_() const {
-  return _internal_has_float_()
-      ? *is_.float__
-      : reinterpret_cast< ::yune::Type_Float&>(::yune::_Type_Float_default_instance_);
-}
-inline const ::yune::Type_Float& Type::float_() const {
-  // @@protoc_insertion_point(field_get:yune.Type.float)
-  return _internal_float_();
-}
-inline ::yune::Type_Float* Type::unsafe_arena_release_float_() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.float)
-  if (_internal_has_float_()) {
-    clear_has_is();
-    ::yune::Type_Float* temp = is_.float__;
-    is_.float__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void Type::unsafe_arena_set_allocated_float_(::yune::Type_Float* float_) {
-  clear_is();
-  if (float_) {
-    set_has_float_();
-    is_.float__ = float_;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.float)
-}
-inline ::yune::Type_Float* Type::_internal_mutable_float_() {
-  if (!_internal_has_float_()) {
-    clear_is();
-    set_has_float_();
-    is_.float__ = CreateMaybeMessage< ::yune::Type_Float >(GetArenaForAllocation());
-  }
-  return is_.float__;
-}
-inline ::yune::Type_Float* Type::mutable_float_() {
-  ::yune::Type_Float* _msg = _internal_mutable_float_();
-  // @@protoc_insertion_point(field_mutable:yune.Type.float)
-  return _msg;
-}
-
-// .yune.Type.Bool bool = 3;
-inline bool Type::_internal_has_bool_() const {
-  return is_case() == kBool;
-}
-inline bool Type::has_bool_() const {
-  return _internal_has_bool_();
-}
-inline void Type::set_has_bool_() {
-  _oneof_case_[0] = kBool;
-}
-inline void Type::clear_bool_() {
-  if (_internal_has_bool_()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete is_.bool__;
-    }
-    clear_has_is();
-  }
-}
-inline ::yune::Type_Bool* Type::release_bool_() {
-  // @@protoc_insertion_point(field_release:yune.Type.bool)
-  if (_internal_has_bool_()) {
-    clear_has_is();
-      ::yune::Type_Bool* temp = is_.bool__;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    is_.bool__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::yune::Type_Bool& Type::_internal_bool_() const {
-  return _internal_has_bool_()
-      ? *is_.bool__
-      : reinterpret_cast< ::yune::Type_Bool&>(::yune::_Type_Bool_default_instance_);
-}
-inline const ::yune::Type_Bool& Type::bool_() const {
-  // @@protoc_insertion_point(field_get:yune.Type.bool)
-  return _internal_bool_();
-}
-inline ::yune::Type_Bool* Type::unsafe_arena_release_bool_() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.bool)
-  if (_internal_has_bool_()) {
-    clear_has_is();
-    ::yune::Type_Bool* temp = is_.bool__;
-    is_.bool__ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void Type::unsafe_arena_set_allocated_bool_(::yune::Type_Bool* bool_) {
-  clear_is();
-  if (bool_) {
-    set_has_bool_();
-    is_.bool__ = bool_;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.bool)
-}
-inline ::yune::Type_Bool* Type::_internal_mutable_bool_() {
-  if (!_internal_has_bool_()) {
-    clear_is();
-    set_has_bool_();
-    is_.bool__ = CreateMaybeMessage< ::yune::Type_Bool >(GetArenaForAllocation());
-  }
-  return is_.bool__;
-}
-inline ::yune::Type_Bool* Type::mutable_bool_() {
-  ::yune::Type_Bool* _msg = _internal_mutable_bool_();
-  // @@protoc_insertion_point(field_mutable:yune.Type.bool)
-  return _msg;
-}
-
-// .yune.Type.String string = 4;
-inline bool Type::_internal_has_string() const {
-  return is_case() == kString;
-}
-inline bool Type::has_string() const {
-  return _internal_has_string();
-}
-inline void Type::set_has_string() {
-  _oneof_case_[0] = kString;
-}
-inline void Type::clear_string() {
-  if (_internal_has_string()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete is_.string_;
-    }
-    clear_has_is();
-  }
-}
-inline ::yune::Type_String* Type::release_string() {
-  // @@protoc_insertion_point(field_release:yune.Type.string)
-  if (_internal_has_string()) {
-    clear_has_is();
-      ::yune::Type_String* temp = is_.string_;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    is_.string_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::yune::Type_String& Type::_internal_string() const {
-  return _internal_has_string()
-      ? *is_.string_
-      : reinterpret_cast< ::yune::Type_String&>(::yune::_Type_String_default_instance_);
-}
-inline const ::yune::Type_String& Type::string() const {
-  // @@protoc_insertion_point(field_get:yune.Type.string)
-  return _internal_string();
-}
-inline ::yune::Type_String* Type::unsafe_arena_release_string() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.string)
-  if (_internal_has_string()) {
-    clear_has_is();
-    ::yune::Type_String* temp = is_.string_;
-    is_.string_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void Type::unsafe_arena_set_allocated_string(::yune::Type_String* string) {
-  clear_is();
-  if (string) {
-    set_has_string();
-    is_.string_ = string;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.string)
-}
-inline ::yune::Type_String* Type::_internal_mutable_string() {
-  if (!_internal_has_string()) {
-    clear_is();
-    set_has_string();
-    is_.string_ = CreateMaybeMessage< ::yune::Type_String >(GetArenaForAllocation());
-  }
-  return is_.string_;
-}
-inline ::yune::Type_String* Type::mutable_string() {
-  ::yune::Type_String* _msg = _internal_mutable_string();
-  // @@protoc_insertion_point(field_mutable:yune.Type.string)
-  return _msg;
-}
-
-// .yune.Type.Fn fn = 5;
+// .yune.Type.Fn fn = 2;
 inline bool Type::_internal_has_fn() const {
-  return is_case() == kFn;
+  return Detail_case() == kFn;
 }
 inline bool Type::has_fn() const {
   return _internal_has_fn();
@@ -2019,20 +1630,20 @@ inline void Type::set_has_fn() {
 inline void Type::clear_fn() {
   if (_internal_has_fn()) {
     if (GetArenaForAllocation() == nullptr) {
-      delete is_.fn_;
+      delete Detail_.fn_;
     }
-    clear_has_is();
+    clear_has_Detail();
   }
 }
 inline ::yune::Type_Fn* Type::release_fn() {
   // @@protoc_insertion_point(field_release:yune.Type.fn)
   if (_internal_has_fn()) {
-    clear_has_is();
-      ::yune::Type_Fn* temp = is_.fn_;
+    clear_has_Detail();
+      ::yune::Type_Fn* temp = Detail_.fn_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    is_.fn_ = nullptr;
+    Detail_.fn_ = nullptr;
     return temp;
   } else {
     return nullptr;
@@ -2040,7 +1651,7 @@ inline ::yune::Type_Fn* Type::release_fn() {
 }
 inline const ::yune::Type_Fn& Type::_internal_fn() const {
   return _internal_has_fn()
-      ? *is_.fn_
+      ? *Detail_.fn_
       : reinterpret_cast< ::yune::Type_Fn&>(::yune::_Type_Fn_default_instance_);
 }
 inline const ::yune::Type_Fn& Type::fn() const {
@@ -2050,29 +1661,29 @@ inline const ::yune::Type_Fn& Type::fn() const {
 inline ::yune::Type_Fn* Type::unsafe_arena_release_fn() {
   // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.fn)
   if (_internal_has_fn()) {
-    clear_has_is();
-    ::yune::Type_Fn* temp = is_.fn_;
-    is_.fn_ = nullptr;
+    clear_has_Detail();
+    ::yune::Type_Fn* temp = Detail_.fn_;
+    Detail_.fn_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
 inline void Type::unsafe_arena_set_allocated_fn(::yune::Type_Fn* fn) {
-  clear_is();
+  clear_Detail();
   if (fn) {
     set_has_fn();
-    is_.fn_ = fn;
+    Detail_.fn_ = fn;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.fn)
 }
 inline ::yune::Type_Fn* Type::_internal_mutable_fn() {
   if (!_internal_has_fn()) {
-    clear_is();
+    clear_Detail();
     set_has_fn();
-    is_.fn_ = CreateMaybeMessage< ::yune::Type_Fn >(GetArenaForAllocation());
+    Detail_.fn_ = CreateMaybeMessage< ::yune::Type_Fn >(GetArenaForAllocation());
   }
-  return is_.fn_;
+  return Detail_.fn_;
 }
 inline ::yune::Type_Fn* Type::mutable_fn() {
   ::yune::Type_Fn* _msg = _internal_mutable_fn();
@@ -2080,9 +1691,9 @@ inline ::yune::Type_Fn* Type::mutable_fn() {
   return _msg;
 }
 
-// .yune.Type.Tuple tuple = 6;
+// .yune.Type.Tuple tuple = 3;
 inline bool Type::_internal_has_tuple() const {
-  return is_case() == kTuple;
+  return Detail_case() == kTuple;
 }
 inline bool Type::has_tuple() const {
   return _internal_has_tuple();
@@ -2093,20 +1704,20 @@ inline void Type::set_has_tuple() {
 inline void Type::clear_tuple() {
   if (_internal_has_tuple()) {
     if (GetArenaForAllocation() == nullptr) {
-      delete is_.tuple_;
+      delete Detail_.tuple_;
     }
-    clear_has_is();
+    clear_has_Detail();
   }
 }
 inline ::yune::Type_Tuple* Type::release_tuple() {
   // @@protoc_insertion_point(field_release:yune.Type.tuple)
   if (_internal_has_tuple()) {
-    clear_has_is();
-      ::yune::Type_Tuple* temp = is_.tuple_;
+    clear_has_Detail();
+      ::yune::Type_Tuple* temp = Detail_.tuple_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    is_.tuple_ = nullptr;
+    Detail_.tuple_ = nullptr;
     return temp;
   } else {
     return nullptr;
@@ -2114,7 +1725,7 @@ inline ::yune::Type_Tuple* Type::release_tuple() {
 }
 inline const ::yune::Type_Tuple& Type::_internal_tuple() const {
   return _internal_has_tuple()
-      ? *is_.tuple_
+      ? *Detail_.tuple_
       : reinterpret_cast< ::yune::Type_Tuple&>(::yune::_Type_Tuple_default_instance_);
 }
 inline const ::yune::Type_Tuple& Type::tuple() const {
@@ -2124,29 +1735,29 @@ inline const ::yune::Type_Tuple& Type::tuple() const {
 inline ::yune::Type_Tuple* Type::unsafe_arena_release_tuple() {
   // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.tuple)
   if (_internal_has_tuple()) {
-    clear_has_is();
-    ::yune::Type_Tuple* temp = is_.tuple_;
-    is_.tuple_ = nullptr;
+    clear_has_Detail();
+    ::yune::Type_Tuple* temp = Detail_.tuple_;
+    Detail_.tuple_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
 inline void Type::unsafe_arena_set_allocated_tuple(::yune::Type_Tuple* tuple) {
-  clear_is();
+  clear_Detail();
   if (tuple) {
     set_has_tuple();
-    is_.tuple_ = tuple;
+    Detail_.tuple_ = tuple;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.tuple)
 }
 inline ::yune::Type_Tuple* Type::_internal_mutable_tuple() {
   if (!_internal_has_tuple()) {
-    clear_is();
+    clear_Detail();
     set_has_tuple();
-    is_.tuple_ = CreateMaybeMessage< ::yune::Type_Tuple >(GetArenaForAllocation());
+    Detail_.tuple_ = CreateMaybeMessage< ::yune::Type_Tuple >(GetArenaForAllocation());
   }
-  return is_.tuple_;
+  return Detail_.tuple_;
 }
 inline ::yune::Type_Tuple* Type::mutable_tuple() {
   ::yune::Type_Tuple* _msg = _internal_mutable_tuple();
@@ -2154,9 +1765,9 @@ inline ::yune::Type_Tuple* Type::mutable_tuple() {
   return _msg;
 }
 
-// .yune.Type.List list = 7;
+// .yune.Type.List list = 4;
 inline bool Type::_internal_has_list() const {
-  return is_case() == kList;
+  return Detail_case() == kList;
 }
 inline bool Type::has_list() const {
   return _internal_has_list();
@@ -2167,20 +1778,20 @@ inline void Type::set_has_list() {
 inline void Type::clear_list() {
   if (_internal_has_list()) {
     if (GetArenaForAllocation() == nullptr) {
-      delete is_.list_;
+      delete Detail_.list_;
     }
-    clear_has_is();
+    clear_has_Detail();
   }
 }
 inline ::yune::Type_List* Type::release_list() {
   // @@protoc_insertion_point(field_release:yune.Type.list)
   if (_internal_has_list()) {
-    clear_has_is();
-      ::yune::Type_List* temp = is_.list_;
+    clear_has_Detail();
+      ::yune::Type_List* temp = Detail_.list_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    is_.list_ = nullptr;
+    Detail_.list_ = nullptr;
     return temp;
   } else {
     return nullptr;
@@ -2188,7 +1799,7 @@ inline ::yune::Type_List* Type::release_list() {
 }
 inline const ::yune::Type_List& Type::_internal_list() const {
   return _internal_has_list()
-      ? *is_.list_
+      ? *Detail_.list_
       : reinterpret_cast< ::yune::Type_List&>(::yune::_Type_List_default_instance_);
 }
 inline const ::yune::Type_List& Type::list() const {
@@ -2198,29 +1809,29 @@ inline const ::yune::Type_List& Type::list() const {
 inline ::yune::Type_List* Type::unsafe_arena_release_list() {
   // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.list)
   if (_internal_has_list()) {
-    clear_has_is();
-    ::yune::Type_List* temp = is_.list_;
-    is_.list_ = nullptr;
+    clear_has_Detail();
+    ::yune::Type_List* temp = Detail_.list_;
+    Detail_.list_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
 inline void Type::unsafe_arena_set_allocated_list(::yune::Type_List* list) {
-  clear_is();
+  clear_Detail();
   if (list) {
     set_has_list();
-    is_.list_ = list;
+    Detail_.list_ = list;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.list)
 }
 inline ::yune::Type_List* Type::_internal_mutable_list() {
   if (!_internal_has_list()) {
-    clear_is();
+    clear_Detail();
     set_has_list();
-    is_.list_ = CreateMaybeMessage< ::yune::Type_List >(GetArenaForAllocation());
+    Detail_.list_ = CreateMaybeMessage< ::yune::Type_List >(GetArenaForAllocation());
   }
-  return is_.list_;
+  return Detail_.list_;
 }
 inline ::yune::Type_List* Type::mutable_list() {
   ::yune::Type_List* _msg = _internal_mutable_list();
@@ -2228,22 +1839,133 @@ inline ::yune::Type_List* Type::mutable_list() {
   return _msg;
 }
 
-inline bool Type::has_is() const {
-  return is_case() != IS_NOT_SET;
+// .yune.Type.Struct struct = 5;
+inline bool Type::_internal_has_struct_() const {
+  return Detail_case() == kStruct;
 }
-inline void Type::clear_has_is() {
-  _oneof_case_[0] = IS_NOT_SET;
+inline bool Type::has_struct_() const {
+  return _internal_has_struct_();
 }
-inline Type::IsCase Type::is_case() const {
-  return Type::IsCase(_oneof_case_[0]);
+inline void Type::set_has_struct_() {
+  _oneof_case_[0] = kStruct;
 }
+inline void Type::clear_struct_() {
+  if (_internal_has_struct_()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Detail_.struct__;
+    }
+    clear_has_Detail();
+  }
+}
+inline ::yune::Type_Struct* Type::release_struct_() {
+  // @@protoc_insertion_point(field_release:yune.Type.struct)
+  if (_internal_has_struct_()) {
+    clear_has_Detail();
+      ::yune::Type_Struct* temp = Detail_.struct__;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Detail_.struct__ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::yune::Type_Struct& Type::_internal_struct_() const {
+  return _internal_has_struct_()
+      ? *Detail_.struct__
+      : reinterpret_cast< ::yune::Type_Struct&>(::yune::_Type_Struct_default_instance_);
+}
+inline const ::yune::Type_Struct& Type::struct_() const {
+  // @@protoc_insertion_point(field_get:yune.Type.struct)
+  return _internal_struct_();
+}
+inline ::yune::Type_Struct* Type::unsafe_arena_release_struct_() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:yune.Type.struct)
+  if (_internal_has_struct_()) {
+    clear_has_Detail();
+    ::yune::Type_Struct* temp = Detail_.struct__;
+    Detail_.struct__ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Type::unsafe_arena_set_allocated_struct_(::yune::Type_Struct* struct_) {
+  clear_Detail();
+  if (struct_) {
+    set_has_struct_();
+    Detail_.struct__ = struct_;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:yune.Type.struct)
+}
+inline ::yune::Type_Struct* Type::_internal_mutable_struct_() {
+  if (!_internal_has_struct_()) {
+    clear_Detail();
+    set_has_struct_();
+    Detail_.struct__ = CreateMaybeMessage< ::yune::Type_Struct >(GetArenaForAllocation());
+  }
+  return Detail_.struct__;
+}
+inline ::yune::Type_Struct* Type::mutable_struct_() {
+  ::yune::Type_Struct* _msg = _internal_mutable_struct_();
+  // @@protoc_insertion_point(field_mutable:yune.Type.struct)
+  return _msg;
+}
+
+inline bool Type::has_Detail() const {
+  return Detail_case() != DETAIL_NOT_SET;
+}
+inline void Type::clear_has_Detail() {
+  _oneof_case_[0] = DETAIL_NOT_SET;
+}
+inline Type::DetailCase Type::Detail_case() const {
+  return Type::DetailCase(_oneof_case_[0]);
+}
+// -------------------------------------------------------------------
+
+// Messages
+
+// repeated .google.protobuf.Any messages = 1;
+inline int Messages::_internal_messages_size() const {
+  return messages_.size();
+}
+inline int Messages::messages_size() const {
+  return _internal_messages_size();
+}
+inline ::PROTOBUF_NAMESPACE_ID::Any* Messages::mutable_messages(int index) {
+  // @@protoc_insertion_point(field_mutable:yune.Messages.messages)
+  return messages_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PROTOBUF_NAMESPACE_ID::Any >*
+Messages::mutable_messages() {
+  // @@protoc_insertion_point(field_mutable_list:yune.Messages.messages)
+  return &messages_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::Any& Messages::_internal_messages(int index) const {
+  return messages_.Get(index);
+}
+inline const ::PROTOBUF_NAMESPACE_ID::Any& Messages::messages(int index) const {
+  // @@protoc_insertion_point(field_get:yune.Messages.messages)
+  return _internal_messages(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::Any* Messages::_internal_add_messages() {
+  return messages_.Add();
+}
+inline ::PROTOBUF_NAMESPACE_ID::Any* Messages::add_messages() {
+  ::PROTOBUF_NAMESPACE_ID::Any* _add = _internal_add_messages();
+  // @@protoc_insertion_point(field_add:yune.Messages.messages)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PROTOBUF_NAMESPACE_ID::Any >&
+Messages::messages() const {
+  // @@protoc_insertion_point(field_list:yune.Messages.messages)
+  return messages_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -2258,6 +1980,16 @@ inline Type::IsCase Type::is_case() const {
 // @@protoc_insertion_point(namespace_scope)
 
 }  // namespace yune
+
+PROTOBUF_NAMESPACE_OPEN
+
+template <> struct is_proto_enum< ::yune::Type_Kind> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::yune::Type_Kind>() {
+  return ::yune::Type_Kind_descriptor();
+}
+
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
 

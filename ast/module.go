@@ -83,7 +83,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			query := Query{
 				Expression:   &call,
 				Destination:  macro,
-				ExpectedType: MacroReturnType,
+				ExpectedType: value.MacroReturnType,
 			}
 			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
 			macroNode.UpdateHook = node
@@ -192,12 +192,12 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		}))
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
-				if v != value.Value("") {
+				if v != nil { // NOTE: not sure if this check is correct
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 				continue
 			}
-			evalNodes[i].Query.SetValue(string(v))
+			evalNodes[i].Query.SetValue(v)
 
 			// Update node that depends on the result of this query.
 			node := evalNodes[i].UpdateHook
