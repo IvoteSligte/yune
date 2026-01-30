@@ -15,7 +15,10 @@ parser: parser/yune_lexer.go parser/yune_parser.go
 pb/schema.capnp.go: schema.capnp
 	capnp compile -ogo:pb schema.capnp
 
-pb: pb/schema.capnp.go
+cpp/includes/schema.capnp.c++: schema.capnp
+	capnp compile -oc++:cpp/includes schema.capnp
+
+pb: pb/schema.capnp.go cpp/includes/schema.capnp.c++
 
 run: parser pb
 	go run .

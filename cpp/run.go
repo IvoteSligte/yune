@@ -1,6 +1,7 @@
 package cpp
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +9,16 @@ import (
 	"path"
 	"strings"
 )
+
+// Cap'n Proto serialization schema header file.
+//
+//go:embed "includes/schema.capnp.h"
+var schemaHeader string
+
+// Cap'n Proto serialization schema implementation file.
+//
+//go:embed "includes/schema.capnp.c++"
+var schemaImplementation string
 
 func format(code string) (formatted string, err error) {
 	cmd := exec.Command("clang-format")
@@ -71,13 +82,15 @@ func Run(module Module) {
 	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
 
-	writeFile(dir, "code.hpp", header) // TODO: close files
-	writeFile(dir, "code.cpp", "#include \"code.hpp\"\n"+implementation)
+	writeFile(dir, "schema.capnp.h", schemaHeader)
+	writeFile(dir, "schema.capnp.cpp", schemaImplementation)
+	writeFile(dir, "code.h", `#include "schema.capnp.h"`+header) // TODO: close files
+	writeFile(dir, "code.cpp", `#include "code.h"`+implementation)
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
 
 	fmt.Println("-- Clang++ log --")
-	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath}...)
+	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath, "-lcapnp"}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
