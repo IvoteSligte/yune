@@ -128,11 +128,7 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Requires: []string{"Expression"},
 	Implementation: `
 Expression_type_ stringLiteral(std::string str) {
-    std::size_t found = str.size();
-    while ((found = str.rfind('"', found)) != std::string::npos) {
-        str = str.replace(found, 1, "\\\"");
-    }
-    return Expression_type_{std::string("\"") + str + "\""};
+    return Expression_type_{str};
 };`,
 }
 
