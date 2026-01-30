@@ -5,6 +5,7 @@
 go
 clang++
 clang-format
+C++ 17
 
 ### Serialization
 SWIG

@@ -11,8 +11,10 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-pb/pb.go: pb/schema.hpp
-	swig -go pb/schema.hpp -outdir pb/
+pb/pb.go: pb-cpp/pb.h
+	swig -c++ -std=c++17 -go -outdir pb/ pb-cpp/swig.i
 
-run: parser pb/pb.go
+pb: pb/pb.go
+
+run: parser pb
 	go run .
