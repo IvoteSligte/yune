@@ -1,3 +1,0 @@
-[submodule "go-capnp"]
-	path = go-capnp
-	url = https://github.com/capnproto/go-capnp

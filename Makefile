@@ -11,14 +11,8 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-# compile Go Cap'n Proto files
-pb/schema.capnp.go: schema.capnp
-	capnp compile -ogo:pb schema.capnp
+pb/pb.go: pb/schema.hpp
+	swig -go pb/schema.hpp -outdir pb/
 
-cpp/includes/schema.capnp.c++: schema.capnp
-	capnp compile -oc++:cpp/includes schema.capnp
-
-pb: pb/schema.capnp.go cpp/includes/schema.capnp.c++
-
-run: parser pb
+run: parser pb/pb.go
 	go run .
