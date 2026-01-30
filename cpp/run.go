@@ -1,7 +1,6 @@
 package cpp
 
 import (
-	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -9,16 +8,6 @@ import (
 	"path"
 	"strings"
 )
-
-// Cap'n Proto serialization schema header file.
-//
-//go:embed "includes/schema.capnp.h"
-var schemaHeader string
-
-// Cap'n Proto serialization schema implementation file.
-//
-//go:embed "includes/schema.capnp.c++"
-var schemaImplementation string
 
 func format(code string) (formatted string, err error) {
 	cmd := exec.Command("clang-format")
@@ -82,8 +71,8 @@ func Run(module Module) {
 	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
 
-	writeFile(dir, "schema.capnp.h", schemaHeader)
-	writeFile(dir, "schema.capnp.cpp", schemaImplementation)
+	// writeFile(dir, "schema.capnp.h", schemaHeader)
+	// writeFile(dir, "schema.capnp.cpp", schemaImplementation)
 	writeFile(dir, "code.h", `
 #include "schema.capnp.h"
 #include <capnp/serialize.h>

@@ -13,9 +13,9 @@ extern
 #ifdef __cplusplus
   "C"
 #endif
-  void cgo_panic__pb_d9d2dd81988ff878(const char*);
+  void cgo_panic__pb_a09055da72bc98de(const char*);
 static void _swig_gopanic(const char *p) {
-  cgo_panic__pb_d9d2dd81988ff878(p);
+  cgo_panic__pb_a09055da72bc98de(p);
 }
 
 
@@ -207,6 +207,15 @@ typedef struct { void* array; intgo len; intgo cap; } _goslice_;
 
 
 
+static _gostring_ Swig_AllocateString(const char *p, size_t l) {
+  _gostring_ ret;
+  ret.p = (char*)malloc(l);
+  memcpy(ret.p, p, l);
+  ret.n = l;
+  return ret;
+}
+
+
 #ifdef __cplusplus
 #include <utility>
 /* SwigValueWrapper is described in swig.swg */
@@ -266,11 +275,32 @@ static void* Swig_malloc(int c) {
 
 #include "pb.h"
 
+
+#include <vector>
+#include <stdexcept>
+
+
+#include <string>
+
+SWIGINTERN std::vector< Type >::const_reference std_vector_Sl_Type_Sg__get(std::vector< Type > *self,int i){
+                int size = int(self->size());
+                if (i>=0 && i<size)
+                    return (*self)[i];
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
+SWIGINTERN void std_vector_Sl_Type_Sg__set(std::vector< Type > *self,int i,std::vector< Type >::value_type const &val){
+                int size = int(self->size());
+                if (i>=0 && i<size)
+                    (*self)[i] = val;
+                else
+                    throw std::out_of_range("vector index out of range");
+            }
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void _wrap_Swig_free_pb_d9d2dd81988ff878(void *_swig_go_0) {
+void _wrap_Swig_free_pb_a09055da72bc98de(void *_swig_go_0) {
   void *arg1 = (void *) 0 ;
   
   arg1 = *(void **)&_swig_go_0; 
@@ -280,7 +310,7 @@ void _wrap_Swig_free_pb_d9d2dd81988ff878(void *_swig_go_0) {
 }
 
 
-void *_wrap_Swig_malloc_pb_d9d2dd81988ff878(intgo _swig_go_0) {
+void *_wrap_Swig_malloc_pb_a09055da72bc98de(intgo _swig_go_0) {
   int arg1 ;
   void *result = 0 ;
   void *_swig_go_result;
@@ -293,40 +323,168 @@ void *_wrap_Swig_malloc_pb_d9d2dd81988ff878(intgo _swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_Value_serialize_pb_d9d2dd81988ff878(Value *_swig_go_0) {
-  Value *arg1 = (Value *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+std::vector< Type > *_wrap_new_TypeVector__SWIG_0_pb_a09055da72bc98de() {
+  std::vector< Type > *result = 0 ;
+  std::vector< Type > *_swig_go_result;
   
-  arg1 = *(Value **)&_swig_go_0; 
   
-  result = (arg1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (std::vector< Type > *)new std::vector< Type >();
+  *(std::vector< Type > **)&_swig_go_result = (std::vector< Type > *)result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_Value_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+std::vector< Type > *_wrap_new_TypeVector__SWIG_1_pb_a09055da72bc98de(long long _swig_go_0) {
+  std::vector< Type >::size_type arg1 ;
+  std::vector< Type > *result = 0 ;
+  std::vector< Type > *_swig_go_result;
   
+  arg1 = (size_t)_swig_go_0; 
   
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
+  result = (std::vector< Type > *)new std::vector< Type >(SWIG_STD_MOVE(arg1));
+  *(std::vector< Type > **)&_swig_go_result = (std::vector< Type > *)result; 
+  return _swig_go_result;
+}
+
+
+std::vector< Type > *_wrap_new_TypeVector__SWIG_2_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = 0 ;
+  std::vector< Type > *result = 0 ;
+  std::vector< Type > *_swig_go_result;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  result = (std::vector< Type > *)new std::vector< Type >((std::vector< Type > const &)*arg1);
+  *(std::vector< Type > **)&_swig_go_result = (std::vector< Type > *)result; 
+  return _swig_go_result;
+}
+
+
+long long _wrap_TypeVector_size_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  std::vector< Type >::size_type result;
+  long long _swig_go_result;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  result = ((std::vector< Type > const *)arg1)->size();
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
+long long _wrap_TypeVector_capacity_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  std::vector< Type >::size_type result;
+  long long _swig_go_result;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  result = ((std::vector< Type > const *)arg1)->capacity();
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
+void _wrap_TypeVector_reserve_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0, long long _swig_go_1) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  std::vector< Type >::size_type arg2 ;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  arg2 = (size_t)_swig_go_1; 
+  
+  (arg1)->reserve(SWIG_STD_MOVE(arg2));
+  
+}
+
+
+bool _wrap_TypeVector_isEmpty_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  bool result;
+  bool _swig_go_result;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  result = (bool)((std::vector< Type > const *)arg1)->empty();
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
+void _wrap_TypeVector_clear_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  (arg1)->clear();
+  
+}
+
+
+void _wrap_TypeVector_add_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0, Type *_swig_go_1) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  std::vector< Type >::value_type *arg2 = 0 ;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  arg2 = *(std::vector< Type >::value_type **)&_swig_go_1; 
+  
+  (arg1)->push_back((std::vector< Type >::value_type const &)*arg2);
+  
+}
+
+
+Type *_wrap_TypeVector_get_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0, intgo _swig_go_1) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  int arg2 ;
+  std::vector< Type >::value_type *result = 0 ;
+  Type *_swig_go_result;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  arg2 = (int)_swig_go_1; 
+  
+  try {
+    result = (std::vector< Type >::value_type *) &std_vector_Sl_Type_Sg__get(arg1,arg2);
+  } catch(std::out_of_range &_e) {
+    (void)_e;
+    _swig_gopanic("C++ std::out_of_range exception thrown");
+    
   }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  *(std::vector< Type >::value_type **)&_swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_new_Value_pb_d9d2dd81988ff878() {
+void _wrap_TypeVector_set_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0, intgo _swig_go_1, Type *_swig_go_2) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  int arg2 ;
+  std::vector< Type >::value_type *arg3 = 0 ;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  arg2 = (int)_swig_go_1; 
+  arg3 = *(std::vector< Type >::value_type **)&_swig_go_2; 
+  
+  try {
+    std_vector_Sl_Type_Sg__set(arg1,arg2,(Type const &)*arg3);
+  } catch(std::out_of_range &_e) {
+    (void)_e;
+    _swig_gopanic("C++ std::out_of_range exception thrown");
+    
+  }
+  
+}
+
+
+void _wrap_delete_TypeVector_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > *arg1 = (std::vector< Type > *) 0 ;
+  
+  arg1 = *(std::vector< Type > **)&_swig_go_0; 
+  
+  delete arg1;
+  
+}
+
+
+Value *_wrap_new_Value_pb_a09055da72bc98de() {
   Value *result = 0 ;
   Value *_swig_go_result;
   
@@ -337,7 +495,7 @@ Value *_wrap_new_Value_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_Value_pb_d9d2dd81988ff878(Value *_swig_go_0) {
+void _wrap_delete_Value_pb_a09055da72bc98de(Value *_swig_go_0) {
   Value *arg1 = (Value *) 0 ;
   
   arg1 = *(Value **)&_swig_go_0; 
@@ -347,7 +505,22 @@ void _wrap_delete_Value_pb_d9d2dd81988ff878(Value *_swig_go_0) {
 }
 
 
-Type *_wrap_new_Type_pb_d9d2dd81988ff878() {
+bool _wrap_Type_eq_pb_a09055da72bc98de(Type *_swig_go_0, Type *_swig_go_1) {
+  Type *arg1 = (Type *) 0 ;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
+  
+  arg1 = *(Type **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
+  
+  result = (bool)(arg1)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
+Type *_wrap_new_Type_pb_a09055da72bc98de() {
   Type *result = 0 ;
   Type *_swig_go_result;
   
@@ -358,7 +531,7 @@ Type *_wrap_new_Type_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_Type_pb_d9d2dd81988ff878(Type *_swig_go_0) {
+void _wrap_delete_Type_pb_a09055da72bc98de(Type *_swig_go_0) {
   Type *arg1 = (Type *) 0 ;
   
   arg1 = *(Type **)&_swig_go_0; 
@@ -368,41 +541,44 @@ void _wrap_delete_Type_pb_d9d2dd81988ff878(Type *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_Type_serialize_pb_d9d2dd81988ff878(Type *_swig_go_0) {
-  Type *arg1 = (Type *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+TypeType *_wrap_new_TypeType_pb_a09055da72bc98de() {
+  TypeType *result = 0 ;
+  TypeType *_swig_go_result;
   
-  arg1 = *(Type **)&_swig_go_0; 
   
-  Value *swig_b0 = (Value *)arg1;
-  result = (swig_b0)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (TypeType *)new TypeType();
+  *(TypeType **)&_swig_go_result = (TypeType *)result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_Type_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+void _wrap_delete_TypeType_pb_a09055da72bc98de(TypeType *_swig_go_0) {
+  TypeType *arg1 = (TypeType *) 0 ;
   
+  arg1 = *(TypeType **)&_swig_go_0; 
   
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
+  delete arg1;
   
+}
+
+
+bool _wrap_TypeType_eq_pb_a09055da72bc98de(TypeType *_swig_go_0, Type *_swig_go_1) {
+  TypeType *arg1 = (TypeType *) 0 ;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  arg1 = *(TypeType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
+  
+  Type *swig_b0 = (Type *)arg1;
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-IntType *_wrap_new_IntType_pb_d9d2dd81988ff878() {
+IntType *_wrap_new_IntType_pb_a09055da72bc98de() {
   IntType *result = 0 ;
   IntType *_swig_go_result;
   
@@ -413,7 +589,7 @@ IntType *_wrap_new_IntType_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_IntType_pb_d9d2dd81988ff878(IntType *_swig_go_0) {
+void _wrap_delete_IntType_pb_a09055da72bc98de(IntType *_swig_go_0) {
   IntType *arg1 = (IntType *) 0 ;
   
   arg1 = *(IntType **)&_swig_go_0; 
@@ -423,98 +599,60 @@ void _wrap_delete_IntType_pb_d9d2dd81988ff878(IntType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_IntType_serialize_pb_d9d2dd81988ff878(IntType *_swig_go_0) {
+bool _wrap_IntType_eq_pb_a09055da72bc98de(IntType *_swig_go_0, Type *_swig_go_1) {
   IntType *arg1 = (IntType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(IntType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_IntType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+FloatType *_wrap_new_FloatType_pb_a09055da72bc98de() {
+  FloatType *result = 0 ;
+  FloatType *_swig_go_result;
   
   
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  result = (FloatType *)new FloatType();
+  *(FloatType **)&_swig_go_result = (FloatType *)result; 
   return _swig_go_result;
 }
 
 
-Float *_wrap_new_Float_pb_d9d2dd81988ff878() {
-  Float *result = 0 ;
-  Float *_swig_go_result;
+void _wrap_delete_FloatType_pb_a09055da72bc98de(FloatType *_swig_go_0) {
+  FloatType *arg1 = (FloatType *) 0 ;
   
-  
-  result = (Float *)new Float();
-  *(Float **)&_swig_go_result = (Float *)result; 
-  return _swig_go_result;
-}
-
-
-void _wrap_delete_Float_pb_d9d2dd81988ff878(Float *_swig_go_0) {
-  Float *arg1 = (Float *) 0 ;
-  
-  arg1 = *(Float **)&_swig_go_0; 
+  arg1 = *(FloatType **)&_swig_go_0; 
   
   delete arg1;
   
 }
 
 
-std::vector< char > *_wrap_Float_serialize_pb_d9d2dd81988ff878(Float *_swig_go_0) {
-  Float *arg1 = (Float *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+bool _wrap_FloatType_eq_pb_a09055da72bc98de(FloatType *_swig_go_0, Type *_swig_go_1) {
+  FloatType *arg1 = (FloatType *) 0 ;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
-  arg1 = *(Float **)&_swig_go_0; 
+  arg1 = *(FloatType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_Float_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
-  
-  
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
-  return _swig_go_result;
-}
-
-
-BoolType *_wrap_new_BoolType_pb_d9d2dd81988ff878() {
+BoolType *_wrap_new_BoolType_pb_a09055da72bc98de() {
   BoolType *result = 0 ;
   BoolType *_swig_go_result;
   
@@ -525,7 +663,7 @@ BoolType *_wrap_new_BoolType_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_BoolType_pb_d9d2dd81988ff878(BoolType *_swig_go_0) {
+void _wrap_delete_BoolType_pb_a09055da72bc98de(BoolType *_swig_go_0) {
   BoolType *arg1 = (BoolType *) 0 ;
   
   arg1 = *(BoolType **)&_swig_go_0; 
@@ -535,42 +673,23 @@ void _wrap_delete_BoolType_pb_d9d2dd81988ff878(BoolType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_BoolType_serialize_pb_d9d2dd81988ff878(BoolType *_swig_go_0) {
+bool _wrap_BoolType_eq_pb_a09055da72bc98de(BoolType *_swig_go_0, Type *_swig_go_1) {
   BoolType *arg1 = (BoolType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(BoolType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_BoolType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
-  
-  
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
-  return _swig_go_result;
-}
-
-
-StringType *_wrap_new_StringType_pb_d9d2dd81988ff878() {
+StringType *_wrap_new_StringType_pb_a09055da72bc98de() {
   StringType *result = 0 ;
   StringType *_swig_go_result;
   
@@ -581,7 +700,7 @@ StringType *_wrap_new_StringType_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_StringType_pb_d9d2dd81988ff878(StringType *_swig_go_0) {
+void _wrap_delete_StringType_pb_a09055da72bc98de(StringType *_swig_go_0) {
   StringType *arg1 = (StringType *) 0 ;
   
   arg1 = *(StringType **)&_swig_go_0; 
@@ -591,42 +710,80 @@ void _wrap_delete_StringType_pb_d9d2dd81988ff878(StringType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_StringType_serialize_pb_d9d2dd81988ff878(StringType *_swig_go_0) {
+bool _wrap_StringType_eq_pb_a09055da72bc98de(StringType *_swig_go_0, Type *_swig_go_1) {
   StringType *arg1 = (StringType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(StringType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_StringType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+NilType *_wrap_new_NilType_pb_a09055da72bc98de() {
+  NilType *result = 0 ;
+  NilType *_swig_go_result;
   
   
-  argp1 = (std::vector< char > *)_swig_go_0;
+  result = (NilType *)new NilType();
+  *(NilType **)&_swig_go_result = (NilType *)result; 
+  return _swig_go_result;
+}
+
+
+void _wrap_delete_NilType_pb_a09055da72bc98de(NilType *_swig_go_0) {
+  NilType *arg1 = (NilType *) 0 ;
+  
+  arg1 = *(NilType **)&_swig_go_0; 
+  
+  delete arg1;
+  
+}
+
+
+bool _wrap_NilType_eq_pb_a09055da72bc98de(NilType *_swig_go_0, Type *_swig_go_1) {
+  NilType *arg1 = (NilType *) 0 ;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
+  
+  arg1 = *(NilType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
+  
+  Type *swig_b0 = (Type *)arg1;
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
+  return _swig_go_result;
+}
+
+
+TupleType *_wrap_new_TupleType_pb_a09055da72bc98de(std::vector< Type > *_swig_go_0) {
+  std::vector< Type > arg1 ;
+  std::vector< Type > *argp1 ;
+  TupleType *result = 0 ;
+  TupleType *_swig_go_result;
+  
+  
+  argp1 = (std::vector< Type > *)_swig_go_0;
   if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
+    _swig_gopanic("Attempt to dereference null std::vector< Type >");
   }
-  arg1 = (std::vector< char >)*argp1;
+  arg1 = (std::vector< Type >)*argp1;
   
   
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  result = (TupleType *)new TupleType(SWIG_STD_MOVE(arg1));
+  *(TupleType **)&_swig_go_result = (TupleType *)result; 
   return _swig_go_result;
 }
 
 
-void _wrap_TupleType_elements_set_pb_d9d2dd81988ff878(TupleType *_swig_go_0, std::vector< Type > *_swig_go_1) {
+void _wrap_TupleType_elements_set_pb_a09055da72bc98de(TupleType *_swig_go_0, std::vector< Type > *_swig_go_1) {
   TupleType *arg1 = (TupleType *) 0 ;
   std::vector< Type > *arg2 = (std::vector< Type > *) 0 ;
   
@@ -638,7 +795,7 @@ void _wrap_TupleType_elements_set_pb_d9d2dd81988ff878(TupleType *_swig_go_0, std
 }
 
 
-std::vector< Type > *_wrap_TupleType_elements_get_pb_d9d2dd81988ff878(TupleType *_swig_go_0) {
+std::vector< Type > *_wrap_TupleType_elements_get_pb_a09055da72bc98de(TupleType *_swig_go_0) {
   TupleType *arg1 = (TupleType *) 0 ;
   std::vector< Type > *result = 0 ;
   std::vector< Type > *_swig_go_result;
@@ -651,18 +808,7 @@ std::vector< Type > *_wrap_TupleType_elements_get_pb_d9d2dd81988ff878(TupleType 
 }
 
 
-TupleType *_wrap_new_TupleType_pb_d9d2dd81988ff878() {
-  TupleType *result = 0 ;
-  TupleType *_swig_go_result;
-  
-  
-  result = (TupleType *)new TupleType();
-  *(TupleType **)&_swig_go_result = (TupleType *)result; 
-  return _swig_go_result;
-}
-
-
-void _wrap_delete_TupleType_pb_d9d2dd81988ff878(TupleType *_swig_go_0) {
+void _wrap_delete_TupleType_pb_a09055da72bc98de(TupleType *_swig_go_0) {
   TupleType *arg1 = (TupleType *) 0 ;
   
   arg1 = *(TupleType **)&_swig_go_0; 
@@ -672,42 +818,43 @@ void _wrap_delete_TupleType_pb_d9d2dd81988ff878(TupleType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_TupleType_serialize_pb_d9d2dd81988ff878(TupleType *_swig_go_0) {
+bool _wrap_TupleType_eq_pb_a09055da72bc98de(TupleType *_swig_go_0, Type *_swig_go_1) {
   TupleType *arg1 = (TupleType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(TupleType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_TupleType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+ListType *_wrap_new_ListType_pb_a09055da72bc98de(Type *_swig_go_0) {
+  Type arg1 ;
+  Type *argp1 ;
+  ListType *result = 0 ;
+  ListType *_swig_go_result;
   
   
-  argp1 = (std::vector< char > *)_swig_go_0;
+  argp1 = (Type *)_swig_go_0;
   if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
+    _swig_gopanic("Attempt to dereference null Type");
   }
-  arg1 = (std::vector< char >)*argp1;
+  arg1 = (Type)*argp1;
   
   
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  result = (ListType *)new ListType(SWIG_STD_MOVE(arg1));
+  *(ListType **)&_swig_go_result = (ListType *)result; 
   return _swig_go_result;
 }
 
 
-void _wrap_ListType_element_set_pb_d9d2dd81988ff878(ListType *_swig_go_0, Type *_swig_go_1) {
+void _wrap_ListType_element_set_pb_a09055da72bc98de(ListType *_swig_go_0, Type *_swig_go_1) {
   ListType *arg1 = (ListType *) 0 ;
   Type *arg2 = (Type *) 0 ;
   
@@ -719,7 +866,7 @@ void _wrap_ListType_element_set_pb_d9d2dd81988ff878(ListType *_swig_go_0, Type *
 }
 
 
-Type *_wrap_ListType_element_get_pb_d9d2dd81988ff878(ListType *_swig_go_0) {
+Type *_wrap_ListType_element_get_pb_a09055da72bc98de(ListType *_swig_go_0) {
   ListType *arg1 = (ListType *) 0 ;
   Type *result = 0 ;
   Type *_swig_go_result;
@@ -732,18 +879,7 @@ Type *_wrap_ListType_element_get_pb_d9d2dd81988ff878(ListType *_swig_go_0) {
 }
 
 
-ListType *_wrap_new_ListType_pb_d9d2dd81988ff878() {
-  ListType *result = 0 ;
-  ListType *_swig_go_result;
-  
-  
-  result = (ListType *)new ListType();
-  *(ListType **)&_swig_go_result = (ListType *)result; 
-  return _swig_go_result;
-}
-
-
-void _wrap_delete_ListType_pb_d9d2dd81988ff878(ListType *_swig_go_0) {
+void _wrap_delete_ListType_pb_a09055da72bc98de(ListType *_swig_go_0) {
   ListType *arg1 = (ListType *) 0 ;
   
   arg1 = *(ListType **)&_swig_go_0; 
@@ -753,42 +889,52 @@ void _wrap_delete_ListType_pb_d9d2dd81988ff878(ListType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_ListType_serialize_pb_d9d2dd81988ff878(ListType *_swig_go_0) {
+bool _wrap_ListType_eq_pb_a09055da72bc98de(ListType *_swig_go_0, Type *_swig_go_1) {
   ListType *arg1 = (ListType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(ListType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_ListType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
+FnType *_wrap_new_FnType_pb_a09055da72bc98de(Type *_swig_go_0, Type *_swig_go_1) {
+  Type arg1 ;
+  Type arg2 ;
+  Type *argp1 ;
+  Type *argp2 ;
+  FnType *result = 0 ;
+  FnType *_swig_go_result;
   
   
-  argp1 = (std::vector< char > *)_swig_go_0;
+  argp1 = (Type *)_swig_go_0;
   if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
+    _swig_gopanic("Attempt to dereference null Type");
   }
-  arg1 = (std::vector< char >)*argp1;
+  arg1 = (Type)*argp1;
   
   
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
+  argp2 = (Type *)_swig_go_1;
+  if (argp2 == NULL) {
+    _swig_gopanic("Attempt to dereference null Type");
+  }
+  arg2 = (Type)*argp2;
+  
+  
+  result = (FnType *)new FnType(SWIG_STD_MOVE(arg1),SWIG_STD_MOVE(arg2));
+  *(FnType **)&_swig_go_result = (FnType *)result; 
   return _swig_go_result;
 }
 
 
-void _wrap_FnType_argument_set_pb_d9d2dd81988ff878(FnType *_swig_go_0, Type *_swig_go_1) {
+void _wrap_FnType_argument_set_pb_a09055da72bc98de(FnType *_swig_go_0, Type *_swig_go_1) {
   FnType *arg1 = (FnType *) 0 ;
   Type *arg2 = (Type *) 0 ;
   
@@ -800,7 +946,7 @@ void _wrap_FnType_argument_set_pb_d9d2dd81988ff878(FnType *_swig_go_0, Type *_sw
 }
 
 
-Type *_wrap_FnType_argument_get_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
+Type *_wrap_FnType_argument_get_pb_a09055da72bc98de(FnType *_swig_go_0) {
   FnType *arg1 = (FnType *) 0 ;
   Type *result = 0 ;
   Type *_swig_go_result;
@@ -813,43 +959,32 @@ Type *_wrap_FnType_argument_get_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
 }
 
 
-void _wrap_FnType__return_set_pb_d9d2dd81988ff878(FnType *_swig_go_0, Type *_swig_go_1) {
+void _wrap_FnType_returnType_set_pb_a09055da72bc98de(FnType *_swig_go_0, Type *_swig_go_1) {
   FnType *arg1 = (FnType *) 0 ;
   Type *arg2 = (Type *) 0 ;
   
   arg1 = *(FnType **)&_swig_go_0; 
   arg2 = *(Type **)&_swig_go_1; 
   
-  if (arg1) (arg1)->_return = *arg2;
+  if (arg1) (arg1)->returnType = *arg2;
   
 }
 
 
-Type *_wrap_FnType__return_get_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
+Type *_wrap_FnType_returnType_get_pb_a09055da72bc98de(FnType *_swig_go_0) {
   FnType *arg1 = (FnType *) 0 ;
   Type *result = 0 ;
   Type *_swig_go_result;
   
   arg1 = *(FnType **)&_swig_go_0; 
   
-  result = (Type *)& ((arg1)->_return);
+  result = (Type *)& ((arg1)->returnType);
   *(Type **)&_swig_go_result = (Type *)result; 
   return _swig_go_result;
 }
 
 
-FnType *_wrap_new_FnType_pb_d9d2dd81988ff878() {
-  FnType *result = 0 ;
-  FnType *_swig_go_result;
-  
-  
-  result = (FnType *)new FnType();
-  *(FnType **)&_swig_go_result = (FnType *)result; 
-  return _swig_go_result;
-}
-
-
-void _wrap_delete_FnType_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
+void _wrap_delete_FnType_pb_a09055da72bc98de(FnType *_swig_go_0) {
   FnType *arg1 = (FnType *) 0 ;
   
   arg1 = *(FnType **)&_swig_go_0; 
@@ -859,85 +994,64 @@ void _wrap_delete_FnType_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_FnType_serialize_pb_d9d2dd81988ff878(FnType *_swig_go_0) {
+bool _wrap_FnType_eq_pb_a09055da72bc98de(FnType *_swig_go_0, Type *_swig_go_1) {
   FnType *arg1 = (FnType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(FnType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_FnType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
-  
-  
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
-  return _swig_go_result;
-}
-
-
-void _wrap_StructType_name_set_pb_d9d2dd81988ff878(StructType *_swig_go_0, std::string *_swig_go_1) {
-  StructType *arg1 = (StructType *) 0 ;
-  std::string arg2 ;
-  std::string *argp2 ;
-  
-  arg1 = *(StructType **)&_swig_go_0; 
-  
-  argp2 = (std::string *)_swig_go_1;
-  if (argp2 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::string");
-  }
-  arg2 = (std::string)*argp2;
-  
-  
-  if (arg1) (arg1)->name = arg2;
-  
-}
-
-
-std::string *_wrap_StructType_name_get_pb_d9d2dd81988ff878(StructType *_swig_go_0) {
-  StructType *arg1 = (StructType *) 0 ;
-  std::string result;
-  std::string *_swig_go_result;
-  
-  arg1 = *(StructType **)&_swig_go_0; 
-  
-  result =  ((arg1)->name);
-  *(std::string **)&_swig_go_result = new std::string(result); 
-  return _swig_go_result;
-}
-
-
-StructType *_wrap_new_StructType_pb_d9d2dd81988ff878() {
+StructType *_wrap_new_StructType_pb_a09055da72bc98de(_gostring_ _swig_go_0) {
+  std::string arg1 ;
   StructType *result = 0 ;
   StructType *_swig_go_result;
   
+  (&arg1)->assign(_swig_go_0.p, _swig_go_0.n); 
   
-  result = (StructType *)new StructType();
+  result = (StructType *)new StructType(SWIG_STD_MOVE(arg1));
   *(StructType **)&_swig_go_result = (StructType *)result; 
   return _swig_go_result;
 }
 
 
-void _wrap_delete_StructType_pb_d9d2dd81988ff878(StructType *_swig_go_0) {
+void _wrap_StructType_name_set_pb_a09055da72bc98de(StructType *_swig_go_0, _gostring_ _swig_go_1) {
+  StructType *arg1 = (StructType *) 0 ;
+  std::string *arg2 = 0 ;
+  
+  arg1 = *(StructType **)&_swig_go_0; 
+  
+  std::string arg2_str(_swig_go_1.p, _swig_go_1.n);
+  arg2 = &arg2_str;
+  
+  
+  if (arg1) (arg1)->name = *arg2;
+  
+}
+
+
+_gostring_ _wrap_StructType_name_get_pb_a09055da72bc98de(StructType *_swig_go_0) {
+  StructType *arg1 = (StructType *) 0 ;
+  std::string *result = 0 ;
+  _gostring_ _swig_go_result;
+  
+  arg1 = *(StructType **)&_swig_go_0; 
+  
+  result = (std::string *) & ((arg1)->name);
+  _swig_go_result = Swig_AllocateString((*result).data(), (*result).length()); 
+  return _swig_go_result;
+}
+
+
+void _wrap_delete_StructType_pb_a09055da72bc98de(StructType *_swig_go_0) {
   StructType *arg1 = (StructType *) 0 ;
   
   arg1 = *(StructType **)&_swig_go_0; 
@@ -947,42 +1061,23 @@ void _wrap_delete_StructType_pb_d9d2dd81988ff878(StructType *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_StructType_serialize_pb_d9d2dd81988ff878(StructType *_swig_go_0) {
+bool _wrap_StructType_eq_pb_a09055da72bc98de(StructType *_swig_go_0, Type *_swig_go_1) {
   StructType *arg1 = (StructType *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
+  Type *arg2 = 0 ;
+  bool result;
+  bool _swig_go_result;
   
   arg1 = *(StructType **)&_swig_go_0; 
+  arg2 = *(Type **)&_swig_go_1; 
   
   Type *swig_b0 = (Type *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
+  result = (bool)(swig_b0)->eq((Type const &)*arg2);
+  _swig_go_result = result; 
   return _swig_go_result;
 }
 
 
-Value *_wrap_StructType_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
-  
-  
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
-  return _swig_go_result;
-}
-
-
-Expression *_wrap_new_Expression_pb_d9d2dd81988ff878() {
+Expression *_wrap_new_Expression_pb_a09055da72bc98de() {
   Expression *result = 0 ;
   Expression *_swig_go_result;
   
@@ -993,7 +1088,7 @@ Expression *_wrap_new_Expression_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_Expression_pb_d9d2dd81988ff878(Expression *_swig_go_0) {
+void _wrap_delete_Expression_pb_a09055da72bc98de(Expression *_swig_go_0) {
   Expression *arg1 = (Expression *) 0 ;
   
   arg1 = *(Expression **)&_swig_go_0; 
@@ -1003,73 +1098,35 @@ void _wrap_delete_Expression_pb_d9d2dd81988ff878(Expression *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_Expression_serialize_pb_d9d2dd81988ff878(Expression *_swig_go_0) {
-  Expression *arg1 = (Expression *) 0 ;
-  std::vector< char > result;
-  std::vector< char > *_swig_go_result;
-  
-  arg1 = *(Expression **)&_swig_go_0; 
-  
-  Value *swig_b0 = (Value *)arg1;
-  result = (swig_b0)->serialize();
-  *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
-  return _swig_go_result;
-}
-
-
-Value *_wrap_Expression_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
-  std::vector< char > *argp1 ;
-  Value result;
-  Value *_swig_go_result;
-  
-  
-  argp1 = (std::vector< char > *)_swig_go_0;
-  if (argp1 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::vector< char >");
-  }
-  arg1 = (std::vector< char >)*argp1;
-  
-  
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
-  *(Value **)&_swig_go_result = new Value(result); 
-  return _swig_go_result;
-}
-
-
-void _wrap_String_value_set_pb_d9d2dd81988ff878(String *_swig_go_0, std::string *_swig_go_1) {
+void _wrap_String_value_set_pb_a09055da72bc98de(String *_swig_go_0, _gostring_ _swig_go_1) {
   String *arg1 = (String *) 0 ;
-  std::string arg2 ;
-  std::string *argp2 ;
+  std::string *arg2 = 0 ;
   
   arg1 = *(String **)&_swig_go_0; 
   
-  argp2 = (std::string *)_swig_go_1;
-  if (argp2 == NULL) {
-    _swig_gopanic("Attempt to dereference null std::string");
-  }
-  arg2 = (std::string)*argp2;
+  std::string arg2_str(_swig_go_1.p, _swig_go_1.n);
+  arg2 = &arg2_str;
   
   
-  if (arg1) (arg1)->value = arg2;
+  if (arg1) (arg1)->value = *arg2;
   
 }
 
 
-std::string *_wrap_String_value_get_pb_d9d2dd81988ff878(String *_swig_go_0) {
+_gostring_ _wrap_String_value_get_pb_a09055da72bc98de(String *_swig_go_0) {
   String *arg1 = (String *) 0 ;
-  std::string result;
-  std::string *_swig_go_result;
+  std::string *result = 0 ;
+  _gostring_ _swig_go_result;
   
   arg1 = *(String **)&_swig_go_0; 
   
-  result =  ((arg1)->value);
-  *(std::string **)&_swig_go_result = new std::string(result); 
+  result = (std::string *) & ((arg1)->value);
+  _swig_go_result = Swig_AllocateString((*result).data(), (*result).length()); 
   return _swig_go_result;
 }
 
 
-String *_wrap_new_String_pb_d9d2dd81988ff878() {
+String *_wrap_new_String_pb_a09055da72bc98de() {
   String *result = 0 ;
   String *_swig_go_result;
   
@@ -1080,7 +1137,7 @@ String *_wrap_new_String_pb_d9d2dd81988ff878() {
 }
 
 
-void _wrap_delete_String_pb_d9d2dd81988ff878(String *_swig_go_0) {
+void _wrap_delete_String_pb_a09055da72bc98de(String *_swig_go_0) {
   String *arg1 = (String *) 0 ;
   
   arg1 = *(String **)&_swig_go_0; 
@@ -1090,23 +1147,28 @@ void _wrap_delete_String_pb_d9d2dd81988ff878(String *_swig_go_0) {
 }
 
 
-std::vector< char > *_wrap_String_serialize_pb_d9d2dd81988ff878(String *_swig_go_0) {
-  String *arg1 = (String *) 0 ;
-  std::vector< char > result;
+std::vector< char > *_wrap_serializeValue_pb_a09055da72bc98de(Value *_swig_go_0) {
+  Value arg1 ;
+  Value *argp1 ;
+  SwigValueWrapper< std::vector< char > > result;
   std::vector< char > *_swig_go_result;
   
-  arg1 = *(String **)&_swig_go_0; 
   
-  Expression *swig_b0 = (Expression *)arg1;
-  Value *swig_b1 = (Value *)swig_b0;
-  result = (swig_b1)->serialize();
+  argp1 = (Value *)_swig_go_0;
+  if (argp1 == NULL) {
+    _swig_gopanic("Attempt to dereference null Value");
+  }
+  arg1 = (Value)*argp1;
+  
+  
+  result = serializeValue(SWIG_STD_MOVE(arg1));
   *(std::vector< char > **)&_swig_go_result = new std::vector< char >(result); 
   return _swig_go_result;
 }
 
 
-Value *_wrap_String_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_go_0) {
-  std::vector< char > arg1 ;
+Value *_wrap_deserializeValue_pb_a09055da72bc98de(std::vector< char > *_swig_go_0) {
+  SwigValueWrapper< std::vector< char > > arg1 ;
   std::vector< char > *argp1 ;
   Value result;
   Value *_swig_go_result;
@@ -1119,7 +1181,7 @@ Value *_wrap_String_deserialize_pb_d9d2dd81988ff878(std::vector< char > *_swig_g
   arg1 = (std::vector< char >)*argp1;
   
   
-  result = Value::deserialize(SWIG_STD_MOVE(arg1));
+  result = deserializeValue(SWIG_STD_MOVE(arg1));
   *(Value **)&_swig_go_result = new Value(result); 
   return _swig_go_result;
 }
