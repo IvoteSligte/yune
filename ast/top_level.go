@@ -111,8 +111,8 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
 	deps = append(deps, Query{
 		Expression:   d.ReturnType.Expression,
-		Destination:  &d.ReturnType.value,
-		ExpectedType: pb.TypeType,
+		Destination:  pb.SetType{Type: &d.ReturnType.value},
+		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -133,8 +133,10 @@ func (d FunctionDeclaration) GetName() Name {
 }
 
 func (d FunctionDeclaration) GetDeclaredType() pb.Type {
-	params := util.Map(d.Parameters, FunctionParameter.GetDeclaredType)
-	return pb.NewFnType(pb.NewTupleType(params...), d.ReturnType.Get())
+	params := util.Map(d.Parameters, func(p FunctionParameter) any {
+		return p.GetDeclaredType()
+	})
+	return pb.NewFnType(pb.NewTupleType(pb.NewTypeVector(params...)), d.ReturnType.Get())
 }
 
 type FunctionParameter struct {
@@ -184,8 +186,8 @@ func (d FunctionParameter) GetMacroValueDependencies() (deps []Name) {
 func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  &d.Type.value,
-		ExpectedType: pb.TypeType,
+		Destination:  pb.SetType{&d.Type.value},
+		ExpectedType: TypeType,
 	})
 	return
 }
@@ -246,8 +248,8 @@ func (d ConstantDeclaration) GetMacroValueDependencies() []Name {
 func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  &d.Type.value,
-		ExpectedType: pb.TypeType,
+		Destination:  pb.SetType{Type: &d.Type.value},
+		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return

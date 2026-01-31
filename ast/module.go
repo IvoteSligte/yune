@@ -192,7 +192,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		}))
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
-				if v.IsEmpty() { // NOTE: not sure if this check is correct
+				if v.Eq(pb.NewValue()) { // NOTE: not sure if this check is correct
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 				continue

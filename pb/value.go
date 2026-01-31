@@ -22,6 +22,15 @@ type Destination interface {
 	SetValue(v Value)
 }
 
+type SetType struct {
+	Type *Type
+}
+
+// SetValue implements Destination
+func (s SetType) SetValue(v Value) {
+	*s.Type = v.(Type)
+}
+
 // Uninitialized type
 var UninitType Type = nil
 
@@ -36,15 +45,6 @@ var ExpressionType = NewStructType("Expression")
 
 // TODO: complete macro return type with diagnostics
 var MacroReturnType = NewTupleType(NewTypeVector(NewStringType(), ExpressionType))
-
-type SetType struct {
-	Type
-}
-
-// SetValue implements Destination.
-func (t SetType) SetValue(v Value) {
-	t.Type = v.(Type)
-}
 
 var _ Destination = (*SetType)(nil)
 

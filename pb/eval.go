@@ -7,6 +7,8 @@ import (
 	"yune/cpp"
 )
 
+// TODO: manage memory of pb.Type and such
+
 // TODO: skip evaluation if batch is all-nil
 func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 	// NOTE: main function is assumed not to exist

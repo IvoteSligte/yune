@@ -250,7 +250,7 @@ func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
 func (b BuiltinConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
 		Name:  b.Name,
-		Type:  b.Type.Lower(),
+		Type:  pb.LowerType(b.Type),
 		Value: cpp.Raw(b.Value),
 	}
 }
@@ -313,8 +313,8 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinFunctionDeclaration) GetDeclaredType() pb.Type {
 	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
-	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) pb.Type { return p.Type })
-	return pb.NewFnType(pb.NewTupleType(params...), b.ReturnType)
+	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) any { return p.Type })
+	return pb.NewFnType(pb.NewTupleType(pb.NewTypeVector(params...)), b.ReturnType)
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -344,10 +344,10 @@ func (b BuiltinFunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		Parameters: util.Map(b.Parameters, func(p BuiltinFunctionParameter) cpp.FunctionParameter {
 			return cpp.FunctionParameter{
 				Name: p.Name,
-				Type: p.Type.Lower(),
+				Type: pb.LowerType(p.Type),
 			}
 		}),
-		ReturnType: b.ReturnType.Lower(),
+		ReturnType: pb.LowerType(b.ReturnType),
 		Body: cpp.Block(util.Map(strings.Split(b.Body, "\n"), func(s string) cpp.Statement {
 			return cpp.Statement(cpp.Raw(s))
 		})),

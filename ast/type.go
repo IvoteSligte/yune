@@ -19,5 +19,5 @@ func (t Type) Get() pb.Type {
 }
 
 func (t Type) Lower() cpp.Type {
-	return t.value.Lower()
+	return pb.LowerType(t.value)
 }

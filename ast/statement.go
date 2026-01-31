@@ -50,8 +50,8 @@ func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  &d.Type.value,
-		ExpectedType: pb.TypeType,
+		Destination:  pb.SetType{&d.Type.value},
+		ExpectedType: TypeType,
 	})
 	return append(deps, d.Body.GetTypeDependencies()...)
 }
@@ -89,7 +89,7 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 func (d VariableDeclaration) Lower() cpp.Statement {
 	return cpp.VariableDeclaration{
 		Name:  d.Name.String,
-		Type:  d.Type.Lower(), // TODO: actually register the type too
+		Type:  pb.LowerType(d.Type.value), // TODO: actually register the type too
 		Value: d.Body.LowerVariableBody(),
 	}
 }
@@ -99,7 +99,7 @@ func (d VariableDeclaration) GetName() Name {
 }
 
 func (d VariableDeclaration) GetType() pb.Type {
-	return pb.NilType
+	return NilType
 }
 
 func (d VariableDeclaration) GetDeclaredType() pb.Type {
@@ -167,7 +167,7 @@ func (a *Assignment) Lower() cpp.Statement {
 }
 
 func (a Assignment) GetType() pb.Type {
-	return pb.NilType
+	return NilType
 }
 
 type AssignmentOp string
@@ -230,7 +230,7 @@ func (b *BranchStatement) GetValueDependencies() (deps []Name) {
 
 // InferType implements Statement.
 func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
-	errors = b.Condition.InferType(pb.BoolType, deps)
+	errors = b.Condition.InferType(BoolType, deps)
 	errors = append(errors, b.Then.InferType(deps.NewScope())...)
 	errors = append(errors, b.Else.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
@@ -240,7 +240,7 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 	thenType := b.Then.GetType()
 	elseType := b.Else.GetType()
 
-	if !conditionType.Eq(pb.BoolType) {
+	if !conditionType.Eq(BoolType) {
 		errors = append(errors, InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),
@@ -354,7 +354,7 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 func (b *Block) lowerStatements() []cpp.Statement {
 	statements := util.Map(b.Statements, Statement.Lower)
 
-	if !b.Statements[len(b.Statements)-1].GetType().Eq(pb.NilType) {
+	if !b.Statements[len(b.Statements)-1].GetType().Eq(NilType) {
 		// last expression is implicitly returned in Yune,
 		// but needs to be explicitly returned in C++
 		statements[len(statements)-1] = cpp.ReturnStatement{
