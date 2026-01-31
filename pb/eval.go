@@ -26,6 +26,7 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 		statements = append(statements, cpp.Statement(cpp.Raw(s)))
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFile.Name()))
+	addStmt(`std::vector<pb::Value> outputs;`)
 
 	for _, e := range batch {
 		addStmt(`::capnp::MallocMessage:Builder message;`)
