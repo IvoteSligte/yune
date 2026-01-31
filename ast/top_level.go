@@ -133,10 +133,10 @@ func (d FunctionDeclaration) GetName() Name {
 }
 
 func (d FunctionDeclaration) GetDeclaredType() pb.Type {
-	params := util.Map(d.Parameters, func(p FunctionParameter) any {
+	params := util.Map(d.Parameters, func(p FunctionParameter) pb.Type {
 		return p.GetDeclaredType()
 	})
-	return pb.NewFnType(pb.NewTupleType(pb.NewTypeVector(params...)), d.ReturnType.Get())
+	return pb.NewFnType(pb.NewTupleType2(params...), d.ReturnType.Get())
 }
 
 type FunctionParameter struct {

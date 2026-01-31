@@ -264,7 +264,7 @@ func (f *FunctionCall) InferType(expected pb.Type, deps DeclarationTable) (error
 	argumentType := f.Argument.GetType()
 	argumentType, isTuple := argumentType.(pb.TupleType)
 	if !isTuple {
-		argumentType = pb.NewTupleType(pb.NewTypeVector(argumentType))
+		argumentType = pb.NewTupleType2(argumentType)
 	}
 	// NOTE: should functions return () instead of Nil?
 	if !argumentType.Eq(functionType.GetArgument()) {

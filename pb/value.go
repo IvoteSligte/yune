@@ -44,7 +44,28 @@ var MainType = NewFnType(EmptyTupleType, NewIntType())
 var ExpressionType = NewStructType("Expression")
 
 // TODO: complete macro return type with diagnostics
-var MacroReturnType = NewTupleType(NewTypeVector(NewStringType(), ExpressionType))
+var MacroReturnType = NewTupleType(func() TypeVector {
+	tv := NewTypeVector()
+	tv.Add(NewStringType())
+	tv.Add(ExpressionType)
+	return tv
+}())
+
+func NewTypeVector2(types ...Type) TypeVector {
+	tv := NewTypeVector()
+	for _, t := range types {
+		tv.Add(t)
+	}
+	return tv
+}
+
+func NewTupleType2(types ...Type) TupleType {
+	tv := NewTypeVector()
+	for _, t := range types {
+		tv.Add(t)
+	}
+	return NewTupleType(tv)
+}
 
 var _ Destination = (*SetType)(nil)
 
