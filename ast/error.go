@@ -15,7 +15,7 @@ func (e DuplicateDeclaration) Error() string {
 
 type InvalidUnaryExpressionType struct {
 	Op   UnaryOp
-	Type pb.Type
+	Type TypeValue
 	At   Span
 }
 
@@ -30,8 +30,8 @@ func (e InvalidUnaryExpressionType) Error() string {
 
 type InvalidBinaryExpressionTypes struct {
 	Op    BinaryOp
-	Left  pb.Type
-	Right pb.Type
+	Left  TypeValue
+	Right TypeValue
 	At    Span
 }
 
@@ -58,7 +58,7 @@ func (e UndefinedType) Error() string {
 }
 
 type NotAFunction struct {
-	Found pb.Type
+	Found TypeValue
 	At    Span
 }
 
@@ -67,8 +67,8 @@ func (e NotAFunction) Error() string {
 }
 
 type UnexpectedType struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -81,8 +81,8 @@ func (e UnexpectedType) Error() string {
 }
 
 type AssignmentTypeMismatch struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -91,8 +91,8 @@ func (e AssignmentTypeMismatch) Error() string {
 }
 
 type ReturnTypeMismatch struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -101,8 +101,8 @@ func (e ReturnTypeMismatch) Error() string {
 }
 
 type VariableTypeMismatch struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -111,8 +111,8 @@ func (e VariableTypeMismatch) Error() string {
 }
 
 type ConstantTypeMismatch struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -121,8 +121,8 @@ func (e ConstantTypeMismatch) Error() string {
 }
 
 type ArgumentTypeMismatch struct {
-	Expected pb.Type
-	Found    pb.Type
+	Expected TypeValue
+	Found    TypeValue
 	At       Span
 }
 
@@ -131,7 +131,7 @@ func (e ArgumentTypeMismatch) Error() string {
 }
 
 type InvalidConditionType struct {
-	Found pb.Type
+	Found TypeValue
 	At    Span
 }
 
@@ -140,9 +140,9 @@ func (e InvalidConditionType) Error() string {
 }
 
 type BranchTypeNotEqual struct {
-	Then   pb.Type
+	Then   TypeValue
 	ThenAt Span
-	Else   pb.Type
+	Else   TypeValue
 	ElseAt Span
 }
 
@@ -157,7 +157,7 @@ func (e BranchTypeNotEqual) Error() string {
 }
 
 type InvalidMainSignature struct {
-	Found pb.Type
+	Found TypeValue
 	At    Span
 }
 

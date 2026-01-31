@@ -37,5 +37,5 @@ type Query struct {
 	Expression
 	pb.Destination
 	// The type this query expects. May be pbType("") to indicate absence.
-	ExpectedType pb.Type
+	ExpectedType TypeValue
 }

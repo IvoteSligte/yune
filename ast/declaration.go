@@ -65,7 +65,7 @@ type Declaration interface {
 	GetValueDependencies() []Name
 
 	// Returns the type of this declaration.
-	GetDeclaredType() pb.Type
+	GetDeclaredType() TypeValue
 
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.

@@ -131,8 +131,8 @@ func (d FunctionDeclaration) GetName() Name {
 	return d.Name
 }
 
-func (d FunctionDeclaration) GetDeclaredType() pb.Type {
-	params := util.Map(d.Parameters, func(p FunctionParameter) pb.Type {
+func (d FunctionDeclaration) GetDeclaredType() TypeValue {
+	params := util.Map(d.Parameters, func(p FunctionParameter) TypeValue {
 		return p.GetDeclaredType()
 	})
 	return pb.NewFnType(pb.NewTupleType2(params...), d.ReturnType.Get())
@@ -167,7 +167,7 @@ func (d FunctionParameter) GetName() Name {
 }
 
 // GetDeclaredType implements Declaration
-func (d FunctionParameter) GetDeclaredType() pb.Type {
+func (d FunctionParameter) GetDeclaredType() TypeValue {
 	return d.Type.Get()
 }
 
@@ -269,7 +269,7 @@ func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 }
 
 // GetType implements Declaration.
-func (d ConstantDeclaration) GetDeclaredType() pb.Type {
+func (d ConstantDeclaration) GetDeclaredType() TypeValue {
 	return d.Type.Get()
 }
 

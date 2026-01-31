@@ -13,7 +13,7 @@ type Type struct {
 }
 
 // TODO: rename to GetValue
-func (t Type) Get() pb.Type {
+func (t Type) Get() TypeValue {
 	return t.value
 }
 

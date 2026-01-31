@@ -9,7 +9,7 @@ import (
 type StatementBase interface {
 	Node
 	InferType(deps DeclarationTable) Errors
-	GetType() pb.Type
+	GetType() TypeValue
 	GetMacros() []*Macro
 
 	GetMacroTypeDependencies() (deps []Query)
@@ -98,11 +98,11 @@ func (d VariableDeclaration) GetName() Name {
 	return d.Name
 }
 
-func (d VariableDeclaration) GetType() pb.Type {
+func (d VariableDeclaration) GetType() TypeValue {
 	return NilType
 }
 
-func (d VariableDeclaration) GetDeclaredType() pb.Type {
+func (d VariableDeclaration) GetDeclaredType() TypeValue {
 	return d.Type.Get()
 }
 
@@ -166,7 +166,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	}
 }
 
-func (a Assignment) GetType() pb.Type {
+func (a Assignment) GetType() TypeValue {
 	return NilType
 }
 
@@ -184,7 +184,7 @@ const (
 // statements in a block are is in its .Else field.
 type BranchStatement struct {
 	Span
-	pb.Type
+	TypeValue
 	Condition Expression
 	Then      Block
 	Else      Block
@@ -198,7 +198,7 @@ func (b *BranchStatement) GetMacros() (macros []*Macro) {
 }
 
 // GetType implements Statement.
-func (b *BranchStatement) GetType() pb.Type {
+func (b *BranchStatement) GetType() TypeValue {
 	return b.Type
 }
 
@@ -271,7 +271,7 @@ type Block struct {
 	Statements []Statement
 }
 
-func (b Block) GetType() pb.Type {
+func (b Block) GetType() TypeValue {
 	return b.Statements[len(b.Statements)-1].GetType()
 }
 
