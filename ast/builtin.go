@@ -242,7 +242,7 @@ func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
 func (b BuiltinConstantDeclaration) Lower() cpp.TopLevelDeclaration {
 	return cpp.ConstantDeclaration{
 		Name:  b.Name,
-		Type:  pb.LowerType(b.Type),
+		Type:  b.Type.Lower(),
 		Value: cpp.Raw(b.Value),
 	}
 }
@@ -336,10 +336,10 @@ func (b BuiltinFunctionDeclaration) Lower() cpp.TopLevelDeclaration {
 		Parameters: util.Map(b.Parameters, func(p BuiltinFunctionParameter) cpp.FunctionParameter {
 			return cpp.FunctionParameter{
 				Name: p.Name,
-				Type: pb.LowerType(p.Type),
+				Type: p.Type.Lower(),
 			}
 		}),
-		ReturnType: pb.LowerType(b.ReturnType),
+		ReturnType: b.ReturnType.Lower(),
 		Body: cpp.Block(util.Map(strings.Split(b.Body, "\n"), func(s string) cpp.Statement {
 			return cpp.Statement(cpp.Raw(s))
 		})),

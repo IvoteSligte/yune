@@ -18,7 +18,7 @@ func (t Type) Get() TypeValue {
 }
 
 func (t Type) Lower() cpp.Type {
-	return pb.LowerType(t.value)
+	return t.value.Lower()
 }
 
 var valueOptions = map[string]Value{

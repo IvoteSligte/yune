@@ -89,7 +89,7 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 func (d VariableDeclaration) Lower() cpp.Statement {
 	return cpp.VariableDeclaration{
 		Name:  d.Name.String,
-		Type:  pb.LowerType(d.Type.value), // TODO: actually register the type too
+		Type:  d.Type.value.Lower(), // TODO: actually register the type too
 		Value: d.Body.LowerVariableBody(),
 	}
 }
