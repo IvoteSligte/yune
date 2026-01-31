@@ -11,11 +11,5 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-# Alpaca requires C++17 and default deep equality operators require C++20.
-pb/pb.go: pb-cpp/pb.h pb-cpp/swig.i
-	swig -c++ -std=c++20 -go -outdir pb/ pb-cpp/swig.i
-
-pb: pb/pb.go
-
-run: parser pb
+run: parser
 	go run .

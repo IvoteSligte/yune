@@ -5,8 +5,6 @@ import (
 	"log"
 	"os"
 	"yune/cpp"
-
-	"capnproto.org/go/capnp/v3"
 )
 
 // TODO: skip evaluation if batch is all-nil

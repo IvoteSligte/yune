@@ -3,13 +3,11 @@
 #include <alpaca/alpaca.h>
 #include <iostream>
 
-struct Value {};
-
-struct Type : Value {
-  bool eq(const Type& other) {
-    return *this == other;
-  }
+struct Value {
+  bool operator==(const Value&) const = default;
 };
+
+struct Type : Value {};
 struct TypeType : Type {};
 struct IntType : Type {};
 struct FloatType : Type {};

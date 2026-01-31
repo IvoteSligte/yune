@@ -1,10 +1,12 @@
 %module pb
 %{
-#include "pb.h"
+#include "pb.hpp"
 %}
 %include <std_vector.i>
 %include <std_string.i>
 
 %template(TypeVector) std::vector<Type>;
- 
-%include "pb.h"
+
+%rename(eq) operator==;
+
+%include "pb.hpp"
