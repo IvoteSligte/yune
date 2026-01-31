@@ -18,25 +18,29 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 	if err != nil {
 		log.Fatalln("Failed to create temporary file during compile-time C++ evaluation. Error:", err)
 	}
-	defer os.Remove(outputFile.Name()) // TODO: close file
+	outputFileName := outputFile.Name()
+	if err := outputFile.Close(); err != nil {
+		log.Fatalln("Failed to close temporary file during compile-time C++ evaluation. Error:", err)
+	}
+	defer os.Remove(outputFileName)
 
 	statements := []cpp.Statement{}
 
 	addStmt := func(s string) {
 		statements = append(statements, cpp.Statement(cpp.Raw(s)))
 	}
-	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFile.Name()))
-	addStmt(`std::vector<pb::Value> outputs;`)
+	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
+	addStmt(`std::vector<Value> outputs;`)
 
 	for _, e := range batch {
-		addStmt(`::capnp::MallocMessage:Builder message;`)
-		addStmt(`pb::Value value = message.initRoot<pb::Value>();`)
-		if e != nil {
-			statement = `outputFile << ` + e.String() + ` << '\0';`
+		if e == nil {
+			addStmt(`outputs.emplace_back({});`)
+		} else {
+			addStmt(fmt.Sprintf(`outputs.push_back(%s);`, e))
 		}
-		addStmt(`::capnp::writeMessage(outputFile, message);`)
 	}
-	statements = append(statements, cpp.Statement(cpp.Raw(`outputFile.close();`)))
+	addStmt(`outputFile << serializeValues(outputs);`)
+	addStmt(`outputFile.close();`)
 
 	module.Declarations = append(module.Declarations, cpp.FunctionDeclaration{
 		Name:       "main",
@@ -45,17 +49,10 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 		Body:       cpp.Block(statements),
 	})
 	cpp.Run(module)
-	decoder := capnp.NewDecoder(outputFile)
-	for range len(batch) {
-		msg, err := decoder.Decode()
-		if err != nil {
-			log.Fatalf("Failed to decode compile-time evaluation outputs. Error: %s", err)
-		}
-		value, err := ReadRootValue(msg)
-		if err != nil {
-			log.Fatalf("Failed to parse compile-time evaluation outputs. Error: %s", err)
-		}
-		outputs = append(outputs, value)
+	bytes, err := os.ReadFile(outputFileName)
+	if err != nil {
+		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
 	}
-	return
+	values := DeserializeValues(string(bytes))
+	return ToSlice(values)
 }

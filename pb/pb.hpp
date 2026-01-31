@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
-#include <alpaca/alpaca.h>
+#include "rfl/json.hpp"
+#include "rfl.hpp"
 #include <iostream>
 
 struct Value {
@@ -41,20 +42,11 @@ struct String : Expression {
   std::string value;
 };
 
-
-std::vector<char> serializeValues(std::vector<Value> values) {
-  std::vector<char> bytes;
-  alpaca::serialize(values, bytes);
-  return bytes;
+std::string serializeValues(std::vector<Value> values) {
+  return rfl::json::write(values);
 }
 
-std::vector<Value> deserializeValues(std::vector<char> bytes) {
-  std::error_code error_code;
-  auto values = alpaca::deserialize<std::vector<Value>>(bytes, error_code);
-  if (error_code) {
-    std::cerr << "Error deserializing Value: " << error_code << std::endl;
-    exit(1);
-  }
-  return values;
+std::vector<Value> deserializeValues(std::string data) {
+  return rfl::json::read<std::vector<Value>>(data).value();
 }
 

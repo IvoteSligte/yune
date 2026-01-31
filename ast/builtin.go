@@ -21,6 +21,13 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	PrintStringDeclaration,
 }
 
+var TypeType = pb.NewTypeType()
+var IntType = pb.NewIntType()
+var FloatType = pb.NewFloatType()
+var BoolType = pb.NewBoolType()
+var StringType = pb.NewStringType()
+var NilType = pb.NewNilType()
+
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
 	Name           string
@@ -87,7 +94,7 @@ var _ TopLevelDeclaration = BuiltinRawDeclaration{}
 
 var TypeDeclaration = BuiltinRawDeclaration{
 	Name: "Type",
-	Type: pb.TypeType,
+	Type: TypeType,
 	Header: `
 struct Type {
     std::string id;
@@ -100,7 +107,7 @@ std::ostream& operator<<(std::ostream& out, const Type& t) {
 
 var ExpressionDeclaration = BuiltinRawDeclaration{
 	Name:     "Expression",
-	Type:     pb.TypeType,
+	Type:     TypeType,
 	Requires: []string{"Type"},
 	Header: `
 extern Type Expression;`,
@@ -110,7 +117,7 @@ Type Expression = Type{"pb::Expression"};`,
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
-	Type:     pb.NewFnType(pb.StringType, pb.ExpressionType),
+	Type:     pb.NewFnType(StringType, pb.ExpressionType),
 	Requires: []string{"Expression"},
 	Implementation: `
 pb::Expression stringLiteral(std::string str) {
@@ -141,7 +148,7 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetDeclaredType() pb.Type {
-	return pb.TypeType
+	return TypeType
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -257,27 +264,27 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  pb.TypeType,
+	Type:  TypeType,
 	Value: `Type{"int"}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  pb.TypeType,
+	Type:  TypeType,
 	Value: `Type{"float"}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  pb.TypeType,
+	Type:  TypeType,
 	Value: `Type{"bool"}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  pb.TypeType,
+	Type:  TypeType,
 	Value: `Type{"std::string"}`,
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
-	Type:  pb.TypeType,
+	Type:  TypeType,
 	Value: `Type{"void"}`,
 }
 
@@ -357,14 +364,14 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "argumentType",
-			Type: pb.TypeType,
+			Type: TypeType,
 		},
 		{
 			Name: "returnType",
-			Type: pb.TypeType,
+			Type: TypeType,
 		},
 	},
-	ReturnType: pb.TypeType,
+	ReturnType: TypeType,
 	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
 	Body: `
 std::string tuplePrefix("std::tuple<");
@@ -383,10 +390,10 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "elementType",
-			Type: pb.TypeType,
+			Type: TypeType,
 		},
 	},
-	ReturnType: pb.TypeType,
+	ReturnType: TypeType,
 	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
 }
 
@@ -395,10 +402,10 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "string",
-			Type: pb.StringType,
+			Type: StringType,
 		},
 	},
-	ReturnType: pb.NilType,
+	ReturnType: NilType,
 	Body:       `std::cout << string << std::endl;`,
 }
 

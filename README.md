@@ -9,4 +9,4 @@ C++ 17
 
 ### Serialization
 SWIG
-github.com/p-ranav/alpaca (installed and in path)
+reflect-cpp (submodule)
