@@ -41,19 +41,20 @@ struct String : Expression {
   std::string value;
 };
 
-std::vector<char> serializeValue(Value value) {
+
+std::vector<char> serializeValues(std::vector<Value> values) {
   std::vector<char> bytes;
-  alpaca::serialize(value, bytes);
+  alpaca::serialize(values, bytes);
   return bytes;
 }
 
-Value deserializeValue(std::vector<char> bytes) {
+std::vector<Value> deserializeValues(std::vector<char> bytes) {
   std::error_code error_code;
-  auto value = alpaca::deserialize<Value>(bytes, error_code);
+  auto values = alpaca::deserialize<std::vector<Value>>(bytes, error_code);
   if (error_code) {
     std::cerr << "Error deserializing Value: " << error_code << std::endl;
     exit(1);
   }
-  return value;
+  return values;
 }
 
