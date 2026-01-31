@@ -2,7 +2,6 @@ package ast
 
 import (
 	"log"
-	"yune/pb"
 )
 
 type DeclarationTable struct {

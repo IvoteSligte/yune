@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"yune/pb"
 )
 
 type DuplicateDeclaration struct {
