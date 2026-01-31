@@ -1,16 +1,15 @@
-package pb
+package cpp
 
 import (
 	"fmt"
 	"log"
 	"os"
-	"yune/cpp"
 )
 
 // TODO: manage memory of pb.Type and such
 
 // TODO: skip evaluation if batch is all-nil
-func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
+func Evaluate(module Module, batch []Expression) (outputs []Value) {
 	// NOTE: main function is assumed not to exist
 
 	fmt.Println("--- Start Evaluation ---")
@@ -26,10 +25,10 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 	}
 	defer os.Remove(outputFileName)
 
-	statements := []cpp.Statement{}
+	statements := []Statement{}
 
 	addStmt := func(s string) {
-		statements = append(statements, cpp.Statement(cpp.Raw(s)))
+		statements = append(statements, Statement(Raw(s)))
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
 	addStmt(`std::vector<Value> outputs;`)
@@ -44,17 +43,17 @@ func Evaluate(module cpp.Module, batch []cpp.Expression) (outputs []Value) {
 	addStmt(`outputFile << serializeValues(outputs);`)
 	addStmt(`outputFile.close();`)
 
-	module.Declarations = append(module.Declarations, cpp.FunctionDeclaration{
+	module.Declarations = append(module.Declarations, FunctionDeclaration{
 		Name:       "main",
-		Parameters: []cpp.FunctionParameter{},
+		Parameters: []FunctionParameter{},
 		ReturnType: "int",
-		Body:       cpp.Block(statements),
+		Body:       Block(statements),
 	})
-	cpp.Run(module)
+	Run(module)
 	bytes, err := os.ReadFile(outputFileName)
 	if err != nil {
 		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
 	}
 	values := DeserializeValues(string(bytes))
-	return ToSlice(values)
+	return values
 }
