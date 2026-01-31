@@ -86,7 +86,7 @@ var _ TopLevelDeclaration = BuiltinRawDeclaration{}
 
 var TypeDeclaration = BuiltinRawDeclaration{
 	Name: "Type",
-	Type: TypeType,
+	Type: TypeType{},
 	Header: `
 struct Type {
     std::string id;
@@ -99,7 +99,7 @@ std::ostream& operator<<(std::ostream& out, const Type& t) {
 
 var ExpressionDeclaration = BuiltinRawDeclaration{
 	Name:     "Expression",
-	Type:     TypeType,
+	Type:     TypeType{},
 	Requires: []string{"Type"},
 	Header: `
 extern Type Expression;`,
@@ -109,7 +109,7 @@ Type Expression = Type{":Expression"};`,
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
-	Type:     NewFnType(StringType, ExpressionType),
+	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
 	Implementation: `
 :Expression stringLiteral(std::string str) {
@@ -140,7 +140,7 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetDeclaredType() TypeValue {
-	return TypeType
+	return TypeType{}
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.
@@ -256,27 +256,27 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  TypeType,
+	Type:  TypeType{},
 	Value: `Type{"int"}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  TypeType,
+	Type:  TypeType{},
 	Value: `Type{"float"}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  TypeType,
+	Type:  TypeType{},
 	Value: `Type{"bool"}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  TypeType,
+	Type:  TypeType{},
 	Value: `Type{"std::string"}`,
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
-	Type:  TypeType,
+	Type:  TypeType{},
 	Value: `Type{"void"}`,
 }
 
@@ -306,7 +306,10 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
 	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) TypeValue { return p.Type })
-	return NewFnType(NewTupleType2(params...), b.ReturnType)
+	return FnType{
+		Argument: NewTupleType(params...),
+		Return:   b.ReturnType,
+	}
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.

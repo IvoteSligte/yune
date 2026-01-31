@@ -22,9 +22,9 @@ type Value interface {
 	value()
 }
 
-func Deserialize(jsonBytes []byte) (v Value) {
+func Deserialize(jsonBytes []byte) (vs []Value) {
 	unmarshaler := oneof.UnmarshalFunc(valueOptions, nil)
-	err := json.Unmarshal(jsonBytes, &v, json.WithUnmarshalers(unmarshaler))
+	err := json.Unmarshal(jsonBytes, &vs, json.WithUnmarshalers(unmarshaler))
 	if err != nil {
 		panic("Failed to deserialize JSON: " + err.Error())
 	}
@@ -33,4 +33,12 @@ func Deserialize(jsonBytes []byte) (v Value) {
 
 type Destination interface {
 	SetValue(v Value)
+}
+
+type SetType struct {
+	Type *TypeValue
+}
+
+func (s SetType) SetValue(v Value) {
+	*s.Type = v.(TypeValue)
 }

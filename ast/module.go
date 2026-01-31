@@ -182,7 +182,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// TODO: make sure the main() function is always in the last stage
-		values := Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
+		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
@@ -191,7 +191,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		}))
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
-				if v.Eq(NewValue()) { // NOTE: not sure if this check is correct
+				if v == nil {
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 				continue

@@ -23,6 +23,13 @@ func (t Type) Lower() cpp.Type {
 	return t.value.Lower()
 }
 
+var MainType = FnType{
+	Argument: NewTupleType(IntType{}),
+	Return:   NilType{},
+}
+var ExpressionType = StructType{Name: "Expression"}
+var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
+
 type TypeValue interface {
 	Value
 	typeValue()
@@ -114,6 +121,12 @@ func (t TupleType) Lower() cpp.Type {
 	}))
 }
 
+func NewTupleType(elements ...TypeValue) TupleType {
+	return TupleType{
+		Elements: elements,
+	}
+}
+
 type ListType struct {
 	Element TypeValue
 }
@@ -129,7 +142,7 @@ func (l ListType) Lower() cpp.Type {
 }
 
 type FnType struct {
-	Argument TypeValue
+	Argument TupleType
 	Return   TypeValue
 }
 
@@ -141,15 +154,9 @@ func (f FnType) typeValue() {}
 func (f FnType) value()     {}
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	argumentTuple, argumentIsTuple := f.Argument.(TupleType)
-	var arguments string
-	if argumentIsTuple {
-		arguments = util.JoinFunction(argumentTuple.Elements, ", ", func(v TypeValue) string {
-			return v.Lower().String()
-		})
-	} else {
-		arguments = f.Argument.Lower().String()
-	}
+	arguments := util.JoinFunction(f.Argument.Elements, ", ", func(v TypeValue) string {
+		return v.Lower().String()
+	})
 	return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return, arguments))
 }
 

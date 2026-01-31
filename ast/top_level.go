@@ -111,7 +111,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.ReturnType.Expression,
 		Destination:  SetType{Type: &d.ReturnType.value},
-		ExpectedType: TypeType,
+		ExpectedType: TypeType{},
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
@@ -135,7 +135,10 @@ func (d FunctionDeclaration) GetDeclaredType() TypeValue {
 	params := util.Map(d.Parameters, func(p FunctionParameter) TypeValue {
 		return p.GetDeclaredType()
 	})
-	return NewFnType(NewTupleType2(params...), d.ReturnType.Get())
+	return FnType{
+		Argument: NewTupleType(params...),
+		Return:   d.ReturnType.Get(),
+	}
 }
 
 type FunctionParameter struct {
@@ -186,7 +189,7 @@ func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  SetType{&d.Type.value},
-		ExpectedType: TypeType,
+		ExpectedType: TypeType{},
 	})
 	return
 }
@@ -248,7 +251,7 @@ func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
 		Destination:  SetType{Type: &d.Type.value},
-		ExpectedType: TypeType,
+		ExpectedType: TypeType{},
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
