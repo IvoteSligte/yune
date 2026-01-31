@@ -1,6 +1,7 @@
 package cpp
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +9,9 @@ import (
 	"path"
 	"strings"
 )
+
+//go:embed "pb.hpp"
+var pbHeader string
 
 func format(code string) (formatted string, err error) {
 	cmd := exec.Command("clang-format")
@@ -71,14 +75,22 @@ func Run(module Module) {
 	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
 
+	writeFile(dir, "pb.hpp", pbHeader)
+
 	writeFile(dir, "code.h", `
+#include "pb.hpp"
 `+header) // TODO: close files
-	writeFile(dir, "code.cpp", `#include "code.h"`+implementation)
+
+	writeFile(dir, "code.cpp", `
+#include "code.h"
+`+implementation)
+
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")
 
 	fmt.Println("-- Clang++ log --")
-	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath, "-lcapnp", "-lkj"}...)
+	pbIncludes := os.ExpandEnv("-I$PWD/pb")
+	cmd := exec.Command("clang++", []string{implementationPath, "-o", binaryPath, pbIncludes}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {

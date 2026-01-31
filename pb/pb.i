@@ -1,6 +1,6 @@
 %module pb
 %{
-#include "pb.hpp"
+#include "../cpp/pb.hpp"
 %}
 %include <std_vector.i>
 %include <std_string.i>
@@ -10,4 +10,4 @@
 
 %rename(eq) operator==;
 
-%include "pb.hpp"
+%include "../cpp/pb.hpp"
