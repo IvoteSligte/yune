@@ -2,7 +2,6 @@ package ast
 
 import (
 	"yune/cpp"
-	"yune/
 	"yune/util"
 )
 
