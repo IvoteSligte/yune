@@ -162,7 +162,7 @@ type InvalidMainSignature struct {
 }
 
 func (e InvalidMainSignature) Error() string {
-	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, pb.MainType, e.Found)
+	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, MainType, e.Found)
 }
 
 type CyclicTypeDependency struct {

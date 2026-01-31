@@ -63,7 +63,7 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(pb.MainType) {
+	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
@@ -110,7 +110,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
 	deps = append(deps, Query{
 		Expression:   d.ReturnType.Expression,
-		Destination:  pb.SetType{Type: &d.ReturnType.value},
+		Destination:  SetType{Type: &d.ReturnType.value},
 		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)
@@ -135,7 +135,7 @@ func (d FunctionDeclaration) GetDeclaredType() TypeValue {
 	params := util.Map(d.Parameters, func(p FunctionParameter) TypeValue {
 		return p.GetDeclaredType()
 	})
-	return pb.NewFnType(pb.NewTupleType2(params...), d.ReturnType.Get())
+	return NewFnType(NewTupleType2(params...), d.ReturnType.Get())
 }
 
 type FunctionParameter struct {
@@ -185,7 +185,7 @@ func (d FunctionParameter) GetMacroValueDependencies() (deps []Name) {
 func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  pb.SetType{&d.Type.value},
+		Destination:  SetType{&d.Type.value},
 		ExpectedType: TypeType,
 	})
 	return
@@ -247,7 +247,7 @@ func (d ConstantDeclaration) GetMacroValueDependencies() []Name {
 func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  pb.SetType{Type: &d.Type.value},
+		Destination:  SetType{Type: &d.Type.value},
 		ExpectedType: TypeType,
 	})
 	deps = append(deps, d.Body.GetTypeDependencies()...)

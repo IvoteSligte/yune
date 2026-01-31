@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"yune/cpp"
-	"yune/pb"
+	"yune/
 	"yune/util"
 )
 
@@ -187,7 +187,7 @@ func (v *Variable) GetValueDependencies() (deps []Name) {
 // InferType implements Expression.
 func (v *Variable) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
 	decl, _ := deps.Get(v.Name.String)
-	if decl.GetDeclaredType().Eq(pb.UninitType) {
+	if decl.GetDeclaredType().Eq(UninitType) {
 		log.Printf("WARN: Type queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
 	}
 	v.Type = decl.GetDeclaredType()
@@ -243,12 +243,12 @@ func (f *FunctionCall) GetValueDependencies() []Name {
 
 // InferType implements Expression.
 func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(pb.UninitType, deps)
+	errors = f.Function.InferType(UninitType, deps)
 	if len(errors) > 0 {
 		return
 	}
 	maybeFunctionType := f.Function.GetType()
-	functionType, isFunction := maybeFunctionType.(pb.FnType)
+	functionType, isFunction := maybeFunctionType.(FnType)
 	if !isFunction {
 		errors = append(errors, NotAFunction{
 			Found: maybeFunctionType,
@@ -262,9 +262,9 @@ func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (err
 	}
 	// single-argument functions still expect a tuple type for comparison
 	argumentType := f.Argument.GetType()
-	argumentType, isTuple := argumentType.(pb.TupleType)
+	argumentType, isTuple := argumentType.(TupleType)
 	if !isTuple {
-		argumentType = pb.NewTupleType2(argumentType)
+		argumentType = NewTupleType2(argumentType)
 	}
 	// NOTE: should functions return () instead of Nil?
 	if !argumentType.Eq(functionType.GetArgument()) {
@@ -282,10 +282,10 @@ func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (err
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
 	argumentType := f.Argument.GetType()
-	_, isTuple := argumentType.(pb.TupleType)
+	_, isTuple := argumentType.(TupleType)
 	if isTuple {
 		// functions called with the empty tuple are lowered to functions called with nothing
-		if argumentType.Eq(pb.EmptyTupleType) {
+		if argumentType.Eq(EmptyTupleType) {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
 				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
@@ -353,10 +353,10 @@ func (t *Tuple) GetValueDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	expectedTupleType, isTuple := expected.(pb.TupleType)
+	expectedTupleType, isTuple := expected.(TupleType)
 
 	for i, elem := range t.Elements {
-		expectedElementType := pb.UninitType
+		expectedElementType := UninitType
 		if expected.Eq(TypeType) {
 			expectedElementType = TypeType
 		}
@@ -368,7 +368,7 @@ func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Err
 	if expected.Eq(TypeType) {
 		t.Type = TypeType
 	} else {
-		t.Type = pb.NewTupleType(pb.NewTypeVector(util.Map(t.Elements, func(e Expression) any {
+		t.Type = NewTupleType(NewTypeVector(util.Map(t.Elements, func(e Expression) any {
 			return e.GetType()
 		})...))
 	}
@@ -408,8 +408,8 @@ type Macro struct {
 	Result Expression
 }
 
-// SetValue implements pb.Destination.
-func (m *Macro) SetValue(v pb.Value) {
+// SetValue implements Destination.
+func (m *Macro) SetValue(v Value) {
 	m.Result = String{
 		Span:  Span{}, // TODO: span
 		Value: "TODO: Macro SetValue (requires Expression serialization)",

@@ -104,17 +104,17 @@ var ExpressionDeclaration = BuiltinRawDeclaration{
 	Header: `
 extern Type Expression;`,
 	Implementation: `
-Type Expression = Type{"pb::Expression"};`,
+Type Expression = Type{":Expression"};`,
 }
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
-	Type:     pb.NewFnType(StringType, pb.ExpressionType),
+	Type:     NewFnType(StringType, ExpressionType),
 	Requires: []string{"Expression"},
 	Implementation: `
-pb::Expression stringLiteral(std::string str) {
+:Expression stringLiteral(std::string str) {
     
-    return pb::Expression{str};
+    return :Expression{str};
 };`,
 }
 
@@ -306,7 +306,7 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
 	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) TypeValue { return p.Type })
-	return pb.NewFnType(pb.NewTupleType2(params...), b.ReturnType)
+	return NewFnType(NewTupleType2(params...), b.ReturnType)
 }
 
 // GetMacroTypeDependencies implements TopLevelDeclaration.

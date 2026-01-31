@@ -2,7 +2,7 @@ package ast
 
 import (
 	"yune/cpp"
-	"yune/pb"
+	"yune/
 	"yune/util"
 )
 
@@ -50,7 +50,7 @@ func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
 	deps = append(deps, Query{
 		Expression:   d.Type.Expression,
-		Destination:  pb.SetType{&d.Type.value},
+		Destination:  SetType{&d.Type.value},
 		ExpectedType: TypeType,
 	})
 	return append(deps, d.Body.GetTypeDependencies()...)
@@ -140,7 +140,7 @@ func (a *Assignment) GetValueDependencies() []Name {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(pb.UninitType, deps), a.Body.InferType(deps.NewScope())...)
+	errors = append(a.Target.InferType(UninitType, deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -381,7 +381,7 @@ type ExpressionStatement struct {
 // InferType implements Statement.
 // Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
 func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
-	return e.Expression.InferType(pb.UninitType, deps)
+	return e.Expression.InferType(UninitType, deps)
 }
 
 // Lower implements Statement.

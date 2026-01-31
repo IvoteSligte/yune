@@ -35,7 +35,7 @@ type Errors = []error
 
 type Query struct {
 	Expression
-	pb.Destination
-	// The type this query expects. May be pbType("") to indicate absence.
+	Destination
+	// The type this query expects. May be ype("") to indicate absence.
 	ExpectedType TypeValue
 }
