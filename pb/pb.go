@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-// source: pb.swigcxx
+// source: pb.i
 
 package pb
 
@@ -42,88 +42,88 @@ typedef _gostring_ swig_type_12;
 typedef _gostring_ swig_type_13;
 typedef _gostring_ swig_type_14;
 typedef _gostring_ swig_type_15;
-extern void _wrap_Swig_free_pb_10c8593e675607f8(uintptr_t arg1);
-extern uintptr_t _wrap_Swig_malloc_pb_10c8593e675607f8(swig_intgo arg1);
-extern uintptr_t _wrap_new_TypeVector__SWIG_0_pb_10c8593e675607f8(void);
-extern uintptr_t _wrap_new_TypeVector__SWIG_1_pb_10c8593e675607f8(swig_type_1 arg1);
-extern uintptr_t _wrap_new_TypeVector__SWIG_2_pb_10c8593e675607f8(uintptr_t arg1);
-extern swig_type_2 _wrap_TypeVector_size_pb_10c8593e675607f8(uintptr_t arg1);
-extern swig_type_3 _wrap_TypeVector_capacity_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_TypeVector_reserve_pb_10c8593e675607f8(uintptr_t arg1, swig_type_4 arg2);
-extern _Bool _wrap_TypeVector_isEmpty_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_TypeVector_clear_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_TypeVector_add_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_TypeVector_get_pb_10c8593e675607f8(uintptr_t arg1, swig_intgo arg2);
-extern void _wrap_TypeVector_set_pb_10c8593e675607f8(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
-extern void _wrap_delete_TypeVector_pb_10c8593e675607f8(uintptr_t arg1);
-extern uintptr_t _wrap_new_ValueVector__SWIG_0_pb_10c8593e675607f8(void);
-extern uintptr_t _wrap_new_ValueVector__SWIG_1_pb_10c8593e675607f8(swig_type_5 arg1);
-extern uintptr_t _wrap_new_ValueVector__SWIG_2_pb_10c8593e675607f8(uintptr_t arg1);
-extern swig_type_6 _wrap_ValueVector_size_pb_10c8593e675607f8(uintptr_t arg1);
-extern swig_type_7 _wrap_ValueVector_capacity_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_ValueVector_reserve_pb_10c8593e675607f8(uintptr_t arg1, swig_type_8 arg2);
-extern _Bool _wrap_ValueVector_isEmpty_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_ValueVector_clear_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_ValueVector_add_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_ValueVector_get_pb_10c8593e675607f8(uintptr_t arg1, swig_intgo arg2);
-extern void _wrap_ValueVector_set_pb_10c8593e675607f8(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
-extern void _wrap_delete_ValueVector_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_Value_eq_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_new_Value_pb_10c8593e675607f8(void);
-extern void _wrap_delete_Value_pb_10c8593e675607f8(uintptr_t arg1);
-extern uintptr_t _wrap_new_Type_pb_10c8593e675607f8(void);
-extern void _wrap_delete_Type_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_Type_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_TypeType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_TypeType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_TypeType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_IntType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_IntType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_IntType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_FloatType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_FloatType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_FloatType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_BoolType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_BoolType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_BoolType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_StringType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_StringType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_StringType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_NilType_pb_10c8593e675607f8(void);
-extern void _wrap_delete_NilType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_NilType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_TupleType_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_TupleType_elements_set_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_TupleType_elements_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_delete_TupleType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_TupleType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_ListType_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_ListType_element_set_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_ListType_element_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_delete_ListType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_ListType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_FnType_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern void _wrap_FnType_argument_set_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_FnType_argument_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_FnType_returnType_set_pb_10c8593e675607f8(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_FnType_returnType_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_delete_FnType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_FnType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_StructType_pb_10c8593e675607f8(swig_type_9 arg1);
-extern void _wrap_StructType_name_set_pb_10c8593e675607f8(uintptr_t arg1, swig_type_10 arg2);
-extern swig_type_11 _wrap_StructType_name_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern void _wrap_delete_StructType_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_StructType_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern uintptr_t _wrap_new_Expression_pb_10c8593e675607f8(void);
-extern void _wrap_delete_Expression_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_Expression_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern void _wrap_String_value_set_pb_10c8593e675607f8(uintptr_t arg1, swig_type_12 arg2);
-extern swig_type_13 _wrap_String_value_get_pb_10c8593e675607f8(uintptr_t arg1);
-extern uintptr_t _wrap_new_String_pb_10c8593e675607f8(void);
-extern void _wrap_delete_String_pb_10c8593e675607f8(uintptr_t arg1);
-extern _Bool _wrap_String_eq_pb_10c8593e675607f8(uintptr_t _swig_base, uintptr_t arg1);
-extern swig_type_14 _wrap_serializeValues_pb_10c8593e675607f8(uintptr_t arg1);
-extern uintptr_t _wrap_deserializeValues_pb_10c8593e675607f8(swig_type_15 arg1);
+extern void _wrap_Swig_free_pb_a35e394453e0a42a(uintptr_t arg1);
+extern uintptr_t _wrap_Swig_malloc_pb_a35e394453e0a42a(swig_intgo arg1);
+extern uintptr_t _wrap_new_TypeVector__SWIG_0_pb_a35e394453e0a42a(void);
+extern uintptr_t _wrap_new_TypeVector__SWIG_1_pb_a35e394453e0a42a(swig_type_1 arg1);
+extern uintptr_t _wrap_new_TypeVector__SWIG_2_pb_a35e394453e0a42a(uintptr_t arg1);
+extern swig_type_2 _wrap_TypeVector_size_pb_a35e394453e0a42a(uintptr_t arg1);
+extern swig_type_3 _wrap_TypeVector_capacity_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_TypeVector_reserve_pb_a35e394453e0a42a(uintptr_t arg1, swig_type_4 arg2);
+extern _Bool _wrap_TypeVector_isEmpty_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_TypeVector_clear_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_TypeVector_add_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_TypeVector_get_pb_a35e394453e0a42a(uintptr_t arg1, swig_intgo arg2);
+extern void _wrap_TypeVector_set_pb_a35e394453e0a42a(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
+extern void _wrap_delete_TypeVector_pb_a35e394453e0a42a(uintptr_t arg1);
+extern uintptr_t _wrap_new_ValueVector__SWIG_0_pb_a35e394453e0a42a(void);
+extern uintptr_t _wrap_new_ValueVector__SWIG_1_pb_a35e394453e0a42a(swig_type_5 arg1);
+extern uintptr_t _wrap_new_ValueVector__SWIG_2_pb_a35e394453e0a42a(uintptr_t arg1);
+extern swig_type_6 _wrap_ValueVector_size_pb_a35e394453e0a42a(uintptr_t arg1);
+extern swig_type_7 _wrap_ValueVector_capacity_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_ValueVector_reserve_pb_a35e394453e0a42a(uintptr_t arg1, swig_type_8 arg2);
+extern _Bool _wrap_ValueVector_isEmpty_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_ValueVector_clear_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_ValueVector_add_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_ValueVector_get_pb_a35e394453e0a42a(uintptr_t arg1, swig_intgo arg2);
+extern void _wrap_ValueVector_set_pb_a35e394453e0a42a(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
+extern void _wrap_delete_ValueVector_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_Value_eq_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_new_Value_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_Value_pb_a35e394453e0a42a(uintptr_t arg1);
+extern uintptr_t _wrap_new_Type_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_Type_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_Type_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_TypeType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_TypeType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_TypeType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_IntType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_IntType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_IntType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_FloatType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_FloatType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_FloatType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_BoolType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_BoolType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_BoolType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_StringType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_StringType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_StringType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_NilType_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_NilType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_NilType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_TupleType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_TupleType_elements_set_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_TupleType_elements_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_delete_TupleType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_TupleType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_ListType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_ListType_element_set_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_ListType_element_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_delete_ListType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_ListType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_FnType_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern void _wrap_FnType_argument_set_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_FnType_argument_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_FnType_returnType_set_pb_a35e394453e0a42a(uintptr_t arg1, uintptr_t arg2);
+extern uintptr_t _wrap_FnType_returnType_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_delete_FnType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_FnType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_StructType_pb_a35e394453e0a42a(swig_type_9 arg1);
+extern void _wrap_StructType_name_set_pb_a35e394453e0a42a(uintptr_t arg1, swig_type_10 arg2);
+extern swig_type_11 _wrap_StructType_name_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern void _wrap_delete_StructType_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_StructType_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern uintptr_t _wrap_new_Expression_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_Expression_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_Expression_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern void _wrap_String_value_set_pb_a35e394453e0a42a(uintptr_t arg1, swig_type_12 arg2);
+extern swig_type_13 _wrap_String_value_get_pb_a35e394453e0a42a(uintptr_t arg1);
+extern uintptr_t _wrap_new_String_pb_a35e394453e0a42a(void);
+extern void _wrap_delete_String_pb_a35e394453e0a42a(uintptr_t arg1);
+extern _Bool _wrap_String_eq_pb_a35e394453e0a42a(uintptr_t _swig_base, uintptr_t arg1);
+extern swig_type_14 _wrap_serializeValues_pb_a35e394453e0a42a(uintptr_t arg1);
+extern uintptr_t _wrap_deserializeValues_pb_a35e394453e0a42a(swig_type_15 arg1);
 #undef intgo
 */
 import "C"
@@ -155,8 +155,8 @@ func getSwigcptr(v interface { Swigcptr() uintptr }) uintptr {
 
 type _ sync.Mutex
 
-//export cgo_panic__pb_10c8593e675607f8
-func cgo_panic__pb_10c8593e675607f8(p *byte) {
+//export cgo_panic__pb_a35e394453e0a42a
+func cgo_panic__pb_a35e394453e0a42a(p *byte) {
 	s := (*[1024]byte)(unsafe.Pointer(p))[:]
 	for i, b := range s {
 		if b == 0 {
@@ -177,13 +177,13 @@ func swigCopyString(s string) string {
 
 func Swig_free(arg1 uintptr) {
 	_swig_i_0 := arg1
-	C._wrap_Swig_free_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_Swig_free_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func Swig_malloc(arg1 int) (_swig_ret uintptr) {
 	var swig_r uintptr
 	_swig_i_0 := arg1
-	swig_r = (uintptr)(C._wrap_Swig_malloc_pb_10c8593e675607f8(C.swig_intgo(_swig_i_0)))
+	swig_r = (uintptr)(C._wrap_Swig_malloc_pb_a35e394453e0a42a(C.swig_intgo(_swig_i_0)))
 	return swig_r
 }
 
@@ -198,21 +198,21 @@ func (p SwigcptrTypeVector) SwigIsTypeVector() {
 
 func NewTypeVector__SWIG_0() (_swig_ret TypeVector) {
 	var swig_r TypeVector
-	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_0_pb_10c8593e675607f8()))
+	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_0_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func NewTypeVector__SWIG_1(arg1 int64) (_swig_ret TypeVector) {
 	var swig_r TypeVector
 	_swig_i_0 := arg1
-	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_1_pb_10c8593e675607f8(C.swig_type_1(_swig_i_0))))
+	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_1_pb_a35e394453e0a42a(C.swig_type_1(_swig_i_0))))
 	return swig_r
 }
 
 func NewTypeVector__SWIG_2(arg1 TypeVector) (_swig_ret TypeVector) {
 	var swig_r TypeVector
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_2_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_new_TypeVector__SWIG_2_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
@@ -237,46 +237,46 @@ check_2:
 func (arg1 SwigcptrTypeVector) Size() (_swig_ret int64) {
 	var swig_r int64
 	_swig_i_0 := arg1
-	swig_r = (int64)(C._wrap_TypeVector_size_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (int64)(C._wrap_TypeVector_size_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrTypeVector) Capacity() (_swig_ret int64) {
 	var swig_r int64
 	_swig_i_0 := arg1
-	swig_r = (int64)(C._wrap_TypeVector_capacity_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (int64)(C._wrap_TypeVector_capacity_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrTypeVector) Reserve(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_TypeVector_reserve_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_type_4(_swig_i_1))
+	C._wrap_TypeVector_reserve_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_type_4(_swig_i_1))
 }
 
 func (arg1 SwigcptrTypeVector) IsEmpty() (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	swig_r = (bool)(C._wrap_TypeVector_isEmpty_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_TypeVector_isEmpty_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrTypeVector) Clear() {
 	_swig_i_0 := arg1
-	C._wrap_TypeVector_clear_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_TypeVector_clear_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (arg1 SwigcptrTypeVector) Add(arg2 Type) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_TypeVector_add_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_TypeVector_add_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrTypeVector) Get(arg2 int) (_swig_ret Type) {
 	var swig_r Type
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Type)(SwigcptrType(C._wrap_TypeVector_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))))
+	swig_r = (Type)(SwigcptrType(C._wrap_TypeVector_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))))
 	return swig_r
 }
 
@@ -284,12 +284,12 @@ func (arg1 SwigcptrTypeVector) Set(arg2 int, arg3 Type) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
-	C._wrap_TypeVector_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
+	C._wrap_TypeVector_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
 }
 
 func DeleteTypeVector(arg1 TypeVector) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_TypeVector_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_TypeVector_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 type TypeVector interface {
@@ -316,21 +316,21 @@ func (p SwigcptrValueVector) SwigIsValueVector() {
 
 func NewValueVector__SWIG_0() (_swig_ret ValueVector) {
 	var swig_r ValueVector
-	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_0_pb_10c8593e675607f8()))
+	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_0_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func NewValueVector__SWIG_1(arg1 int64) (_swig_ret ValueVector) {
 	var swig_r ValueVector
 	_swig_i_0 := arg1
-	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_1_pb_10c8593e675607f8(C.swig_type_5(_swig_i_0))))
+	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_1_pb_a35e394453e0a42a(C.swig_type_5(_swig_i_0))))
 	return swig_r
 }
 
 func NewValueVector__SWIG_2(arg1 ValueVector) (_swig_ret ValueVector) {
 	var swig_r ValueVector
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_2_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_new_ValueVector__SWIG_2_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
@@ -355,46 +355,46 @@ check_2:
 func (arg1 SwigcptrValueVector) Size() (_swig_ret int64) {
 	var swig_r int64
 	_swig_i_0 := arg1
-	swig_r = (int64)(C._wrap_ValueVector_size_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (int64)(C._wrap_ValueVector_size_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrValueVector) Capacity() (_swig_ret int64) {
 	var swig_r int64
 	_swig_i_0 := arg1
-	swig_r = (int64)(C._wrap_ValueVector_capacity_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (int64)(C._wrap_ValueVector_capacity_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrValueVector) Reserve(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_ValueVector_reserve_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_type_8(_swig_i_1))
+	C._wrap_ValueVector_reserve_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_type_8(_swig_i_1))
 }
 
 func (arg1 SwigcptrValueVector) IsEmpty() (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	swig_r = (bool)(C._wrap_ValueVector_isEmpty_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_ValueVector_isEmpty_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
 func (arg1 SwigcptrValueVector) Clear() {
 	_swig_i_0 := arg1
-	C._wrap_ValueVector_clear_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_ValueVector_clear_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (arg1 SwigcptrValueVector) Add(arg2 Value) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_ValueVector_add_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_ValueVector_add_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrValueVector) Get(arg2 int) (_swig_ret Value) {
 	var swig_r Value
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Value)(SwigcptrValue(C._wrap_ValueVector_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))))
+	swig_r = (Value)(SwigcptrValue(C._wrap_ValueVector_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))))
 	return swig_r
 }
 
@@ -402,12 +402,12 @@ func (arg1 SwigcptrValueVector) Set(arg2 int, arg3 Value) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
-	C._wrap_ValueVector_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
+	C._wrap_ValueVector_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
 }
 
 func DeleteValueVector(arg1 ValueVector) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_ValueVector_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_ValueVector_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 type ValueVector interface {
@@ -436,19 +436,19 @@ func (arg1 SwigcptrValue) Eq(arg2 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	swig_r = (bool)(C._wrap_Value_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1)))
+	swig_r = (bool)(C._wrap_Value_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1)))
 	return swig_r
 }
 
 func NewValue() (_swig_ret Value) {
 	var swig_r Value
-	swig_r = (Value)(SwigcptrValue(C._wrap_new_Value_pb_10c8593e675607f8()))
+	swig_r = (Value)(SwigcptrValue(C._wrap_new_Value_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteValue(arg1 Value) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_Value_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_Value_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 type Value interface {
@@ -468,19 +468,19 @@ func (p SwigcptrType) SwigIsType() {
 
 func NewType() (_swig_ret Type) {
 	var swig_r Type
-	swig_r = (Type)(SwigcptrType(C._wrap_new_Type_pb_10c8593e675607f8()))
+	swig_r = (Type)(SwigcptrType(C._wrap_new_Type_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteType(arg1 Type) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_Type_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_Type_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_Type_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_Type_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -510,19 +510,19 @@ func (p SwigcptrTypeType) SwigIsTypeType() {
 
 func NewTypeType() (_swig_ret TypeType) {
 	var swig_r TypeType
-	swig_r = (TypeType)(SwigcptrTypeType(C._wrap_new_TypeType_pb_10c8593e675607f8()))
+	swig_r = (TypeType)(SwigcptrTypeType(C._wrap_new_TypeType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteTypeType(arg1 TypeType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_TypeType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_TypeType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrTypeType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_TypeType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_TypeType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -561,19 +561,19 @@ func (p SwigcptrIntType) SwigIsIntType() {
 
 func NewIntType() (_swig_ret IntType) {
 	var swig_r IntType
-	swig_r = (IntType)(SwigcptrIntType(C._wrap_new_IntType_pb_10c8593e675607f8()))
+	swig_r = (IntType)(SwigcptrIntType(C._wrap_new_IntType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteIntType(arg1 IntType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_IntType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_IntType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrIntType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_IntType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_IntType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -612,19 +612,19 @@ func (p SwigcptrFloatType) SwigIsFloatType() {
 
 func NewFloatType() (_swig_ret FloatType) {
 	var swig_r FloatType
-	swig_r = (FloatType)(SwigcptrFloatType(C._wrap_new_FloatType_pb_10c8593e675607f8()))
+	swig_r = (FloatType)(SwigcptrFloatType(C._wrap_new_FloatType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteFloatType(arg1 FloatType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_FloatType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_FloatType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrFloatType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_FloatType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_FloatType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -663,19 +663,19 @@ func (p SwigcptrBoolType) SwigIsBoolType() {
 
 func NewBoolType() (_swig_ret BoolType) {
 	var swig_r BoolType
-	swig_r = (BoolType)(SwigcptrBoolType(C._wrap_new_BoolType_pb_10c8593e675607f8()))
+	swig_r = (BoolType)(SwigcptrBoolType(C._wrap_new_BoolType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteBoolType(arg1 BoolType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_BoolType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_BoolType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrBoolType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_BoolType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_BoolType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -714,19 +714,19 @@ func (p SwigcptrStringType) SwigIsStringType() {
 
 func NewStringType() (_swig_ret StringType) {
 	var swig_r StringType
-	swig_r = (StringType)(SwigcptrStringType(C._wrap_new_StringType_pb_10c8593e675607f8()))
+	swig_r = (StringType)(SwigcptrStringType(C._wrap_new_StringType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteStringType(arg1 StringType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_StringType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_StringType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrStringType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_StringType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_StringType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -765,19 +765,19 @@ func (p SwigcptrNilType) SwigIsNilType() {
 
 func NewNilType() (_swig_ret NilType) {
 	var swig_r NilType
-	swig_r = (NilType)(SwigcptrNilType(C._wrap_new_NilType_pb_10c8593e675607f8()))
+	swig_r = (NilType)(SwigcptrNilType(C._wrap_new_NilType_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteNilType(arg1 NilType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_NilType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_NilType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrNilType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_NilType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_NilType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -817,32 +817,32 @@ func (p SwigcptrTupleType) SwigIsTupleType() {
 func NewTupleType(arg1 TypeVector) (_swig_ret TupleType) {
 	var swig_r TupleType
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (TupleType)(SwigcptrTupleType(C._wrap_new_TupleType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (TupleType)(SwigcptrTupleType(C._wrap_new_TupleType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func (arg1 SwigcptrTupleType) SetElements(arg2 TypeVector) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_TupleType_elements_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_TupleType_elements_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrTupleType) GetElements() (_swig_ret TypeVector) {
 	var swig_r TypeVector
 	_swig_i_0 := arg1
-	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_TupleType_elements_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (TypeVector)(SwigcptrTypeVector(C._wrap_TupleType_elements_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func DeleteTupleType(arg1 TupleType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_TupleType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_TupleType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrTupleType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_TupleType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_TupleType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -884,32 +884,32 @@ func (p SwigcptrListType) SwigIsListType() {
 func NewListType(arg1 Type) (_swig_ret ListType) {
 	var swig_r ListType
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (ListType)(SwigcptrListType(C._wrap_new_ListType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (ListType)(SwigcptrListType(C._wrap_new_ListType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func (arg1 SwigcptrListType) SetElement(arg2 Type) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_ListType_element_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_ListType_element_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrListType) GetElement() (_swig_ret Type) {
 	var swig_r Type
 	_swig_i_0 := arg1
-	swig_r = (Type)(SwigcptrType(C._wrap_ListType_element_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (Type)(SwigcptrType(C._wrap_ListType_element_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func DeleteListType(arg1 ListType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_ListType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_ListType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrListType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_ListType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_ListType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -952,45 +952,45 @@ func NewFnType(arg1 Type, arg2 Type) (_swig_ret FnType) {
 	var swig_r FnType
 	_swig_i_0 := getSwigcptr(arg1)
 	_swig_i_1 := getSwigcptr(arg2)
-	swig_r = (FnType)(SwigcptrFnType(C._wrap_new_FnType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))))
+	swig_r = (FnType)(SwigcptrFnType(C._wrap_new_FnType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))))
 	return swig_r
 }
 
 func (arg1 SwigcptrFnType) SetArgument(arg2 Type) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_FnType_argument_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_FnType_argument_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrFnType) GetArgument() (_swig_ret Type) {
 	var swig_r Type
 	_swig_i_0 := arg1
-	swig_r = (Type)(SwigcptrType(C._wrap_FnType_argument_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (Type)(SwigcptrType(C._wrap_FnType_argument_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func (arg1 SwigcptrFnType) SetReturnType(arg2 Type) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	C._wrap_FnType_returnType_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
+	C._wrap_FnType_returnType_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
 }
 
 func (arg1 SwigcptrFnType) GetReturnType() (_swig_ret Type) {
 	var swig_r Type
 	_swig_i_0 := arg1
-	swig_r = (Type)(SwigcptrType(C._wrap_FnType_returnType_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))))
+	swig_r = (Type)(SwigcptrType(C._wrap_FnType_returnType_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))))
 	return swig_r
 }
 
 func DeleteFnType(arg1 FnType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_FnType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_FnType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrFnType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_FnType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_FnType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -1034,7 +1034,7 @@ func (p SwigcptrStructType) SwigIsStructType() {
 func NewStructType(arg1 string) (_swig_ret StructType) {
 	var swig_r StructType
 	_swig_i_0 := arg1
-	swig_r = (StructType)(SwigcptrStructType(C._wrap_new_StructType_pb_10c8593e675607f8(*(*C.swig_type_9)(unsafe.Pointer(&_swig_i_0)))))
+	swig_r = (StructType)(SwigcptrStructType(C._wrap_new_StructType_pb_a35e394453e0a42a(*(*C.swig_type_9)(unsafe.Pointer(&_swig_i_0)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg1
 	}
@@ -1044,7 +1044,7 @@ func NewStructType(arg1 string) (_swig_ret StructType) {
 func (arg1 SwigcptrStructType) SetName(arg2 string) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_StructType_name_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), *(*C.swig_type_10)(unsafe.Pointer(&_swig_i_1)))
+	C._wrap_StructType_name_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), *(*C.swig_type_10)(unsafe.Pointer(&_swig_i_1)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -1053,7 +1053,7 @@ func (arg1 SwigcptrStructType) SetName(arg2 string) {
 func (arg1 SwigcptrStructType) GetName() (_swig_ret string) {
 	var swig_r string
 	_swig_i_0 := arg1
-	swig_r_p := C._wrap_StructType_name_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	swig_r_p := C._wrap_StructType_name_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 	swig_r = *(*string)(unsafe.Pointer(&swig_r_p))
 	var swig_r_1 string
  swig_r_1 = swigCopyString(swig_r) 
@@ -1062,13 +1062,13 @@ func (arg1 SwigcptrStructType) GetName() (_swig_ret string) {
 
 func DeleteStructType(arg1 StructType) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_StructType_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_StructType_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrStructType) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_StructType_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_StructType_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -1109,19 +1109,19 @@ func (p SwigcptrExpression) SwigIsExpression() {
 
 func NewExpression() (_swig_ret Expression) {
 	var swig_r Expression
-	swig_r = (Expression)(SwigcptrExpression(C._wrap_new_Expression_pb_10c8593e675607f8()))
+	swig_r = (Expression)(SwigcptrExpression(C._wrap_new_Expression_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteExpression(arg1 Expression) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_Expression_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_Expression_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrExpression) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_Expression_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_Expression_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -1152,7 +1152,7 @@ func (p SwigcptrString) SwigIsString() {
 func (arg1 SwigcptrString) SetValue(arg2 string) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_String_value_set_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0), *(*C.swig_type_12)(unsafe.Pointer(&_swig_i_1)))
+	C._wrap_String_value_set_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0), *(*C.swig_type_12)(unsafe.Pointer(&_swig_i_1)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -1161,7 +1161,7 @@ func (arg1 SwigcptrString) SetValue(arg2 string) {
 func (arg1 SwigcptrString) GetValue() (_swig_ret string) {
 	var swig_r string
 	_swig_i_0 := arg1
-	swig_r_p := C._wrap_String_value_get_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	swig_r_p := C._wrap_String_value_get_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 	swig_r = *(*string)(unsafe.Pointer(&swig_r_p))
 	var swig_r_1 string
  swig_r_1 = swigCopyString(swig_r) 
@@ -1170,19 +1170,19 @@ func (arg1 SwigcptrString) GetValue() (_swig_ret string) {
 
 func NewString() (_swig_ret String) {
 	var swig_r String
-	swig_r = (String)(SwigcptrString(C._wrap_new_String_pb_10c8593e675607f8()))
+	swig_r = (String)(SwigcptrString(C._wrap_new_String_pb_a35e394453e0a42a()))
 	return swig_r
 }
 
 func DeleteString(arg1 String) {
 	_swig_i_0 := getSwigcptr(arg1)
-	C._wrap_delete_String_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	C._wrap_delete_String_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 }
 
 func (_swig_base SwigcptrString) Eq(arg1 Value) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r = (bool)(C._wrap_String_eq_pb_10c8593e675607f8(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
+	swig_r = (bool)(C._wrap_String_eq_pb_a35e394453e0a42a(C.uintptr_t(_swig_base), C.uintptr_t(_swig_i_0)))
 	return swig_r
 }
 
@@ -1215,7 +1215,7 @@ type String interface {
 func SerializeValues(arg1 ValueVector) (_swig_ret string) {
 	var swig_r string
 	_swig_i_0 := getSwigcptr(arg1)
-	swig_r_p := C._wrap_serializeValues_pb_10c8593e675607f8(C.uintptr_t(_swig_i_0))
+	swig_r_p := C._wrap_serializeValues_pb_a35e394453e0a42a(C.uintptr_t(_swig_i_0))
 	swig_r = *(*string)(unsafe.Pointer(&swig_r_p))
 	var swig_r_1 string
  swig_r_1 = swigCopyString(swig_r) 
@@ -1225,7 +1225,7 @@ func SerializeValues(arg1 ValueVector) (_swig_ret string) {
 func DeserializeValues(arg1 string) (_swig_ret ValueVector) {
 	var swig_r ValueVector
 	_swig_i_0 := arg1
-	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_deserializeValues_pb_10c8593e675607f8(*(*C.swig_type_15)(unsafe.Pointer(&_swig_i_0)))))
+	swig_r = (ValueVector)(SwigcptrValueVector(C._wrap_deserializeValues_pb_a35e394453e0a42a(*(*C.swig_type_15)(unsafe.Pointer(&_swig_i_0)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg1
 	}

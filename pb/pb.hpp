@@ -1,9 +1,11 @@
+
 #include <vector>
 #include <string>
 #include "rfl/json.hpp"
 #include "rfl.hpp"
 #include <iostream>
 
+namespace pb {
 struct Value {
   bool operator==(const Value&) const = default;
 };
@@ -50,3 +52,4 @@ std::vector<Value> deserializeValues(std::string data) {
   return rfl::json::read<std::vector<Value>>(data).value();
 }
 
+}

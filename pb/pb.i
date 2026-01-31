@@ -5,8 +5,8 @@
 %include <std_vector.i>
 %include <std_string.i>
 
-%template(TypeVector) std::vector<Type>;
-%template(ValueVector) std::vector<Value>;
+%template(TypeVector) std::vector<pb::Type>;
+%template(ValueVector) std::vector<pb::Value>;
 
 %rename(eq) operator==;
 
