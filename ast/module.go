@@ -3,7 +3,6 @@ package ast
 import (
 	"log"
 	"yune/cpp"
-	"yune/pb"
 	"yune/util"
 
 	mapset "github.com/deckarep/golang-set/v2"

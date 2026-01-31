@@ -3,7 +3,6 @@ package ast
 import (
 	"strings"
 	"yune/cpp"
-	"yune/pb"
 	"yune/util"
 )
 
@@ -21,17 +20,10 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	PrintStringDeclaration,
 }
 
-var TypeType = pb.NewTypeType()
-var IntType = pb.NewIntType()
-var FloatType = pb.NewFloatType()
-var BoolType = pb.NewBoolType()
-var StringType = pb.NewStringType()
-var NilType = pb.NewNilType()
-
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
 	Name           string
-	Type           pb.Type
+	Type           TypeValue
 	Requires       []string
 	Header         string
 	Implementation string
@@ -53,7 +45,7 @@ func (b BuiltinRawDeclaration) GetSpan() Span {
 }
 
 // GetDeclaredType implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetDeclaredType() pb.Type {
+func (b BuiltinRawDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
@@ -147,7 +139,7 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 }
 
 // GetDeclaredType implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetDeclaredType() pb.Type {
+func (b BuiltinStructDeclaration) GetDeclaredType() TypeValue {
 	return TypeType
 }
 
@@ -202,7 +194,7 @@ type BuiltinFieldDeclaration struct {
 
 type BuiltinConstantDeclaration struct {
 	Name  string
-	Type  pb.Type
+	Type  TypeValue
 	Value string
 }
 
@@ -222,7 +214,7 @@ func (b BuiltinConstantDeclaration) GetSpan() Span {
 }
 
 // GetDeclaredType implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetDeclaredType() pb.Type {
+func (b BuiltinConstantDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
@@ -291,7 +283,7 @@ var NilDeclaration = BuiltinConstantDeclaration{
 type BuiltinFunctionDeclaration struct {
 	Name       string
 	Parameters []BuiltinFunctionParameter
-	ReturnType pb.Type
+	ReturnType TypeValue
 	Body       string
 }
 
@@ -311,9 +303,9 @@ func (b BuiltinFunctionDeclaration) GetSpan() Span {
 }
 
 // GetDeclaredType implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetDeclaredType() pb.Type {
+func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	// NOTE: does this work for single parameters? it's the same in FunctionDeclaration.GetDeclaredType
-	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) pb.Type { return p.Type })
+	params := util.Map(b.Parameters, func(p BuiltinFunctionParameter) TypeValue { return p.Type })
 	return pb.NewFnType(pb.NewTupleType2(params...), b.ReturnType)
 }
 
@@ -364,14 +356,14 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "argumentType",
-			Type: TypeType,
+			Type: TypeType{},
 		},
 		{
 			Name: "returnType",
-			Type: TypeType,
+			Type: TypeType{},
 		},
 	},
-	ReturnType: TypeType,
+	ReturnType: TypeType{},
 	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
 	Body: `
 std::string tuplePrefix("std::tuple<");
@@ -390,10 +382,10 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "elementType",
-			Type: TypeType,
+			Type: TypeType{},
 		},
 	},
-	ReturnType: TypeType,
+	ReturnType: TypeType{},
 	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
 }
 
@@ -402,10 +394,10 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "string",
-			Type: StringType,
+			Type: StringType{},
 		},
 	},
-	ReturnType: NilType,
+	ReturnType: NilType{},
 	Body:       `std::cout << string << std::endl;`,
 }
 
@@ -413,5 +405,5 @@ var _ TopLevelDeclaration = BuiltinFunctionDeclaration{}
 
 type BuiltinFunctionParameter struct {
 	Name string
-	Type pb.Type
+	Type TypeValue
 }
