@@ -27,40 +27,65 @@ type TypeValue interface {
 	Value
 	typeValue()
 	Lower() cpp.Type
+	Eq(other TypeValue) bool
 }
 
 type TypeType struct{}
 
+func (t TypeType) Eq(other TypeValue) bool {
+	_, ok := other.(TypeType)
+	return ok
+}
 func (t TypeType) typeValue()    {}
 func (t TypeType) value()        {}
 func (TypeType) Lower() cpp.Type { return "Type" }
 
 type IntType struct{}
 
+func (i IntType) Eq(other TypeValue) bool {
+	_, ok := other.(IntType)
+	return ok
+}
 func (i IntType) typeValue()    {}
 func (i IntType) value()        {}
 func (IntType) Lower() cpp.Type { return "int" }
 
 type FloatType struct{}
 
+func (f FloatType) Eq(other TypeValue) bool {
+	_, ok := other.(FloatType)
+	return ok
+}
 func (f FloatType) typeValue()    {}
 func (f FloatType) value()        {}
 func (FloatType) Lower() cpp.Type { return "float" }
 
 type BoolType struct{}
 
+func (b BoolType) Eq(other TypeValue) bool {
+	_, ok := other.(BoolType)
+	return ok
+}
 func (b BoolType) typeValue()    {}
 func (b BoolType) value()        {}
 func (BoolType) Lower() cpp.Type { return "bool" }
 
 type StringType struct{}
 
+func (s StringType) Eq(other TypeValue) bool {
+	_, ok := other.(StringType)
+	return ok
+}
 func (s StringType) typeValue()    {}
 func (s StringType) value()        {}
 func (StringType) Lower() cpp.Type { return "std::string" }
 
 type NilType struct{}
 
+func (n NilType) Eq(other TypeValue) bool {
+	_, ok := other.(NilType)
+	return ok
+}
 func (n NilType) typeValue()    {}
 func (n NilType) value()        {}
 func (NilType) Lower() cpp.Type { return "void" }
@@ -69,6 +94,18 @@ type TupleType struct {
 	Elements []TypeValue
 }
 
+func (t TupleType) Eq(other TypeValue) bool {
+	otherTuple, ok := other.(TupleType)
+	if !ok {
+		return false
+	}
+	for i, element := range t.Elements {
+		if !element.Eq(otherTuple.Elements[i]) {
+			return false
+		}
+	}
+	return true
+}
 func (t TupleType) typeValue() {}
 func (t TupleType) value()     {}
 func (t TupleType) Lower() cpp.Type {
@@ -81,6 +118,10 @@ type ListType struct {
 	Element TypeValue
 }
 
+func (l ListType) Eq(other TypeValue) bool {
+	otherList, ok := other.(ListType)
+	return ok && l.Element.Eq(otherList.Element)
+}
 func (l ListType) typeValue() {}
 func (l ListType) value()     {}
 func (l ListType) Lower() cpp.Type {
@@ -92,6 +133,10 @@ type FnType struct {
 	Return   TypeValue
 }
 
+func (f FnType) Eq(other TypeValue) bool {
+	otherFn, ok := other.(FnType)
+	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
+}
 func (f FnType) typeValue() {}
 func (f FnType) value()     {}
 func (f FnType) Lower() cpp.Type {
@@ -112,6 +157,10 @@ type StructType struct {
 	Name string
 }
 
+func (s StructType) Eq(other TypeValue) bool {
+	otherStruct, ok := other.(StructType)
+	return ok && s.Name == otherStruct.Name
+}
 func (s StructType) typeValue() {}
 func (s StructType) value()     {}
 func (s StructType) Lower() cpp.Type {
