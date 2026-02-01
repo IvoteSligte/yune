@@ -4,18 +4,22 @@
 #include <string>
 #include <vector>
 
+template <class T> using Box = std::unique_ptr<T>;
+template <class T> Box<T> box(T value) { return std::make_unique<T>(value); }
+
 namespace ty {
 
 using json = nlohmann::json;
 
 struct Value {
+  Value() {}
   virtual json to_json() const = 0;
 };
 
 struct Type : Value {
   virtual json to_json() const = 0;
 };
-using TypePtr = std::unique_ptr<Type>;
+using TypePtr = Box<Type>;
 
 struct TypeType : Type {
   json to_json() const override { return {{"_type", "Type"}}; }
@@ -51,7 +55,7 @@ struct TupleType : Type {
 struct ListType : Type {
   template <typename T, typename = std::enable_if_t<std::is_base_of_v<Type, T>>>
   ListType(T element) {
-    this->element(std::make_unique<T>(std::move(element)));
+    this->element(box<T>(std::move(element)));
   }
   json to_json() const override {
     return {{"_type", "ListType"}, {"element", element->to_json()}};
@@ -64,8 +68,8 @@ struct FnType : Type {
             typename = std::enable_if_t<std::is_base_of_v<Type, A>>,
             typename = std::enable_if_t<std::is_base_of_v<Type, B>>>
   FnType(A argument, B returnType) {
-    this->argument(std::make_unique<A>(argument));
-    this->returnType(std::make_unique<B>(returnType));
+    this->argument(box<A>(argument));
+    this->returnType(box<B>(returnType));
   }
   json to_json() const override {
     return {{"_type", "FnType"},

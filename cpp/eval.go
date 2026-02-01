@@ -35,7 +35,7 @@ func Evaluate(module Module, batch []Expression) (outputs []byte) {
 
 	for _, e := range batch {
 		if e == nil {
-			addStmt(`outputs.emplace_back({});`)
+			addStmt(`outputs.emplace_back(ty::Value());`)
 		} else {
 			addStmt(fmt.Sprintf(`outputs.push_back(%s);`, e))
 		}

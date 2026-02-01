@@ -110,8 +110,8 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
 	Implementation: `
-ty::Expression stringLiteral(std::string str) {
-    return ty::String{str};
+Box<ty::Expression> stringLiteral(std::string str) {
+    return box<ty::String>(ty::String{str});
 };`,
 }
 
