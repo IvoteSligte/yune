@@ -7,9 +7,9 @@
 #include <vector>
 
 template <class T>
-using Box = std::unique_ptr<T>;
+using Box = std::shared_ptr<T>;
 template <class T>
-Box<T> box(T value) { return std::make_unique<T>(value); }
+Box<T> box(T value) { return std::make_shared<T>(value); }
 
 namespace ty {
 
@@ -100,10 +100,9 @@ struct TupleType {
     std::vector<Type> elements;
 };
 struct ListType {
-    template <typename T, typename = std::enable_if_t<std::is_base_of_v<Type, T>>>
-    ListType(T element)
+    ListType(Type element)
     {
-        this->element(box<T>(std::move(element)));
+        this->element = element;
     }
 
     Type element;
