@@ -31,7 +31,7 @@ func Evaluate(module Module, batch []Expression) (outputs []byte) {
 		statements = append(statements, Statement(Raw(s)))
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
-	addStmt(`std::vector<Value> outputs;`)
+	addStmt(`std::vector<ty::Value> outputs;`)
 
 	for _, e := range batch {
 		if e == nil {

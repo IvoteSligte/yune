@@ -98,13 +98,11 @@ std::ostream& operator<<(std::ostream& out, const Type& t) {
 }
 
 var ExpressionDeclaration = BuiltinRawDeclaration{
-	Name:     "Expression",
-	Type:     TypeType{},
-	Requires: []string{"Type"},
-	Header: `
-extern Type Expression;`,
-	Implementation: `
-Type Expression = Type{":Expression"};`,
+	Name:           "Expression",
+	Type:           TypeType{},
+	Requires:       []string{"Type"},
+	Header:         `extern Type Expression;`,
+	Implementation: `Type Expression = Type{"Expression"};`,
 }
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
@@ -112,9 +110,8 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
 	Implementation: `
-:Expression stringLiteral(std::string str) {
-    
-    return :Expression{str};
+ty::Expression stringLiteral(std::string str) {
+    return ty::String{str};
 };`,
 }
 
