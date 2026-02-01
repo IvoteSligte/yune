@@ -100,6 +100,7 @@ func discriminatorToOption(d string, opts []Option) (found Option, ok bool) {
 	for _, opt := range opts {
 		if opt.OneofKey() == d {
 			found = opt
+			ok = true
 			return
 		}
 	}
