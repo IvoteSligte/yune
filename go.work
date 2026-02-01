@@ -4,6 +4,7 @@ use (
 	.
 	./ast
 	./cpp
+	./oneof
 	./parser
 	./util
 )

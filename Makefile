@@ -11,5 +11,7 @@ parser/yune_parser.go: YuneParser.g4 YuneLexer.g4
 
 parser: parser/yune_lexer.go parser/yune_parser.go
 
-run: parser
+go:
 	go run .
+
+run: parser go

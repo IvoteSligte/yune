@@ -182,13 +182,14 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// TODO: make sure the main() function is always in the last stage
-		values := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
+		evalBytes := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
 				return nil
 			}
 		}))
+		values := Deserialize(evalBytes)
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
 				if v == nil {

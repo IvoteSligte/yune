@@ -35,75 +35,91 @@ type TypeValue interface {
 	typeValue()
 	Lower() cpp.Type
 	Eq(other TypeValue) bool
+	// Wraps self in a TupleType, if self is not already a TupleType
+	WrapTupleType() TupleType
 }
 
-type TypeType struct{}
+type DefaultTypeValue struct{}
+
+func (DefaultTypeValue) value()     {}
+func (DefaultTypeValue) typeValue() {}
+func (DefaultTypeValue) Lower() cpp.Type {
+	panic("DefaultTypeValue.Lower should be overridden")
+}
+func (DefaultTypeValue) Eq(other TypeValue) bool {
+	panic("DefaultTypeValue.Eq should be overridden")
+}
+func (d DefaultTypeValue) WrapTupleType() TupleType {
+	return NewTupleType(d)
+}
+func (DefaultTypeValue) OneofKey() string {
+	panic("DefaultTypeValue.OneofKey should be overridden")
+}
+
+var _ TypeValue = DefaultTypeValue{}
+
+type TypeType struct{ DefaultTypeValue }
 
 func (t TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(TypeType)
 	return ok
 }
-func (t TypeType) typeValue()    {}
-func (t TypeType) value()        {}
-func (TypeType) Lower() cpp.Type { return "Type" }
+func (TypeType) Lower() cpp.Type  { return "Type" }
+func (TypeType) OneofKey() string { return "Type" }
 
-type IntType struct{}
+type IntType struct{ DefaultTypeValue }
 
 func (i IntType) Eq(other TypeValue) bool {
 	_, ok := other.(IntType)
 	return ok
 }
-func (i IntType) typeValue()    {}
-func (i IntType) value()        {}
-func (IntType) Lower() cpp.Type { return "int" }
+func (IntType) Lower() cpp.Type  { return "int" }
+func (IntType) OneofKey() string { return "IntType" }
 
-type FloatType struct{}
+type FloatType struct{ DefaultTypeValue }
 
 func (f FloatType) Eq(other TypeValue) bool {
 	_, ok := other.(FloatType)
 	return ok
 }
-func (f FloatType) typeValue()    {}
-func (f FloatType) value()        {}
-func (FloatType) Lower() cpp.Type { return "float" }
+func (FloatType) Lower() cpp.Type  { return "float" }
+func (FloatType) OneofKey() string { return "FloatType" }
 
-type BoolType struct{}
+type BoolType struct{ DefaultTypeValue }
 
 func (b BoolType) Eq(other TypeValue) bool {
 	_, ok := other.(BoolType)
 	return ok
 }
-func (b BoolType) typeValue()    {}
-func (b BoolType) value()        {}
-func (BoolType) Lower() cpp.Type { return "bool" }
+func (BoolType) Lower() cpp.Type  { return "bool" }
+func (BoolType) OneofKey() string { return "BoolType" }
 
-type StringType struct{}
+type StringType struct{ DefaultTypeValue }
 
 func (s StringType) Eq(other TypeValue) bool {
 	_, ok := other.(StringType)
 	return ok
 }
-func (s StringType) typeValue()    {}
-func (s StringType) value()        {}
-func (StringType) Lower() cpp.Type { return "std::string" }
+func (StringType) Lower() cpp.Type  { return "std::string" }
+func (StringType) OneofKey() string { return "StringType" }
 
-type NilType struct{}
+type NilType struct{ DefaultTypeValue }
 
 func (n NilType) Eq(other TypeValue) bool {
 	_, ok := other.(NilType)
 	return ok
 }
-func (n NilType) typeValue()    {}
-func (n NilType) value()        {}
-func (NilType) Lower() cpp.Type { return "void" }
+func (NilType) Lower() cpp.Type  { return "void" }
+func (NilType) OneofKey() string { return "NilType" }
 
 type TupleType struct {
+	DefaultTypeValue
 	Elements []TypeValue
 }
 
 func (t TupleType) Eq(other TypeValue) bool {
 	otherTuple, ok := other.(TupleType)
-	if !ok {
+	if !ok || len(t.Elements) != len(otherTuple.Elements) {
 		return false
 	}
 	for i, element := range t.Elements {
@@ -113,13 +129,13 @@ func (t TupleType) Eq(other TypeValue) bool {
 	}
 	return true
 }
-func (t TupleType) typeValue() {}
-func (t TupleType) value()     {}
 func (t TupleType) Lower() cpp.Type {
 	return cpp.Type(util.JoinFunction(t.Elements, ", ", func(v TypeValue) string {
 		return v.Lower().String()
 	}))
 }
+func (t TupleType) WrapTupleType() TupleType { return t }
+func (TupleType) OneofKey() string           { return "TupleType" }
 
 func NewTupleType(elements ...TypeValue) TupleType {
 	return TupleType{
@@ -128,6 +144,7 @@ func NewTupleType(elements ...TypeValue) TupleType {
 }
 
 type ListType struct {
+	DefaultTypeValue
 	Element TypeValue
 }
 
@@ -135,14 +152,14 @@ func (l ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(ListType)
 	return ok && l.Element.Eq(otherList.Element)
 }
-func (l ListType) typeValue() {}
-func (l ListType) value()     {}
 func (l ListType) Lower() cpp.Type {
 	return cpp.Type("std::vector<" + l.Element.Lower() + ">")
 }
+func (ListType) OneofKey() string { return "ListType" }
 
 type FnType struct {
-	Argument TupleType
+	DefaultTypeValue
+	Argument TypeValue
 	Return   TypeValue
 }
 
@@ -150,17 +167,17 @@ func (f FnType) Eq(other TypeValue) bool {
 	otherFn, ok := other.(FnType)
 	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
 }
-func (f FnType) typeValue() {}
-func (f FnType) value()     {}
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	arguments := util.JoinFunction(f.Argument.Elements, ", ", func(v TypeValue) string {
+	arguments := util.JoinFunction(f.Argument.WrapTupleType().Elements, ", ", func(v TypeValue) string {
 		return v.Lower().String()
 	})
 	return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return, arguments))
 }
+func (FnType) OneofKey() string { return "FnType" }
 
 type StructType struct {
+	DefaultTypeValue
 	Name string
 }
 
@@ -168,12 +185,11 @@ func (s StructType) Eq(other TypeValue) bool {
 	otherStruct, ok := other.(StructType)
 	return ok && s.Name == otherStruct.Name
 }
-func (s StructType) typeValue() {}
-func (s StructType) value()     {}
 func (s StructType) Lower() cpp.Type {
 	// TODO: register struct type if newly defined
 	return cpp.Type("ty::" + s.Name)
 }
+func (StructType) OneofKey() string { return "StructType" }
 
 var _ TypeValue = TypeType{}
 var _ TypeValue = IntType{}

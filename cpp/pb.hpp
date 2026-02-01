@@ -1,9 +1,10 @@
 
 #include <vector>
 #include <string>
-#include "rfl/json.hpp"
-#include "rfl.hpp"
 #include <iostream>
+#include "json.hpp" // nlohmann JSON library
+
+using json = nlohmann::json;
 
 namespace pb {
 struct Value {

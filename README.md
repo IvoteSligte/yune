@@ -1,12 +1,10 @@
 # Yune
 
 ## Dependencies
-### Compilation
+
 go
 clang++
 clang-format
-C++ 17
+C++ 20
+nlohmann/json (provided)
 
-### Serialization
-SWIG
-reflect-cpp (submodule)

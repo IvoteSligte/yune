@@ -1,29 +1,30 @@
 package ast
 
 import (
-	"github.com/dhoelle/oneof"
-	"github.com/go-json-experiment/json" // JSON V2
+	"github.com/go-json-experiment/json"
+	"yune/oneof"
 )
 
-var valueOptions = map[string]Value{
-	"Type":       TypeType{},
-	"IntType":    IntType{},
-	"FloatType":  FloatType{},
-	"BoolType":   BoolType{},
-	"StringType": StringType{},
-	"NilType":    NilType{},
-	"TupleType":  TupleType{},
-	"ListType":   ListType{},
-	"FnType":     FnType{},
-	"StructType": StructType{},
+var valueOptions = []oneof.Option{
+	TypeType{},
+	IntType{},
+	FloatType{},
+	BoolType{},
+	StringType{},
+	NilType{},
+	TupleType{},
+	ListType{},
+	FnType{},
+	StructType{},
 }
 
 type Value interface {
+	oneof.Option
 	value()
 }
 
 func Deserialize(jsonBytes []byte) (vs []Value) {
-	unmarshaler := oneof.UnmarshalFunc(valueOptions, nil)
+	unmarshaler := oneof.UnmarshalFunc[Value](valueOptions)
 	err := json.Unmarshal(jsonBytes, &vs, json.WithUnmarshalers(unmarshaler))
 	if err != nil {
 		panic("Failed to deserialize JSON: " + err.Error())

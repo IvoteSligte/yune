@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"yune/ast"
 )
 
 // TODO: manage memory of pb.Type and such
 
 // TODO: skip evaluation if batch is all-nil
-func Evaluate(module Module, batch []Expression) (outputs []ast.Value) {
+func Evaluate(module Module, batch []Expression) (outputs []byte) {
 	// NOTE: main function is assumed not to exist
 
 	fmt.Println("--- Start Evaluation ---")
@@ -55,5 +54,5 @@ func Evaluate(module Module, batch []Expression) (outputs []ast.Value) {
 	if err != nil {
 		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
 	}
-	return ast.Deserialize(bytes)
+	return bytes // not deserialized here to prevent module import loop
 }

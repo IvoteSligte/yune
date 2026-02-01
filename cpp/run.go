@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+//go:embed "json.hpp"
+var jsonHeader string // nlohmann JSON library
+
 //go:embed "pb.hpp"
 var pbHeader string
 
@@ -75,6 +78,7 @@ func Run(module Module) {
 	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
 
+	writeFile(dir, "json.hpp", jsonHeader)
 	writeFile(dir, "pb.hpp", pbHeader)
 
 	writeFile(dir, "code.h", `
