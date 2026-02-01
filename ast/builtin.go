@@ -85,12 +85,9 @@ func (b BuiltinRawDeclaration) TypeCheckBody(deps DeclarationTable) (errors []er
 var _ TopLevelDeclaration = BuiltinRawDeclaration{}
 
 var TypeDeclaration = BuiltinRawDeclaration{
-	Name: "Type",
-	Type: TypeType{},
-	Header: `
-struct Type {
-    std::string id;
-};`,
+	Name:   "Type",
+	Type:   TypeType{},
+	Header: `extern ty::Type Type;`,
 	Implementation: `
 std::ostream& operator<<(std::ostream& out, const Type& t) {
     return out << t.id;
@@ -101,8 +98,8 @@ var ExpressionDeclaration = BuiltinRawDeclaration{
 	Name:           "Expression",
 	Type:           TypeType{},
 	Requires:       []string{"Type"},
-	Header:         `extern Type Expression;`,
-	Implementation: `Type Expression = Type{"Expression"};`,
+	Header:         `extern ty::Type Expression;`,
+	Implementation: `ty::Type Expression = ty::Type{"Expression"};`,
 }
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
@@ -110,8 +107,8 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
 	Implementation: `
-Box<ty::Expression> stringLiteral(std::string str) {
-    return box<ty::String>(ty::String{str});
+ty::Expression stringLiteral(std::string str) {
+    return ty::String{str};
 };`,
 }
 
@@ -254,27 +251,27 @@ var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
 	Type:  TypeType{},
-	Value: `Type{"int"}`,
+	Value: `ty::IntType{}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
 	Type:  TypeType{},
-	Value: `Type{"float"}`,
+	Value: `ty::FloatType{}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
 	Type:  TypeType{},
-	Value: `Type{"bool"}`,
+	Value: `ty::BoolType{}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
 	Type:  TypeType{},
-	Value: `Type{"std::string"}`,
+	Value: `ty::StringType{}`,
 }
 var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
 	Type:  TypeType{},
-	Value: `Type{"void"}`,
+	Value: `ty::NilType{}`,
 }
 
 type BuiltinFunctionDeclaration struct {
@@ -364,17 +361,7 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	// FIXME: this does not map Fn((A, B), C) -> std::function<C(A, B)> but to std::function<C(std::tuple<A, B>)>
-	Body: `
-std::string tuplePrefix("std::tuple<");
-if (argumentType.id.substr(0, tuplePrefix.size()) == tuplePrefix) {
-    argumentType = Type{argumentType.id.substr(
-        tuplePrefix.size(),
-        argumentType.id.size() - 1 - tuplePrefix.size()
-    )};
-}
-return Type{"std::function<" + returnType.id + "(" + argumentType.id + ")>"};
-`,
+	Body:       `return box<ty::Type>(ty::FnType(argumentType, returnType));`,
 }
 
 var ListDeclaration = BuiltinFunctionDeclaration{
@@ -386,7 +373,7 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `return Type{"std::vector<" + elementType.id + ">"};`,
+	Body:       `return ty::ListType{elementType};`,
 }
 
 var PrintStringDeclaration = BuiltinFunctionDeclaration{

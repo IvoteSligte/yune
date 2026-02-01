@@ -13,59 +13,88 @@ Box<T> box(T value) { return std::make_unique<T>(value); }
 
 namespace ty {
 
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
 using json = nlohmann::json;
 
-struct TypeType;
-struct IntType;
-struct FloatType;
-struct BoolType;
-struct StringType;
-struct NilType;
+struct TypeType { };
+
+struct IntType { };
+struct FloatType { };
+struct BoolType { };
+struct StringType { };
+struct NilType { };
 struct TupleType;
 struct ListType;
 struct FnType;
 struct StructType;
 
-using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType,
-    NilType, TupleType, ListType, FnType, StructType>;
+inline json serialize(const TypeType&) { return { { "_type", "Type" } }; }
+inline json serialize(const IntType&) { return { { "_type", "IntType" } }; }
+inline json serialize(const FloatType&) { return { { "_type", "FloatType" } }; }
+inline json serialize(const BoolType&) { return { { "_type", "BoolType" } }; }
+inline json serialize(const StringType&) { return { { "_type", "StringType" } }; }
+inline json serialize(const NilType&) { return { { "_type", "NilType" } }; }
 
-struct String;
+using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, NilType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
+
+struct String {
+    String(std::string value)
+        : value(value)
+    {
+    }
+
+    std::string value;
+};
+inline json serialize(const String& e)
+{
+    return { { "_type", "String" }, { "value", e.value } };
+}
+
 using Expression = std::variant<String>;
 
 using Value = std::variant<Type, Expression>;
 
-using TypePtr = Box<Type>;
+json serialize(const TypeType& t);
+json serialize(const IntType& t);
+json serialize(const FloatType& t);
+json serialize(const BoolType& t);
+json serialize(const StringType& t);
+json serialize(const NilType& t);
+json serialize(const TupleType& t);
+json serialize(const ListType& t);
+json serialize(const FnType& t);
+json serialize(const StructType& t);
 
-struct TypeType {
-    json to_json() const { return { { "_type", "Type" } }; }
-};
-struct IntType {
-    json to_json() const { return { { "_type", "IntType" } }; }
-};
-struct FloatType {
-    json to_json() const { return { { "_type", "FloatType" } }; }
-};
-struct BoolType {
-    json to_json() const { return { { "_type", "BoolType" } }; }
-};
-struct StringType {
-    json to_json() const { return { { "_type", "StringType" } }; }
-};
-struct NilType {
-    json to_json() const { return { { "_type", "NilType" } }; }
-};
+inline json serialize(const Type& t)
+{
+    return std::visit(overloaded {
+                          [](const Box<TupleType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<ListType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<FnType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<StructType>& boxed) -> json { return serialize(*boxed); },
+                          [](const auto value) -> json { return serialize(value); },
+                      },
+        t);
+}
+inline json serialize(const Value& t)
+{
+    return std::visit([](auto& t) { return serialize(t); }, t);
+}
+inline json serialize(const Expression& t)
+{
+    return std::visit([](auto t) { return serialize(t); }, t);
+}
+
 struct TupleType {
     TupleType(std::vector<Type> elements)
     {
         this->elements = std::move(elements);
-    }
-    json to_json() const
-    {
-        json elementsJson;
-        for (auto& t : elements)
-          elementsJson.push_back(std::visit([](auto t) {
-                return t.to_json(); }, t);
-        return { { "_type", "TupleType" }, { "elements", elementsJson } };
     }
 
     std::vector<Type> elements;
@@ -76,24 +105,14 @@ struct ListType {
     {
         this->element(box<T>(std::move(element)));
     }
-    json to_json() const
-    {
-        return { { "_type", "ListType" }, { "element", element->to_json() } };
-    }
 
     Type element;
 };
 struct FnType {
     FnType(Type argument, Type returnType)
     {
-        this->argument(argument);
-        this->returnType(returnType);
-    }
-    json to_json() const
-    {
-        return { { "_type", "FnType" },
-            { "argument", std::visit([](auto& arg) -> json { return arg.to_json(); }, *argument) },
-            { "return", returnType->to_json() } };
+        this->argument = std::move(argument);
+        this->returnType = std::move(returnType);
     }
 
     Type argument;
@@ -105,39 +124,38 @@ struct StructType {
     {
     }
 
-    json to_json() const { return { { "_type", "StructType" }, { "name", name } }; }
-
     std::string name;
 };
 
-struct String {
-    String(std::string value)
-        : value(value)
-    {
-    }
-
-    json to_json() const { return { { "_type", "String" }, { "value", value } }; }
-
-    std::string value;
-};
-
-inline void to_json(json& j, const Type& t)
+inline json serialize(const TupleType& t)
 {
-    j = std::visit([](auto t) { return t.to_json(); }, t);
+    json elementsJson;
+    for (const Type& element : t.elements)
+        elementsJson.push_back(serialize(element));
+    return { { "_type", "TupleType" }, { "elements", elementsJson } };
 }
-inline void to_json(json& j, const Expression& t)
+inline json serialize(const ListType& t)
 {
-    j = std::visit([](auto t) { return t.to_json(); }, t);
+    return { { "_type", "ListType" }, { "element", serialize(t.element) } };
 }
-inline void to_json(json& j, const Value& t)
+inline json serialize(const FnType& t)
 {
-    j = std::visit([](auto t) { return to_json(t); }, t);
+    return {
+        { "_type", "FnType" }, { "argument", serialize(t.argument) },
+        { "return", serialize(t.returnType) }
+    };
+}
+inline json serialize(const StructType& t)
+{
+    return { { "_type", "StructType" }, { "name", t.name } };
 }
 
 inline std::string serializeValues(std::vector<Value> values)
 {
-    json j = values;
-    p return j.dump();
+    json j;
+    for (auto& v : values)
+        j.push_back(serialize(v));
+    return j.dump();
 }
 
 } // namespace ty
