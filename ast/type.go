@@ -64,7 +64,7 @@ func (t TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(TypeType)
 	return ok
 }
-func (TypeType) Lower() cpp.Type  { return "Type" }
+func (TypeType) Lower() cpp.Type  { return "ty::Type" }
 func (TypeType) OneofKey() string { return "Type" }
 
 type IntType struct{ DefaultTypeValue }
@@ -130,9 +130,9 @@ func (t TupleType) Eq(other TypeValue) bool {
 	return true
 }
 func (t TupleType) Lower() cpp.Type {
-	return cpp.Type(util.JoinFunction(t.Elements, ", ", func(v TypeValue) string {
+	return cpp.Type("std::tuple<" + util.JoinFunction(t.Elements, ", ", func(v TypeValue) string {
 		return v.Lower().String()
-	}))
+	}) + ">")
 }
 func (t TupleType) WrapTupleType() TupleType { return t }
 func (TupleType) OneofKey() string           { return "TupleType" }

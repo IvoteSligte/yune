@@ -256,7 +256,7 @@ var NilDeclaration = BuiltinConstantDeclaration{
 var ExpressionDeclaration = BuiltinConstantDeclaration{
 	Name:  "Expression",
 	Type:  TypeType{},
-	Value: `ty::StructType{"Expression"}`,
+	Value: `box(ty::StructType{"Expression"})`,
 }
 
 type BuiltinFunctionDeclaration struct {
@@ -346,7 +346,7 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `return box<ty::Type>(ty::FnType(argumentType, returnType));`,
+	Body:       `return box(ty::FnType(std::move(argumentType), std::move(returnType)));`,
 }
 
 var ListDeclaration = BuiltinFunctionDeclaration{
@@ -358,7 +358,7 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `return ty::ListType{elementType};`,
+	Body:       `return box(ty::ListType(std::move(elementType)));`,
 }
 
 var PrintStringDeclaration = BuiltinFunctionDeclaration{
