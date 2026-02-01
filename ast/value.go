@@ -24,6 +24,7 @@ type Value interface {
 }
 
 func Deserialize(jsonBytes []byte) (vs []Value) {
+	// NOTE: do we need an unmarshaler for both Value and Expression?
 	unmarshaler := oneof.UnmarshalFunc[Value](valueOptions)
 	err := json.Unmarshal(jsonBytes, &vs, json.WithUnmarshalers(unmarshaler))
 	if err != nil {
