@@ -61,11 +61,14 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			})
 		} else {
 			_, isRawBuiltin := decl.(BuiltinRawDeclaration)
+			_, isConstantBuiltin := decl.(BuiltinConstantDeclaration)
+			_, isFunctionBuiltin := decl.(BuiltinFunctionDeclaration)
+			isBuiltin := isRawBuiltin || isConstantBuiltin || isFunctionBuiltin
 			node := &evalNode{
 				Declaration:   decl,
 				After:         mapset.NewThreadUnsafeSet[*evalNode](), // filled later
 				Requires:      mapset.NewThreadUnsafeSet[*evalNode](), // filled later
-				IsPrecomputed: isRawBuiltin,
+				IsPrecomputed: isBuiltin,
 			}
 			declarationToNode[name.String] = node
 			stageNodes.Add(node)

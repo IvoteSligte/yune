@@ -84,24 +84,6 @@ func (b BuiltinRawDeclaration) TypeCheckBody(deps DeclarationTable) (errors []er
 
 var _ TopLevelDeclaration = BuiltinRawDeclaration{}
 
-var TypeDeclaration = BuiltinRawDeclaration{
-	Name:   "Type",
-	Type:   TypeType{},
-	Header: `extern ty::Type Type;`,
-	Implementation: `
-std::ostream& operator<<(std::ostream& out, const Type& t) {
-    return out << t.id;
-}`,
-}
-
-var ExpressionDeclaration = BuiltinRawDeclaration{
-	Name:           "Expression",
-	Type:           TypeType{},
-	Requires:       []string{"Type"},
-	Header:         `extern ty::Type Expression;`,
-	Implementation: `ty::Type Expression = ty::Type{"Expression"};`,
-}
-
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
 	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
@@ -179,13 +161,6 @@ type BuiltinFieldDeclaration struct {
 	Type string
 }
 
-// var TypeDeclaration = BuiltinStructDeclaration{
-// 	Name: "Type",
-// 	Fields: []BuiltinFieldDeclaration{
-// 		{Name: "id", Type: "std::string"},
-// 	},
-// }
-
 type BuiltinConstantDeclaration struct {
 	Name  string
 	Type  TypeValue
@@ -248,6 +223,11 @@ func (b BuiltinConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors
 
 var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
 
+var TypeDeclaration = BuiltinConstantDeclaration{
+	Name:  "Type",
+	Type:  TypeType{},
+	Value: `ty::TypeType{}`,
+}
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
 	Type:  TypeType{},
@@ -272,6 +252,11 @@ var NilDeclaration = BuiltinConstantDeclaration{
 	Name:  "Nil",
 	Type:  TypeType{},
 	Value: `ty::NilType{}`,
+}
+var ExpressionDeclaration = BuiltinConstantDeclaration{
+	Name:  "Expression",
+	Type:  TypeType{},
+	Value: `ty::StructType{"Expression"}`,
 }
 
 type BuiltinFunctionDeclaration struct {
