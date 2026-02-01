@@ -2,113 +2,142 @@
 #include "json.hpp" // nlohmann JSON library
 #include <memory>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
-template <class T> using Box = std::unique_ptr<T>;
-template <class T> Box<T> box(T value) { return std::make_unique<T>(value); }
+template <class T>
+using Box = std::unique_ptr<T>;
+template <class T>
+Box<T> box(T value) { return std::make_unique<T>(value); }
 
 namespace ty {
 
 using json = nlohmann::json;
 
-struct Value {
-  Value() {}
-  virtual json to_json() const = 0;
-};
+struct TypeType;
+struct IntType;
+struct FloatType;
+struct BoolType;
+struct StringType;
+struct NilType;
+struct TupleType;
+struct ListType;
+struct FnType;
+struct StructType;
 
-struct Type : Value {
-  virtual json to_json() const = 0;
-};
+using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType,
+    NilType, TupleType, ListType, FnType, StructType>;
+
+struct String;
+using Expression = std::variant<String>;
+
+using Value = std::variant<Type, Expression>;
+
 using TypePtr = Box<Type>;
 
-struct TypeType : Type {
-  json to_json() const override { return {{"_type", "Type"}}; }
+struct TypeType {
+    json to_json() const { return { { "_type", "Type" } }; }
 };
-struct IntType : Type {
-  json to_json() const override { return {{"_type", "IntType"}}; }
+struct IntType {
+    json to_json() const { return { { "_type", "IntType" } }; }
 };
-struct FloatType : Type {
-  json to_json() const override { return {{"_type", "FloatType"}}; }
+struct FloatType {
+    json to_json() const { return { { "_type", "FloatType" } }; }
 };
-struct BoolType : Type {
-  json to_json() const override { return {{"_type", "BoolType"}}; }
+struct BoolType {
+    json to_json() const { return { { "_type", "BoolType" } }; }
 };
-struct StringType : Type {
-  json to_json() const override { return {{"_type", "StringType"}}; }
+struct StringType {
+    json to_json() const { return { { "_type", "StringType" } }; }
 };
-struct NilType : Type {
-  json to_json() const override { return {{"_type", "NilType"}}; }
+struct NilType {
+    json to_json() const { return { { "_type", "NilType" } }; }
 };
-struct TupleType : Type {
-  TupleType(std::vector<TypePtr> elements) {
-    this->elements = std::move(elements);
-  }
-  json to_json() const override {
-    json elementsJson;
-    for (auto &ptr : elements)
-      elementsJson.push_back(ptr->to_json());
-    return {{"_type", "TupleType"}, {"elements", elementsJson}};
-  }
+struct TupleType {
+    TupleType(std::vector<Type> elements)
+    {
+        this->elements = std::move(elements);
+    }
+    json to_json() const
+    {
+        json elementsJson;
+        for (auto& t : elements)
+          elementsJson.push_back(std::visit([](auto t) {
+                return t.to_json(); }, t);
+        return { { "_type", "TupleType" }, { "elements", elementsJson } };
+    }
 
-  std::vector<TypePtr> elements;
+    std::vector<Type> elements;
 };
-struct ListType : Type {
-  template <typename T, typename = std::enable_if_t<std::is_base_of_v<Type, T>>>
-  ListType(T element) {
-    this->element(box<T>(std::move(element)));
-  }
-  json to_json() const override {
-    return {{"_type", "ListType"}, {"element", element->to_json()}};
-  }
+struct ListType {
+    template <typename T, typename = std::enable_if_t<std::is_base_of_v<Type, T>>>
+    ListType(T element)
+    {
+        this->element(box<T>(std::move(element)));
+    }
+    json to_json() const
+    {
+        return { { "_type", "ListType" }, { "element", element->to_json() } };
+    }
 
-  TypePtr element;
+    Type element;
 };
-struct FnType : Type {
-  template <typename A, typename B,
-            typename = std::enable_if_t<std::is_base_of_v<Type, A>>,
-            typename = std::enable_if_t<std::is_base_of_v<Type, B>>>
-  FnType(A argument, B returnType) {
-    this->argument(box<A>(argument));
-    this->returnType(box<B>(returnType));
-  }
-  json to_json() const override {
-    return {{"_type", "FnType"},
-            {"argument", argument->to_json()},
-            {"return", returnType->to_json()}};
-  }
+struct FnType {
+    FnType(Type argument, Type returnType)
+    {
+        this->argument(argument);
+        this->returnType(returnType);
+    }
+    json to_json() const
+    {
+        return { { "_type", "FnType" },
+            { "argument", std::visit([](auto& arg) -> json { return arg.to_json(); }, *argument) },
+            { "return", returnType->to_json() } };
+    }
 
-  TypePtr argument;
-  TypePtr returnType;
+    Type argument;
+    Type returnType;
 };
-struct StructType : Type {
-  StructType(std::string name) : name(name) {}
+struct StructType {
+    StructType(std::string name)
+        : name(name)
+    {
+    }
 
-  json to_json() const override {
-    return {{"_type", "StructType"}, {"name", name}};
-  }
+    json to_json() const { return { { "_type", "StructType" }, { "name", name } }; }
 
-  std::string name;
-};
-
-struct Expression : Value {
-  virtual json to_json() const = 0;
-};
-struct String : Expression {
-  String(std::string value) : value(value) {}
-
-  json to_json() const override {
-    return {{"_type", "String"}, {"value", value}};
-  }
-
-  std::string value;
+    std::string name;
 };
 
-inline void to_json(json &j, const Value &t) { j = t.to_json(); }
-inline void to_json(json &j, const Type &t) { j = t.to_json(); }
+struct String {
+    String(std::string value)
+        : value(value)
+    {
+    }
 
-inline std::string serializeValues(std::vector<Value> values) {
-  json j = values;
-  return j.dump();
+    json to_json() const { return { { "_type", "String" }, { "value", value } }; }
+
+    std::string value;
+};
+
+inline void to_json(json& j, const Type& t)
+{
+    j = std::visit([](auto t) { return t.to_json(); }, t);
+}
+inline void to_json(json& j, const Expression& t)
+{
+    j = std::visit([](auto t) { return t.to_json(); }, t);
+}
+inline void to_json(json& j, const Value& t)
+{
+    j = std::visit([](auto t) { return to_json(t); }, t);
+}
+
+inline std::string serializeValues(std::vector<Value> values)
+{
+    json j = values;
+    p return j.dump();
 }
 
 } // namespace ty
