@@ -76,6 +76,7 @@ func UnmarshalType(data *fj.Value) (t TypeValue) {
 
 type TypeValue interface {
 	Value
+	fmt.Stringer
 	typeValue()
 	Lower() cpp.Type
 	Eq(other TypeValue) bool
@@ -87,6 +88,9 @@ type DefaultTypeValue struct{}
 
 func (DefaultTypeValue) value()     {}
 func (DefaultTypeValue) typeValue() {}
+func (DefaultTypeValue) String() string {
+	panic("DefaultTypeValue.String should be overridden")
+}
 func (DefaultTypeValue) Lower() cpp.Type {
 	panic("DefaultTypeValue.Lower should be overridden")
 }
@@ -101,6 +105,7 @@ var _ TypeValue = DefaultTypeValue{}
 
 type TypeType struct{ DefaultTypeValue }
 
+func (TypeType) String() string { return "Type" }
 func (t TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(TypeType)
 	return ok
@@ -109,6 +114,7 @@ func (TypeType) Lower() cpp.Type { return "ty::Type" }
 
 type IntType struct{ DefaultTypeValue }
 
+func (IntType) String() string { return "Int" }
 func (i IntType) Eq(other TypeValue) bool {
 	_, ok := other.(IntType)
 	return ok
@@ -117,6 +123,7 @@ func (IntType) Lower() cpp.Type { return "int" }
 
 type FloatType struct{ DefaultTypeValue }
 
+func (FloatType) String() string { return "Float" }
 func (f FloatType) Eq(other TypeValue) bool {
 	_, ok := other.(FloatType)
 	return ok
@@ -125,6 +132,7 @@ func (FloatType) Lower() cpp.Type { return "float" }
 
 type BoolType struct{ DefaultTypeValue }
 
+func (BoolType) String() string { return "Bool" }
 func (b BoolType) Eq(other TypeValue) bool {
 	_, ok := other.(BoolType)
 	return ok
@@ -133,6 +141,7 @@ func (BoolType) Lower() cpp.Type { return "bool" }
 
 type StringType struct{ DefaultTypeValue }
 
+func (StringType) String() string { return "String" }
 func (s StringType) Eq(other TypeValue) bool {
 	_, ok := other.(StringType)
 	return ok
@@ -141,6 +150,7 @@ func (StringType) Lower() cpp.Type { return "std::string" }
 
 type NilType struct{ DefaultTypeValue }
 
+func (NilType) String() string { return "Nil" }
 func (n NilType) Eq(other TypeValue) bool {
 	_, ok := other.(NilType)
 	return ok
@@ -150,6 +160,10 @@ func (NilType) Lower() cpp.Type { return "void" }
 type TupleType struct {
 	DefaultTypeValue
 	Elements []TypeValue
+}
+
+func (t TupleType) String() string {
+	return "(" + util.Join(t.Elements, ", ") + ")"
 }
 
 func (t TupleType) Eq(other TypeValue) bool {
@@ -182,6 +196,10 @@ type ListType struct {
 	Element TypeValue
 }
 
+func (l ListType) String() string {
+	return "List(" + l.Element.String() + ")"
+}
+
 func (l ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(ListType)
 	return ok && l.Element.Eq(otherList.Element)
@@ -194,6 +212,10 @@ type FnType struct {
 	DefaultTypeValue
 	Argument TypeValue
 	Return   TypeValue
+}
+
+func (f FnType) String() string {
+	return "Fn(" + f.Argument.String() + ", " + f.Return.String() + ")"
 }
 
 func (f FnType) Eq(other TypeValue) bool {
@@ -211,6 +233,10 @@ func (f FnType) Lower() cpp.Type {
 type StructType struct {
 	DefaultTypeValue
 	Name string
+}
+
+func (s StructType) String() string {
+	return s.Name
 }
 
 func (s StructType) Eq(other TypeValue) bool {

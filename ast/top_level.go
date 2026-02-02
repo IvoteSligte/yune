@@ -135,10 +135,13 @@ func (d FunctionDeclaration) GetDeclaredType() TypeValue {
 	params := util.Map(d.Parameters, func(p FunctionParameter) TypeValue {
 		return p.GetDeclaredType()
 	})
-	return FnType{
-		Argument: NewTupleType(params...),
-		Return:   d.ReturnType.Get(),
+	var argument TypeValue
+	if len(d.Parameters) == 1 {
+		argument = params[0]
+	} else {
+		argument = NewTupleType(params...)
 	}
+	return FnType{Argument: argument, Return: d.ReturnType.Get()}
 }
 
 type FunctionParameter struct {
