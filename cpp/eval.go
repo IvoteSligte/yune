@@ -31,16 +31,18 @@ func Evaluate(module Module, batch []Expression) (outputs []byte) {
 		statements = append(statements, Statement(Raw(s)))
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
-	addStmt(`std::vector<ty::Value> outputs;`)
+	addStmt(`outputFile << "[\n";`)
 
-	for _, e := range batch {
+	for i, e := range batch {
 		if e == nil {
-			addStmt(`outputs.emplace_back(ty::Value());`)
+			addStmt(`outputFile << ty::serialize(ty::Value()) << ",\n";`)
+		} else if i < len(batch)-1 {
+			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << ",\n";`, e))
 		} else {
-			addStmt(fmt.Sprintf(`outputs.emplace_back(%s);`, e))
+			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << "\n";`, e))
 		}
 	}
-	addStmt(`outputFile << serializeValues(outputs);`)
+	addStmt(`outputFile << "]\n";`)
 	addStmt(`outputFile.close();`)
 
 	module.Declarations = append(module.Declarations, FunctionDeclaration{

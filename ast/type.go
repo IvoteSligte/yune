@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"log"
 	"yune/cpp"
 	"yune/util"
 
@@ -36,6 +35,7 @@ var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 // Default value for TypeValue that still allows method calls.
 var noType = DefaultTypeValue{}
 
+// Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalType(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data)
 	switch key {
@@ -69,7 +69,7 @@ func UnmarshalType(data *fj.Value) (t TypeValue) {
 			Name: string(v.GetStringBytes("name")),
 		}
 	default:
-		log.Fatalf("Unknown key for JSON Type: '%s'.", key)
+		// t = nil
 	}
 	return
 }

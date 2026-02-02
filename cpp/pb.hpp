@@ -60,8 +60,6 @@ inline json serialize(const String& e)
 
 using Expression = std::variant<String>;
 
-using Value = std::variant<Type, Expression>;
-
 json serialize(const TypeType& t);
 json serialize(const IntType& t);
 json serialize(const FloatType& t);
@@ -81,14 +79,6 @@ inline json serialize(const Type& t)
                           [](const Box<FnType>& boxed) -> json { return serialize(*boxed); },
                           [](const Box<StructType>& boxed) -> json { return serialize(*boxed); },
                           [](const auto value) -> json { return serialize(value); },
-                      },
-        t);
-}
-inline json serialize(const Value& t)
-{
-    return std::visit(overloaded {
-                          [](const Type& t) -> json { return { { "Type", serialize(t) } }; },
-                          [](const Expression& t) -> json { return { { "Expression", serialize(t) } }; },
                       },
         t);
 }
@@ -150,13 +140,6 @@ inline json serialize(const FnType& t)
 inline json serialize(const StructType& t)
 {
     return { { "StructType", { { "name", t.name } } } };
-}
-inline std::string serializeValues(std::vector<Value> values)
-{
-    json j;
-    for (auto& v : values)
-        j.push_back(serialize(v));
-    return j.dump();
 }
 
 } // namespace ty

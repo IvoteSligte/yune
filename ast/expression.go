@@ -27,6 +27,7 @@ type Expression interface {
 	Lower() cpp.Expression
 }
 
+// Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	key, v := fjUnmarshalUnion(data)
 	switch key {
@@ -67,7 +68,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Right: UnmarshalExpression(v.Get("right")),
 		}
 	default:
-		log.Fatalf("Unknown key for JSON Expression: '%s'.", key)
+		// expr = nil
 	}
 	return
 }

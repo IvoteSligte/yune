@@ -32,17 +32,16 @@ type Value interface {
 	value()
 }
 
-func UnmarshalValue(data *fj.Value) Value {
-	key, v := fjUnmarshalUnion(data)
-	switch key {
-	case "Type":
-		return UnmarshalType(v)
-	case "Expression":
-		return UnmarshalExpression(v)
-	default:
-		log.Fatalf("Unknown key for JSON Value: '%s'.", key)
+func UnmarshalValue(data *fj.Value) (v Value) {
+	if v = UnmarshalType(data); v != nil {
+		return
 	}
-	panic("unreachable")
+	if v = UnmarshalExpression(data); v != nil {
+		return
+	}
+	key, _ := fjUnmarshalUnion(data)
+	log.Fatalf("Unknown key for JSON Value: '%s'.", key)
+	return
 }
 
 func Unmarshal(jsonBytes []byte) (values []Value) {
