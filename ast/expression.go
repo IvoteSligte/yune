@@ -465,10 +465,7 @@ type Macro struct {
 
 // SetValue implements Destination.
 func (m *Macro) SetValue(v Value) {
-	m.Result = String{
-		Span:  Span{}, // TODO: span
-		Value: "TODO: Macro SetValue (requires Expression serialization)",
-	}
+	m.Result = v.(Expression)
 }
 
 // GetSpan implements Expression.
