@@ -1,8 +1,12 @@
 package ast
 
 import (
+	"encoding/json"
 	"fmt"
+	"iter"
 	"log"
+	"maps"
+	"slices"
 	"yune/cpp"
 	"yune/util"
 )
@@ -23,11 +27,54 @@ type Expression interface {
 	InferType(expected TypeValue, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() TypeValue
 	Lower() cpp.Expression
+
+	Deserialize(data []byte) error
+}
+
+func DeserializeExpression(data []byte) (expr Expression, err error) {
+	m := map[string]json.RawMessage{}
+	if err = json.Unmarshal(data, &m); err != nil {
+		return
+	}
+	keys := slices.Collect(maps.Keys(m))
+	if len(keys) != 1 {
+		err = fmt.Errorf("Found multiple keys %v when deserializing expression.", keys)
+		return
+	}
+	switch keys[0] {
+	case "Integer":
+		expr = &Integer{}
+	case "Float":
+		expr = &Float{}
+	case "Bool":
+		expr = &Bool{}
+	case "String":
+		expr = &String{}
+	case "Variable":
+		expr = &Variable{}
+	case "FunctionCall":
+		expr = &FunctionCall{}
+	case "Tuple":
+		expr = &Tuple{}
+	case "Macro":
+		expr = &Macro{}
+	case "UnaryExpression":
+		expr = &UnaryExpression{}
+	case "BinaryExpression":
+		expr = &BinaryExpression{}
+	default:
+		return nil, fmt.Errorf("Unknown key for Expression: '%s'.", keys[0])
+	}
+	expr.Deserialize(m[keys[0]])
+	return
 }
 
 type DefaultExpression struct{}
 
-var _ Expression = DefaultExpression{}
+// Deserialize implements Expression.
+func (d DefaultExpression) Deserialize([]byte) error {
+	panic("DefaultExpression.Deserialize must be overridden")
+}
 
 // value implements Expression.
 func (d DefaultExpression) value() {}
@@ -77,10 +124,17 @@ func (d DefaultExpression) Lower() cpp.Expression {
 	panic("DefaultExpression.Lower() should be overridden")
 }
 
+var _ Expression = DefaultExpression{}
+
 type Integer struct {
 	DefaultExpression
 	Span  Span
 	Value int64
+}
+
+// Deserialize implements Expression
+func (i *Integer) Deserialize(data []byte) error {
+	return json.Unmarshal(data, &i)
 }
 
 // GetSpan implements Expression.
@@ -104,6 +158,11 @@ type Float struct {
 	Value float64
 }
 
+// Deserialize implements Expression
+func (f *Float) Deserialize(data []byte) error {
+	return json.Unmarshal(data, &f)
+}
+
 // GetSpan implements Expression.
 func (f Float) GetSpan() Span {
 	return f.Span
@@ -123,6 +182,11 @@ type Bool struct {
 	DefaultExpression
 	Span  Span
 	Value bool
+}
+
+// Deserialize implements Expression
+func (b *Bool) Deserialize(data []byte) error {
+	return json.Unmarshal(data, &b)
 }
 
 // GetSpan implements Expression.
@@ -146,6 +210,11 @@ type String struct {
 	Value string
 }
 
+// Deserialize implements Expression
+func (s *String) Deserialize(data []byte) error {
+	return json.Unmarshal(data, &s)
+}
+
 // GetSpan implements Expression.
 func (s String) GetSpan() Span {
 	return s.Span
@@ -165,6 +234,11 @@ type Variable struct {
 	DefaultExpression
 	Type TypeValue
 	Name Name
+}
+
+// Deserialize implements Expression
+func (v *Variable) Deserialize(data []byte) error {
+	return json.Unmarshal(data, &v)
 }
 
 // GetSpan implements Expression.
@@ -208,6 +282,29 @@ type FunctionCall struct {
 	Type     TypeValue
 	Function Expression
 	Argument Expression
+}
+
+// Deserialize implements Expression
+func (f *FunctionCall) Deserialize(data []byte) error {
+	s := struct {
+		Span     Span
+		Type     TypeValue
+		Function json.RawMessage
+		Argument json.RawMessage
+	}{}
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	f.Span = s.Span
+	f.Type = s.Type
+	function, err := DeserializeExpression(s.Function)
+	f.Function = function
+	if err != nil {
+		return err
+	}
+	argument, err := DeserializeExpression(s.Argument)
+	f.Argument = argument
+	return err
 }
 
 // GetSpan implements Expression.
@@ -724,10 +821,10 @@ const (
 	And          BinaryOp = "and"
 )
 
-var _ Expression = Integer{}
-var _ Expression = Float{}
-var _ Expression = Bool{}
-var _ Expression = String{}
+var _ Expression = &Integer{}
+var _ Expression = &Float{}
+var _ Expression = &Bool{}
+var _ Expression = &String{}
 var _ Expression = &Variable{}
 var _ Expression = &FunctionCall{}
 var _ Expression = &Tuple{}
