@@ -139,7 +139,7 @@ func (a *Assignment) GetValueDependencies() []Name {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(nil, deps), a.Body.InferType(deps.NewScope())...)
+	errors = append(a.Target.InferType(noType, deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -380,7 +380,7 @@ type ExpressionStatement struct {
 // InferType implements Statement.
 // Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
 func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
-	return e.Expression.InferType(nil, deps)
+	return e.Expression.InferType(noType, deps)
 }
 
 // Lower implements Statement.

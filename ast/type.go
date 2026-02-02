@@ -30,6 +30,9 @@ var MainType = FnType{
 var ExpressionType = StructType{Name: "Expression"}
 var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 
+// Default value for TypeValue that still allows method calls.
+var noType = DefaultTypeValue{}
+
 type TypeValue interface {
 	Value
 	typeValue()
@@ -47,7 +50,7 @@ func (DefaultTypeValue) Lower() cpp.Type {
 	panic("DefaultTypeValue.Lower should be overridden")
 }
 func (DefaultTypeValue) Eq(other TypeValue) bool {
-	panic("DefaultTypeValue.Eq should be overridden")
+	return false
 }
 func (d DefaultTypeValue) WrapTupleType() TupleType {
 	return NewTupleType(d)

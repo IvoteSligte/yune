@@ -242,7 +242,7 @@ func (f *FunctionCall) GetValueDependencies() []Name {
 
 // InferType implements Expression.
 func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(nil, deps)
+	errors = f.Function.InferType(noType, deps)
 	if len(errors) > 0 {
 		return
 	}
