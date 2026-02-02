@@ -465,6 +465,8 @@ type Macro struct {
 
 // SetValue implements Destination.
 func (m *Macro) SetValue(v Value) {
+	// FIXME: in Yune: (String, Expression) -> after serialization: (String, String)
+	//     because both are simply stored as Expression
 	m.Result = v.(Expression)
 }
 
