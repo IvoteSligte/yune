@@ -192,7 +192,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 				return nil
 			}
 		}))
-		values := Deserialize(evalBytes)
+		values := Unmarshal(evalBytes)
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
 				if v == nil {

@@ -1,14 +1,12 @@
 package ast
 
 import (
-	"encoding/json"
 	"fmt"
-	"iter"
 	"log"
-	"maps"
-	"slices"
 	"yune/cpp"
 	"yune/util"
+
+	fj "github.com/valyala/fastjson"
 )
 
 type Expression interface {
@@ -27,45 +25,50 @@ type Expression interface {
 	InferType(expected TypeValue, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
 	GetType() TypeValue
 	Lower() cpp.Expression
-
-	Deserialize(data []byte) error
 }
 
-func DeserializeExpression(data []byte) (expr Expression, err error) {
-	m := map[string]json.RawMessage{}
-	if err = json.Unmarshal(data, &m); err != nil {
-		return
-	}
-	keys := slices.Collect(maps.Keys(m))
-	if len(keys) != 1 {
-		err = fmt.Errorf("Found multiple keys %v when deserializing expression.", keys)
-		return
-	}
-	switch keys[0] {
+func UnmarshalExpression(data *fj.Value) (expr Expression) {
+	key, v := fjUnmarshalUnion(data)
+	switch key {
 	case "Integer":
-		expr = &Integer{}
+		expr = fjUnmarshal(v, &Integer{})
 	case "Float":
-		expr = &Float{}
+		expr = fjUnmarshal(v, &Float{})
 	case "Bool":
-		expr = &Bool{}
+		expr = fjUnmarshal(v, &Bool{})
 	case "String":
-		expr = &String{}
+		expr = fjUnmarshal(v, &String{})
 	case "Variable":
-		expr = &Variable{}
+		expr = fjUnmarshal(v, &Variable{})
 	case "FunctionCall":
-		expr = &FunctionCall{}
+		expr = &FunctionCall{
+			Span:     fjUnmarshal(v.Get("Span"), Span{}),
+			Function: UnmarshalExpression(v.Get("function")),
+			Argument: UnmarshalExpression(v.Get("argument")),
+		}
 	case "Tuple":
-		expr = &Tuple{}
+		expr = &Tuple{
+			Span:     fjUnmarshal(v.Get("Span"), Span{}),
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
+		}
 	case "Macro":
-		expr = &Macro{}
+		panic("Macros are not supported for serialization right now.")
 	case "UnaryExpression":
-		expr = &UnaryExpression{}
+		expr = &UnaryExpression{
+			Span:       fjUnmarshal(v.Get("Span"), Span{}),
+			Op:         UnaryOp(v.GetStringBytes("op")),
+			Expression: UnmarshalExpression(v.Get("expression")),
+		}
 	case "BinaryExpression":
-		expr = &BinaryExpression{}
+		expr = &BinaryExpression{
+			Span:  fjUnmarshal(v.Get("Span"), Span{}),
+			Op:    BinaryOp(v.GetStringBytes("op")),
+			Left:  UnmarshalExpression(v.Get("left")),
+			Right: UnmarshalExpression(v.Get("right")),
+		}
 	default:
-		return nil, fmt.Errorf("Unknown key for Expression: '%s'.", keys[0])
+		log.Fatalf("Unknown key for JSON Expression: '%s'.", key)
 	}
-	expr.Deserialize(m[keys[0]])
 	return
 }
 
@@ -128,13 +131,8 @@ var _ Expression = DefaultExpression{}
 
 type Integer struct {
 	DefaultExpression
-	Span  Span
-	Value int64
-}
-
-// Deserialize implements Expression
-func (i *Integer) Deserialize(data []byte) error {
-	return json.Unmarshal(data, &i)
+	Span  Span  `json:"span"`
+	Value int64 `json:"value"`
 }
 
 // GetSpan implements Expression.
@@ -158,11 +156,6 @@ type Float struct {
 	Value float64
 }
 
-// Deserialize implements Expression
-func (f *Float) Deserialize(data []byte) error {
-	return json.Unmarshal(data, &f)
-}
-
 // GetSpan implements Expression.
 func (f Float) GetSpan() Span {
 	return f.Span
@@ -182,11 +175,6 @@ type Bool struct {
 	DefaultExpression
 	Span  Span
 	Value bool
-}
-
-// Deserialize implements Expression
-func (b *Bool) Deserialize(data []byte) error {
-	return json.Unmarshal(data, &b)
 }
 
 // GetSpan implements Expression.
@@ -210,11 +198,6 @@ type String struct {
 	Value string
 }
 
-// Deserialize implements Expression
-func (s *String) Deserialize(data []byte) error {
-	return json.Unmarshal(data, &s)
-}
-
 // GetSpan implements Expression.
 func (s String) GetSpan() Span {
 	return s.Span
@@ -234,11 +217,6 @@ type Variable struct {
 	DefaultExpression
 	Type TypeValue
 	Name Name
-}
-
-// Deserialize implements Expression
-func (v *Variable) Deserialize(data []byte) error {
-	return json.Unmarshal(data, &v)
 }
 
 // GetSpan implements Expression.
@@ -282,29 +260,6 @@ type FunctionCall struct {
 	Type     TypeValue
 	Function Expression
 	Argument Expression
-}
-
-// Deserialize implements Expression
-func (f *FunctionCall) Deserialize(data []byte) error {
-	s := struct {
-		Span     Span
-		Type     TypeValue
-		Function json.RawMessage
-		Argument json.RawMessage
-	}{}
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	f.Span = s.Span
-	f.Type = s.Type
-	function, err := DeserializeExpression(s.Function)
-	f.Function = function
-	if err != nil {
-		return err
-	}
-	argument, err := DeserializeExpression(s.Argument)
-	f.Argument = argument
-	return err
 }
 
 // GetSpan implements Expression.

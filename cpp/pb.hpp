@@ -86,7 +86,11 @@ inline json serialize(const Type& t)
 }
 inline json serialize(const Value& t)
 {
-    return std::visit([](auto& t) { return serialize(t); }, t);
+    return std::visit(overloaded {
+                          [](const Type& t) -> json { return { { "Type", serialize(t) } }; },
+                          [](const Expression& t) -> json { return { { "Expression", serialize(t) } }; },
+                      },
+        t);
 }
 inline json serialize(const Expression& t)
 {

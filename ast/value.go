@@ -1,155 +1,91 @@
 package ast
 
 import (
+	"log"
+	"yune/util"
+
 	"github.com/go-json-experiment/json"
+	fj "github.com/valyala/fastjson"
 )
 
-type ValueOptions struct {
-	TypeOptions
-	ExpressionOptions
-}
-
-func (o ValueOptions) GetNonNil() Value {
-	if t := o.TypeOptions.GetNonNil(); t != nil {
-		return t
+func fjUnmarshal[T any](fjValue *fj.Value, dest T) T {
+	if err := json.Unmarshal(fjValue.MarshalTo(nil), &dest); err != nil {
+		log.Fatalf("Failed to unmarshal JSON: '%s'", err)
 	}
-	if e := o.ExpressionOptions.GetNonNil(); e != nil {
-		return e
+	return dest
+}
+
+func fjUnmarshalUnion(data *fj.Value) (key string, value *fj.Value) {
+	object := data.GetObject()
+	if object.Len() != 1 {
+		log.Fatalf("Found %d keys when deserializing JSON union: '%v'. Expected 1.", object.Len(), object)
+		return
 	}
-	return nil
+	object.Visit(func(byteKey []byte, v *fj.Value) {
+		key = string(byteKey)
+		value = v
+	})
+	return
 }
 
-type TypeOptions struct {
-	TypeType   *TypeType
-	IntType    *IntType
-	FloatType  *FloatType
-	BoolType   *BoolType
-	StringType *StringType
-	NilType    *NilType
-	TupleType  *TupleType
-	ListType   *ListType
-	FnType     *FnType
-	StructType *StructType
-}
-
-func (o TypeOptions) GetNonNil() TypeValue {
-	switch {
-	case o.TypeType != nil:
-		return o.TypeType
-	case o.IntType != nil:
-		return o.IntType
-	case o.FloatType != nil:
-		return o.FloatType
-	case o.BoolType != nil:
-		return o.BoolType
-	case o.StringType != nil:
-		return o.StringType
-	case o.NilType != nil:
-		return o.NilType
-	case o.TupleType != nil:
-		return o.TupleType
-	case o.ListType != nil:
-		return o.ListType
-	case o.FnType != nil:
-		return o.FnType
-	case o.StructType != nil:
-		return o.StructType
+func UnmarshalType(data *fj.Value) (t TypeValue) {
+	key, v := fjUnmarshalUnion(data)
+	switch key {
+	case "TypeType":
+		t = TypeType{}
+	case "IntType":
+		t = IntType{}
+	case "FloatType":
+		t = FloatType{}
+	case "BoolType":
+		t = BoolType{}
+	case "StringType":
+		t = StringType{}
+	case "NilType":
+		t = NilType{}
+	case "TupleType":
+		t = TupleType{
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalType),
+		}
+	case "ListType":
+		t = ListType{
+			Element: UnmarshalType(v.Get("element")),
+		}
+	case "FnType":
+		t = FnType{
+			Argument: UnmarshalType(v.Get("argument")),
+			Return:   UnmarshalType(v.Get("return")),
+		}
+	case "StructType":
+		t = StructType{
+			Name: string(v.GetStringBytes("name")),
+		}
 	default:
-		return nil
+		log.Fatalf("Unknown key for JSON Type: '%s'.", key)
 	}
-}
-
-type ExpressionOptions struct {
-	Integer          *Integer
-	Float            *Float
-	Bool             *Bool
-	String           *String
-	Variable         *Variable
-	FunctionCall     *FunctionCall
-	Tuple            *Tuple
-	Macro            *Macro
-	UnaryExpression  *UnaryExpression
-	BinaryExpression *BinaryExpression
-}
-
-func (o ExpressionOptions) GetNonNil() Expression {
-	switch {
-	case o.Integer != nil:
-		return *o.Integer
-	case o.Float != nil:
-		return *o.Float
-	case o.Bool != nil:
-		return *o.Bool
-	case o.String != nil:
-		return *o.String
-	case o.Variable != nil:
-		return o.Variable
-	case o.FunctionCall != nil:
-		return o.FunctionCall
-	case o.Tuple != nil:
-		return o.Tuple
-	case o.Macro != nil:
-		return o.Macro
-	case o.UnaryExpression != nil:
-		return o.UnaryExpression
-	case o.BinaryExpression != nil:
-		return o.BinaryExpression
-	default:
-		return nil
-	}
+	return
 }
 
 type Value interface {
 	value()
 }
 
-func Deserialize(jsonBytes []byte) (vs []Value) {
-	var unmarshalers *json.Unmarshalers
-	expressionUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, e *Expression) error {
-		options := ExpressionOptions{}
-		println("HI Expression: " + string(jsonBytes))
-		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
-			return err
-		}
-		*e = options.GetNonNil()
-		if *e == nil {
-			panic("Only nil options when unmarshaling Expression")
-		}
-		return nil
-	})
-	// NOTE: only gets called with non-pointer type so we can't change the interface implementor
-	typeUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, t *TypeValue) error {
-		println("HI TypeValue: " + string(jsonBytes))
-		options := TypeOptions{}
-		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
-			return err
-		}
-		*t = options.GetNonNil()
-		if *t == nil {
-			panic("Only nil options when unmarshaling TypeValue")
-		}
-		return nil
-	})
-	valueUnmarshalers := json.UnmarshalPtrFunc(func(jsonBytes []byte, v *Value) error {
-		options := ValueOptions{}
-		println("HI Value: " + string(jsonBytes))
-		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
-			return err
-		}
-		*v = options.GetNonNil()
-		if *v == nil {
-			panic("Only nil options when unmarshaling Value")
-		}
-		return nil
-	})
-	unmarshalers = json.JoinUnmarshalers(expressionUnmarshalers, typeUnmarshalers, valueUnmarshalers)
-
-	// NOTE: do we need an unmarshaler for both Value and Expression?
-	err := json.Unmarshal(jsonBytes, &vs, json.WithUnmarshalers(unmarshalers))
-	if err != nil {
-		panic("Failed to deserialize JSON: " + err.Error())
+func UnmarshalValue(data *fj.Value) Value {
+	key, v := fjUnmarshalUnion(data)
+	switch key {
+	case "Type":
+		return UnmarshalType(v)
+	case "Expression":
+		return UnmarshalExpression(v)
+	default:
+		log.Fatalf("Unknown key for JSON Value: '%s'.", key)
 	}
-	return
+	panic("unreachable")
+}
+
+func Unmarshal(jsonBytes []byte) (values []Value) {
+	data := fj.MustParseBytes(jsonBytes)
+	return util.Map(data.GetArray(), UnmarshalValue)
 }
 
 type Destination interface {
