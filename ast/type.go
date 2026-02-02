@@ -2,8 +2,11 @@ package ast
 
 import (
 	"fmt"
+	"log"
 	"yune/cpp"
 	"yune/util"
+
+	fj "github.com/valyala/fastjson"
 )
 
 // TODO: macros in types
@@ -32,6 +35,44 @@ var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 
 // Default value for TypeValue that still allows method calls.
 var noType = DefaultTypeValue{}
+
+func UnmarshalType(data *fj.Value) (t TypeValue) {
+	key, v := fjUnmarshalUnion(data)
+	switch key {
+	case "TypeType":
+		t = TypeType{}
+	case "IntType":
+		t = IntType{}
+	case "FloatType":
+		t = FloatType{}
+	case "BoolType":
+		t = BoolType{}
+	case "StringType":
+		t = StringType{}
+	case "NilType":
+		t = NilType{}
+	case "TupleType":
+		t = TupleType{
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalType),
+		}
+	case "ListType":
+		t = ListType{
+			Element: UnmarshalType(v.Get("element")),
+		}
+	case "FnType":
+		t = FnType{
+			Argument: UnmarshalType(v.Get("argument")),
+			Return:   UnmarshalType(v.Get("return")),
+		}
+	case "StructType":
+		t = StructType{
+			Name: string(v.GetStringBytes("name")),
+		}
+	default:
+		log.Fatalf("Unknown key for JSON Type: '%s'.", key)
+	}
+	return
+}
 
 type TypeValue interface {
 	Value
