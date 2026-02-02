@@ -74,14 +74,30 @@ func UnmarshalType(data *fj.Value) (t TypeValue) {
 	return
 }
 
+// Wraps self in a TupleType, if self is not already a TupleType
+func wrapTupleType(t TypeValue) TupleType {
+	tupleType, ok := t.(TupleType)
+	if ok {
+		return tupleType
+	}
+	return NewTupleType(t)
+}
+
+// If self is a TupleType of one element, returns the first element. Otherwise returns self.
+func unwrapTupleType(t TypeValue) TypeValue {
+	tupleType, ok := t.(TupleType)
+	if ok {
+		return tupleType.Elements[0]
+	}
+	return t
+}
+
 type TypeValue interface {
 	Value
 	fmt.Stringer
 	typeValue()
 	Lower() cpp.Type
 	Eq(other TypeValue) bool
-	// Wraps self in a TupleType, if self is not already a TupleType
-	WrapTupleType() TupleType
 }
 
 type DefaultTypeValue struct{}
@@ -95,10 +111,7 @@ func (DefaultTypeValue) Lower() cpp.Type {
 	panic("DefaultTypeValue.Lower should be overridden")
 }
 func (DefaultTypeValue) Eq(other TypeValue) bool {
-	return false
-}
-func (d DefaultTypeValue) WrapTupleType() TupleType {
-	return NewTupleType(d)
+	return false // allows using DefaultTypeValue{} as default Expression value
 }
 
 var _ TypeValue = DefaultTypeValue{}
@@ -119,7 +132,8 @@ func (i IntType) Eq(other TypeValue) bool {
 	_, ok := other.(IntType)
 	return ok
 }
-func (IntType) Lower() cpp.Type { return "int" }
+func (IntType) Lower() cpp.Type            { return "int" }
+func (t IntType) WrapTupleType() TupleType { return NewTupleType(t) }
 
 type FloatType struct{ DefaultTypeValue }
 
@@ -183,7 +197,6 @@ func (t TupleType) Lower() cpp.Type {
 		return v.Lower().String()
 	}) + ">")
 }
-func (t TupleType) WrapTupleType() TupleType { return t }
 
 func NewTupleType(elements ...TypeValue) TupleType {
 	return TupleType{
@@ -224,7 +237,7 @@ func (f FnType) Eq(other TypeValue) bool {
 }
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	arguments := util.JoinFunction(f.Argument.WrapTupleType().Elements, ", ", func(v TypeValue) string {
+	arguments := util.JoinFunction(wrapTupleType(f.Argument).Elements, ", ", func(v TypeValue) string {
 		return v.Lower().String()
 	})
 	return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return, arguments))

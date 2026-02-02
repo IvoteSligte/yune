@@ -318,10 +318,6 @@ func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (err
 	}
 	// single-argument functions still expect a tuple type for comparison
 	argumentType := f.Argument.GetType()
-	argumentType, isTuple := argumentType.(TupleType)
-	if !isTuple {
-		argumentType = NewTupleType(argumentType)
-	}
 	// NOTE: should functions return () instead of Nil?
 	if !argumentType.Eq(functionType.Argument) {
 		errors = append(errors, ArgumentTypeMismatch{
