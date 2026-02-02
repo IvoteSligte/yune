@@ -26,8 +26,8 @@ func (t Type) Lower() cpp.Type {
 }
 
 var MainType = FnType{
-	Argument: NewTupleType(IntType{}),
-	Return:   NilType{},
+	Argument: NewTupleType(),
+	Return:   IntType{},
 }
 var ExpressionType = StructType{Name: "Expression"}
 var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
