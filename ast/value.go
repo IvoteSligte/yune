@@ -107,6 +107,7 @@ func Deserialize(jsonBytes []byte) (vs []Value) {
 	var unmarshalers *json.Unmarshalers
 	expressionUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, e *Expression) error {
 		options := ExpressionOptions{}
+		println("HI Expression: " + string(jsonBytes))
 		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
 			return err
 		}
@@ -116,19 +117,23 @@ func Deserialize(jsonBytes []byte) (vs []Value) {
 		}
 		return nil
 	})
-	typeUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, t *TypeValue) error {
-		options := TypeOptions{}
-		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
-			return err
-		}
-		*t = options.GetNonNil()
-		if *t == nil {
-			panic("Only nil options when unmarshaling TypeValue")
-		}
+	// NOTE: only gets called with non-pointer type so we can't change the interface implementor
+	typeUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, t TypeValue) error {
+		println("HI TypeValue: " + string(jsonBytes))
 		return nil
+		// options := TypeOptions{}
+		// if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
+		// 	return err
+		// }
+		// *t = options.GetNonNil()
+		// if *t == nil {
+		// 	panic("Only nil options when unmarshaling TypeValue")
+		// }
+		// return nil
 	})
 	valueUnmarshalers := json.UnmarshalFunc(func(jsonBytes []byte, v *Value) error {
 		options := ValueOptions{}
+		println("HI Value: " + string(jsonBytes))
 		if err := json.Unmarshal(jsonBytes, &options, json.WithUnmarshalers(unmarshalers)); err != nil {
 			return err
 		}

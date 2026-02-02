@@ -34,12 +34,14 @@ struct ListType;
 struct FnType;
 struct StructType;
 
-inline json serialize(const TypeType&) { return { { "Type", { {} } } }; }
-inline json serialize(const IntType&) { return { { "IntType", {} } }; }
-inline json serialize(const FloatType&) { return { { "FloatType", { {} } } }; }
-inline json serialize(const BoolType&) { return { { "BoolType", { {} } } }; }
-inline json serialize(const StringType&) { return { { "StringType", { {} } } }; }
-inline json serialize(const NilType&) { return { { "NilType", { {} } } }; }
+using namespace nlohmann::literals;
+
+inline json serialize(const TypeType&) { return R"({ "Type": {} })"_json; }
+inline json serialize(const IntType&) { return R"({ "IntType": {} })"_json; }
+inline json serialize(const FloatType&) { return R"({ "FloatType": {} })"_json; }
+inline json serialize(const BoolType&) { return R"({ "BoolType", {} })"_json; }
+inline json serialize(const StringType&) { return R"({ "StringType": {} })"_json; }
+inline json serialize(const NilType&) { return R"({ "NilType", {} })"_json; }
 
 using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, NilType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
 
