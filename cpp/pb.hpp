@@ -34,12 +34,12 @@ struct ListType;
 struct FnType;
 struct StructType;
 
-inline json serialize(const TypeType&) { return { { "_type", "Type" } }; }
-inline json serialize(const IntType&) { return { { "_type", "IntType" } }; }
-inline json serialize(const FloatType&) { return { { "_type", "FloatType" } }; }
-inline json serialize(const BoolType&) { return { { "_type", "BoolType" } }; }
-inline json serialize(const StringType&) { return { { "_type", "StringType" } }; }
-inline json serialize(const NilType&) { return { { "_type", "NilType" } }; }
+inline json serialize(const TypeType&) { return { { "Type", { {} } } }; }
+inline json serialize(const IntType&) { return { { "IntType", {} } }; }
+inline json serialize(const FloatType&) { return { { "FloatType", { {} } } }; }
+inline json serialize(const BoolType&) { return { { "BoolType", { {} } } }; }
+inline json serialize(const StringType&) { return { { "StringType", { {} } } }; }
+inline json serialize(const NilType&) { return { { "NilType", { {} } } }; }
 
 using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, NilType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
 
@@ -53,7 +53,7 @@ struct String {
 };
 inline json serialize(const String& e)
 {
-    return { { "_type", "String" }, { "value", e.value } };
+    return { { "String", { { "value", e.value } } } };
 }
 
 using Expression = std::variant<String>;
@@ -131,24 +131,20 @@ inline json serialize(const TupleType& t)
     json elementsJson;
     for (const Type& element : t.elements)
         elementsJson.push_back(serialize(element));
-    return { { "_type", "TupleType" }, { "elements", elementsJson } };
+    return { { "TupleType", { { "elements", elementsJson } } } };
 }
 inline json serialize(const ListType& t)
 {
-    return { { "_type", "ListType" }, { "element", serialize(t.element) } };
+    return { { "ListType", { { "element", serialize(t.element) } } } };
 }
 inline json serialize(const FnType& t)
 {
-    return {
-        { "_type", "FnType" }, { "argument", serialize(t.argument) },
-        { "return", serialize(t.returnType) }
-    };
+    return { { "FnType", { { "argument", serialize(t.argument) }, { "return", serialize(t.returnType) } } } };
 }
 inline json serialize(const StructType& t)
 {
-    return { { "_type", "StructType" }, { "name", t.name } };
+    return { { "StructType", { { "name", t.name } } } };
 }
-
 inline std::string serializeValues(std::vector<Value> values)
 {
     json j;

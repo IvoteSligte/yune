@@ -54,5 +54,6 @@ func Evaluate(module Module, batch []Expression) (outputs []byte) {
 	if err != nil {
 		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
 	}
+	println(string(bytes))
 	return bytes // not deserialized here to prevent module import loop
 }
