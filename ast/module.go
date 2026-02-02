@@ -195,7 +195,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		values := Unmarshal(evalBytes)
 		for i, v := range values {
 			if evalNodes[i].Query.Expression == nil {
-				if v == nil {
+				if v != nil {
 					log.Fatalf("Passed nil expression to the C++ evaluator, but received non-empty string '%s'.", v)
 				}
 				continue

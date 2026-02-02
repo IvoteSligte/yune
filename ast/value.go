@@ -9,6 +9,9 @@ import (
 )
 
 func fjUnmarshal[T any](fjValue *fj.Value, dest T) T {
+	if fjValue == nil {
+		return dest
+	}
 	if err := json.Unmarshal(fjValue.MarshalTo(nil), &dest); err != nil {
 		log.Fatalf("Failed to unmarshal JSON: '%s'", err)
 	}
@@ -33,6 +36,9 @@ type Value interface {
 }
 
 func UnmarshalValue(data *fj.Value) (v Value) {
+	if string(data.MarshalTo(nil)) == `"<no_value>"` {
+		return
+	}
 	if v = UnmarshalType(data); v != nil {
 		return
 	}

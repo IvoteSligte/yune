@@ -59,28 +59,57 @@ inline json serialize(const String& e)
     return { { "String", { { "value", e.value } } } };
 }
 
+template <class... T>
+inline json serialize(const std::tuple<T...>& e)
+{
+    json elements = std::apply([](auto&&... element) { return json { serialize(element)... }; }, e);
+    return { { "Tuple", { { "elements", elements } } } };
+}
+
 struct Expression {
     Expression(String value)
-        : value(value)
+        : self(std::make_unique<Concrete<String>>(std::move(value)))
     {
     }
 
-    template <class T>
-    bool has_type() const { return value.type() == typeid(T); }
-    template <class T>
-    T& get() { return std::any_cast<T>(value); }
-    template <class T>
-    T get() const { return std::any_cast<T>(value); }
+    template <class... T>
+    Expression(std::tuple<T...> value)
+        : self(std::make_unique<Concrete<String>>(std::move(value)))
+    {
+    }
 
-    std::any value;
+    struct Interface {
+        virtual json serialize() const = 0;
+        virtual ~Interface() = default;
+    };
+    template <class T>
+    struct Concrete : Interface {
+        Concrete(T value)
+            : value(std::move(value))
+        {
+        }
+        json serialize() const override
+        {
+            return ty::serialize(value);
+        }
+        T value;
+    };
+
+    template <class T>
+    bool has_type() const { return dynamic_cast<T*>(self.get()) != nullptr; }
+    template <class T>
+    T& get() { return dynamic_cast<T*>(self.get()); }
+    template <class T>
+    T get() const { return *dynamic_cast<T*>(self.get()); }
+
+    json serialize() const { return self->serialize(); }
+
+    std::unique_ptr<Interface> self;
 };
 
 inline json serialize(const Expression& e)
 {
-    if (e.has_type<String>()) {
-        return ty::serialize(e.get<String>());
-    }
-    exit(1); // unreachable
+    return e.serialize();
 }
 
 json serialize(const TypeType& t);
@@ -159,12 +188,6 @@ inline json serialize(const FnType& t)
 inline json serialize(const StructType& t)
 {
     return { { "StructType", { { "name", t.name } } } };
-}
-
-template <class... T>
-inline json serialize(const std::tuple<T...>& t)
-{
-    return serialize(Tuple((std::get<T>(t), ...)));
 }
 
 } // namespace ty
