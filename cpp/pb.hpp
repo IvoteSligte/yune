@@ -2,6 +2,7 @@
 #include "json.hpp" // nlohmann JSON library
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -58,7 +59,29 @@ inline json serialize(const String& e)
     return { { "String", { { "value", e.value } } } };
 }
 
-using Expression = std::variant<String>;
+struct Expression {
+    Expression(String value)
+        : value(value)
+    {
+    }
+
+    template <class T>
+    bool has_type() const { return value.type() == typeid(T); }
+    template <class T>
+    T& get() { return std::any_cast<T>(value); }
+    template <class T>
+    T get() const { return std::any_cast<T>(value); }
+
+    std::any value;
+};
+
+inline json serialize(const Expression& e)
+{
+    if (e.has_type<String>()) {
+        return ty::serialize(e.get<String>());
+    }
+    exit(1); // unreachable
+}
 
 json serialize(const TypeType& t);
 json serialize(const IntType& t);
@@ -81,10 +104,6 @@ inline json serialize(const Type& t)
                           [](const auto value) -> json { return serialize(value); },
                       },
         t);
-}
-inline json serialize(const Expression& t)
-{
-    return std::visit([](auto t) { return serialize(t); }, t);
 }
 
 struct TupleType {
@@ -140,6 +159,12 @@ inline json serialize(const FnType& t)
 inline json serialize(const StructType& t)
 {
     return { { "StructType", { { "name", t.name } } } };
+}
+
+template <class... T>
+inline json serialize(const std::tuple<T...>& t)
+{
+    return serialize(Tuple((std::get<T>(t), ...)));
 }
 
 } // namespace ty
