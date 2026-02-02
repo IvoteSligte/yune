@@ -9,6 +9,7 @@ import (
 
 type Expression interface {
 	Node
+	Value
 	GetMacros() []*Macro
 
 	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
@@ -27,6 +28,9 @@ type Expression interface {
 type DefaultExpression struct{}
 
 var _ Expression = DefaultExpression{}
+
+// value implements Expression.
+func (d DefaultExpression) value() {}
 
 // GetMacroTypeDependencies implements Expression.
 func (d DefaultExpression) GetMacroTypeDependencies() []Query {
@@ -199,6 +203,7 @@ func (v *Variable) Lower() cpp.Expression {
 }
 
 type FunctionCall struct {
+	DefaultExpression
 	Span     Span
 	Type     TypeValue
 	Function Expression
@@ -308,6 +313,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 }
 
 type Tuple struct {
+	DefaultExpression
 	Span Span
 	// Inferred type
 	Type     TypeValue
@@ -399,6 +405,7 @@ func (t *Tuple) GetType() TypeValue {
 
 // TODO: type check Function
 type Macro struct {
+	DefaultExpression
 	Span Span
 	// Function that evaluates the macro.
 	Function Variable
@@ -483,6 +490,7 @@ type MacroLine struct {
 }
 
 type UnaryExpression struct {
+	DefaultExpression
 	Span       Span
 	Type       TypeValue
 	Op         UnaryOp
@@ -568,6 +576,7 @@ const (
 )
 
 type BinaryExpression struct {
+	DefaultExpression
 	Span  Span
 	Type  TypeValue
 	Op    BinaryOp
