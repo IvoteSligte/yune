@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"log"
 	"yune/util"
 
@@ -29,6 +30,7 @@ func fjUnmarshalUnion(data *fj.Value) (key string, value *fj.Value) {
 }
 
 func UnmarshalType(data *fj.Value) (t TypeValue) {
+	fmt.Printf("JSON: %s\n", data.String())
 	key, v := fjUnmarshalUnion(data)
 	switch key {
 	case "TypeType":

@@ -55,9 +55,6 @@ func (DefaultTypeValue) Eq(other TypeValue) bool {
 func (d DefaultTypeValue) WrapTupleType() TupleType {
 	return NewTupleType(d)
 }
-func (DefaultTypeValue) OneofKey() string {
-	panic("DefaultTypeValue.OneofKey should be overridden")
-}
 
 var _ TypeValue = DefaultTypeValue{}
 
@@ -67,8 +64,7 @@ func (t TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(TypeType)
 	return ok
 }
-func (TypeType) Lower() cpp.Type  { return "ty::Type" }
-func (TypeType) OneofKey() string { return "Type" }
+func (TypeType) Lower() cpp.Type { return "ty::Type" }
 
 type IntType struct{ DefaultTypeValue }
 
@@ -76,8 +72,7 @@ func (i IntType) Eq(other TypeValue) bool {
 	_, ok := other.(IntType)
 	return ok
 }
-func (IntType) Lower() cpp.Type  { return "int" }
-func (IntType) OneofKey() string { return "IntType" }
+func (IntType) Lower() cpp.Type { return "int" }
 
 type FloatType struct{ DefaultTypeValue }
 
@@ -85,8 +80,7 @@ func (f FloatType) Eq(other TypeValue) bool {
 	_, ok := other.(FloatType)
 	return ok
 }
-func (FloatType) Lower() cpp.Type  { return "float" }
-func (FloatType) OneofKey() string { return "FloatType" }
+func (FloatType) Lower() cpp.Type { return "float" }
 
 type BoolType struct{ DefaultTypeValue }
 
@@ -94,8 +88,7 @@ func (b BoolType) Eq(other TypeValue) bool {
 	_, ok := other.(BoolType)
 	return ok
 }
-func (BoolType) Lower() cpp.Type  { return "bool" }
-func (BoolType) OneofKey() string { return "BoolType" }
+func (BoolType) Lower() cpp.Type { return "bool" }
 
 type StringType struct{ DefaultTypeValue }
 
@@ -103,8 +96,7 @@ func (s StringType) Eq(other TypeValue) bool {
 	_, ok := other.(StringType)
 	return ok
 }
-func (StringType) Lower() cpp.Type  { return "std::string" }
-func (StringType) OneofKey() string { return "StringType" }
+func (StringType) Lower() cpp.Type { return "std::string" }
 
 type NilType struct{ DefaultTypeValue }
 
@@ -112,8 +104,7 @@ func (n NilType) Eq(other TypeValue) bool {
 	_, ok := other.(NilType)
 	return ok
 }
-func (NilType) Lower() cpp.Type  { return "void" }
-func (NilType) OneofKey() string { return "NilType" }
+func (NilType) Lower() cpp.Type { return "void" }
 
 type TupleType struct {
 	DefaultTypeValue
@@ -138,7 +129,6 @@ func (t TupleType) Lower() cpp.Type {
 	}) + ">")
 }
 func (t TupleType) WrapTupleType() TupleType { return t }
-func (TupleType) OneofKey() string           { return "TupleType" }
 
 func NewTupleType(elements ...TypeValue) TupleType {
 	return TupleType{
@@ -158,7 +148,6 @@ func (l ListType) Eq(other TypeValue) bool {
 func (l ListType) Lower() cpp.Type {
 	return cpp.Type("std::vector<" + l.Element.Lower() + ">")
 }
-func (ListType) OneofKey() string { return "ListType" }
 
 type FnType struct {
 	DefaultTypeValue
@@ -177,7 +166,6 @@ func (f FnType) Lower() cpp.Type {
 	})
 	return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return, arguments))
 }
-func (FnType) OneofKey() string { return "FnType" }
 
 type StructType struct {
 	DefaultTypeValue
@@ -192,7 +180,6 @@ func (s StructType) Lower() cpp.Type {
 	// TODO: register struct type if newly defined
 	return cpp.Type("ty::" + s.Name)
 }
-func (StructType) OneofKey() string { return "StructType" }
 
 var _ TypeValue = TypeType{}
 var _ TypeValue = IntType{}
