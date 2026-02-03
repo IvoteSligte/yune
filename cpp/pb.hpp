@@ -129,14 +129,31 @@ inline json serialize(const StructType& t)
     return { { "StructType", { { "name", t.name } } } };
 }
 
-struct StringLiteral {
-    explicit StringLiteral(std::string value)
+template <class T>
+struct Literal {
+    explicit Literal(T value)
         : value(value)
     {
     }
-
-    std::string value;
+    T value;
 };
+using IntegerLiteral = Literal<int>;
+using FloatLiteral = Literal<float>;
+using BoolLiteral = Literal<bool>;
+using StringLiteral = Literal<std::string>;
+
+inline json serialize(const IntegerLiteral& e)
+{
+    return { { "IntegerLiteral", { { "type", serialize(StructType("IntegerLiteral")) }, { "value", e.value } } } };
+}
+inline json serialize(const FloatLiteral& e)
+{
+    return { { "FloatLitearl", { { "type", serialize(StructType("FloatLiteral")) }, { "value", e.value } } } };
+}
+inline json serialize(const BoolLiteral& e)
+{
+    return { { "BoolLiteral", { { "type", serialize(StructType("BoolLiteral")) }, { "value", e.value } } } };
+}
 inline json serialize(const StringLiteral& e)
 {
     return { { "StringLiteral", { { "type", serialize(StructType("StringLiteral")) }, { "value", e.value } } } };
@@ -152,8 +169,9 @@ inline json serialize(const std::tuple<T...>& e)
 // TODO: other expression kinds
 
 struct Expression {
-    Expression(StringLiteral value)
-        : self(std::make_unique<Concrete<StringLiteral>>(std::move(value)))
+    template <class T>
+    Expression(Literal<T> value)
+        : self(std::make_unique<Concrete<Literal<T>>>(std::move(value)))
     {
     }
 
