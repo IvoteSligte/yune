@@ -23,12 +23,10 @@ overloaded(Ts...) -> overloaded<Ts...>;
 
 using json = nlohmann::json;
 
-inline json serialize(const std::string& s)
-{
-    return s;
-}
-
-// TODO: other primitive types
+inline json serialize(const std::string& s) { return s; }
+inline json serialize(const int& i) { return i; }
+inline json serialize(const bool& b) { return b; }
+inline json serialize(const float& f) { return f; }
 
 struct TypeType { };
 
