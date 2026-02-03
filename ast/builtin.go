@@ -90,7 +90,7 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Requires: []string{"Expression"},
 	Implementation: `
 ty::Expression stringLiteral(std::string str) {
-    return ty::String{str};
+    return ty::StringLiteral(str);
 };`,
 }
 

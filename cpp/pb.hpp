@@ -23,6 +23,13 @@ overloaded(Ts...) -> overloaded<Ts...>;
 
 using json = nlohmann::json;
 
+inline json serialize(const std::string& s)
+{
+    return s;
+}
+
+// TODO: other primitive types
+
 struct TypeType { };
 
 struct IntType { };
@@ -46,17 +53,95 @@ inline json serialize(const NilType&) { return R"({ "NilType", {} })"_json; }
 
 using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, NilType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
 
-struct String {
-    String(std::string value)
+json serialize(const TypeType& t);
+json serialize(const IntType& t);
+json serialize(const FloatType& t);
+json serialize(const BoolType& t);
+json serialize(const StringType& t);
+json serialize(const NilType& t);
+json serialize(const TupleType& t);
+json serialize(const ListType& t);
+json serialize(const FnType& t);
+json serialize(const StructType& t);
+
+inline json serialize(const Type& t)
+{
+    return std::visit(overloaded {
+                          [](const Box<TupleType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<ListType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<FnType>& boxed) -> json { return serialize(*boxed); },
+                          [](const Box<StructType>& boxed) -> json { return serialize(*boxed); },
+                          [](const auto value) -> json { return serialize(value); },
+                      },
+        t);
+}
+
+struct TupleType {
+    explicit TupleType(std::vector<Type> elements)
+    {
+        this->elements = std::move(elements);
+    }
+
+    std::vector<Type> elements;
+};
+struct ListType {
+    explicit ListType(Type element)
+    {
+        this->element = element;
+    }
+
+    Type element;
+};
+struct FnType {
+    explicit FnType(Type argument, Type returnType)
+    {
+        this->argument = std::move(argument);
+        this->returnType = std::move(returnType);
+    }
+
+    Type argument;
+    Type returnType;
+};
+struct StructType {
+    explicit StructType(std::string name)
+        : name(name)
+    {
+    }
+
+    std::string name;
+};
+
+inline json serialize(const TupleType& t)
+{
+    json elementsJson;
+    for (const Type& element : t.elements)
+        elementsJson.push_back(serialize(element));
+    return { { "TupleType", { { "elements", elementsJson } } } };
+}
+inline json serialize(const ListType& t)
+{
+    return { { "ListType", { { "element", serialize(t.element) } } } };
+}
+inline json serialize(const FnType& t)
+{
+    return { { "FnType", { { "argument", serialize(t.argument) }, { "return", serialize(t.returnType) } } } };
+}
+inline json serialize(const StructType& t)
+{
+    return { { "StructType", { { "name", t.name } } } };
+}
+
+struct StringLiteral {
+    explicit StringLiteral(std::string value)
         : value(value)
     {
     }
 
     std::string value;
 };
-inline json serialize(const String& e)
+inline json serialize(const StringLiteral& e)
 {
-    return { { "String", { { "value", e.value } } } };
+    return { { "StringLiteral", { { "type", serialize(StructType("StringLiteral")) }, { "value", e.value } } } };
 }
 
 template <class... T>
@@ -66,15 +151,17 @@ inline json serialize(const std::tuple<T...>& e)
     return { { "Tuple", { { "elements", elements } } } };
 }
 
+// TODO: other expression kinds
+
 struct Expression {
-    Expression(String value)
-        : self(std::make_unique<Concrete<String>>(std::move(value)))
+    Expression(StringLiteral value)
+        : self(std::make_unique<Concrete<StringLiteral>>(std::move(value)))
     {
     }
 
     template <class... T>
     Expression(std::tuple<T...> value)
-        : self(std::make_unique<Concrete<String>>(std::move(value)))
+        : self(std::make_unique<Concrete<std::tuple<T...>>>(std::move(value)))
     {
     }
 
@@ -109,85 +196,11 @@ struct Expression {
 
 inline json serialize(const Expression& e)
 {
-    return e.serialize();
-}
-
-json serialize(const TypeType& t);
-json serialize(const IntType& t);
-json serialize(const FloatType& t);
-json serialize(const BoolType& t);
-json serialize(const StringType& t);
-json serialize(const NilType& t);
-json serialize(const TupleType& t);
-json serialize(const ListType& t);
-json serialize(const FnType& t);
-json serialize(const StructType& t);
-
-inline json serialize(const Type& t)
-{
-    return std::visit(overloaded {
-                          [](const Box<TupleType>& boxed) -> json { return serialize(*boxed); },
-                          [](const Box<ListType>& boxed) -> json { return serialize(*boxed); },
-                          [](const Box<FnType>& boxed) -> json { return serialize(*boxed); },
-                          [](const Box<StructType>& boxed) -> json { return serialize(*boxed); },
-                          [](const auto value) -> json { return serialize(value); },
-                      },
-        t);
-}
-
-struct TupleType {
-    TupleType(std::vector<Type> elements)
-    {
-        this->elements = std::move(elements);
+    json j = e.serialize();
+    for (auto& jStruct : j) {
+        jStruct["type"] = serialize(StructType("Expression"));
     }
-
-    std::vector<Type> elements;
-};
-struct ListType {
-    ListType(Type element)
-    {
-        this->element = element;
-    }
-
-    Type element;
-};
-struct FnType {
-    FnType(Type argument, Type returnType)
-    {
-        this->argument = std::move(argument);
-        this->returnType = std::move(returnType);
-    }
-
-    Type argument;
-    Type returnType;
-};
-struct StructType {
-    StructType(std::string name)
-        : name(name)
-    {
-    }
-
-    std::string name;
-};
-
-inline json serialize(const TupleType& t)
-{
-    json elementsJson;
-    for (const Type& element : t.elements)
-        elementsJson.push_back(serialize(element));
-    return { { "TupleType", { { "elements", elementsJson } } } };
-}
-inline json serialize(const ListType& t)
-{
-    return { { "ListType", { { "element", serialize(t.element) } } } };
-}
-inline json serialize(const FnType& t)
-{
-    return { { "FnType", { { "argument", serialize(t.argument) }, { "return", serialize(t.returnType) } } } };
-}
-inline json serialize(const StructType& t)
-{
-    return { { "StructType", { { "name", t.name } } } };
+    return j;
 }
 
 } // namespace ty

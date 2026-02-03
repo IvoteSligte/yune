@@ -29,45 +29,88 @@ type Expression interface {
 
 // Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
-	key, v := fjUnmarshalUnion(data)
+	object := data.GetObject()
+	if object == nil { // primitive or array
+		integer, err := data.Int64()
+		if err == nil {
+			expr = &Integer{Value: integer}
+			return
+		}
+		float, err := data.Float64()
+		if err == nil {
+			expr = &Float{Value: float}
+			return
+		}
+		boolean, err := data.Bool()
+		if err == nil {
+			expr = &Bool{Value: boolean}
+			return
+		}
+		stringBytes, err := data.StringBytes()
+		if err == nil {
+			expr = &String{Value: string(stringBytes)}
+			return
+		}
+		return nil // not a primitive
+	}
+	key, v := fjUnmarshalUnion(object)
 	switch key {
-	case "Integer":
-		expr = fjUnmarshal(v, &Integer{})
-	case "Float":
-		expr = fjUnmarshal(v, &Float{})
-	case "Bool":
-		expr = fjUnmarshal(v, &Bool{})
-	case "String":
-		expr = fjUnmarshal(v, &String{})
+	case "IntegerLiteral":
+		expr = &Integer{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetInt64("value"),
+		}
+	case "FloatLiteral":
+		expr = &Float{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetFloat64("value"),
+		}
+	case "BoolLiteral":
+		expr = &Bool{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetBool("value"),
+		}
+	case "StringLiteral":
+		expr = &String{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: string(v.GetStringBytes("value")),
+		}
 	case "Variable":
-		expr = fjUnmarshal(v, &Variable{})
+		expr = &Variable{
+			Name: Name{
+				Span:   fjUnmarshal(v.Get("span"), Span{}),
+				String: string(v.GetStringBytes("value")),
+			},
+			Type: UnmarshalType(v.Get("type")),
+		}
 	case "FunctionCall":
 		expr = &FunctionCall{
-			Span:     fjUnmarshal(v.Get("Span"), Span{}),
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
+			Type:     UnmarshalType(v.Get("type")),
 			Function: UnmarshalExpression(v.Get("function")),
 			Argument: UnmarshalExpression(v.Get("argument")),
 		}
 	case "Tuple":
 		expr = &Tuple{
-			Span:     fjUnmarshal(v.Get("Span"), Span{}),
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
 		}
 	case "Macro":
 		panic("Macros are not supported for serialization right now.")
 	case "UnaryExpression":
 		expr = &UnaryExpression{
-			Span:       fjUnmarshal(v.Get("Span"), Span{}),
+			Span:       fjUnmarshal(v.Get("span"), Span{}),
 			Op:         UnaryOp(v.GetStringBytes("op")),
 			Expression: UnmarshalExpression(v.Get("expression")),
 		}
 	case "BinaryExpression":
 		expr = &BinaryExpression{
-			Span:  fjUnmarshal(v.Get("Span"), Span{}),
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
 			Op:    BinaryOp(v.GetStringBytes("op")),
 			Left:  UnmarshalExpression(v.Get("left")),
 			Right: UnmarshalExpression(v.Get("right")),
 		}
-	default:
+	default: // unknown key
 		// expr = nil
 	}
 	return
@@ -132,8 +175,9 @@ var _ Expression = DefaultExpression{}
 
 type Integer struct {
 	DefaultExpression
-	Span  Span  `json:"span"`
-	Value int64 `json:"value"`
+	Span  Span
+	Type  TypeValue
+	Value int64
 }
 
 // GetSpan implements Expression.
@@ -143,17 +187,23 @@ func (i Integer) GetSpan() Span {
 
 // Lower implements Expression.
 func (i Integer) Lower() cpp.Expression {
+	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
 	return cpp.Integer(i.Value)
 }
 
 // GetType implements Expression.
 func (i Integer) GetType() TypeValue {
-	return IntType{}
+	if i.Type == nil {
+		return IntType{}
+	} else {
+		return i.Type
+	}
 }
 
 type Float struct {
 	DefaultExpression
 	Span  Span
+	Type  TypeValue
 	Value float64
 }
 
@@ -164,17 +214,23 @@ func (f Float) GetSpan() Span {
 
 // Lower implements Expression.
 func (f Float) Lower() cpp.Expression {
+	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
 	return cpp.Float(f.Value)
 }
 
 // GetType implements Expression.
 func (f Float) GetType() TypeValue {
-	return FloatType{}
+	if f.Type == nil {
+		return FloatType{}
+	} else {
+		return f.Type
+	}
 }
 
 type Bool struct {
 	DefaultExpression
 	Span  Span
+	Type  TypeValue
 	Value bool
 }
 
@@ -185,17 +241,23 @@ func (b Bool) GetSpan() Span {
 
 // Lower implements Expression.
 func (b Bool) Lower() cpp.Expression {
+	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
 	return cpp.Bool(b.Value)
 }
 
 // GetType implements Expression.
 func (b Bool) GetType() TypeValue {
-	return BoolType{}
+	if b.Type == nil {
+		return BoolType{}
+	} else {
+		return b.Type
+	}
 }
 
 type String struct {
 	DefaultExpression
 	Span  Span
+	Type  TypeValue
 	Value string
 }
 
@@ -206,12 +268,17 @@ func (s String) GetSpan() Span {
 
 // Lower implements Expression.
 func (s String) Lower() cpp.Expression {
+	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
 	return cpp.String(s.Value)
 }
 
 // GetType implements Expression.
 func (s String) GetType() TypeValue {
-	return StringType{}
+	if s.Type == nil {
+		return StringType{}
+	} else {
+		return s.Type
+	}
 }
 
 type Variable struct {
@@ -465,9 +532,16 @@ type Macro struct {
 
 // SetValue implements Destination.
 func (m *Macro) SetValue(v Value) {
-	// FIXME: in Yune: (String, Expression) -> after serialization: (String, String)
-	//     because both are simply stored as Expression
-	m.Result = v.(Expression)
+	util.PrettyPrint(v)
+	tuple := v.(*Tuple)
+	errorMessage := tuple.Elements[0].(*String).Value
+	expression := tuple.Elements[1]
+	stringExpression := expression.(*String) // TODO: non-String
+	stringExpression.Type = nil              // TODO: Expression.ClearType()
+	m.Result = stringExpression
+	if errorMessage != "" {
+		panic("Macro returned error: " + errorMessage)
+	}
 }
 
 // GetSpan implements Expression.
@@ -536,6 +610,9 @@ type MacroLine struct {
 	Span
 	Text string
 }
+
+// TODO: allow "lowering" UnaryExpression, BinaryExpression and Tuple to a cpp ty::Expression
+//     just like the literals
 
 type UnaryExpression struct {
 	DefaultExpression

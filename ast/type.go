@@ -37,7 +37,7 @@ var noType = DefaultTypeValue{}
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalType(data *fj.Value) (t TypeValue) {
-	key, v := fjUnmarshalUnion(data)
+	key, v := fjUnmarshalUnion(data.GetObject())
 	switch key {
 	case "TypeType":
 		t = TypeType{}

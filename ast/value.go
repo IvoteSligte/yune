@@ -18,8 +18,7 @@ func fjUnmarshal[T any](fjValue *fj.Value, dest T) T {
 	return dest
 }
 
-func fjUnmarshalUnion(data *fj.Value) (key string, value *fj.Value) {
-	object := data.GetObject()
+func fjUnmarshalUnion(object *fj.Object) (key string, value *fj.Value) {
 	if object.Len() != 1 {
 		log.Fatalf("Found %d keys when deserializing JSON union: '%v'. Expected 1.", object.Len(), object)
 		return
@@ -45,7 +44,7 @@ func UnmarshalValue(data *fj.Value) (v Value) {
 	if v = UnmarshalExpression(data); v != nil {
 		return
 	}
-	key, _ := fjUnmarshalUnion(data)
+	key, _ := fjUnmarshalUnion(data.GetObject())
 	log.Fatalf("Unknown key for JSON Value: '%s'.", key)
 	return
 }
