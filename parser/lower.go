@@ -174,7 +174,7 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 		if err != nil {
 			panic("ANTLR parser-accepted integer failed to parse by strconv.ParseInt")
 		}
-		return ast.Integer{
+		return &ast.Integer{
 			Span:  GetSpan(ctx),
 			Value: integer,
 		}
@@ -183,18 +183,18 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 		if err != nil {
 			panic("ANTLR parser-accepted float failed to parse by strconv.ParseFloat")
 		}
-		return ast.Float{
+		return &ast.Float{
 			Span:  GetSpan(ctx),
 			Value: float,
 		}
 	case ctx.GetBool_() != nil:
-		return ast.Bool{
+		return &ast.Bool{
 			Span:  GetSpan(ctx),
 			Value: ctx.GetBool_().GetText() == "true",
 		}
 	case ctx.STRING() != nil:
 		s := ctx.STRING().GetText()
-		return ast.String{
+		return &ast.String{
 			Span:  GetSpan(ctx),
 			Value: s[1 : len(s)-1], // strip ""
 		}
