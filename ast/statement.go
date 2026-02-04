@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"yune/cpp"
 	"yune/util"
 )
@@ -91,11 +92,11 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Statement.
 func (d VariableDeclaration) Lower() cpp.Statement {
-	return cpp.VariableDeclaration{
-		Name:  d.Name.String,
-		Type:  d.Type.value.Lower(), // TODO: actually register the type too
-		Value: d.Body.LowerVariableBody(),
-	}
+	return fmt.Sprintf(`%s %s = %s;`,
+		d.Type.value.Lower(), // TODO: actually register the type too (if a StructType)
+		d.Name.String,
+		cpp.LambdaBlock(d.Body.lowerStatements()),
+	)
 }
 
 func (d VariableDeclaration) GetName() Name {
@@ -163,11 +164,11 @@ func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Statement.
 func (a *Assignment) Lower() cpp.Statement {
-	return cpp.Assignment{
-		Target: a.Target.Name.String,
-		Op:     cpp.AssignmentOp(a.Op),
-		Value:  a.Body.LowerVariableBody(),
-	}
+	return fmt.Sprintf(`%s %s %s;`,
+		a.Target.Name.String,
+		a.Op,
+		cpp.LambdaBlock(a.Body.lowerStatements()),
+	)
 }
 
 func (a Assignment) GetType() TypeValue {
@@ -265,11 +266,11 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Statement.
 func (b *BranchStatement) Lower() cpp.Statement {
-	return cpp.BranchStatement{
-		Condition: b.Condition.Lower(),
-		Then:      b.Then.LowerFunctionBody(),
-		Else:      b.Else.LowerFunctionBody(), // FIXME: branches generate duplicate, unreachable code (not sure where the bug is)
-	}
+	return fmt.Sprintf(`if (%s) %s else %s`,
+		b.Condition.Lower(),
+		cpp.Block(b.Then.lowerStatements()),
+		cpp.Block(b.Else.lowerStatements()),
+	)
 }
 
 type Block struct {
@@ -364,27 +365,15 @@ func (b *Block) lowerStatements() []cpp.Statement {
 	case *ExpressionStatement:
 		// last expression is implicitly returned in Yune,
 		// but needs to be explicitly returned in C++
-		statements[len(statements)-1] = cpp.ReturnStatement{
-			Expression: statements[len(statements)-1].(cpp.ExpressionStatement).Expression,
-		}
+		statements[len(statements)-1] = fmt.Sprintf(`return %s`, statements[len(statements)-1])
 	case *BranchStatement:
 		// already returns
 	case *VariableDeclaration, *Assignment:
-		statements = append(statements, cpp.ReturnStatement{
-			Expression: cpp.Tuple{},
-		})
+		statements = append(statements, `return std::make_tuple();`)
 	default:
 		panic("unreachable")
 	}
 	return statements
-}
-
-func (b *Block) LowerFunctionBody() cpp.Block {
-	return b.lowerStatements()
-}
-
-func (b *Block) LowerVariableBody() cpp.LambdaBlock {
-	return b.lowerStatements()
 }
 
 var _ Node = &Block{}
@@ -395,7 +384,7 @@ type ExpressionStatement struct {
 
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower() cpp.Statement {
-	return cpp.ExpressionStatement{Expression: e.Expression.Lower()}
+	return e.Expression.Lower() + ";"
 }
 
 var _ Statement = &VariableDeclaration{}

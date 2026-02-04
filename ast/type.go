@@ -185,9 +185,7 @@ func (t TupleType) Eq(other TypeValue) bool {
 	return true
 }
 func (t TupleType) Lower() cpp.Type {
-	return cpp.Type("std::tuple<" + util.JoinFunction(t.Elements, ", ", func(v TypeValue) string {
-		return v.Lower().String()
-	}) + ">")
+	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.Lower) + ">"
 }
 
 func NewTupleType(elements ...TypeValue) TupleType {
@@ -210,7 +208,7 @@ func (l ListType) Eq(other TypeValue) bool {
 	return ok && typeEqual(l.Element, otherList.Element)
 }
 func (l ListType) Lower() cpp.Type {
-	return cpp.Type("std::vector<" + l.Element.Lower() + ">")
+	return "std::vector<" + l.Element.Lower() + ">"
 }
 
 type FnType struct {
@@ -229,10 +227,8 @@ func (f FnType) Eq(other TypeValue) bool {
 }
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	arguments := util.JoinFunction(wrapTupleType(f.Argument).Elements, ", ", func(v TypeValue) string {
-		return v.Lower().String()
-	})
-	return cpp.Type(fmt.Sprintf("std::function<%s(%s)>", _return, arguments))
+	arguments := util.JoinFunction(wrapTupleType(f.Argument).Elements, ", ", TypeValue.Lower)
+	return fmt.Sprintf("std::function<%s(%s)>", _return, arguments)
 }
 
 type StructType struct {
@@ -250,7 +246,7 @@ func (s StructType) Eq(other TypeValue) bool {
 }
 func (s StructType) Lower() cpp.Type {
 	// TODO: register struct type if newly defined
-	return cpp.Type("ty::" + s.Name)
+	return "ty::" + s.Name
 }
 
 var _ TypeValue = TypeType{}

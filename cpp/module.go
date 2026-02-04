@@ -5,13 +5,10 @@ import (
 )
 
 type Module struct {
-	Declarations []TopLevelDeclaration
+	Declarations []Declaration
 }
 
-// FIXME: declarations need to be ordered properly in the header file.
-// It is primarily that type declarations need to come before constant declarations that use them.
-
-func (m Module) GenHeader() string {
+func (m Module) Header() string {
 	// <tuple> for std::tuple, std::apply
 	// <functional> for std::function
 	// <string> for std::string
@@ -23,9 +20,13 @@ func (m Module) GenHeader() string {
 #include <vector>     // std::vector
 #include <fstream>    // std::fstream
 #include <iostream>   // std::cout
-` + util.JoinFunction(m.Declarations, "\n", TopLevelDeclaration.GenHeader)
+` + util.JoinFunction(m.Declarations, "\n", func(d Declaration) string {
+		return d.Header
+	})
 }
 
-func (m Module) String() string {
-	return util.Join(m.Declarations, "\n")
+func (m Module) Implementation() string {
+	return util.JoinFunction(m.Declarations, "\n", func(d Declaration) string {
+		return d.Implementation
+	})
 }

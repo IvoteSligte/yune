@@ -19,13 +19,7 @@ func (s Span) String() string {
 }
 
 func (s Span) Lower() cpp.Expression {
-	return cpp.FunctionCall{
-		Function: cpp.Expression(cpp.Raw("Span")),
-		Arguments: []cpp.Expression{
-			cpp.Expression(cpp.Integer(s.Line)),
-			cpp.Expression(cpp.Integer(s.Column)),
-		},
-	}
+	return fmt.Sprintf(`Span(%d, %d)`, s.Line, s.Column)
 }
 
 type Name struct {

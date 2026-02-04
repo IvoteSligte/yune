@@ -69,8 +69,8 @@ func (b BuiltinRawDeclaration) GetValueDependencies() []Name {
 }
 
 // Lower implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.RawDeclaration{
+func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
+	return cpp.Declaration{
 		Header:         b.Header,
 		Implementation: b.Implementation,
 	}
@@ -139,13 +139,13 @@ func (b BuiltinStructDeclaration) GetValueDependencies() []Name {
 }
 
 // Lower implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.StructDeclaration{
-		Name: b.Name,
-		Fields: util.Map(b.Fields, func(f BuiltinFieldDeclaration) cpp.Field {
-			return cpp.Field{Name: f.Name, Type: cpp.Type(f.Type)}
+func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
+	return cpp.StructDeclaration(
+		b.Name,
+		util.Map(b.Fields, func(f BuiltinFieldDeclaration) string {
+			return cpp.Field(f.Name, f.Type)
 		}),
-	}
+	)
 }
 
 // TypeCheckBody implements TopLevelDeclaration.
@@ -207,12 +207,8 @@ func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
 }
 
 // Lower implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.ConstantDeclaration{
-		Name:  b.Name,
-		Type:  b.Type.Lower(),
-		Value: cpp.Raw(b.Value),
-	}
+func (b BuiltinConstantDeclaration) Lower() cpp.Declaration {
+	return cpp.ConstantDeclaration(b.Name, b.Type.Lower(), b.Value)
 }
 
 // TypeCheckBody implements TopLevelDeclaration.
@@ -308,20 +304,15 @@ func (b BuiltinFunctionDeclaration) GetValueDependencies() []Name {
 }
 
 // Lower implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.FunctionDeclaration{
-		Name: b.Name,
-		Parameters: util.Map(b.Parameters, func(p BuiltinFunctionParameter) cpp.FunctionParameter {
-			return cpp.FunctionParameter{
-				Name: p.Name,
-				Type: p.Type.Lower(),
-			}
+func (b BuiltinFunctionDeclaration) Lower() cpp.Declaration {
+	return cpp.FunctionDeclaration(
+		b.Name,
+		util.Map(b.Parameters, func(p BuiltinFunctionParameter) string {
+			return p.Type.Lower() + " " + p.Name
 		}),
-		ReturnType: b.ReturnType.Lower(),
-		Body: cpp.Block(util.Map(strings.Split(b.Body, "\n"), func(s string) cpp.Statement {
-			return cpp.Statement(cpp.Raw(s))
-		})),
-	}
+		b.ReturnType.Lower(),
+		cpp.Block(strings.Split(b.Body, "\n")),
+	)
 }
 
 // TypeCheckBody implements TopLevelDeclaration.

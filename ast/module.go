@@ -138,7 +138,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	// sort precomputed nodes
 	lowered.Declarations = util.Map(
 		sortedEvaluatableNodes(evaluated.Clone(), mapset.NewThreadUnsafeSet[*evalNode]()),
-		func(node *evalNode) cpp.TopLevelDeclaration {
+		func(node *evalNode) cpp.Declaration {
 			return node.Declaration.Lower()
 		},
 	)
@@ -182,7 +182,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
-				return nil
+				return `std::string("<no_value>")`
 			}
 		}))
 		values := Unmarshal(evalBytes)

@@ -28,36 +28,27 @@ func Evaluate(module Module, batch []Expression) []byte {
 	statements := []Statement{}
 
 	addStmt := func(s string) {
-		statements = append(statements, Statement(Raw(s)))
+		statements = append(statements, s)
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
 	addStmt(`outputFile << "[\n";`)
 
 	for i, e := range batch {
-		// TODO: just handle non-Expressions in the ast module instead
-		if e == nil {
-			if i < len(batch)-1 {
-				addStmt(`outputFile << "\"<no_value>\"" << ",\n";`)
-			} else {
-				addStmt(`outputFile << "\"<no_value>\"" << "\n";`)
-			}
+		if i < len(batch)-1 {
+			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << ",\n";`, e))
 		} else {
-			if i < len(batch)-1 {
-				addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << ",\n";`, e))
-			} else {
-				addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << "\n";`, e))
-			}
+			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << "\n";`, e))
 		}
 	}
 	addStmt(`outputFile << "]\n";`)
 	addStmt(`outputFile.close();`)
 
-	module.Declarations = append(module.Declarations, FunctionDeclaration{
-		Name:       "main",
-		Parameters: []FunctionParameter{},
-		ReturnType: "int",
-		Body:       Block(statements),
-	})
+	module.Declarations = append(module.Declarations, FunctionDeclaration(
+		"main",
+		[]FunctionParameter{},
+		"int",
+		Block(statements),
+	))
 	Run(module)
 	bytes, err := os.ReadFile(outputFileName)
 	if err != nil {

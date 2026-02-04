@@ -75,19 +75,20 @@ func (i Integer) GetSpan() Span {
 func (i Integer) Lower() cpp.Expression {
 	switch {
 	case i.Type == nil:
-		return cpp.Integer(i.Value)
+		return fmt.Sprintf(`%d`, i.Value)
 	case i.Type.Eq(IntegerLiteralType):
-		return cpp.FunctionCall{
-			Function: cpp.Expression(cpp.Raw("ty::IntegerLiteral")),
-			Arguments: []cpp.Expression{
-				i.Span.Lower(),
-				cpp.Integer(i.Value),
-			},
-		}
+		return fmt.Sprintf(`ty::IntegerLiteral(%s, %d)`,
+			i.Span.Lower(),
+			i.Value,
+		)
 	case i.Type.Eq(ExpressionType):
-
+		return fmt.Sprintf(`ty::Expression(ty::IntegerLiteral(%s, %d))`,
+			i.Span.Lower(),
+			i.Value,
+		)
+	default:
+		panic("unreachable")
 	}
-	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
 }
 
 // GetType implements Expression.
@@ -131,7 +132,7 @@ func (f Float) GetSpan() Span {
 // Lower implements Expression.
 func (f Float) Lower() cpp.Expression {
 	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return cpp.Float(f.Value)
+	return fmt.Sprintf("%g", f.Value)
 }
 
 // GetType implements Expression.
@@ -175,7 +176,7 @@ func (b Bool) GetSpan() Span {
 // Lower implements Expression.
 func (b Bool) Lower() cpp.Expression {
 	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return cpp.Bool(b.Value)
+	return fmt.Sprintf("%t", b.Value)
 }
 
 // GetType implements Expression.
@@ -293,7 +294,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (v *Variable) Lower() cpp.Expression {
-	return cpp.Variable(v.Name.String)
+	return v.Name.String
 }
 
 type FunctionCall struct {
@@ -380,20 +381,9 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	_, isTuple := argumentType.(TupleType)
 	if isTuple {
 		// calls the function with a tuple of arguments
-		return cpp.FunctionCall{
-			Function: cpp.Variable("std::apply"),
-			Arguments: []cpp.Expression{
-				f.Function.Lower(),
-				f.Argument.Lower(),
-			},
-		}
+		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(), f.Argument.Lower())
 	}
-	return cpp.FunctionCall{
-		Function: f.Function.Lower(),
-		Arguments: []cpp.Expression{
-			f.Argument.Lower(),
-		},
-	}
+	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(), f.Argument.Lower())
 }
 
 type Tuple struct {
@@ -486,17 +476,14 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 func (t *Tuple) Lower() cpp.Expression {
 	if typeEqual(t.Type, TypeType{}) {
 		if len(t.Elements) == 0 {
-			return cpp.Raw(`box(ty::TupleType{{}})`)
+			return `box(ty::TupleType({}))`
 		}
 		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
-			return e.Lower().String()
+			return e.Lower()
 		})
-		return cpp.Raw(fmt.Sprintf(`box(ty::TupleType{{%s}})`, elements))
+		return fmt.Sprintf(`box(ty::TupleType({%s}))`, elements)
 	} else {
-		return cpp.FunctionCall{
-			Function:  cpp.Variable("std::make_tuple"),
-			Arguments: util.Map(t.Elements, Expression.Lower),
-		}
+		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", Expression.Lower))
 	}
 }
 
@@ -681,10 +668,7 @@ func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 func (u *UnaryExpression) Lower() cpp.Expression {
 	switch u.Op {
 	case Negate:
-		return cpp.UnaryExpression{
-			Op:         "-",
-			Expression: u.Expression.Lower(),
-		}
+		return "-" + u.Expression.Lower()
 	default:
 		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
@@ -825,11 +809,7 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	return cpp.BinaryExpression{
-		Op:    cpp.BinaryOp(op),
-		Left:  b.Left.Lower(),
-		Right: b.Right.Lower(),
-	}
+	return b.Left.Lower() + " " + op + " " + b.Right.Lower()
 }
 
 type BinaryOp string

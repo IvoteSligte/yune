@@ -11,7 +11,6 @@ type FunctionDeclaration struct {
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
-	Value      cpp.FunctionDeclaration
 }
 
 // GetMacros implements Declaration.
@@ -118,13 +117,13 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 }
 
 // Lower implements Declaration.
-func (d FunctionDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.FunctionDeclaration{
-		Name:       d.Name.String,
-		Parameters: util.Map(d.Parameters, FunctionParameter.Lower),
-		ReturnType: d.ReturnType.Lower(),
-		Body:       d.Body.LowerFunctionBody(),
-	}
+func (d FunctionDeclaration) Lower() cpp.Declaration {
+	return cpp.FunctionDeclaration(
+		d.Name.String,
+		util.Map(d.Parameters, FunctionParameter.Lower),
+		d.ReturnType.Lower(),
+		cpp.Block(d.Body.lowerStatements()),
+	)
 }
 
 func (d FunctionDeclaration) GetName() Name {
@@ -161,10 +160,7 @@ func (d FunctionParameter) TypeCheckBody(deps DeclarationTable) (errors Errors) 
 }
 
 func (d FunctionParameter) Lower() cpp.FunctionParameter {
-	return cpp.FunctionParameter{
-		Name: d.Name.String,
-		Type: d.Type.Lower(),
-	}
+	return d.Type.Lower() + " " + d.Name.String
 }
 
 // GetName implements Declaration
@@ -266,12 +262,12 @@ func (d ConstantDeclaration) GetValueDependencies() []Name {
 }
 
 // Lower implements Declaration.
-func (d ConstantDeclaration) Lower() cpp.TopLevelDeclaration {
-	return cpp.ConstantDeclaration{
-		Name:  d.Name.String,
-		Type:  d.Type.Lower(),
-		Value: d.Body.LowerVariableBody(),
-	}
+func (d ConstantDeclaration) Lower() cpp.Declaration {
+	return cpp.ConstantDeclaration(
+		d.Name.String,
+		d.Type.Lower(),
+		cpp.LambdaBlock(d.Body.lowerStatements()),
+	)
 }
 
 // GetType implements Declaration.
@@ -295,7 +291,7 @@ type TopLevelDeclaration interface {
 	// NOTE: when the value has been computed, this function should
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
-	Lower() cpp.TopLevelDeclaration
+	Lower() cpp.Declaration
 }
 
 // TODO: when types and type aliases can be created, make sure that
