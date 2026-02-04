@@ -93,7 +93,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			// another node for delay because the macro needs to be executed 2 stages
 			// before the declaration itself (as it can add type dependencies to the declaration)
 			depNode := &evalNode{
-				After:    mapset.NewThreadUnsafeSet[*evalNode](macroNode),
+				After:    mapset.NewThreadUnsafeSet(macroNode),
 				Requires: mapset.NewThreadUnsafeSet[*evalNode](),
 			}
 			node.After.Add(depNode)
@@ -153,7 +153,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			query := node.Query
 			if query.Expression != nil {
 				errors = append(errors, query.Expression.InferType(query.ExpectedType, table)...)
-				if len(errors) == 0 && !query.GetType().Eq(query.ExpectedType) {
+				if len(errors) == 0 && !typeEqual(query.GetType(), query.ExpectedType) {
 					errors = append(errors, UnexpectedType{
 						Expected: query.ExpectedType,
 						Found:    query.GetType(),

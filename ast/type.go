@@ -32,9 +32,6 @@ var MainType = FnType{
 var ExpressionType = StructType{Name: "Expression"}
 var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 
-// Default value for TypeValue that still allows method calls.
-var noType = DefaultTypeValue{}
-
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalType(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())
@@ -83,21 +80,20 @@ func wrapTupleType(t TypeValue) TupleType {
 	return NewTupleType(t)
 }
 
-// If self is a TupleType of one element, returns the first element. Otherwise returns self.
-func unwrapTupleType(t TypeValue) TypeValue {
-	tupleType, ok := t.(TupleType)
-	if ok {
-		return tupleType.Elements[0]
-	}
-	return t
-}
-
 type TypeValue interface {
 	Value
 	fmt.Stringer
 	typeValue()
 	Lower() cpp.Type
 	Eq(other TypeValue) bool
+}
+
+// Compares two TypeValues, without panicking on nil.
+func typeEqual(left, right TypeValue) bool {
+	if left == nil || right == nil {
+		return false
+	}
+	return left.Eq(right)
 }
 
 type DefaultTypeValue struct{}
@@ -111,7 +107,7 @@ func (DefaultTypeValue) Lower() cpp.Type {
 	panic("DefaultTypeValue.Lower should be overridden")
 }
 func (DefaultTypeValue) Eq(other TypeValue) bool {
-	return false // allows using DefaultTypeValue{} as default Expression value
+	panic("DefaultTypeValue.Eq should be overridden")
 }
 
 var _ TypeValue = DefaultTypeValue{}
@@ -186,7 +182,7 @@ func (t TupleType) Eq(other TypeValue) bool {
 		return false
 	}
 	for i, element := range t.Elements {
-		if !element.Eq(otherTuple.Elements[i]) {
+		if !typeEqual(element, otherTuple.Elements[i]) {
 			return false
 		}
 	}
@@ -215,7 +211,7 @@ func (l ListType) String() string {
 
 func (l ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(ListType)
-	return ok && l.Element.Eq(otherList.Element)
+	return ok && typeEqual(l.Element, otherList.Element)
 }
 func (l ListType) Lower() cpp.Type {
 	return cpp.Type("std::vector<" + l.Element.Lower() + ">")
@@ -233,7 +229,7 @@ func (f FnType) String() string {
 
 func (f FnType) Eq(other TypeValue) bool {
 	otherFn, ok := other.(FnType)
-	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
+	return ok && typeEqual(f.Argument, otherFn.Argument) && typeEqual(f.Return, otherFn.Return)
 }
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()

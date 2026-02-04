@@ -367,7 +367,7 @@ func (f *FunctionCall) GetValueDependencies() []Name {
 
 // InferType implements Expression.
 func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(noType, deps)
+	errors = f.Function.InferType(nil, deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -387,7 +387,7 @@ func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (err
 	// single-argument functions still expect a tuple type for comparison
 	argumentType := f.Argument.GetType()
 	// NOTE: should functions return () instead of Nil?
-	if !argumentType.Eq(functionType.Argument) {
+	if !typeEqual(argumentType, functionType.Argument) {
 		errors = append(errors, ArgumentTypeMismatch{
 			Expected: functionType.Argument,
 			Found:    argumentType,
@@ -405,7 +405,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	_, isTuple := argumentType.(TupleType)
 	if isTuple {
 		// functions called with the empty tuple are lowered to functions called with nothing
-		if argumentType.Eq(TupleType{}) {
+		if typeEqual(argumentType, TupleType{}) {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
 				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
@@ -478,7 +478,7 @@ func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Err
 
 	for i, elem := range t.Elements {
 		var expectedElementType TypeValue
-		if expected.Eq(TypeType{}) {
+		if typeEqual(expected, TypeType{}) {
 			expectedElementType = TypeType{}
 		}
 		if isTuple && len(expectedTupleType.Elements) == len(t.Elements) {
@@ -486,7 +486,7 @@ func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Err
 		}
 		errors = append(errors, elem.InferType(expectedElementType, deps)...)
 	}
-	if expected.Eq(TypeType{}) {
+	if typeEqual(expected, TypeType{}) {
 		t.Type = TypeType{}
 	} else {
 		t.Type = NewTupleType(util.Map(t.Elements, func(e Expression) TypeValue {
@@ -498,7 +498,7 @@ func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Err
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	if t.Type.Eq(TypeType{}) {
+	if typeEqual(t.Type, TypeType{}) {
 		if len(t.Elements) == 0 {
 			return cpp.Raw(`box(ty::TupleType{{}})`)
 		}
@@ -666,8 +666,8 @@ func (u *UnaryExpression) InferType(expected TypeValue, deps DeclarationTable) (
 	expressionType := u.Expression.GetType()
 	switch {
 	case
-		expressionType.Eq(IntType{}),
-		expressionType.Eq(FloatType{}):
+		typeEqual(expressionType, IntType{}),
+		typeEqual(expressionType, FloatType{}):
 		break
 	default:
 		errors = append(errors, InvalidUnaryExpressionType{
@@ -752,7 +752,7 @@ func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) 
 	}
 	leftType := b.Left.GetType()
 	rightType := b.Right.GetType()
-	if !leftType.Eq(rightType) {
+	if !typeEqual(leftType, rightType) {
 		errors = append(errors, InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
@@ -779,7 +779,7 @@ func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) 
 		GreaterEqual,
 		Less,
 		LessEqual:
-		if !leftType.Eq(IntType{}) && !leftType.Eq(FloatType{}) {
+		if !typeEqual(leftType, IntType{}) && !typeEqual(leftType, FloatType{}) {
 			emitErr()
 			return
 		}
@@ -790,7 +790,7 @@ func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) 
 		b.Type = BoolType{}
 	case
 		Or, And:
-		if !leftType.Eq(BoolType{}) {
+		if !typeEqual(leftType, BoolType{}) {
 			emitErr()
 			return
 		}

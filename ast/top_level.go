@@ -56,14 +56,14 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	returnType := d.ReturnType.Get()
 	bodyType := d.Body.GetType()
 
-	if !returnType.Eq(bodyType) {
+	if !typeEqual(returnType, bodyType) {
 		errors = append(errors, ReturnTypeMismatch{
 			Expected: returnType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	if d.GetName().String == "main" && !d.GetDeclaredType().Eq(MainType) {
+	if d.GetName().String == "main" && !typeEqual(d.GetDeclaredType(), MainType) {
 		errors = append(errors, InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
@@ -228,7 +228,7 @@ func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 	declType := d.Type.Get()
 	bodyType := d.Body.GetType()
 
-	if !declType.Eq(bodyType) {
+	if !typeEqual(declType, bodyType) {
 		errors = append(errors, ConstantTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
@@ -296,11 +296,6 @@ type TopLevelDeclaration interface {
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
 	Lower() cpp.TopLevelDeclaration
-}
-
-func isConstantDeclaration(decl TopLevelDeclaration) bool {
-	_, isConstant := decl.(*ConstantDeclaration)
-	return isConstant
 }
 
 // TODO: when types and type aliases can be created, make sure that

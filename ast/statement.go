@@ -73,7 +73,7 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 	}
 	declType := d.Type.Get()
 	bodyType := d.Body.GetType()
-	if !declType.Eq(bodyType) {
+	if !typeEqual(declType, bodyType) {
 		errors = append(errors, VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
@@ -139,13 +139,13 @@ func (a *Assignment) GetValueDependencies() []Name {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(noType, deps), a.Body.InferType(deps.NewScope())...)
+	errors = append(a.Target.InferType(nil, deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
 	targetType := a.Target.GetType()
 	bodyType := a.Body.GetType()
-	if !targetType.Eq(bodyType) {
+	if !typeEqual(targetType, bodyType) {
 		errors = append(errors, AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
@@ -239,13 +239,13 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 	thenType := b.Then.GetType()
 	elseType := b.Else.GetType()
 
-	if !conditionType.Eq(BoolType{}) {
+	if !typeEqual(conditionType, BoolType{}) {
 		errors = append(errors, InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),
 		})
 	}
-	if !thenType.Eq(elseType) {
+	if !typeEqual(thenType, elseType) {
 		errors = append(errors, BranchTypeNotEqual{
 			Then:   thenType,
 			ThenAt: b.Then.GetSpan(),
@@ -353,7 +353,7 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 func (b *Block) lowerStatements() []cpp.Statement {
 	statements := util.Map(b.Statements, Statement.Lower)
 
-	if !b.Statements[len(b.Statements)-1].GetType().Eq(NilType{}) {
+	if !typeEqual(b.Statements[len(b.Statements)-1].GetType(), NilType{}) {
 		// last expression is implicitly returned in Yune,
 		// but needs to be explicitly returned in C++
 		statements[len(statements)-1] = cpp.ReturnStatement{
@@ -380,7 +380,7 @@ type ExpressionStatement struct {
 // InferType implements Statement.
 // Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
 func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
-	return e.Expression.InferType(noType, deps)
+	return e.Expression.InferType(nil, deps)
 }
 
 // Lower implements Statement.
