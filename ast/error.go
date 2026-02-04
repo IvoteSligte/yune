@@ -66,6 +66,16 @@ func (e NotAFunction) Error() string {
 	return fmt.Sprintf("Function call on non-function type '%s' at %s.", e.Found, e.At)
 }
 
+type ArityMismatch struct {
+	Expected int
+	Found    int
+	At       Span
+}
+
+func (e ArityMismatch) Error() string {
+	return fmt.Sprintf("Expected a tuple with arity %d, but found a tuple with arity %d at %s.", e.Expected, e.Found, e.At)
+}
+
 type UnexpectedType struct {
 	Expected TypeValue
 	Found    TypeValue

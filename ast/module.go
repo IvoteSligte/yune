@@ -82,10 +82,10 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 
 		for _, macro := range decl.GetMacros() {
 			call := macro.AsFunctionCall()
+			call.SetType(MacroReturnType)
 			query := Query{
-				Expression:   &call,
-				Destination:  macro,
-				ExpectedType: MacroReturnType,
+				Expression:  &call,
+				Destination: macro,
 			}
 			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
 			macroNode.UpdateHook = node
@@ -152,14 +152,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		for _, node := range evalNodes {
 			query := node.Query
 			if query.Expression != nil {
-				errors = append(errors, query.Expression.InferType(query.ExpectedType, table)...)
-				if len(errors) == 0 && !typeEqual(query.GetType(), query.ExpectedType) {
-					errors = append(errors, UnexpectedType{
-						Expected: query.ExpectedType,
-						Found:    query.GetType(),
-						At:       query.GetSpan(),
-					})
-				}
+				errors = append(errors, query.Expression.InferType(table)...)
 			}
 			if node.Declaration != nil {
 				errors = append(errors, node.Declaration.TypeCheckBody(table)...)

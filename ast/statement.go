@@ -47,10 +47,10 @@ func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
 
 // GetTypeDependencies implements Statement.
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
+	d.Type.Expression.SetType(TypeType{})
 	deps = append(deps, Query{
-		Expression:   d.Type.Expression,
-		Destination:  SetType{&d.Type.value},
-		ExpectedType: TypeType{},
+		Expression:  d.Type.Expression,
+		Destination: SetType{&d.Type.value},
 	})
 	return append(deps, d.Body.GetTypeDependencies()...)
 }
@@ -139,7 +139,7 @@ func (a *Assignment) GetValueDependencies() []Name {
 
 // InferType implements Statement.
 func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(nil, deps), a.Body.InferType(deps.NewScope())...)
+	errors = append(a.Target.InferType(deps), a.Body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -229,7 +229,8 @@ func (b *BranchStatement) GetValueDependencies() (deps []Name) {
 
 // InferType implements Statement.
 func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
-	errors = b.Condition.InferType(BoolType{}, deps)
+	b.Condition.SetType(BoolType{})
+	errors = b.Condition.InferType(deps)
 	errors = append(errors, b.Then.InferType(deps.NewScope())...)
 	errors = append(errors, b.Else.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
@@ -380,7 +381,7 @@ type ExpressionStatement struct {
 // InferType implements Statement.
 // Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
 func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
-	return e.Expression.InferType(nil, deps)
+	return e.Expression.InferType(deps)
 }
 
 // Lower implements Statement.

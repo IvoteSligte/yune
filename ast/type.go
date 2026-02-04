@@ -29,7 +29,14 @@ var MainType = FnType{
 	Argument: NewTupleType(),
 	Return:   IntType{},
 }
+
+// kinds of Expression types
+var IntegerLiteralType = StructType{Name: "IntegerLiteral"}
+var FloatLiteralType = StructType{Name: "FloatLiteral"}
+var BoolLiteralType = StructType{Name: "BoolLiteral"}
+var StringLiteralType = StructType{Name: "StringLiteral"}
 var ExpressionType = StructType{Name: "Expression"}
+
 var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.

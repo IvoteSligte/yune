@@ -21,115 +21,18 @@ type Expression interface {
 	GetTypeDependencies() []Query // TODO: remove, as it is always empty (unless blocks in expressions are allowed!!!)
 	GetValueDependencies() []Name
 
-	// Sets the type, in case the expression needs to be inferred differently.
-	// This is the case when an Expression is used in a Type, or represents syntax the user has generated.
+	// Sets the type, in order to resolve ambiguities when the expression needs
+	// to be inferred differently from the default. This is the case when an
+	// Expression is used in a Type, or represents syntax the user has generated.
 	SetType(t TypeValue)
-	// Infers type, with an optional `expected` type for backwards inference.
-	InferType(expected TypeValue, deps DeclarationTable) (errors Errors) // TODO: check that types match `expected` types
+	// Infers the type of the expression, returning errors in case of mismatches.
+	// GetType() should return a non-nil result if this returns no errors.
+	InferType(deps DeclarationTable) (errors Errors)
 	GetType() TypeValue
 	Lower() cpp.Expression
 }
 
-// Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
-func UnmarshalExpression(data *fj.Value) (expr Expression) {
-	object := data.GetObject()
-	if object == nil { // primitive or array
-		integer, err := data.Int64()
-		if err == nil {
-			expr = &Integer{Value: integer}
-			return
-		}
-		float, err := data.Float64()
-		if err == nil {
-			expr = &Float{Value: float}
-			return
-		}
-		boolean, err := data.Bool()
-		if err == nil {
-			expr = &Bool{Value: boolean}
-			return
-		}
-		stringBytes, err := data.StringBytes()
-		if err == nil {
-			expr = &String{Value: string(stringBytes)}
-			return
-		}
-		return nil // not a primitive
-	}
-	key, v := fjUnmarshalUnion(object)
-	switch key {
-	case "IntegerLiteral":
-		expr = &Integer{
-			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetInt64("value"),
-		}
-	case "FloatLiteral":
-		expr = &Float{
-			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetFloat64("value"),
-		}
-	case "BoolLiteral":
-		expr = &Bool{
-			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetBool("value"),
-		}
-	case "StringLiteral":
-		expr = &String{
-			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: string(v.GetStringBytes("value")),
-		}
-	case "Variable":
-		expr = &Variable{
-			Name: Name{
-				Span:   fjUnmarshal(v.Get("span"), Span{}),
-				String: string(v.GetStringBytes("value")),
-			},
-			Type: UnmarshalType(v.Get("type")),
-		}
-	case "FunctionCall":
-		expr = &FunctionCall{
-			Span:     fjUnmarshal(v.Get("span"), Span{}),
-			Type:     UnmarshalType(v.Get("type")),
-			Function: UnmarshalExpression(v.Get("function")),
-			Argument: UnmarshalExpression(v.Get("argument")),
-		}
-	case "Tuple":
-		expr = &Tuple{
-			Span:     fjUnmarshal(v.Get("span"), Span{}),
-			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
-		}
-	case "Macro":
-		panic("Macros are not supported for serialization right now.")
-	case "UnaryExpression":
-		expr = &UnaryExpression{
-			Span:       fjUnmarshal(v.Get("span"), Span{}),
-			Op:         UnaryOp(v.GetStringBytes("op")),
-			Expression: UnmarshalExpression(v.Get("expression")),
-		}
-	case "BinaryExpression":
-		expr = &BinaryExpression{
-			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Op:    BinaryOp(v.GetStringBytes("op")),
-			Left:  UnmarshalExpression(v.Get("left")),
-			Right: UnmarshalExpression(v.Get("right")),
-		}
-	default: // unknown key
-		// expr = nil
-	}
-	return
-}
-
 type DefaultExpression struct{}
-
-// SetType implements Expression.
-func (d DefaultExpression) SetType(t TypeValue) {
-	panic("DefaultExpression.SetType must be overridden")
-}
-
-// Deserialize implements Expression.
-func (d DefaultExpression) Deserialize([]byte) error {
-	panic("DefaultExpression.Deserialize must be overridden")
-}
 
 // value implements Expression.
 func (d DefaultExpression) value() {}
@@ -149,16 +52,6 @@ func (d DefaultExpression) GetMacros() []*Macro {
 	return []*Macro{}
 }
 
-// GetSpan implements Expression.
-func (d DefaultExpression) GetSpan() Span {
-	panic("DefaultExpression.GetSpan() should be overridden")
-}
-
-// GetType implements Expression.
-func (d DefaultExpression) GetType() TypeValue {
-	panic("DefaultExpression.GetType() should be overridden")
-}
-
 // GetTypeDependencies implements Expression.
 func (d DefaultExpression) GetTypeDependencies() []Query {
 	return []Query{}
@@ -168,18 +61,6 @@ func (d DefaultExpression) GetTypeDependencies() []Query {
 func (d DefaultExpression) GetValueDependencies() []Name {
 	return []Name{}
 }
-
-// InferType implements Expression.
-func (d DefaultExpression) InferType(expected TypeValue, deps DeclarationTable) (errors []error) {
-	return
-}
-
-// Lower implements Expression.
-func (d DefaultExpression) Lower() cpp.Expression {
-	panic("DefaultExpression.Lower() should be overridden")
-}
-
-var _ Expression = DefaultExpression{}
 
 type Integer struct {
 	DefaultExpression
@@ -211,6 +92,18 @@ func (i Integer) GetType() TypeValue {
 	} else {
 		return i.Type
 	}
+}
+
+// InferType implements Expression.
+func (i Integer) InferType(deps DeclarationTable) (errors []error) {
+	if i.Type != nil && !i.Type.Eq(IntType{}) && !i.Type.Eq(IntegerLiteralType) && !i.Type.Eq(ExpressionType) {
+		errors = append(errors, UnexpectedType{
+			Expected: i.Type,
+			Found:    IntType{},
+			At:       i.Span,
+		})
+	}
+	return
 }
 
 type Float struct {
@@ -245,6 +138,18 @@ func (f Float) GetType() TypeValue {
 	}
 }
 
+// InferType implements Expression.
+func (f Float) InferType(deps DeclarationTable) (errors []error) {
+	if f.Type != nil && !f.Type.Eq(FloatType{}) && !f.Type.Eq(FloatLiteralType) && !f.Type.Eq(ExpressionType) {
+		errors = append(errors, UnexpectedType{
+			Expected: f.Type,
+			Found:    FloatType{},
+			At:       f.Span,
+		})
+	}
+	return
+}
+
 type Bool struct {
 	DefaultExpression
 	Span  Span
@@ -275,6 +180,18 @@ func (b Bool) GetType() TypeValue {
 	} else {
 		return b.Type
 	}
+}
+
+// InferType implements Expression.
+func (b Bool) InferType(deps DeclarationTable) (errors []error) {
+	if b.Type != nil && !b.Type.Eq(BoolType{}) && !b.Type.Eq(BoolLiteralType) && !b.Type.Eq(ExpressionType) {
+		errors = append(errors, UnexpectedType{
+			Expected: b.Type,
+			Found:    BoolType{},
+			At:       b.Span,
+		})
+	}
+	return
 }
 
 type String struct {
@@ -309,6 +226,18 @@ func (s String) GetType() TypeValue {
 	}
 }
 
+// InferType implements Expression.
+func (s String) InferType(deps DeclarationTable) (errors []error) {
+	if s.Type != nil && !s.Type.Eq(StringType{}) && !s.Type.Eq(StringLiteralType) && !s.Type.Eq(ExpressionType) {
+		errors = append(errors, UnexpectedType{
+			Expected: s.Type,
+			Found:    StringType{},
+			At:       s.Span,
+		})
+	}
+	return
+}
+
 type Variable struct {
 	DefaultExpression
 	Type TypeValue
@@ -341,10 +270,17 @@ func (v *Variable) GetValueDependencies() (deps []Name) {
 }
 
 // InferType implements Expression.
-func (v *Variable) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 	decl, _ := deps.Get(v.Name.String)
 	if decl.GetDeclaredType() == nil {
-		log.Printf("WARN: Type{} queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
+		log.Fatalf("Type queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
+	}
+	if v.Type != nil && !v.Type.Eq(decl.GetDeclaredType()) {
+		errors = append(errors, UnexpectedType{
+			Expected: v.Type,
+			Found:    decl.GetDeclaredType(),
+			At:       v.GetSpan(),
+		})
 	}
 	v.Type = decl.GetDeclaredType()
 	return
@@ -404,8 +340,8 @@ func (f *FunctionCall) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(nil, deps)
+func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
+	errors = f.Function.InferType(deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -418,20 +354,16 @@ func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (err
 		})
 		return
 	}
-	errors = f.Argument.InferType(functionType.Argument, deps)
-	if len(errors) > 0 {
+	f.Argument.SetType(functionType.Argument)
+	if errors = f.Argument.InferType(deps); len(errors) > 0 {
 		return
 	}
-	// single-argument functions still expect a tuple type for comparison
-	argumentType := f.Argument.GetType()
-	// NOTE: should functions return () instead of Nil?
-	if !typeEqual(argumentType, functionType.Argument) {
-		errors = append(errors, ArgumentTypeMismatch{
-			Expected: functionType.Argument,
-			Found:    argumentType,
-			At:       f.Argument.GetSpan(),
+	if f.Type != nil && !f.Type.Eq(functionType.Return) {
+		errors = append(errors, UnexpectedType{
+			Expected: f.Type,
+			Found:    functionType.Return,
+			At:       f.GetSpan(),
 		})
-		return
 	}
 	f.Type = functionType.Return
 	return
@@ -443,7 +375,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	_, isTuple := argumentType.(TupleType)
 	if isTuple {
 		// functions called with the empty tuple are lowered to functions called with nothing
-		if typeEqual(argumentType, TupleType{}) {
+		if argumentType.Eq(TupleType{}) {
 			return cpp.FunctionCall{
 				Function:  f.Function.Lower(),
 				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
@@ -477,6 +409,17 @@ type Tuple struct {
 // SetType implements Expression.
 func (t *Tuple) SetType(tv TypeValue) {
 	t.Type = tv
+	if tv == nil || tv.Eq(TypeType{}) {
+		for i := range t.Elements {
+			t.Elements[i].SetType(tv)
+		}
+	}
+	tupleType, ok := tv.(TupleType)
+	if ok && len(tupleType.Elements) == len(t.Elements) {
+		for i := range t.Elements {
+			t.Elements[i].SetType(tupleType.Elements[i])
+		}
+	}
 }
 
 // GetSpan implements Expression.
@@ -516,22 +459,24 @@ func (t *Tuple) GetValueDependencies() (deps []Name) {
 }
 
 // InferType implements Expression.
-func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	expectedTupleType, isTuple := expected.(TupleType)
+func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
+	expectedTupleType, isTuple := t.Type.(TupleType)
 
-	for i, elem := range t.Elements {
-		var expectedElementType TypeValue
-		if typeEqual(expected, TypeType{}) {
-			expectedElementType = TypeType{}
-		}
-		if isTuple && len(expectedTupleType.Elements) == len(t.Elements) {
-			expectedElementType = expectedTupleType.Elements[i]
-		}
-		errors = append(errors, elem.InferType(expectedElementType, deps)...)
+	if isTuple && len(expectedTupleType.Elements) != len(t.Elements) {
+		errors = append(errors, ArityMismatch{
+			Expected: len(expectedTupleType.Elements),
+			Found:    len(t.Elements),
+			At:       t.GetSpan(),
+		})
+		return
 	}
-	if typeEqual(expected, TypeType{}) {
-		t.Type = TypeType{}
-	} else {
+	for i := range t.Elements {
+		errors = append(errors, t.Elements[i].InferType(deps)...)
+	}
+	if len(errors) > 0 {
+		return
+	}
+	if t.Type == nil || !t.Type.Eq(TypeType{}) {
 		t.Type = NewTupleType(util.Map(t.Elements, func(e Expression) TypeValue {
 			return e.GetType()
 		})...)
@@ -640,8 +585,8 @@ func (m *Macro) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (m *Macro) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	return m.Result.InferType(expected, deps)
+func (m *Macro) InferType(deps DeclarationTable) (errors Errors) {
+	return m.Result.InferType(deps)
 }
 
 // Lower implements Expression.
@@ -711,8 +656,8 @@ func (u *UnaryExpression) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (u *UnaryExpression) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = u.Expression.InferType(expected, deps)
+func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
+	errors = u.Expression.InferType(deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -803,8 +748,8 @@ func (b *BinaryExpression) GetValueDependencies() []Name {
 }
 
 // InferType implements Expression.
-func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = append(b.Left.InferType(expected, deps), b.Right.InferType(expected, deps)...)
+func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
+	errors = append(b.Left.InferType(deps), b.Right.InferType(deps)...)
 	if len(errors) > 0 {
 		return
 	}
@@ -887,7 +832,6 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 		Left:  b.Left.Lower(),
 		Right: b.Right.Lower(),
 	}
-
 }
 
 type BinaryOp string
@@ -906,6 +850,95 @@ const (
 	Or           BinaryOp = "or"
 	And          BinaryOp = "and"
 )
+
+// Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
+func UnmarshalExpression(data *fj.Value) (expr Expression) {
+	object := data.GetObject()
+	if object == nil { // primitive or array
+		integer, err := data.Int64()
+		if err == nil {
+			expr = &Integer{Value: integer}
+			return
+		}
+		float, err := data.Float64()
+		if err == nil {
+			expr = &Float{Value: float}
+			return
+		}
+		boolean, err := data.Bool()
+		if err == nil {
+			expr = &Bool{Value: boolean}
+			return
+		}
+		stringBytes, err := data.StringBytes()
+		if err == nil {
+			expr = &String{Value: string(stringBytes)}
+			return
+		}
+		return nil // not a primitive
+	}
+	key, v := fjUnmarshalUnion(object)
+	switch key {
+	case "IntegerLiteral":
+		expr = &Integer{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetInt64("value"),
+		}
+	case "FloatLiteral":
+		expr = &Float{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetFloat64("value"),
+		}
+	case "BoolLiteral":
+		expr = &Bool{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: v.GetBool("value"),
+		}
+	case "StringLiteral":
+		expr = &String{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Value: string(v.GetStringBytes("value")),
+		}
+	case "Variable":
+		expr = &Variable{
+			Name: Name{
+				Span:   fjUnmarshal(v.Get("span"), Span{}),
+				String: string(v.GetStringBytes("value")),
+			},
+			Type: UnmarshalType(v.Get("type")),
+		}
+	case "FunctionCall":
+		expr = &FunctionCall{
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
+			Type:     UnmarshalType(v.Get("type")),
+			Function: UnmarshalExpression(v.Get("function")),
+			Argument: UnmarshalExpression(v.Get("argument")),
+		}
+	case "Tuple":
+		expr = &Tuple{
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
+		}
+	case "Macro":
+		panic("Macros are not supported for serialization right now.")
+	case "UnaryExpression":
+		expr = &UnaryExpression{
+			Span:       fjUnmarshal(v.Get("span"), Span{}),
+			Op:         UnaryOp(v.GetStringBytes("op")),
+			Expression: UnmarshalExpression(v.Get("expression")),
+		}
+	case "BinaryExpression":
+		expr = &BinaryExpression{
+			Span:  fjUnmarshal(v.Get("span"), Span{}),
+			Op:    BinaryOp(v.GetStringBytes("op")),
+			Left:  UnmarshalExpression(v.Get("left")),
+			Right: UnmarshalExpression(v.Get("right")),
+		}
+	default: // unknown key
+		// expr = nil
+	}
+	return
+}
 
 var _ Expression = &Integer{}
 var _ Expression = &Float{}
