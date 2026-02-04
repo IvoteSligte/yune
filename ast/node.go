@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"yune/cpp"
 )
 
 type Span struct {
@@ -15,6 +16,16 @@ func (s Span) GetSpan() Span {
 
 func (s Span) String() string {
 	return fmt.Sprintf("%d:%d", s.Line, s.Column)
+}
+
+func (s Span) Lower() cpp.Expression {
+	return cpp.FunctionCall{
+		Function: cpp.Expression(cpp.Raw("Span")),
+		Arguments: []cpp.Expression{
+			cpp.Expression(cpp.Integer(s.Line)),
+			cpp.Expression(cpp.Integer(s.Column)),
+		},
+	}
 }
 
 type Name struct {

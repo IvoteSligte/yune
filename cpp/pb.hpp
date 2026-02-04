@@ -42,6 +42,16 @@ struct Union {
     std::variant<T...> variant;
 };
 
+struct Span {
+    Span(int line, int column)
+        : line(line)
+        , column(column)
+    {
+    }
+    int line;
+    int column;
+};
+
 using json = nlohmann::json;
 
 inline json serialize(const std::string& s) { return s; }

@@ -73,8 +73,21 @@ func (i Integer) GetSpan() Span {
 
 // Lower implements Expression.
 func (i Integer) Lower() cpp.Expression {
+	switch {
+	case i.Type == nil:
+		return cpp.Integer(i.Value)
+	case i.Type.Eq(IntegerLiteralType):
+		return cpp.FunctionCall{
+			Function: cpp.Expression(cpp.Raw("ty::IntegerLiteral")),
+			Arguments: []cpp.Expression{
+				i.Span.Lower(),
+				cpp.Integer(i.Value),
+			},
+		}
+	case i.Type.Eq(ExpressionType):
+
+	}
 	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return cpp.Integer(i.Value)
 }
 
 // GetType implements Expression.
