@@ -54,6 +54,19 @@ func (d DefaultExpression) GetValueDependencies() []Name {
 	return []Name{}
 }
 
+func lowerLiteral[T any](name string, span Span, value T, _type TypeValue) cpp.Expression {
+	switch {
+	case _type == nil:
+		return fmt.Sprintf(`%v`, value)
+	case _type.Eq(StructType{Name: name}):
+		return fmt.Sprintf(`ty::%s(%s, %v)`, name, span.Lower(), value)
+	case _type.Eq(ExpressionType):
+		return fmt.Sprintf(`ty::Expression(ty::%s(%s, %v))`, name, span.Lower(), value)
+	default:
+		panic("unreachable")
+	}
+}
+
 type Integer struct {
 	DefaultExpression
 	Span  Span
@@ -73,22 +86,7 @@ func (i Integer) GetSpan() Span {
 
 // Lower implements Expression.
 func (i Integer) Lower() cpp.Expression {
-	switch {
-	case i.Type == nil:
-		return fmt.Sprintf(`%d`, i.Value)
-	case i.Type.Eq(IntegerLiteralType):
-		return fmt.Sprintf(`ty::IntegerLiteral(%s, %d)`,
-			i.Span.Lower(),
-			i.Value,
-		)
-	case i.Type.Eq(ExpressionType):
-		return fmt.Sprintf(`ty::Expression(ty::IntegerLiteral(%s, %d))`,
-			i.Span.Lower(),
-			i.Value,
-		)
-	default:
-		panic("unreachable")
-	}
+	return lowerLiteral("IntegerLiteral", i.Span, i.Value, i.Type)
 }
 
 // GetType implements Expression.
@@ -131,8 +129,7 @@ func (f Float) GetSpan() Span {
 
 // Lower implements Expression.
 func (f Float) Lower() cpp.Expression {
-	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return fmt.Sprintf("%g", f.Value)
+	return lowerLiteral("FloatLiteral", f.Span, f.Value, f.Type)
 }
 
 // GetType implements Expression.
@@ -175,8 +172,7 @@ func (b Bool) GetSpan() Span {
 
 // Lower implements Expression.
 func (b Bool) Lower() cpp.Expression {
-	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return fmt.Sprintf("%t", b.Value)
+	return lowerLiteral("BoolLiteral", b.Span, b.Value, b.Type)
 }
 
 // GetType implements Expression.
@@ -219,8 +215,7 @@ func (s String) GetSpan() Span {
 
 // Lower implements Expression.
 func (s String) Lower() cpp.Expression {
-	// TODO: if _.Type != nil { return cpp.IntegerLiteral(i.Span, i.Value) }
-	return cpp.String(s.Value)
+	return lowerLiteral("StringLiteral", s.Span, s.Value, s.Type)
 }
 
 // GetType implements Expression.

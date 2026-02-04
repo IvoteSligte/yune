@@ -163,6 +163,11 @@ struct Literal {
         : value(value)
     {
     }
+    json serialize(std::string name) const
+    {
+        return { { name, { { "type", ty::serialize(StructType(name)) }, { "value", value } } } };
+    }
+
     T value;
 };
 using IntegerLiteral = Literal<int>;
@@ -172,19 +177,19 @@ using StringLiteral = Literal<std::string>;
 
 inline json serialize(const IntegerLiteral& e)
 {
-    return { { "IntegerLiteral", { { "type", serialize(StructType("IntegerLiteral")) }, { "value", e.value } } } };
+    return e.serialize("IntegerLiteral");
 }
 inline json serialize(const FloatLiteral& e)
 {
-    return { { "FloatLitearl", { { "type", serialize(StructType("FloatLiteral")) }, { "value", e.value } } } };
+    return e.serialize("FloatLiteral");
 }
 inline json serialize(const BoolLiteral& e)
 {
-    return { { "BoolLiteral", { { "type", serialize(StructType("BoolLiteral")) }, { "value", e.value } } } };
+    return e.serialize("BoolLiteral");
 }
 inline json serialize(const StringLiteral& e)
 {
-    return { { "StringLiteral", { { "type", serialize(StructType("StringLiteral")) }, { "value", e.value } } } };
+    return e.serialize("StringLiteral");
 }
 
 template <class... T>
