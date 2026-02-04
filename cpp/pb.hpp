@@ -14,13 +14,29 @@ Box<T> box(T value) { return std::make_shared<T>(value); }
 
 namespace ty {
 
-template <class... Ts>
-struct overloaded : Ts... {
-    using Ts::operator()...;
+template <class... T>
+struct overloaded : T... {
+    using T::operator()...;
 };
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
+template <class... T>
+overloaded(T...) -> overloaded<T...>;
+  
+  template<class... T>
+  struct Union {
+    // Create from element
+    template<class U>
+    Union(U element) : variant(element) {}
 
+    // Create from subset
+    template<class... U>
+    Union(Union<U...> subset) : variant(std::visit(
+ [](auto element) constexpr -> std::variant<T...> { return element.variant; },
+		 subset))
+    {}
+
+    std::variant<T...> variant;
+  };
+  
 using json = nlohmann::json;
 
 inline json serialize(const std::string& s) { return s; }
