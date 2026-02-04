@@ -12,21 +12,13 @@ import (
 type Expression interface {
 	Node
 	Value
+	StatementBase
 	GetMacros() []*Macro
-
-	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
-	GetMacroTypeDependencies() []Query
-	GetMacroValueDependencies() []Name
-
-	GetTypeDependencies() []Query // TODO: remove, as it is always empty (unless blocks in expressions are allowed!!!)
-	GetValueDependencies() []Name
 
 	// Sets the type, in order to resolve ambiguities when the expression needs
 	// to be inferred differently from the default. This is the case when an
 	// Expression is used in a Type, or represents syntax the user has generated.
 	SetType(t TypeValue)
-	// Infers the type of the expression, returning errors in case of mismatches.
-	// GetType() should return a non-nil result if this returns no errors.
 	InferType(deps DeclarationTable) (errors Errors)
 	GetType() TypeValue
 	Lower() cpp.Expression

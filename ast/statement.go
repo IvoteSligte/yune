@@ -7,15 +7,20 @@ import (
 
 type StatementBase interface {
 	Node
-	InferType(deps DeclarationTable) Errors
+
 	GetType() TypeValue
 	GetMacros() []*Macro
 
+	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
 	GetMacroTypeDependencies() (deps []Query)
 	GetMacroValueDependencies() (deps []Name)
 
 	GetTypeDependencies() (deps []Query)
 	GetValueDependencies() (deps []Name)
+
+	// Infers the type, returning errors in case of mismatches.
+	// GetType() should return a non-nil result if this returns no errors.
+	InferType(deps DeclarationTable) Errors
 }
 
 type Statement interface {
@@ -254,6 +259,7 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 			ElseAt: b.Else.GetSpan(),
 		})
 	}
+	b.TypeValue = thenType
 	return
 }
 
@@ -354,16 +360,21 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 func (b *Block) lowerStatements() []cpp.Statement {
 	statements := util.Map(b.Statements, Statement.Lower)
 
-	if !typeEqual(b.Statements[len(b.Statements)-1].GetType(), TupleType{}) {
+	switch b.Statements[len(b.Statements)-1].(type) {
+	case *ExpressionStatement:
 		// last expression is implicitly returned in Yune,
 		// but needs to be explicitly returned in C++
 		statements[len(statements)-1] = cpp.ReturnStatement{
 			Expression: statements[len(statements)-1].(cpp.ExpressionStatement).Expression,
 		}
-	} else {
+	case *BranchStatement:
+		// already returns
+	case *VariableDeclaration, *Assignment:
 		statements = append(statements, cpp.ReturnStatement{
 			Expression: cpp.Tuple{},
 		})
+	default:
+		panic("unreachable")
 	}
 	return statements
 }
@@ -380,12 +391,6 @@ var _ Node = &Block{}
 
 type ExpressionStatement struct {
 	Expression
-}
-
-// InferType implements Statement.
-// Subtle: this method shadows the method (Expression).InferType of ExpressionStatement.Expression.
-func (e *ExpressionStatement) InferType(deps DeclarationTable) []error {
-	return e.Expression.InferType(deps)
 }
 
 // Lower implements Statement.

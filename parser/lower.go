@@ -69,12 +69,10 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 	return &expr
 }
 
-func LowerBranchStatement(ctx IBranchStatementContext, statementsAfter []IStatementContext) ast.BranchStatement {
-	elseBlock := ast.Block{}
-	if len(statementsAfter) > 0 {
-		elseBlock = ast.Block{
-			Statements: LowerStatement(statementsAfter[0], statementsAfter[1:]),
-		}
+func LowerBranchStatement(ctx IBranchStatementContext) ast.BranchStatement {
+	elseBlock := ast.Block{
+		Span:       GetSpan(ctx.ElseBlock()),
+		Statements: util.Map(ctx.ElseBlock().AllStatement(), LowerStatement),
 	}
 	return ast.BranchStatement{
 		Span:      GetSpan(ctx),
@@ -211,37 +209,31 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	}
 }
 
-func LowerStatement(ctx IStatementContext, statementsAfter []IStatementContext) []ast.Statement {
-	var single ast.Statement
+func LowerStatement(ctx IStatementContext) ast.Statement {
 	switch {
 	case ctx.VariableDeclaration() != nil:
 		stmt := LowerVariableDeclaration(ctx.VariableDeclaration())
-		single = &stmt
+		return &stmt
 	case ctx.Assignment() != nil:
 		stmt := LowerAssignment(ctx.Assignment())
-		single = &stmt
+		return &stmt
 	case ctx.Expression() != nil:
-		stmt := ast.ExpressionStatement{
+		return &ast.ExpressionStatement{
 			Expression: LowerExpression(ctx.Expression()),
 		}
-		single = &stmt
 	case ctx.BranchStatement() != nil:
-		stmt := LowerBranchStatement(ctx.BranchStatement(), statementsAfter)
-		single = &stmt
+		stmt := LowerBranchStatement(ctx.BranchStatement())
+		util.PrettyPrint(stmt)
+		return &stmt
 	default:
 		panic("unreachable")
 	}
-	if len(statementsAfter) == 0 {
-		return []ast.Statement{single}
-	}
-	return util.Prepend(single, LowerStatement(statementsAfter[0], statementsAfter[1:]))
 }
 
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
-	statements := ctx.AllStatement()
 	return ast.Block{
 		Span:       GetSpan(ctx),
-		Statements: LowerStatement(statements[0], statements[1:]),
+		Statements: util.Map(ctx.AllStatement(), LowerStatement),
 	}
 }
 

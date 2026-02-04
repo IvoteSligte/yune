@@ -108,6 +108,10 @@ expression
     : binaryExpression
     ;
 
+elseBlock
+    : statement*
+    ;
+
 branchStatement
-    : expression RARROW statementBody
+    : expression RARROW statementBody elseBlock
     ;
