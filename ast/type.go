@@ -53,8 +53,6 @@ func UnmarshalType(data *fj.Value) (t TypeValue) {
 		t = BoolType{}
 	case "StringType":
 		t = StringType{}
-	case "NilType":
-		t = NilType{}
 	case "TupleType":
 		t = TupleType{
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalType),
@@ -165,15 +163,6 @@ func (s StringType) Eq(other TypeValue) bool {
 }
 func (StringType) Lower() cpp.Type { return "std::string" }
 
-type NilType struct{ DefaultTypeValue }
-
-func (NilType) String() string { return "Nil" }
-func (n NilType) Eq(other TypeValue) bool {
-	_, ok := other.(NilType)
-	return ok
-}
-func (NilType) Lower() cpp.Type { return "void" }
-
 type TupleType struct {
 	DefaultTypeValue
 	Elements []TypeValue
@@ -269,7 +258,6 @@ var _ TypeValue = IntType{}
 var _ TypeValue = FloatType{}
 var _ TypeValue = BoolType{}
 var _ TypeValue = StringType{}
-var _ TypeValue = NilType{}
 var _ TypeValue = TupleType{}
 var _ TypeValue = ListType{}
 var _ TypeValue = FnType{}

@@ -20,23 +20,28 @@ struct overloaded : T... {
 };
 template <class... T>
 overloaded(T...) -> overloaded<T...>;
-  
-  template<class... T>
-  struct Union {
+
+template <class... T>
+struct Union {
     // Create from element
-    template<class U>
-    Union(U element) : variant(element) {}
+    template <class U>
+    Union(U element)
+        : variant(element)
+    {
+    }
 
     // Create from subset
-    template<class... U>
-    Union(Union<U...> subset) : variant(std::visit(
- [](auto element) constexpr -> std::variant<T...> { return element.variant; },
-		 subset))
-    {}
+    template <class... U>
+    Union(Union<U...> subset)
+        : variant(std::visit(
+              [](auto element) constexpr -> std::variant<T...> { return element.variant; },
+              subset))
+    {
+    }
 
     std::variant<T...> variant;
-  };
-  
+};
+
 using json = nlohmann::json;
 
 inline json serialize(const std::string& s) { return s; }
@@ -50,7 +55,6 @@ struct IntType { };
 struct FloatType { };
 struct BoolType { };
 struct StringType { };
-struct NilType { };
 struct TupleType;
 struct ListType;
 struct FnType;
@@ -61,18 +65,16 @@ using namespace nlohmann::literals;
 inline json serialize(const TypeType&) { return R"({ "Type": {} })"_json; }
 inline json serialize(const IntType&) { return R"({ "IntType": {} })"_json; }
 inline json serialize(const FloatType&) { return R"({ "FloatType": {} })"_json; }
-inline json serialize(const BoolType&) { return R"({ "BoolType", {} })"_json; }
+inline json serialize(const BoolType&) { return R"({ "BoolType": {} })"_json; }
 inline json serialize(const StringType&) { return R"({ "StringType": {} })"_json; }
-inline json serialize(const NilType&) { return R"({ "NilType", {} })"_json; }
 
-using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, NilType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
+using Type = std::variant<TypeType, IntType, FloatType, BoolType, StringType, Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
 
 json serialize(const TypeType& t);
 json serialize(const IntType& t);
 json serialize(const FloatType& t);
 json serialize(const BoolType& t);
 json serialize(const StringType& t);
-json serialize(const NilType& t);
 json serialize(const TupleType& t);
 json serialize(const ListType& t);
 json serialize(const FnType& t);

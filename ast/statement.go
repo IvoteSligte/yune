@@ -98,7 +98,7 @@ func (d VariableDeclaration) GetName() Name {
 }
 
 func (d VariableDeclaration) GetType() TypeValue {
-	return NilType{}
+	return TupleType{}
 }
 
 func (d VariableDeclaration) GetDeclaredType() TypeValue {
@@ -166,7 +166,7 @@ func (a *Assignment) Lower() cpp.Statement {
 }
 
 func (a Assignment) GetType() TypeValue {
-	return NilType{}
+	return TupleType{}
 }
 
 type AssignmentOp string
@@ -354,12 +354,16 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 func (b *Block) lowerStatements() []cpp.Statement {
 	statements := util.Map(b.Statements, Statement.Lower)
 
-	if !typeEqual(b.Statements[len(b.Statements)-1].GetType(), NilType{}) {
+	if !typeEqual(b.Statements[len(b.Statements)-1].GetType(), TupleType{}) {
 		// last expression is implicitly returned in Yune,
 		// but needs to be explicitly returned in C++
 		statements[len(statements)-1] = cpp.ReturnStatement{
 			Expression: statements[len(statements)-1].(cpp.ExpressionStatement).Expression,
 		}
+	} else {
+		statements = append(statements, cpp.ReturnStatement{
+			Expression: cpp.Tuple{},
+		})
 	}
 	return statements
 }

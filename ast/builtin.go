@@ -11,7 +11,6 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	FloatDeclaration,
 	BoolDeclaration,
 	StringDeclaration,
-	NilDeclaration,
 	ListDeclaration,
 	FnDeclaration,
 	TypeDeclaration,
@@ -248,11 +247,6 @@ var StringDeclaration = BuiltinConstantDeclaration{
 	Type:  TypeType{},
 	Value: `ty::StringType{}`,
 }
-var NilDeclaration = BuiltinConstantDeclaration{
-	Name:  "Nil",
-	Type:  TypeType{},
-	Value: `ty::NilType{}`,
-}
 var ExpressionDeclaration = BuiltinConstantDeclaration{
 	Name:  "Expression",
 	Type:  TypeType{},
@@ -371,8 +365,10 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 			Type: StringType{},
 		},
 	},
-	ReturnType: NilType{},
-	Body:       `std::cout << string << std::endl;`,
+	ReturnType: TupleType{},
+	Body: `
+std::cout << string << std::endl;
+return std::make_tuple();`,
 }
 
 var _ TopLevelDeclaration = BuiltinFunctionDeclaration{}

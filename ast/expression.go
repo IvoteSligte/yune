@@ -374,13 +374,6 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	argumentType := f.Argument.GetType()
 	_, isTuple := argumentType.(TupleType)
 	if isTuple {
-		// functions called with the empty tuple are lowered to functions called with nothing
-		if argumentType.Eq(TupleType{}) {
-			return cpp.FunctionCall{
-				Function:  f.Function.Lower(),
-				Arguments: []cpp.Expression{}, // FIXME: currently does not execute argument
-			}
-		}
 		// calls the function with a tuple of arguments
 		return cpp.FunctionCall{
 			Function: cpp.Variable("std::apply"),
