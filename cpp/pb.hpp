@@ -10,7 +10,7 @@
 template <class T>
 using Box = std::shared_ptr<T>;
 template <class T>
-Box<T> box(T value) { return std::make_shared<T>(value); }
+Box<T> box(T value) { return std::make_shared<T>(std::move(value)); }
 
 namespace ty {
 
@@ -34,7 +34,7 @@ struct Union {
     template <class... U>
     Union(Union<U...> subset)
         : variant(std::visit(
-              [](auto element) constexpr -> std::variant<T...> { return element.variant; },
+              [](auto element) constexpr -> std::variant<T...> { return element; },
               subset))
     {
     }
