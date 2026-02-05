@@ -54,6 +54,43 @@ func (d DefaultExpression) GetValueDependencies() []Name {
 	return []Name{}
 }
 
+type StructValue struct {
+	DefaultExpression
+	Name   string
+	Fields []StructValueField
+}
+
+func (s StructValue) SetType(t TypeValue) {
+	if !(StructType{Name: s.Name}.Eq(t)) {
+		panic("StructValue type does not match type provided to SetType")
+	}
+}
+
+func (s StructValue) InferType(deps DeclarationTable) (errors Errors) {
+	return
+}
+
+func (s StructValue) GetType() TypeValue {
+	return StructType{Name: s.Name}
+}
+
+func (s StructValue) Lower() cpp.Expression {
+	fields := ""
+	for i, field := range s.Fields {
+		if i > 0 {
+			fields += ", "
+		}
+		fields += field.Value.Lower()
+		i++
+	}
+	return fmt.Sprintf(`%s(%s)`, s.Name, fields)
+}
+
+type StructValueField struct {
+	Name  string
+	Value Expression
+}
+
 func lowerLiteral[T any](name string, span Span, value T, _type TypeValue) cpp.Expression {
 	switch {
 	case _type == nil:
