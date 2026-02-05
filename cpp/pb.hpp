@@ -99,37 +99,16 @@ inline json serialize(const Type& t)
 }
 
 struct TupleType {
-    explicit TupleType(std::vector<Type> elements)
-    {
-        this->elements = std::move(elements);
-    }
-
     std::vector<Type> elements;
 };
 struct ListType {
-    explicit ListType(Type element)
-    {
-        this->element = element;
-    }
-
     Type element;
 };
 struct FnType {
-    explicit FnType(Type argument, Type returnType)
-    {
-        this->argument = std::move(argument);
-        this->returnType = std::move(returnType);
-    }
-
     Type argument;
     Type returnType;
 };
 struct StructType {
-    explicit StructType(std::string name)
-        : name(name)
-    {
-    }
-
     std::string name;
 };
 
@@ -155,15 +134,10 @@ inline json serialize(const StructType& t)
 
 template <class T>
 struct Literal {
-    explicit Literal(T value)
-        : value(value)
-    {
-    }
     json serialize(std::string name) const
     {
       return { { name, {{ "value", value }} } };
     }
-
     T value;
 };
 using IntegerLiteral = Literal<int>;

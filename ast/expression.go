@@ -55,42 +55,6 @@ func (d DefaultExpression) GetValueDependencies() []Name {
 	return []Name{}
 }
 
-type StructValue struct {
-	DefaultExpression
-	Name   string
-	Fields []StructValueField
-}
-
-func (s StructValue) SetType(t TypeValue) {
-	if !(StructType{Name: s.Name}.Eq(t)) {
-		panic("StructValue type does not match type provided to SetType")
-	}
-}
-
-func (s StructValue) InferType(deps DeclarationTable) (errors Errors) {
-	return
-}
-
-func (s StructValue) GetType() TypeValue {
-	return StructType{Name: s.Name}
-}
-
-func (s StructValue) Lower() cpp.Expression {
-	fields := ""
-	for i, field := range s.Fields {
-		if i > 0 {
-			fields += ", "
-		}
-		fields += field.Value.Lower()
-		i++
-	}
-	return fmt.Sprintf(`%s(%s)`, s.Name, fields)
-}
-
-type StructValueField struct {
-	Name  string
-	Value Expression
-}
 
 type Integer struct {
 	DefaultExpression
@@ -852,6 +816,41 @@ const (
 	And          BinaryOp = "and"
 )
 
+type StructExpression struct {
+	DefaultExpression
+	Span Span
+	Name   string
+	Fields map[string]Expression
+}
+
+// GetSpan implements Expression.
+func (s *StructExpression) GetSpan() Span {
+	return s.Span
+}
+
+func (s StructExpression) SetType(t TypeValue) {
+	// TODO: check union conversibility
+	if !(StructType{Name: s.Name}.Eq(t)) {
+		panic("StructValue type does not match type provided to SetType")
+	}
+}
+
+func (s StructExpression) InferType(deps DeclarationTable) (errors Errors) {
+	return
+}
+
+func (s StructExpression) GetType() TypeValue {
+	return StructType{Name: s.Name}
+}
+
+func (s StructExpression) Lower() cpp.Expression {
+	fields := ""
+	for key, value := range s.Fields {
+		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower())
+	}
+	return fmt.Sprintf(`(%s){\n%s}`, s.Name, fields)
+}
+
 // Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -879,6 +878,12 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 		return nil // not a primitive
 	}
 	key, v := fjUnmarshalUnion(object)
+	expr = &StructExpression {
+		Span:              fjUnmarshal(v.Get("span"), Span{}),
+		Name:              key,
+			Fields:            panic("TODO map[string]Expression"),
+	}
+	
 	switch key {
 	case "IntegerLiteral":
 		expr = &Integer{
@@ -951,3 +956,4 @@ var _ Expression = &Tuple{}
 var _ Expression = &Macro{}
 var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
+var _ Expression = &StructExpression{}
