@@ -24,17 +24,13 @@ overloaded(T...) -> overloaded<T...>;
 template <class... T>
 struct Union {
     // Create from element
-    template <class U>
-    Union(U element)
-        : variant(element)
-    {
-    }
+    template <class U> Union(U element) : variant(element) {}
 
     // Create from subset
     template <class... U>
     Union(Union<U...> subset)
         : variant(std::visit(
-              [](auto element) constexpr -> std::variant<T...> { return element; },
+              [](auto element) constexpr { return element; },
               subset))
     {
     }
