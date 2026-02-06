@@ -55,7 +55,6 @@ func (d DefaultExpression) GetValueDependencies() []Name {
 	return []Name{}
 }
 
-
 type Integer struct {
 	DefaultExpression
 	Span  Span
@@ -89,7 +88,7 @@ func (i Integer) GetType() TypeValue {
 
 // InferType implements Expression.
 func (i Integer) InferType(deps DeclarationTable) (errors []error) {
-	if i.Type != nil && !i.Type.Eq(IntType{}) && !i.Type.Eq(IntegerLiteralType) && !i.Type.Eq(ExpressionType) {
+	if i.Type != nil && !i.Type.Eq(IntType{}) {
 		errors = append(errors, UnexpectedType{
 			Expected: i.Type,
 			Found:    IntType{},
@@ -132,7 +131,7 @@ func (f Float) GetType() TypeValue {
 
 // InferType implements Expression.
 func (f Float) InferType(deps DeclarationTable) (errors []error) {
-	if f.Type != nil && !f.Type.Eq(FloatType{}) && !f.Type.Eq(FloatLiteralType) && !f.Type.Eq(ExpressionType) {
+	if f.Type != nil && !f.Type.Eq(FloatType{}) {
 		errors = append(errors, UnexpectedType{
 			Expected: f.Type,
 			Found:    FloatType{},
@@ -175,7 +174,7 @@ func (b Bool) GetType() TypeValue {
 
 // InferType implements Expression.
 func (b Bool) InferType(deps DeclarationTable) (errors []error) {
-	if b.Type != nil && !b.Type.Eq(BoolType{}) && !b.Type.Eq(BoolLiteralType) && !b.Type.Eq(ExpressionType) {
+	if b.Type != nil && !b.Type.Eq(BoolType{}) {
 		errors = append(errors, UnexpectedType{
 			Expected: b.Type,
 			Found:    BoolType{},
@@ -219,7 +218,7 @@ func (s String) GetType() TypeValue {
 
 // InferType implements Expression.
 func (s String) InferType(deps DeclarationTable) (errors []error) {
-	if s.Type != nil && !s.Type.Eq(StringType{}) && !s.Type.Eq(StringLiteralType) && !s.Type.Eq(ExpressionType) {
+	if s.Type != nil && !s.Type.Eq(StringType{}) {
 		errors = append(errors, UnexpectedType{
 			Expected: s.Type,
 			Found:    StringType{},
@@ -818,7 +817,7 @@ const (
 
 type StructExpression struct {
 	DefaultExpression
-	Span Span
+	Span   Span
 	Name   string
 	Fields map[string]Expression
 }
