@@ -878,12 +878,6 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 		return nil // not a primitive
 	}
 	key, v := fjUnmarshalUnion(object)
-	expr = &StructExpression {
-		Span:              fjUnmarshal(v.Get("span"), Span{}),
-		Name:              key,
-			Fields:            panic("TODO map[string]Expression"),
-	}
-	
 	switch key {
 	case "IntegerLiteral":
 		expr = &Integer{
