@@ -461,12 +461,12 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 func (t *Tuple) Lower() cpp.Expression {
 	if typeEqual(t.Type, TypeType{}) {
 		if len(t.Elements) == 0 {
-			return `box(ty::TupleType({}))`
+			return `box((ty::TupleType){})`
 		}
 		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
 			return e.Lower()
 		})
-		return fmt.Sprintf(`box(ty::TupleType({%s}))`, elements)
+		return fmt.Sprintf(`box((ty::TupleType){ .elements = {%s} })`, elements)
 	} else {
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", Expression.Lower))
 	}

@@ -89,7 +89,7 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Requires: []string{"Expression"},
 	Implementation: `
 ty::Expression stringLiteral(std::string str) {
-    return ty::StringLiteral(str);
+    return ty::StringLiteral { .value = str };
 };`,
 }
 
@@ -333,7 +333,11 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `return box(ty::FnType(std::move(argumentType), std::move(returnType)));`,
+	Body:       `
+return box((ty::FnType){
+    .argument = std::move(argumentType),
+    .returnType = std::move(returnType),
+});`,
 }
 
 var ListDeclaration = BuiltinFunctionDeclaration{
@@ -345,7 +349,7 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `return box(ty::ListType(std::move(elementType)));`,
+	Body:       `return box((ty::ListType){ .element = std::move(elementType) });`,
 }
 
 var PrintStringDeclaration = BuiltinFunctionDeclaration{
