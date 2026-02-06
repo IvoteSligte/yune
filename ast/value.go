@@ -3,7 +3,6 @@ package ast
 import (
 	"encoding/json"
 	"log"
-	"yune/util"
 
 	fj "github.com/valyala/fastjson"
 )
@@ -49,19 +48,14 @@ func UnmarshalValue(data *fj.Value) (v Value) {
 	return
 }
 
-func Unmarshal(jsonBytes []byte) (values []Value) {
-	data := fj.MustParseBytes(jsonBytes)
-	return util.Map(data.GetArray(), UnmarshalValue)
-}
-
 type Destination interface {
-	SetValue(v Value)
+	SetValue(json string)
 }
 
 type SetType struct {
 	Type *TypeValue
 }
 
-func (s SetType) SetValue(v Value) {
-	*s.Type = v.(TypeValue)
+func (s SetType) SetValue(json string) {
+	*s.Type = UnmarshalType(fj.MustParse(json))
 }

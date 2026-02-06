@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 // TODO: manage memory of pb.Type and such
 
 // TODO: skip evaluation if batch is all-nil
-func Evaluate(module Module, batch []Expression) []byte {
+func Evaluate(module Module, batch []Expression) []string {
 	// NOTE: main function is assumed not to exist
 
 	fmt.Println("--- Start Evaluation ---")
@@ -31,16 +32,15 @@ func Evaluate(module Module, batch []Expression) []byte {
 		statements = append(statements, s)
 	}
 	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
-	addStmt(`outputFile << "[\n";`)
 
-	for i, e := range batch {
-		if i < len(batch)-1 {
-			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << ",\n";`, e))
+	for _, e := range batch {
+		// data separated by newlines (newlines are escaped in string literals)
+		if e == "" {
+			addStmt(`outputFile << "\n";`) // no data
 		} else {
 			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << "\n";`, e))
 		}
 	}
-	addStmt(`outputFile << "]\n";`)
 	addStmt(`outputFile.close();`)
 
 	module.Declarations = append(module.Declarations, FunctionDeclaration(
@@ -55,5 +55,6 @@ func Evaluate(module Module, batch []Expression) []byte {
 		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
 	}
 	println(string(bytes))
-	return bytes // not deserialized here to prevent module import loop
+	evalJsons := strings.Split(string(bytes), "\n") // not deserialized here to prevent module import loop
+	return evalJsons[:len(evalJsons)-1] // skip trailing line
 }

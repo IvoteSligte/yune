@@ -161,7 +161,7 @@ struct Literal {
     }
     json serialize(std::string name) const
     {
-        return { { name, { { "type", ty::serialize(StructType(name)) }, { "value", value } } } };
+      return { { name, {{ "value", value }} } };
     }
 
     T value;
@@ -234,18 +234,12 @@ struct Expression {
     template <class T>
     T get() const { return *dynamic_cast<T*>(self.get()); }
 
-    json serialize() const { return self->serialize(); }
-
     std::unique_ptr<Interface> self;
 };
 
 inline json serialize(const Expression& e)
 {
-    json j = e.serialize();
-    for (auto& jStruct : j) {
-        jStruct["type"] = serialize(StructType("Expression"));
-    }
-    return j;
+  return e.self->serialize();
 }
 
 } // namespace ty
