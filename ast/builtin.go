@@ -333,7 +333,7 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: TypeType{},
-	Body:       `
+	Body: `
 return box((ty::FnType){
     .argument = std::move(argumentType),
     .returnType = std::move(returnType),
