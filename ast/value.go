@@ -57,5 +57,6 @@ type SetType struct {
 }
 
 func (s SetType) SetValue(json string) {
+	println(json)
 	*s.Type = UnmarshalType(fj.MustParse(json))
 }
