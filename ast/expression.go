@@ -949,13 +949,18 @@ func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 		}
 		captures += captureName
 	}
-	// declares the class and immediately captures the right variables from the environment
-	definition := fmt.Sprintf(`class {
-    %s operator()() {
+	// declares the struct and immediately captures the right variables from the environment
+	definition := fmt.Sprintf(`struct {
+    %s operator()(%s) const {
         %s
     }
     %s
-} %s{%s};`, c.ReturnType.Lower(), strings.Join(c.Body.Lower(), "\n"), fields, name, captures)
+} %s{%s};`,
+		c.ReturnType.Lower(),
+		util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower),
+		strings.Join(c.Body.Lower(), "\n"),
+		fields,
+		name, captures)
 	*defs = append(*defs, definition)
 	return name
 }
