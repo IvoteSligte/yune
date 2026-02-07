@@ -86,7 +86,6 @@ func wrapTupleType(t TypeValue) TupleType {
 }
 
 type TypeValue interface {
-	Value
 	fmt.Stringer
 	typeValue()
 	Lower() cpp.Type
@@ -103,7 +102,6 @@ func typeEqual(left, right TypeValue) bool {
 
 type DefaultTypeValue struct{}
 
-func (DefaultTypeValue) value()     {}
 func (DefaultTypeValue) typeValue() {}
 func (DefaultTypeValue) String() string {
 	panic("DefaultTypeValue.String should be overridden")

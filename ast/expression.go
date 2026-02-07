@@ -12,7 +12,6 @@ import (
 
 type Expression interface {
 	Node
-	Value
 	StatementBase
 	GetMacros() []*Macro
 
@@ -26,9 +25,6 @@ type Expression interface {
 }
 
 type DefaultExpression struct{}
-
-// value implements Expression.
-func (d DefaultExpression) value() {}
 
 // GetMacroTypeDependencies implements Expression.
 func (d DefaultExpression) GetMacroTypeDependencies() []Query {

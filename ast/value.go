@@ -29,25 +29,6 @@ func fjUnmarshalUnion(object *fj.Object) (key string, value *fj.Value) {
 	return
 }
 
-type Value interface {
-	value()
-}
-
-func UnmarshalValue(data *fj.Value) (v Value) {
-	if string(data.MarshalTo(nil)) == `"<no_value>"` {
-		return
-	}
-	if v = UnmarshalType(data); v != nil {
-		return
-	}
-	if v = UnmarshalExpression(data); v != nil {
-		return
-	}
-	key, _ := fjUnmarshalUnion(data.GetObject())
-	log.Fatalf("Unknown key for JSON Value: '%s'.", key)
-	return
-}
-
 type Destination interface {
 	SetValue(json string)
 }
