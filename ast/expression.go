@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand/v2"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -22,7 +23,7 @@ type Expression interface {
 	SetType(t TypeValue)
 	InferType(deps DeclarationTable) (errors Errors)
 	GetType() TypeValue
-	Lower() cpp.Expression
+	Lower(defs *[]cpp.Definition) cpp.Expression
 }
 
 type DefaultExpression struct{}
@@ -70,7 +71,7 @@ func (i Integer) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (i Integer) Lower() cpp.Expression {
+func (i Integer) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", i.Value)
 }
 
@@ -113,7 +114,7 @@ func (f Float) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (f Float) Lower() cpp.Expression {
+func (f Float) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", f.Value)
 }
 
@@ -156,7 +157,7 @@ func (b Bool) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (b Bool) Lower() cpp.Expression {
+func (b Bool) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", b.Value)
 }
 
@@ -199,7 +200,7 @@ func (s String) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (s String) Lower() cpp.Expression {
+func (s String) Lower(defs *[]cpp.Definition) cpp.Expression {
 	bytes, _ := json.Marshal(s.Value)
 	return string(bytes)
 }
@@ -274,7 +275,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (v *Variable) Lower() cpp.Expression {
+func (v *Variable) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return v.Name.String
 }
 
@@ -357,14 +358,14 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (f *FunctionCall) Lower() cpp.Expression {
+func (f *FunctionCall) Lower(defs *[]cpp.Definition) cpp.Expression {
 	argumentType := f.Argument.GetType()
 	_, isTuple := argumentType.(TupleType)
 	if isTuple {
 		// calls the function with a tuple of arguments
-		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(), f.Argument.Lower())
+		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(defs), f.Argument.Lower(defs))
 	}
-	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(), f.Argument.Lower())
+	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(defs), f.Argument.Lower(defs))
 }
 
 type Tuple struct {
@@ -454,17 +455,19 @@ func (t *Tuple) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (t *Tuple) Lower() cpp.Expression {
+func (t *Tuple) Lower(defs *[]cpp.Definition) cpp.Expression {
 	if typeEqual(t.Type, TypeType{}) {
 		if len(t.Elements) == 0 {
 			return `box((ty::TupleType){})`
 		}
 		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
-			return e.Lower()
+			return e.Lower(defs)
 		})
 		return fmt.Sprintf(`box((ty::TupleType){ .elements = {%s} })`, elements)
 	} else {
-		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", Expression.Lower))
+		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", func(e Expression) cpp.Expression {
+			return e.Lower(defs)
+		}))
 	}
 }
 
@@ -557,8 +560,8 @@ func (m *Macro) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (m *Macro) Lower() cpp.Expression {
-	return m.Result.Lower()
+func (m *Macro) Lower(defs *[]cpp.Definition) cpp.Expression {
+	return m.Result.Lower(defs)
 }
 
 // GetType implements Expression.
@@ -647,10 +650,10 @@ func (u *UnaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (u *UnaryExpression) Lower() cpp.Expression {
+func (u *UnaryExpression) Lower(defs *[]cpp.Definition) cpp.Expression {
 	switch u.Op {
 	case Negate:
-		return "-" + u.Expression.Lower()
+		return "-" + u.Expression.Lower(defs)
 	default:
 		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
@@ -769,7 +772,7 @@ func (b *BinaryExpression) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Expression.
-func (b *BinaryExpression) Lower() cpp.Expression {
+func (b *BinaryExpression) Lower(defs *[]cpp.Definition) cpp.Expression {
 	var op string
 	switch b.Op {
 	case
@@ -791,7 +794,7 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	return b.Left.Lower() + " " + op + " " + b.Right.Lower()
+	return b.Left.Lower(defs) + " " + op + " " + b.Right.Lower(defs)
 }
 
 type BinaryOp string
@@ -838,10 +841,10 @@ func (s StructExpression) GetType() TypeValue {
 	return StructType{Name: s.Name}
 }
 
-func (s StructExpression) Lower() cpp.Expression {
+func (s StructExpression) Lower(defs *[]cpp.Definition) cpp.Expression {
 	fields := ""
 	for key, value := range s.Fields {
-		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower())
+		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower(defs))
 	}
 	return fmt.Sprintf(`(%s){\n%s}`, s.Name, fields)
 }
@@ -852,6 +855,7 @@ type Closure struct {
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
+	captures   map[string]TypeValue
 }
 
 // SetType implements Expression.
@@ -903,12 +907,15 @@ func (c *Closure) GetMacroValueDependencies() (deps []Name) {
 
 // GetValueDependencies implements Expression.
 func (c *Closure) GetValueDependencies() (deps []Name) {
+	// make non-nil to prevent nil-dereference error when adding elements
+	c.captures = map[string]TypeValue{}
 	for _, depName := range c.Body.GetValueDependencies() {
 		equals := func(param FunctionParameter) bool {
 			return depName.String == param.GetName().String
 		}
 		if !util.Any(equals, c.Parameters...) {
 			deps = append(deps, depName)
+			c.captures[depName.String] = nil // type is not known yet
 		}
 	}
 	return
@@ -916,21 +923,41 @@ func (c *Closure) GetValueDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (c *Closure) InferType(deps DeclarationTable) (errors Errors) {
+	for name, _ := range c.captures {
+		declaration, ok := deps.Get(name)
+		if !ok {
+			log.Fatalf("Declaration table does not contain closure capture '%s'", name)
+		}
+		c.captures[name] = declaration.GetDeclaredType()
+	}
 	return typeCheckFunction(nil, c.Parameters, c.ReturnType, c.Body, deps)
 }
 
 // Lower implements Expression.
-func (c *Closure) Lower() cpp.Expression {
-	// TODO: ensure original name is used (very low chance of conflict currently)
-	_ = fmt.Sprintf("_%x_closure_", rand.Uint64())
-	_ = `
-class {
-    %s operator()(%s) {
+func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
+	// TODO: fully prevent naming conflicts instead of using rand
+	name := fmt.Sprintf("closure_%x_", rand.Uint64())
+	if c.captures == nil {
+		panic("Closure.Lower called without callng GetValueDependencies first.")
+	}
+	fields := ""
+	captures := ""
+	for captureName, captureType := range c.captures {
+		fields += captureType.Lower() + " " + captureName + ";\n"
+		if captures != "" {
+			captures += ", "
+		}
+		captures += captureName
+	}
+	// declares the class and immediately captures the right variables from the environment
+	definition := fmt.Sprintf(`class {
+    %s operator()() {
         %s
     }
     %s
-} %s;`
-	panic("TODO: Closure.Lower")
+} %s{%s};`, c.ReturnType.Lower(), strings.Join(c.Body.Lower(), "\n"), fields, name, captures)
+	*defs = append(*defs, definition)
+	return name
 }
 
 // Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
@@ -1012,3 +1039,4 @@ var _ Expression = &Macro{}
 var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
 var _ Expression = &StructExpression{}
+var _ Expression = &Closure{}

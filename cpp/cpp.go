@@ -1,6 +1,10 @@
 package cpp
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+	"yune/util"
+)
 
 type Type = string
 
@@ -21,6 +25,29 @@ type Expression = string
 
 func Block(b []Statement) string {
 	return "{\n" + strings.Join(b, "\n") + "\n}"
+}
+
+// Only the implementation part of a declaration.
+// Useful for local declarations (i.e. declarations within functions).
+type Definition = string
+
+type Field struct {
+	Name string
+	Type Type
+}
+
+func AnonymousClass(instance string, fields []Field, methods []string) Definition {
+	methodDeclarations := strings.Join(methods, "\n")
+	fieldDeclarations := util.JoinFunction(fields, "\n", func(f Field) string {
+		return NewField(f.Name, f.Type)
+	})
+	captures := util.JoinFunction(fields, ", ", func(f Field) string {
+		return f.Name
+	})
+	return fmt.Sprintf(`class {
+    %s
+    %s
+} %s{%s};`, methodDeclarations, fieldDeclarations, instance, captures)
 }
 
 type Statement = string

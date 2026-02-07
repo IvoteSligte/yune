@@ -2,11 +2,16 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 
 	fj "github.com/valyala/fastjson"
 )
+
+func defString(defs []cpp.Definition) string {
+	return strings.Join(defs, "\n") + "\n"
+}
 
 type StatementBase interface {
 	Node
@@ -97,7 +102,7 @@ func (d VariableDeclaration) Lower() cpp.Statement {
 	return fmt.Sprintf(`%s %s = %s;`,
 		d.Type.value.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.String,
-		cpp.LambdaBlock(d.Body.lowerStatements()),
+		cpp.LambdaBlock(d.Body.Lower()),
 	)
 }
 
@@ -169,7 +174,7 @@ func (a *Assignment) Lower() cpp.Statement {
 	return fmt.Sprintf(`%s %s %s;`,
 		a.Target.Name.String,
 		a.Op,
-		cpp.LambdaBlock(a.Body.lowerStatements()),
+		cpp.LambdaBlock(a.Body.Lower()),
 	)
 }
 
@@ -268,16 +273,22 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Statement.
 func (b *BranchStatement) Lower() cpp.Statement {
-	return fmt.Sprintf(`if (%s) %s else %s`,
-		b.Condition.Lower(),
-		cpp.Block(b.Then.lowerStatements()),
-		cpp.Block(b.Else.lowerStatements()),
+	var defs []cpp.Definition
+	lowered := fmt.Sprintf(`if (%s) %s else %s`,
+		b.Condition.Lower(&defs),
+		cpp.Block(b.Then.Lower()),
+		cpp.Block(b.Else.Lower()),
 	)
+	return defString(defs) + lowered
 }
 
 type Block struct {
-	Span
+	Span       Span
 	Statements []Statement
+}
+
+func (b Block) GetSpan() Span {
+	return b.Span
 }
 
 func (b Block) GetType() TypeValue {
@@ -357,7 +368,7 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 	return
 }
 
-func (b *Block) lowerStatements() []cpp.Statement {
+func (b *Block) Lower() []cpp.Statement {
 	statements := util.Map(b.Statements, Statement.Lower)
 
 	switch b.Statements[len(b.Statements)-1].(type) {
@@ -383,7 +394,9 @@ type ExpressionStatement struct {
 
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower() cpp.Statement {
-	return e.Expression.Lower() + ";"
+	var defs []cpp.Definition
+	lowered := e.Expression.Lower(&defs)
+	return defString(defs) + lowered + ";"
 }
 
 func UnmarshalBlock(data *fj.Value) (block Block) {

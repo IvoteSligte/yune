@@ -152,7 +152,7 @@ func (d FunctionDeclaration) Lower() cpp.Declaration {
 		d.Name.String,
 		util.Map(d.Parameters, FunctionParameter.Lower),
 		d.ReturnType.Lower(),
-		cpp.Block(d.Body.lowerStatements()),
+		cpp.Block(d.Body.Lower()),
 	)
 }
 
@@ -287,7 +287,7 @@ func (d ConstantDeclaration) Lower() cpp.Declaration {
 	return cpp.ConstantDeclaration(
 		d.Name.String,
 		d.Type.Lower(),
-		cpp.LambdaBlock(d.Body.lowerStatements()),
+		cpp.LambdaBlock(d.Body.Lower()),
 	)
 }
 

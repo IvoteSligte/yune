@@ -143,7 +143,7 @@ func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
 	return cpp.StructDeclaration(
 		b.Name,
 		util.Map(b.Fields, func(f BuiltinFieldDeclaration) string {
-			return cpp.Field(f.Name, f.Type)
+			return cpp.NewField(f.Name, f.Type)
 		}),
 	)
 }

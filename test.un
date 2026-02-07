@@ -22,7 +22,8 @@ main(): Int =
     true and false
     "string galore"
     noArguments(noArguments())
-    ||: Int = 0
+    f: Fn((), Int) = ||: Int = 0
+    f()
     s: String = longString#This is a very long,
         multi-line string.
         It contains several newlines.
