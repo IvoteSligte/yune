@@ -33,7 +33,8 @@ type StatementBase interface {
 
 type Statement interface {
 	StatementBase
-	Lower() cpp.Statement
+	// Lower the statement, adding the "return" prefix if `isLast` is true.
+	Lower(isLast bool) cpp.Statement
 }
 
 type VariableDeclaration struct {
@@ -98,12 +99,16 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Statement.
-func (d VariableDeclaration) Lower() cpp.Statement {
-	return fmt.Sprintf(`%s %s = %s;`,
+func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
+	lowered := fmt.Sprintf(`%s %s = %s;`,
 		d.Type.value.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.String,
 		cpp.LambdaBlock(d.Body.Lower()),
 	)
+	if isLast {
+		lowered += "\nreturn std::make_tuple();"
+	}
+	return lowered
 }
 
 func (d VariableDeclaration) GetName() Name {
@@ -170,12 +175,16 @@ func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Statement.
-func (a *Assignment) Lower() cpp.Statement {
-	return fmt.Sprintf(`%s %s %s;`,
+func (a *Assignment) Lower(isLast bool) cpp.Statement {
+	lowered := fmt.Sprintf(`%s %s %s;`,
 		a.Target.Name.String,
 		a.Op,
 		cpp.LambdaBlock(a.Body.Lower()),
 	)
+	if isLast {
+		lowered += "\nreturn std::make_tuple();"
+	}
+	return lowered
 }
 
 func (a Assignment) GetType() TypeValue {
@@ -272,7 +281,10 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 }
 
 // Lower implements Statement.
-func (b *BranchStatement) Lower() cpp.Statement {
+func (b *BranchStatement) Lower(isLast bool) cpp.Statement {
+	if !isLast {
+		panic("Branch statement should always be the last statement in a block.")
+	}
 	var defs []cpp.Definition
 	lowered := fmt.Sprintf(`if (%s) %s else %s`,
 		b.Condition.Lower(&defs),
@@ -368,22 +380,12 @@ func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
 	return
 }
 
-func (b *Block) Lower() []cpp.Statement {
-	statements := util.Map(b.Statements, Statement.Lower)
-
-	switch b.Statements[len(b.Statements)-1].(type) {
-	case *ExpressionStatement:
-		// last expression is implicitly returned in Yune,
-		// but needs to be explicitly returned in C++
-		statements[len(statements)-1] = fmt.Sprintf(`return %s`, statements[len(statements)-1])
-	case *BranchStatement:
-		// already returns
-	case *VariableDeclaration, *Assignment:
-		statements = append(statements, `return std::make_tuple();`)
-	default:
-		panic("unreachable")
+func (b *Block) Lower() (statements []cpp.Statement) {
+	for i, stmt := range b.Statements {
+		isLast := i+1 == len(b.Statements)
+		statements = append(statements, stmt.Lower(isLast))
 	}
-	return statements
+	return
 }
 
 var _ Node = &Block{}
@@ -393,9 +395,12 @@ type ExpressionStatement struct {
 }
 
 // Lower implements Statement.
-func (e *ExpressionStatement) Lower() cpp.Statement {
+func (e *ExpressionStatement) Lower(isLast bool) cpp.Statement {
 	var defs []cpp.Definition
 	lowered := e.Expression.Lower(&defs)
+	if isLast {
+		lowered = "return " + lowered
+	}
 	return defString(defs) + lowered + ";"
 }
 
