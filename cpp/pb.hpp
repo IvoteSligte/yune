@@ -77,12 +77,29 @@ namespace ty {
   using BoolLiteral = Literal<bool>;
   using StringLiteral = Literal<std::string>;
   struct TupleExpression;
+  struct FunctionCall;
 
   using Expression =
       Union<IntegerLiteral, FloatLiteral, BoolLiteral, StringLiteral, Box<TupleExpression>>;
 
+  struct Variable {
+    std::string name;
+  };
+  struct FunctionCall {
+    Expression function;
+    Expression argument;
+  };
   struct TupleExpression {
     std::vector<Expression> elements;
+  };
+  struct UnaryExpression {
+    std::string op;
+    Expression expression;
+  };
+  struct BinaryExpression {
+    std::string op;
+    Expression left;
+    Expression right;
   };
   
   // Escape string to JSON literal.
@@ -132,7 +149,15 @@ namespace ty {
   template <class T> std::string serialize(std::vector<T> elements);
   template <class... T> std::string serialize(std::tuple<T...> elements);
   template <class... T> std::string serialize(const Union<T...> &u);
-  template<class T> std::string serialize(const Literal<T>& literal, std::string name);
+  std::string serialize(const IntegerLiteral &e);
+  std::string serialize(const FloatLiteral &e);
+  std::string serialize(const BoolLiteral &e);
+  std::string serialize(const StringLiteral &e);
+  std::string serialize(const Variable &e);
+  std::string serialize(const FunctionCall &e);
+  std::string serialize(const TupleExpression &e);
+  std::string serialize(const UnaryExpression &e);
+  std::string serialize(const BinaryExpression &e);
   
   template <class T>
   std::string serialize(std::vector<T> elements) {
@@ -180,7 +205,7 @@ namespace ty {
 
   template<class T>
   inline std::string serialize(const Literal<T>& literal, std::string name) {
-      return R"({ ")" + name + R"(": { "value": )" + ty::serialize(literal.value) +  " } }";
+    return R"({ ")" + name + R"(": { "value": )" + ty::serialize(literal.value) +  " } }";
   }
   inline std::string serialize(const IntegerLiteral &e) {
     return ty::serialize(e, "IntegerLiteral");
@@ -194,13 +219,21 @@ namespace ty {
   inline std::string serialize(const StringLiteral &e) {
     return ty::serialize(e, "StringLiteral");
   }
-  
-  template <class... T>
-  inline std::string serialize(const TupleExpression &e) {
-    return R"({ "TupleExpression": { "elements": )" + ty::serialize(e) + " } }";
+  inline std::string serialize(const Variable &e) {
+    return R"({ "Variable": { "name": )" + ty::serialize(e.name) + " } }";
   }
-
-  // TODO: other expression kinds
+  inline std::string serialize(const FunctionCall &e) {
+    return R"({ "FunctionType": { "function": )" + ty::serialize(e.function) + R"(, "argument": )" + ty::serialize(e.argument) + " } }";
+  }
+  inline std::string serialize(const TupleExpression &e) {
+    return R"({ "TupleExpression": { "elements": )" + ty::serialize(e.elements) + " } }";
+  }
+  inline std::string serialize(const UnaryExpression &e) {
+    return R"({ "UnaryExpression": { "op": )" + ty::serialize(e.op) + R"(, "expression": )" + ty::serialize(e.expression) + " } }";
+  }
+  inline std::string serialize(const BinaryExpression &e) {
+    return R"({ "BinaryExpression": { "op": )" + ty::serialize(e.op) + R"(, "left": )" + ty::serialize(e.left) + R"(, "right": )" + ty::serialize(e.right) + " } }";    
+  }
 
   template<class T>
   std::string serialize(Box<T> box) {

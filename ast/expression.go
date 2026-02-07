@@ -903,16 +903,14 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 				Span:   fjUnmarshal(v.Get("span"), Span{}),
 				String: string(v.GetStringBytes("value")),
 			},
-			Type: UnmarshalType(v.Get("type")),
 		}
 	case "FunctionCall":
 		expr = &FunctionCall{
 			Span:     fjUnmarshal(v.Get("span"), Span{}),
-			Type:     UnmarshalType(v.Get("type")),
 			Function: UnmarshalExpression(v.Get("function")),
 			Argument: UnmarshalExpression(v.Get("argument")),
 		}
-	case "Tuple":
+	case "TupleExpression":
 		expr = &Tuple{
 			Span:     fjUnmarshal(v.Get("span"), Span{}),
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
