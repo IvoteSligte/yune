@@ -494,9 +494,8 @@ func (m *Macro) SetType(t TypeValue) {
 
 // SetValue implements Destination.
 func (m *Macro) SetValue(json string) {
-	util.PrettyPrint(json)
 	v := fj.MustParse(json)
-	elements, err := v.Get("Tuple", "elements").Array()
+	elements, err := v.Array()
 	if err != nil {
 		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
 	}

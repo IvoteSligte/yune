@@ -1,8 +1,8 @@
 
-#include "json.hpp" // nlohmann JSON library
+#include <iomanip>
+#include <sstream>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -13,8 +13,6 @@ template <class T> Box<T> box(T value) {
 }
 
 namespace ty {
-  using json = nlohmann::json;
-
   template <class... T>
   struct overloaded : T... {
     using T::operator()...;
@@ -34,13 +32,8 @@ namespace ty {
     : variant(std::visit([](auto element) constexpr { return element; },
                          subset)) {}
 
-    json serialize() const; 
-
     std::variant<T...> variant;
   };
-
-  template<class ...T>
-  inline json serialize(const Union<T...> &u) { return u.serialize(); }
 
   struct Span {
     Span(int line, int column) : line(line), column(column) {}
@@ -48,13 +41,7 @@ namespace ty {
     int column;
   };
 
-  inline json serialize(const std::string &s) { return s; }
-  inline json serialize(const int &i) { return i; }
-  inline json serialize(const bool &b) { return b; }
-  inline json serialize(const float &f) { return f; }
-
   struct TypeType {};
-
   struct IntType {};
   struct FloatType {};
   struct BoolType {};
@@ -64,30 +51,8 @@ namespace ty {
   struct FnType;
   struct StructType;
 
-  using namespace nlohmann::literals;
-
-  inline json serialize(const TypeType &) { return R"({ "Type": {} })"_json; }
-  inline json serialize(const IntType &) { return R"({ "IntType": {} })"_json; }
-  inline json serialize(const FloatType &) {
-    return R"({ "FloatType": {} })"_json;
-  }
-  inline json serialize(const BoolType &) { return R"({ "BoolType": {} })"_json; }
-  inline json serialize(const StringType &) {
-    return R"({ "StringType": {} })"_json;
-  }
-
   using Type = Union<TypeType, IntType, FloatType, BoolType, StringType,
                      Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
-
-  json serialize(const TypeType &t);
-  json serialize(const IntType &t);
-  json serialize(const FloatType &t);
-  json serialize(const BoolType &t);
-  json serialize(const StringType &t);
-  json serialize(const TupleType &t);
-  json serialize(const ListType &t);
-  json serialize(const FnType &t);
-  json serialize(const StructType &t);
 
   struct TupleType {
     std::vector<Type> elements;
@@ -103,68 +68,147 @@ namespace ty {
     std::string name;
   };
 
-  inline json serialize(const TupleType &t) {
-    json elementsJson;
-    for (const Type &element : t.elements)
-      elementsJson.push_back(serialize(element));
-    return {{"TupleType", {{"elements", elementsJson}}}};
-  }
-  inline json serialize(const ListType &t) {
-    return {{"ListType", {{"element", serialize(t.element)}}}};
-  }
-  inline json serialize(const FnType &t) {
-    return {{"FnType",
-             {{"argument", serialize(t.argument)},
-              {"return", serialize(t.returnType)}}}};
-  }
-  inline json serialize(const StructType &t) {
-    return {{"StructType", {{"name", t.name}}}};
-  }
-
   template <class T>
   struct Literal {
-    json serialize(std::string name) const {
-      return {{name, {{"value", value}}}};
-    }
     T value;
   };
   using IntegerLiteral = Literal<int>;
   using FloatLiteral = Literal<float>;
   using BoolLiteral = Literal<bool>;
   using StringLiteral = Literal<std::string>;
+  struct TupleExpression;
 
-  inline json serialize(const IntegerLiteral &e) {
-    return e.serialize("IntegerLiteral");
+  using Expression =
+      Union<IntegerLiteral, FloatLiteral, BoolLiteral, StringLiteral, Box<TupleExpression>>;
+
+  struct TupleExpression {
+    std::vector<Expression> elements;
+  };
+  
+  // Escape string to JSON literal.
+  inline std::string serialize(const std::string &s) {
+    std::ostringstream oss;
+    oss << '"';
+
+    for (unsigned char c : s) {
+      switch (c) {
+      case '"':  oss << "\\\""; break;
+      case '\\': oss << "\\\\"; break;
+      case '\b': oss << "\\b";  break;
+      case '\f': oss << "\\f";  break;
+      case '\n': oss << "\\n";  break;
+      case '\r': oss << "\\r";  break;
+      case '\t': oss << "\\t";  break;
+      default:
+        if (c < 0x20) {
+          oss << "\\u"
+          << std::hex << std::setw(4) << std::setfill('0')
+          << static_cast<int>(c);
+        } else {
+          oss << c;
+        }
+      }
+    }
+    oss << '"';
+    return oss.str();
   }
-  inline json serialize(const FloatLiteral &e) {
-    return e.serialize("FloatLiteral");
+  inline std::string serialize(const int &i) { return std::to_string(i); }
+  inline std::string serialize(const bool &b) { return std::to_string(b); }
+  inline std::string serialize(const float &f) { return std::to_string(f); }
+
+  inline std::string serialize(const TypeType &) { return R"({ "Type", {} })"; };
+  inline std::string serialize(const IntType &) { return R"({ "IntType": {} })"; }
+  inline std::string serialize(const FloatType &) {
+    return R"({ "FloatType": {} })";
   }
-  inline json serialize(const BoolLiteral &e) {
-    return e.serialize("BoolLiteral");
+  inline std::string serialize(const BoolType &) { return R"({ "BoolType": {} })"; }
+  inline std::string serialize(const StringType &) {
+    return R"({ "StringType": {} })";
   }
-  inline json serialize(const StringLiteral &e) {
-    return e.serialize("StringLiteral");
+  std::string serialize(const TupleType &t);
+  std::string serialize(const ListType &t);
+  std::string serialize(const FnType &t);
+  std::string serialize(const StructType &t);
+  template <class T> std::string serialize(std::vector<T> elements);
+  template <class... T> std::string serialize(std::tuple<T...> elements);
+  template <class... T> std::string serialize(const Union<T...> &u);
+  template<class T> std::string serialize(const Literal<T>& literal, std::string name);
+  
+  template <class T>
+  std::string serialize(std::vector<T> elements) {
+    std::ostringstream oss;
+    oss << '[';
+    for (int i = 0; i < elements.size(); i++) {
+      oss << serialize(elements[i]);
+      if (i + 1 < elements.size()) {
+        oss << ", ";
+      }
+    }
+    oss << ']';
+    return oss.str();
   }
 
+  template <class... T> std::string serialize(std::tuple<T...> tuple) {
+    std::ostringstream oss;
+    oss << '[';
+    int i = 0;
+    std::apply([&](auto&&... elements) {
+      (([&]() {
+        oss << ty::serialize(elements);
+        if (i + 1 < sizeof...(T)) {
+          oss << ", ";
+        }
+        i++;
+      }()), ...);
+    }, tuple);
+    oss << ']';
+    return oss.str();
+  }
+  
+  inline std::string serialize(const TupleType &t) {
+    return R"({ "TupleType": { "elements": )" + ty::serialize(t.elements) + " } }";
+  }
+  inline std::string serialize(const ListType &t) {
+    return R"({ "ListType": { "element": )" + ty::serialize(t.element) + " } }";
+  }
+  inline std::string serialize(const FnType &t) {
+    return R"({ "FnType": { "argument": )" + ty::serialize(t.argument) + R"(, "return": )" + ty::serialize(t.returnType) + " } }";
+  }
+  inline std::string serialize(const StructType &t) {
+    return R"({ "StructType": { "name": )" + ty::serialize(t.name) + " } }";
+  }
+
+  template<class T>
+  inline std::string serialize(const Literal<T>& literal, std::string name) {
+      return R"({ ")" + name + R"(": { "value": )" + ty::serialize(literal.value) +  " } }";
+  }
+  inline std::string serialize(const IntegerLiteral &e) {
+    return ty::serialize(e, "IntegerLiteral");
+  }
+  inline std::string serialize(const FloatLiteral &e) {
+    return ty::serialize(e, "FloatLiteral");
+  }
+  inline std::string serialize(const BoolLiteral &e) {
+    return ty::serialize(e, "BoolLiteral");
+  }
+  inline std::string serialize(const StringLiteral &e) {
+    return ty::serialize(e, "StringLiteral");
+  }
+  
   template <class... T>
-  inline json serialize(const std::tuple<T...> &e) {
-    json elements = std::apply([](auto &&...element) { return json{ty::serialize(element)...}; },
-                               e);
-    return {{"Tuple", {{"elements", elements}}}};
+  inline std::string serialize(const TupleExpression &e) {
+    return R"({ "TupleExpression": { "elements": )" + ty::serialize(e) + " } }";
   }
 
   // TODO: other expression kinds
 
-  using Expression =
-      Union<IntegerLiteral, FloatLiteral, BoolLiteral, StringLiteral>;
-
   template<class T>
-  json serialize(Box<T> box) {
+  std::string serialize(Box<T> box) {
     return ty::serialize(*box.get());
   }
-  
-  template<class... T>
-  json Union<T...>::serialize() const {
-    return std::visit([](const auto& element) -> json { return ty::serialize(element); }, variant);
+
+  template <class... T> inline std::string serialize(const Union<T...> &u) {
+    return std::visit([](const auto& element) { return ty::serialize(element); }, u.variant);
   }
 } // namespace ty
+
