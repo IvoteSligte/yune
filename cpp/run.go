@@ -89,7 +89,7 @@ func Run(module Module) {
 
 	fmt.Println("-- Clang++ log --")
 	pbIncludes := os.ExpandEnv("-I$PWD/pb")
-	cmd := exec.Command("clang++", []string{"-O1", implementationPath, "-o", binaryPath, pbIncludes}...)
+	cmd := exec.Command("clang++", []string{"-O1", "-std=gnu++20", implementationPath, "-o", binaryPath, pbIncludes}...)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
