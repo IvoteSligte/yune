@@ -923,7 +923,7 @@ func (c *Closure) GetValueDependencies() (deps []Name) {
 
 // InferType implements Expression.
 func (c *Closure) InferType(deps DeclarationTable) (errors Errors) {
-	for name, _ := range c.captures {
+	for name := range c.captures {
 		declaration, ok := deps.Get(name)
 		if !ok {
 			log.Fatalf("Declaration table does not contain closure capture '%s'", name)
@@ -1026,7 +1026,21 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "StructExpression":
 		panic("TODO: unmarshal StructExpression")
 	case "Closure":
-		panic("TODO: unmarshal closure")
+		expr = &Closure{
+			Span: fjUnmarshal(v.Get("span"), Span{}),
+			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
+				return FunctionParameter{
+					Span: fjUnmarshal(v.Get("span"), Span{}),
+					Name: Name{
+						Span:   Span{},
+						String: string(v.GetStringBytes("name")),
+					},
+					Type: UnmarshalType(v.Get("type")),
+				}
+			}),
+			ReturnType: UnmarshalType(v.Get("returnType")),
+			Body:       UnmarshalBlock(v.Get("body")),
+		}
 	default:
 		// expr = nil
 	}

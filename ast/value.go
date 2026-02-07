@@ -41,5 +41,5 @@ func (s SetType) SetValue(json string) {
 	if s.Type == nil {
 		panic("SetType type should not be nil. JSON: " + json)
 	}
-	*s.Type = UnmarshalType(fj.MustParse(json))
+	*s.Type = UnmarshalTypeValue(fj.MustParse(json))
 }

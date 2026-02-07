@@ -25,6 +25,12 @@ func (t Type) Lower() cpp.Type {
 	return t.value.Lower()
 }
 
+func UnmarshalType(data *fj.Value) Type {
+	return Type{
+		Expression: UnmarshalExpression(data.Get("Type")),
+	}
+}
+
 var MainType = FnType{
 	Argument: NewTupleType(),
 	Return:   IntType{},
@@ -40,7 +46,7 @@ var ExpressionType = StructType{Name: "Expression"}
 var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
-func UnmarshalType(data *fj.Value) (t TypeValue) {
+func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())
 	switch key {
 	case "TypeType":
@@ -55,16 +61,16 @@ func UnmarshalType(data *fj.Value) (t TypeValue) {
 		t = StringType{}
 	case "TupleType":
 		t = TupleType{
-			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalType),
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalTypeValue),
 		}
 	case "ListType":
 		t = ListType{
-			Element: UnmarshalType(v.Get("element")),
+			Element: UnmarshalTypeValue(v.Get("element")),
 		}
 	case "FnType":
 		t = FnType{
-			Argument: UnmarshalType(v.Get("argument")),
-			Return:   UnmarshalType(v.Get("return")),
+			Argument: UnmarshalTypeValue(v.Get("argument")),
+			Return:   UnmarshalTypeValue(v.Get("return")),
 		}
 	case "StructType":
 		t = StructType{
