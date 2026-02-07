@@ -101,6 +101,29 @@ namespace ty {
     Expression left;
     Expression right;
   };
+
+  struct VariableDeclaration;
+  struct Assignment;
+  struct BranchStatement;
+
+  using Statement = Union<Box<VariableDeclaration>, Box<Assignment>, Box<BranchStatement>>;
+
+  using Block = std::vector<Statement>;
+  
+  struct VariableDeclaration {
+    std::string name;
+    Block body;
+  };
+  struct Assignment {
+    Variable target;
+    std::string op;
+    Block body;
+  };
+  struct BranchStatement {
+    Expression condition;
+    Block thenBlock;
+    Block elseBlock;
+  };
   
   // Escape string to JSON literal.
   inline std::string serialize(const std::string &s) {
@@ -158,6 +181,9 @@ namespace ty {
   std::string serialize(const TupleExpression &e);
   std::string serialize(const UnaryExpression &e);
   std::string serialize(const BinaryExpression &e);
+  std::string serialize(const VariableDeclaration &e);
+  std::string serialize(const Assignment &e);
+  std::string serialize(const BranchStatement &e);
   
   template <class T>
   std::string serialize(std::vector<T> elements) {
@@ -232,9 +258,19 @@ namespace ty {
     return R"({ "UnaryExpression": { "op": )" + ty::serialize(e.op) + R"(, "expression": )" + ty::serialize(e.expression) + " } }";
   }
   inline std::string serialize(const BinaryExpression &e) {
-    return R"({ "BinaryExpression": { "op": )" + ty::serialize(e.op) + R"(, "left": )" + ty::serialize(e.left) + R"(, "right": )" + ty::serialize(e.right) + " } }";    
+    return R"({ "BinaryExpression": { "op": )" + ty::serialize(e.op) + R"(, "left": )" + ty::serialize(e.left) + R"(, "right": )" + ty::serialize(e.right) + " } }";
   }
 
+  inline std::string serialize(const VariableDeclaration &e) {
+    return R"({ "VariableDeclaration": { "name": )" + ty::serialize(e.name) + R"(, "body": )" + ty::serialize(e.body) + " } }";    
+  }
+  inline std::string serialize(const Assignment &e) {
+    return R"({ "Assignment": { "target": )" + ty::serialize(e.target) + R"(, "op": )" + ty::serialize(e.op) + R"(, "body": )" + ty::serialize(e.body) + " } }";        
+  }
+  inline std::string serialize(const BranchStatement &e) {
+    return R"({ "BranchStatement": { "condition": )" + ty::serialize(e.condition) + R"(, "then": )" + ty::serialize(e.thenBlock) + R"(, "else": )" + ty::serialize(e.elseBlock) + " } }";            
+  }
+  
   template<class T>
   std::string serialize(Box<T> box) {
     return ty::serialize(*box.get());

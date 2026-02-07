@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"yune/cpp"
 	"yune/util"
+
+	fj "github.com/valyala/fastjson"
 )
 
 type StatementBase interface {
@@ -189,7 +191,7 @@ const (
 // statements in a block are is in its .Else field.
 type BranchStatement struct {
 	Span
-	TypeValue
+	Type      TypeValue
 	Condition Expression
 	Then      Block
 	Else      Block
@@ -204,7 +206,7 @@ func (b *BranchStatement) GetMacros() (macros []*Macro) {
 
 // GetType implements Statement.
 func (b *BranchStatement) GetType() TypeValue {
-	return b.TypeValue
+	return b.Type
 }
 
 // GetMacroTypeDependencies implements Statement.
@@ -260,7 +262,7 @@ func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
 			ElseAt: b.Else.GetSpan(),
 		})
 	}
-	b.TypeValue = thenType
+	b.Type = thenType
 	return
 }
 
@@ -385,6 +387,46 @@ type ExpressionStatement struct {
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower() cpp.Statement {
 	return e.Expression.Lower() + ";"
+}
+
+func UnmarshalBlock(data *fj.Value) (block Block) {
+	return Block{
+		Span:       Span{},
+		Statements: util.Map(data.GetArray(), UnmarshalStatement),
+	}
+}
+
+func UnmarshalStatement(data *fj.Value) (stmt Statement) {
+	object := data.GetObject()
+	key, v := fjUnmarshalUnion(object)
+	switch key {
+	case "VariableDeclaration":
+		stmt = &VariableDeclaration{
+			Span: fjUnmarshal(v.Get("span"), Span{}),
+			Name: Name{
+				Span:   Span{},
+				String: string(v.GetStringBytes("name")),
+			},
+			Body: UnmarshalBlock(v),
+		}
+	case "Assignment":
+		stmt = &Assignment{
+			Span:   fjUnmarshal(v.Get("span"), Span{}),
+			Target: *UnmarshalExpression(v.Get("target")).(*Variable),
+			Op:     AssignmentOp(v.GetStringBytes("op")),
+			Body:   UnmarshalBlock(v),
+		}
+	case "BranchStatement":
+		stmt = &BranchStatement{
+			Span:      fjUnmarshal(v.Get("span"), Span{}),
+			Condition: UnmarshalExpression(v.Get("condition")),
+			Then:      UnmarshalBlock(v.Get("then")),
+			Else:      UnmarshalBlock(v.Get("else")),
+		}
+	default:
+		stmt = &ExpressionStatement{Expression: UnmarshalExpression(data)}
+	}
+	return
 }
 
 var _ Statement = &VariableDeclaration{}

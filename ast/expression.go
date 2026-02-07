@@ -848,29 +848,6 @@ func (s StructExpression) Lower() cpp.Expression {
 // Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
-	if object == nil { // primitive or array
-		integer, err := data.Int64()
-		if err == nil {
-			expr = &Integer{Value: integer}
-			return
-		}
-		float, err := data.Float64()
-		if err == nil {
-			expr = &Float{Value: float}
-			return
-		}
-		boolean, err := data.Bool()
-		if err == nil {
-			expr = &Bool{Value: boolean}
-			return
-		}
-		stringBytes, err := data.StringBytes()
-		if err == nil {
-			expr = &String{Value: string(stringBytes)}
-			return
-		}
-		return nil // not a primitive
-	}
 	key, v := fjUnmarshalUnion(object)
 	switch key {
 	case "IntegerLiteral":
@@ -926,7 +903,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Left:  UnmarshalExpression(v.Get("left")),
 			Right: UnmarshalExpression(v.Get("right")),
 		}
-	default: // unknown key
+	default:
 		// expr = nil
 	}
 	return
