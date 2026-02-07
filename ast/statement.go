@@ -336,10 +336,7 @@ func (b *Block) GetMacroTypeDependencies() (deps []Query) {
 
 func (b *Block) GetTypeDependencies() (deps []Query) {
 	for _, stmt := range b.Statements {
-		decl, ok := stmt.(Declaration)
-		if ok {
-			deps = append(deps, decl.GetTypeDependencies()...)
-		}
+		deps = append(deps, stmt.GetTypeDependencies()...)
 	}
 	return
 }

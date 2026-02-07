@@ -880,7 +880,7 @@ func (c *Closure) GetMacroTypeDependencies() (deps []Query) {
 
 // GetTypeDependencies implements Expression.
 func (c *Closure) GetTypeDependencies() (deps []Query) {
-	return getFunctionTypeDependencies(c.Parameters, c.ReturnType, c.Body)
+	return getFunctionTypeDependencies(c.Parameters, &c.ReturnType, c.Body)
 }
 
 // GetType implements Expression.

@@ -43,6 +43,7 @@ statement
     : variableDeclaration
     | assignment
     | branchStatement
+    | closureExpression
     // only this should have a newline because all statements end in an expression
     | expression NEWLINE
     ;
@@ -73,7 +74,6 @@ primaryExpression
     | LPAREN expression RPAREN
     | tuple
     | macro
-    | closure // FIXME: expressions following a closure on the next line (same indentation) might be interpreted as part of the same expression as the closure
     ;
 
 variable
@@ -104,19 +104,30 @@ unaryExpression
     | op=MINUS primaryExpression
     ;
 
+// FIXME: precedence is most likely very incorrect
 binaryExpression
     : unaryExpression
-    | binaryExpression op=(STAR | SLASH) binaryExpression
-    | binaryExpression op=(PLUS | MINUS) binaryExpression
-    | binaryExpression op=(LESS | GREATER) binaryExpression
-    | binaryExpression op=(LESSEQUAL | GREATEREQUAL) binaryExpression
-    | binaryExpression op=(EQEQUAL | NOTEQUAL) binaryExpression
-    | binaryExpression op=AND binaryExpression
-    | binaryExpression op=OR binaryExpression
+    | left=binaryExpression op=(STAR | SLASH) right=binaryExpression
+    | left=binaryExpression op=(PLUS | MINUS) right=binaryExpression
+    | left=binaryExpression op=(LESS | GREATER) right=binaryExpression
+    | left=binaryExpression op=(LESSEQUAL | GREATEREQUAL) right=binaryExpression
+    | left=binaryExpression op=(EQEQUAL | NOTEQUAL) right=binaryExpression
+    | left=binaryExpression op=AND right=binaryExpression
+    | left=binaryExpression op=OR right=binaryExpression
     ;
 
-expression
-    : binaryExpression
+expression: binaryExpression;
+
+closureExpression
+    : closure
+    | function=primaryExpression argument=closureExpression
+    | left=binaryExpression op=(STAR | SLASH) right=closureExpression
+    | left=binaryExpression op=(PLUS | MINUS) right=closureExpression
+    | left=binaryExpression op=(LESS | GREATER) right=closureExpression
+    | left=binaryExpression op=(LESSEQUAL | GREATEREQUAL) right=closureExpression
+    | left=binaryExpression op=(EQEQUAL | NOTEQUAL) right=closureExpression
+    | left=binaryExpression op=AND right=closureExpression
+    | left=binaryExpression op=OR right=closureExpression
     ;
 
 elseBlock

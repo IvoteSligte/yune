@@ -29,44 +29,15 @@ func LowerAssignmentOp(ctx IAssignmentOpContext) ast.AssignmentOp {
 }
 
 func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
-	var op ast.BinaryOp
-	switch {
-	case ctx.UnaryExpression() != nil:
+	if ctx.UnaryExpression() != nil {
 		return LowerUnaryExpression(ctx.UnaryExpression())
-	case ctx.STAR() != nil:
-		op = ast.Multiply
-	case ctx.SLASH() != nil:
-		op = ast.Divide
-	case ctx.PLUS() != nil:
-		op = ast.Add
-	case ctx.MINUS() != nil:
-		op = ast.Subtract
-	case ctx.LESS() != nil:
-		op = ast.Less
-	case ctx.GREATER() != nil:
-		op = ast.Greater
-	case ctx.LESSEQUAL() != nil:
-		op = ast.LessEqual
-	case ctx.GREATEREQUAL() != nil:
-		op = ast.GreaterEqual
-	case ctx.EQEQUAL() != nil:
-		op = ast.Equal
-	case ctx.NOTEQUAL() != nil:
-		op = ast.NotEqual
-	case ctx.OR() != nil:
-		op = ast.Or
-	case ctx.AND() != nil:
-		op = ast.And
-	default:
-		panic("unreachable")
 	}
-	expr := ast.BinaryExpression{
+	return &ast.BinaryExpression{
 		Span:  GetSpan(ctx),
-		Op:    op,
-		Left:  LowerBinaryExpression(ctx.BinaryExpression(0)),
-		Right: LowerBinaryExpression(ctx.BinaryExpression(1)),
+		Op:    ast.BinaryOp(ctx.GetOp().GetText()),
+		Left:  LowerBinaryExpression(ctx.GetLeft()),
+		Right: LowerBinaryExpression(ctx.GetRight()),
 	}
-	return &expr
 }
 
 func LowerBranchStatement(ctx IBranchStatementContext) ast.BranchStatement {
@@ -200,11 +171,20 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.Macro() != nil:
 		macro := LowerMacro(ctx.Macro())
 		return &macro
-	case ctx.Closure() != nil:
-		closure := LowerClosure(ctx.Closure())
-		return &closure
 	default:
 		panic("unreachable")
+	}
+}
+
+func LowerClosureExpression(ctx IClosureExpressionContext) ast.Expression {
+	if ctx.Closure() != nil {
+		return LowerClosure(ctx.Closure())
+	}
+	return &ast.BinaryExpression{
+		Span:  GetSpan(ctx),
+		Op:    ast.BinaryOp(ctx.GetOp().GetText()),
+		Left:  LowerBinaryExpression(ctx.GetLeft()),
+		Right: LowerClosureExpression(ctx.GetRight()),
 	}
 }
 
@@ -216,6 +196,10 @@ func LowerStatement(ctx IStatementContext) ast.Statement {
 	case ctx.Assignment() != nil:
 		stmt := LowerAssignment(ctx.Assignment())
 		return &stmt
+	case ctx.ClosureExpression() != nil:
+		return &ast.ExpressionStatement{
+			Expression: LowerClosureExpression(ctx.ClosureExpression()),
+		}
 	case ctx.Expression() != nil:
 		return &ast.ExpressionStatement{
 			Expression: LowerExpression(ctx.Expression()),
@@ -286,8 +270,8 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDecla
 	}
 }
 
-func LowerClosure(ctx IClosureContext) ast.Closure {
-	return ast.Closure{
+func LowerClosure(ctx IClosureContext) *ast.Closure {
+	return &ast.Closure{
 		Span:       GetSpan(ctx),
 		Parameters: util.Map(ctx.ClosureParameters().AllFunctionParameter(), LowerFunctionParameter),
 		ReturnType: LowerType(ctx.Type_()),

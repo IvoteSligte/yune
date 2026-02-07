@@ -61,7 +61,7 @@ func getFunctionType(parameters []FunctionParameter, returnType Type) FnType {
 	return FnType{Argument: argument, Return: returnType.Get()}
 }
 
-func getFunctionTypeDependencies(parameters []FunctionParameter, returnType Type, body Block) (deps []Query) {
+func getFunctionTypeDependencies(parameters []FunctionParameter, returnType *Type, body Block) (deps []Query) {
 	deps = util.FlatMapPtr(parameters, (*FunctionParameter).GetTypeDependencies)
 	returnType.Expression.SetType(TypeType{})
 	deps = append(deps, Query{
@@ -143,7 +143,7 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 
 // GetTypeDependencies implements Declaration.
 func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
-	return getFunctionTypeDependencies(d.Parameters, d.ReturnType, d.Body)
+	return getFunctionTypeDependencies(d.Parameters, &d.ReturnType, d.Body)
 }
 
 // Lower implements Declaration.
