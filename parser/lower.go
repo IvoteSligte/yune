@@ -104,7 +104,7 @@ func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDecla
 	return ast.FunctionDeclaration{
 		Span:       GetSpan(ctx),
 		Name:       LowerName(ctx.Name()),
-		Parameters: LowerFunctionParameters(ctx.FunctionParameters()),
+		Parameters: util.Map(ctx.FunctionParameters().AllFunctionParameter(), LowerFunctionParameter),
 		ReturnType: LowerType(ctx.Type_()),
 		Body:       LowerStatementBody(ctx.StatementBody()),
 	}
@@ -116,10 +116,6 @@ func LowerFunctionParameter(ctx IFunctionParameterContext) ast.FunctionParameter
 		Name: LowerName(ctx.Name()),
 		Type: LowerType(ctx.Type_()),
 	}
-}
-
-func LowerFunctionParameters(ctx IFunctionParametersContext) []ast.FunctionParameter {
-	return util.Map(ctx.AllFunctionParameter(), LowerFunctionParameter)
 }
 
 func LowerName(ctx INameContext) ast.Name {
@@ -196,7 +192,7 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Span:  GetSpan(ctx),
 			Value: s[1 : len(s)-1], // strip ""
 		}
-	case ctx.Expression() != nil:
+	case ctx.Expression() != nil: // parses expression in parentheses: (expression)
 		return LowerExpression(ctx.Expression())
 	case ctx.Tuple() != nil:
 		tuple := LowerTuple(ctx.Tuple())
@@ -204,6 +200,9 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.Macro() != nil:
 		macro := LowerMacro(ctx.Macro())
 		return &macro
+	case ctx.Closure() != nil:
+		closure := LowerClosure(ctx.Closure())
+		return &closure
 	default:
 		panic("unreachable")
 	}
@@ -223,7 +222,6 @@ func LowerStatement(ctx IStatementContext) ast.Statement {
 		}
 	case ctx.BranchStatement() != nil:
 		stmt := LowerBranchStatement(ctx.BranchStatement())
-		util.PrettyPrint(stmt)
 		return &stmt
 	default:
 		panic("unreachable")
@@ -286,5 +284,13 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDecla
 		Type: LowerType(ctx.Type_()),
 		Body: LowerStatementBody(ctx.StatementBody()),
 	}
+}
 
+func LowerClosure(ctx IClosureContext) ast.Closure {
+	return ast.Closure{
+		Span:       GetSpan(ctx),
+		Parameters: util.Map(ctx.ClosureParameters().AllFunctionParameter(), LowerFunctionParameter),
+		ReturnType: LowerType(ctx.Type_()),
+		Body:       LowerStatementBody(ctx.StatementBody()),
+	}
 }

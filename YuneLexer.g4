@@ -12,6 +12,7 @@ LBRACE           : '{';
 RPAREN           : ')';
 RBRACKET         : ']';
 RBRACE           : '}';
+BAR              : '|';
 DOT              : '.';
 COLON            : ':';
 COMMA            : ',';

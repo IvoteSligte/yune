@@ -5,32 +5,12 @@ import (
 	"yune/util"
 )
 
-type FunctionDeclaration struct {
-	Span       Span
-	Name       Name
-	Parameters []FunctionParameter
-	ReturnType Type
-	Body       Block
-}
-
-// GetMacros implements Declaration.
-func (d *FunctionDeclaration) GetMacros() (macros []*Macro) {
-	macros = util.FlatMap(d.Parameters, FunctionParameter.GetMacros)
-	macros = append(macros, d.Body.GetMacros()...)
-	return
-}
-
-// GetSpan implements TopLevelDeclaration.
-func (d *FunctionDeclaration) GetSpan() Span {
-	return d.Name.GetSpan()
-}
-
-// TypeCheckBody implements Declaration.
-func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+// Type checks a possibly unnamed function. `declaration == nil` for unnamed functions.
+func typeCheckFunction(declaration *FunctionDeclaration, parameters []FunctionParameter, returnType Type, body Block, deps DeclarationTable) (errors Errors) {
 	// check for duplicate parameters
 	paramNames := map[string]*FunctionParameter{}
-	for i := range d.Parameters {
-		param := &d.Parameters[i]
+	for i := range parameters {
+		param := &parameters[i]
 		prev, exists := paramNames[param.GetName().String]
 		if exists {
 			errors = append(errors, DuplicateDeclaration{
@@ -43,24 +23,81 @@ func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 		return
 	}
 	deps = deps.NewScope()
-	deps.declarations = map[string]Declaration{d.GetName().String: d}
-	for i := range d.Parameters {
-		param := &d.Parameters[i]
+	deps.declarations = map[string]Declaration{}
+	if declaration != nil { // allow recursion by registering the function
+		deps.declarations[declaration.GetName().String] = declaration
+	}
+	for i := range parameters {
+		param := &parameters[i]
 		deps.declarations[param.GetName().String] = param
 	}
-	errors = append(errors, d.Body.InferType(deps.NewScope())...)
+	errors = append(errors, body.InferType(deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
-	returnType := d.ReturnType.Get()
-	bodyType := d.Body.GetType()
+	_returnType := returnType.Get()
+	bodyType := body.GetType()
 
-	if !typeEqual(returnType, bodyType) {
+	if !typeEqual(_returnType, bodyType) {
 		errors = append(errors, ReturnTypeMismatch{
-			Expected: returnType,
+			Expected: _returnType,
 			Found:    bodyType,
-			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
+			At:       body.Statements[len(body.Statements)-1].GetSpan(),
 		})
+	}
+	return
+}
+
+func getFunctionType(parameters []FunctionParameter, returnType Type) FnType {
+	params := util.Map(parameters, func(p FunctionParameter) TypeValue {
+		return p.GetDeclaredType()
+	})
+	var argument TypeValue
+	if len(parameters) == 1 {
+		argument = params[0]
+	} else {
+		argument = NewTupleType(params...)
+	}
+	return FnType{Argument: argument, Return: returnType.Get()}
+}
+
+func getFunctionTypeDependencies(parameters []FunctionParameter, returnType Type, body Block) (deps []Query) {
+	deps = util.FlatMapPtr(parameters, (*FunctionParameter).GetTypeDependencies)
+	returnType.Expression.SetType(TypeType{})
+	deps = append(deps, Query{
+		Expression:  returnType.Expression,
+		Destination: SetType{Type: &returnType.value},
+	})
+	deps = append(deps, body.GetTypeDependencies()...)
+	return
+}
+
+type FunctionDeclaration struct {
+	Span       Span
+	Name       Name
+	Parameters []FunctionParameter
+	ReturnType Type
+	Body       Block
+}
+
+// GetMacros implements Declaration.
+func (d *FunctionDeclaration) GetMacros() (macros []*Macro) {
+	// NOTE: currently assuming that types do not have macros that also have type dependencies
+	macros = util.FlatMap(d.Parameters, FunctionParameter.GetMacros)
+	macros = append(macros, d.Body.GetMacros()...)
+	return
+}
+
+// GetSpan implements TopLevelDeclaration.
+func (d *FunctionDeclaration) GetSpan() Span {
+	return d.Name.GetSpan()
+}
+
+// TypeCheckBody implements Declaration.
+func (d *FunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
+	errors = typeCheckFunction(d, d.Parameters, d.ReturnType, d.Body, deps)
+	if len(errors) > 0 {
+		return
 	}
 	if d.GetName().String == "main" && !typeEqual(d.GetDeclaredType(), MainType) {
 		errors = append(errors, InvalidMainSignature{
@@ -106,14 +143,7 @@ func (d FunctionDeclaration) GetValueDependencies() (deps []Name) {
 
 // GetTypeDependencies implements Declaration.
 func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
-	deps = util.FlatMapPtr(d.Parameters, (*FunctionParameter).GetTypeDependencies)
-	d.ReturnType.Expression.SetType(TypeType{})
-	deps = append(deps, Query{
-		Expression:  d.ReturnType.Expression,
-		Destination: SetType{Type: &d.ReturnType.value},
-	})
-	deps = append(deps, d.Body.GetTypeDependencies()...)
-	return
+	return getFunctionTypeDependencies(d.Parameters, d.ReturnType, d.Body)
 }
 
 // Lower implements Declaration.
@@ -131,16 +161,7 @@ func (d FunctionDeclaration) GetName() Name {
 }
 
 func (d FunctionDeclaration) GetDeclaredType() TypeValue {
-	params := util.Map(d.Parameters, func(p FunctionParameter) TypeValue {
-		return p.GetDeclaredType()
-	})
-	var argument TypeValue
-	if len(d.Parameters) == 1 {
-		argument = params[0]
-	} else {
-		argument = NewTupleType(params...)
-	}
-	return FnType{Argument: argument, Return: d.ReturnType.Get()}
+	return getFunctionType(d.Parameters, d.ReturnType)
 }
 
 type FunctionParameter struct {

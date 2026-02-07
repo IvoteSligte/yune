@@ -73,6 +73,7 @@ primaryExpression
     | LPAREN expression RPAREN
     | tuple
     | macro
+    | closure // FIXME: expressions following a closure on the next line (same indentation) might be interpreted as part of the same expression as the closure
     ;
 
 variable
@@ -81,11 +82,21 @@ variable
 
 tuple
     : LPAREN RPAREN
-    | LPAREN expression (COMMA expression)+ COMMA? RPAREN
+    // disallows "LPAREN expression RPAREN" as unit tuples do not exist
+    | LPAREN expression (COMMA expression)+ RPAREN
     ;
 
 macro
     : variable HASHTAG (MACROLINE NEWLINE)* MACROLINE
+    ;
+
+closure
+    : closureParameters COLON type EQUAL statementBody
+    ;
+
+closureParameters
+    : BAR BAR
+    | BAR functionParameter (COMMA functionParameter)* BAR
     ;
 
 unaryExpression

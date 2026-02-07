@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"yune/cpp"
 	"yune/util"
 
@@ -845,6 +846,93 @@ func (s StructExpression) Lower() cpp.Expression {
 	return fmt.Sprintf(`(%s){\n%s}`, s.Name, fields)
 }
 
+type Closure struct {
+	DefaultExpression
+	Span       Span
+	Parameters []FunctionParameter
+	ReturnType Type
+	Body       Block
+}
+
+// SetType implements Expression.
+func (c *Closure) SetType(t TypeValue) {
+	println("TODO: Closure.SetType")
+}
+
+// GetSpan implements Expression.
+func (c *Closure) GetSpan() Span {
+	return c.Span
+}
+
+// GetMacros implements Expression.
+func (c *Closure) GetMacros() (macros []*Macro) {
+	macros = util.FlatMap(c.Parameters, FunctionParameter.GetMacros)
+	macros = append(macros, c.Body.GetMacros()...)
+	return
+}
+
+// GetMacroTypeDependencies implements Expression.
+func (c *Closure) GetMacroTypeDependencies() (deps []Query) {
+	deps = util.FlatMapPtr(c.Parameters, (*FunctionParameter).GetMacroTypeDependencies)
+	deps = append(deps, c.Body.GetMacroTypeDependencies()...)
+	return
+}
+
+// GetTypeDependencies implements Expression.
+func (c *Closure) GetTypeDependencies() (deps []Query) {
+	return getFunctionTypeDependencies(c.Parameters, c.ReturnType, c.Body)
+}
+
+// GetType implements Expression.
+func (c *Closure) GetType() TypeValue {
+	return getFunctionType(c.Parameters, c.ReturnType)
+}
+
+// GetMacroValueDependencies implements Expression.
+func (c *Closure) GetMacroValueDependencies() (deps []Name) {
+	for _, depName := range c.Body.GetMacroValueDependencies() {
+		equals := func(param FunctionParameter) bool {
+			return depName.String == param.GetName().String
+		}
+		if !util.Any(equals, c.Parameters...) {
+			deps = append(deps, depName)
+		}
+	}
+	return
+}
+
+// GetValueDependencies implements Expression.
+func (c *Closure) GetValueDependencies() (deps []Name) {
+	for _, depName := range c.Body.GetValueDependencies() {
+		equals := func(param FunctionParameter) bool {
+			return depName.String == param.GetName().String
+		}
+		if !util.Any(equals, c.Parameters...) {
+			deps = append(deps, depName)
+		}
+	}
+	return
+}
+
+// InferType implements Expression.
+func (c *Closure) InferType(deps DeclarationTable) (errors Errors) {
+	return typeCheckFunction(nil, c.Parameters, c.ReturnType, c.Body, deps)
+}
+
+// Lower implements Expression.
+func (c *Closure) Lower() cpp.Expression {
+	// TODO: ensure original name is used (very low chance of conflict currently)
+	_ = fmt.Sprintf("_%x_closure_", rand.Uint64())
+	_ = `
+class {
+    %s operator()(%s) {
+        %s
+    }
+    %s
+} %s;`
+	panic("TODO: Closure.Lower")
+}
+
 // Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -903,6 +991,10 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Left:  UnmarshalExpression(v.Get("left")),
 			Right: UnmarshalExpression(v.Get("right")),
 		}
+	case "StructExpression":
+		panic("TODO: unmarshal StructExpression")
+	case "Closure":
+		panic("TODO: unmarshal closure")
 	default:
 		// expr = nil
 	}
