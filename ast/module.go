@@ -178,7 +178,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			return
 		}
 		// TODO: make sure the main() function is always in the last stage
-        evalJsons := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
+		evalJsons := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
 			if node.Query.Expression != nil {
 				return node.Query.Expression.Lower()
 			} else {
