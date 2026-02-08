@@ -184,6 +184,8 @@ namespace ty {
   std::string serialize(const VariableDeclaration &e);
   std::string serialize(const Assignment &e);
   std::string serialize(const BranchStatement &e);
+  // Fallback for classes that have a serialize() method.
+  template <class T> std::string serialize(T object);
   
   template <class T>
   std::string serialize(std::vector<T> elements) {
@@ -278,6 +280,10 @@ namespace ty {
 
   template <class... T> inline std::string serialize(const Union<T...> &u) {
     return std::visit([](const auto& element) { return ty::serialize(element); }, u.variant);
+  }
+
+  template <class T> std::string serialize(T object) {
+    return object.serialize();
   }
 } // namespace ty
 
