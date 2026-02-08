@@ -203,7 +203,7 @@ namespace ty {
 
   template <class... T> std::string serialize(std::tuple<T...> tuple) {
     std::ostringstream oss;
-    oss << '[';
+    oss << R"({ "Tuple": { "elements": [)";
     int i = 0;
     std::apply([&](auto&&... elements) {
       (([&]() {
@@ -214,7 +214,7 @@ namespace ty {
         i++;
       }()), ...);
     }, tuple);
-    oss << ']';
+    oss << "] } }";
     return oss.str();
   }
   
