@@ -31,7 +31,7 @@ type StatementBase interface {
 
 	// Infers the type, returning errors in case of mismatches.
 	// GetType() should return a non-nil result if this returns no errors.
-	InferType(deps DeclarationTable) Errors
+	InferType(expected TypeValue, deps DeclarationTable) Errors
 }
 
 type Statement interface {
@@ -79,8 +79,8 @@ func (d VariableDeclaration) GetValueDependencies() []Name {
 }
 
 // InferType implements Statement.
-func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
-	errors = d.Body.InferType(deps)
+func (d *VariableDeclaration) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+	errors = d.Body.InferType(d.Type.Get(), deps)
 	if len(errors) > 0 {
 		return
 	}
@@ -155,12 +155,16 @@ func (a *Assignment) GetValueDependencies() []Name {
 }
 
 // InferType implements Statement.
-func (a *Assignment) InferType(deps DeclarationTable) (errors Errors) {
-	errors = append(a.Target.InferType(deps), a.Body.InferType(deps.NewScope())...)
+func (a *Assignment) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+	errors = a.Target.InferType(nil, deps)
 	if len(errors) > 0 {
 		return
 	}
 	targetType := a.Target.GetType()
+	errors = a.Body.InferType(targetType, deps.NewScope())
+	if len(errors) > 0 {
+		return
+	}
 	bodyType := a.Body.GetType()
 	if !typeEqual(targetType, bodyType) {
 		errors = append(errors, AssignmentTypeMismatch{
@@ -249,11 +253,10 @@ func (b *BranchStatement) GetValueDependencies() (deps []Name) {
 }
 
 // InferType implements Statement.
-func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
-	b.Condition.SetId(BoolType{})
-	errors = b.Condition.InferType(deps)
-	errors = append(errors, b.Then.InferType(deps.NewScope())...)
-	errors = append(errors, b.Else.InferType(deps.NewScope())...)
+func (b *BranchStatement) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+	errors = b.Condition.InferType(BoolType{}, deps)
+	errors = append(errors, b.Then.InferType(expected, deps.NewScope())...)
+	errors = append(errors, b.Else.InferType(expected, deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
@@ -363,9 +366,14 @@ func (b *Block) GetTypeDependencies() (deps []Query) {
 	return
 }
 
-func (b *Block) InferType(deps DeclarationTable) (errors Errors) {
+func (b *Block) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
 	for i := range b.Statements {
-		errors = append(errors, b.Statements[i].InferType(deps)...)
+		// Only the last statement has a known expected type, the rest do not matter.
+		expected := expected
+		if i+1 < len(b.Statements) {
+			expected = nil
+		}
+		errors = append(errors, b.Statements[i].InferType(expected, deps)...)
 		if len(errors) > 0 {
 			return
 		}

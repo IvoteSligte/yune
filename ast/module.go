@@ -146,7 +146,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
 			if node.Query != nil {
-				errors = append(errors, node.Query.InferType(table)...)
+				errors = append(errors, node.Query.CheckType(table)...)
 			}
 			if node.Declaration != nil {
 				errors = append(errors, node.Declaration.TypeCheckBody(table)...)

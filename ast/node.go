@@ -152,5 +152,6 @@ type Errors = []error
 
 type Query interface {
 	Expression
+	CheckType(deps DeclarationTable) (errors Errors)
 	SetValue(json string)
 }

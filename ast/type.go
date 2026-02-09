@@ -123,11 +123,9 @@ func NewTypeQuery(t *Type) TypeQuery {
 	}
 }
 
-// InferType implements Expression
-// Subtle: InferType shadows Expression.InferType
-func (t TypeQuery) InferType(deps DeclarationTable) (errors Errors) {
-	t.Expression.SetId(TypeType{})
-	errors = t.Expression.InferType(deps)
+// CheckType implements Query
+func (t TypeQuery) CheckType(deps DeclarationTable) (errors Errors) {
+	errors = t.Expression.InferType(TypeType{}, deps)
 	if len(errors) > 0 {
 		return
 	}

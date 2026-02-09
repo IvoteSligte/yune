@@ -45,11 +45,11 @@ func typeCheckFunction(declaration *FunctionDeclaration, parameters []FunctionPa
 		param := &parameters[i]
 		deps.declarations[param.GetName().String] = param
 	}
-	errors = append(errors, body.InferType(deps.NewScope())...)
+	_returnType := returnType.Get()
+	errors = append(errors, body.InferType(_returnType, deps.NewScope())...)
 	if len(errors) > 0 {
 		return
 	}
-	_returnType := returnType.Get()
 	bodyType := body.GetType()
 
 	if !typeEqual(_returnType, bodyType) {
@@ -245,16 +245,16 @@ func (d *ConstantDeclaration) GetSpan() Span {
 
 // TypeCheckBody implements TopLevelDeclaration.
 func (d *ConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
-	errors = d.Body.InferType(deps.NewScope())
+	declaredType := d.Type.Get()
+	errors = d.Body.InferType(declaredType, deps.NewScope())
 	if len(errors) > 0 {
 		return
 	}
-	declType := d.Type.Get()
 	bodyType := d.Body.GetType()
 
-	if !typeEqual(declType, bodyType) {
+	if !typeEqual(declaredType, bodyType) {
 		errors = append(errors, ConstantTypeMismatch{
-			Expected: declType,
+			Expected: declaredType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
