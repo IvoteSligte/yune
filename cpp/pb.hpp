@@ -53,9 +53,8 @@ namespace ty {
     Return operator()(Args... args) const {
       return (*self)(std::forward<Args>(args)...);
     }
-    std::string serialize() const {
-      return self->serialize();
-    }
+    std::string serialize() const { return self->serialize(); }
+    // TODO: copy and move operators
     
     std::unique_ptr<Concept> self;
   };
