@@ -20,7 +20,7 @@ type Expression interface {
 	// Sets the type, in order to resolve ambiguities when the expression needs
 	// to be inferred differently from the default. This is the case when an
 	// Expression is used in a Type, or represents syntax the user has generated.
-	SetType(t TypeValue)
+	SetId(t TypeValue)
 	InferType(deps DeclarationTable) (errors Errors)
 	GetType() TypeValue
 	Lower(defs *[]cpp.Definition) cpp.Expression
@@ -60,8 +60,8 @@ type Integer struct {
 	Value int64
 }
 
-// SetType implements Expression.
-func (i *Integer) SetType(t TypeValue) {
+// SetId implements Expression.
+func (i *Integer) SetId(t TypeValue) {
 	i.Type = t
 }
 
@@ -103,8 +103,8 @@ type Float struct {
 	Value float64
 }
 
-// SetType implements Expression.
-func (f *Float) SetType(t TypeValue) {
+// SetId implements Expression.
+func (f *Float) SetId(t TypeValue) {
 	f.Type = t
 }
 
@@ -146,8 +146,8 @@ type Bool struct {
 	Value bool
 }
 
-// SetType implements Expression.
-func (b *Bool) SetType(t TypeValue) {
+// SetId implements Expression.
+func (b *Bool) SetId(t TypeValue) {
 	b.Type = t
 }
 
@@ -189,8 +189,8 @@ type String struct {
 	Value string
 }
 
-// SetType implements Expression.
-func (s *String) SetType(t TypeValue) {
+// SetId implements Expression.
+func (s *String) SetId(t TypeValue) {
 	s.Type = t
 }
 
@@ -232,8 +232,8 @@ type Variable struct {
 	Name Name
 }
 
-// SetType implements Expression.
-func (v *Variable) SetType(t TypeValue) {
+// SetId implements Expression.
+func (v *Variable) SetId(t TypeValue) {
 	v.Type = t
 }
 
@@ -287,8 +287,8 @@ type FunctionCall struct {
 	Argument Expression
 }
 
-// SetType implements Expression.
-func (f *FunctionCall) SetType(t TypeValue) {
+// SetId implements Expression.
+func (f *FunctionCall) SetId(t TypeValue) {
 	f.Type = t
 }
 
@@ -342,7 +342,7 @@ func (f *FunctionCall) InferType(deps DeclarationTable) (errors Errors) {
 		})
 		return
 	}
-	f.Argument.SetType(functionType.Argument)
+	f.Argument.SetId(functionType.Argument)
 	if errors = f.Argument.InferType(deps); len(errors) > 0 {
 		return
 	}
@@ -376,18 +376,18 @@ type Tuple struct {
 	Elements []Expression
 }
 
-// SetType implements Expression.
-func (t *Tuple) SetType(tv TypeValue) {
+// SetId implements Expression.
+func (t *Tuple) SetId(tv TypeValue) {
 	t.Type = tv
 	if tv == nil || tv.Eq(TypeType{}) {
 		for i := range t.Elements {
-			t.Elements[i].SetType(tv)
+			t.Elements[i].SetId(tv)
 		}
 	}
 	tupleType, ok := tv.(TupleType)
 	if ok && len(tupleType.Elements) == len(t.Elements) {
 		for i := range t.Elements {
-			t.Elements[i].SetType(tupleType.Elements[i])
+			t.Elements[i].SetId(tupleType.Elements[i])
 		}
 	}
 }
@@ -487,9 +487,9 @@ type Macro struct {
 	Result Expression
 }
 
-// SetType implements Expression.
-func (m *Macro) SetType(t TypeValue) {
-	m.Result.SetType(t)
+// SetId implements Expression.
+func (m *Macro) SetId(t TypeValue) {
+	m.Result.SetId(t)
 }
 
 // SetValue implements Destination.
@@ -585,8 +585,8 @@ type UnaryExpression struct {
 	Expression Expression
 }
 
-// SetType implements Expression.
-func (u *UnaryExpression) SetType(t TypeValue) {
+// SetId implements Expression.
+func (u *UnaryExpression) SetId(t TypeValue) {
 	u.Type = t
 }
 
@@ -674,8 +674,8 @@ type BinaryExpression struct {
 	Right Expression
 }
 
-// SetType implements Expression.
-func (b *BinaryExpression) SetType(t TypeValue) {
+// SetId implements Expression.
+func (b *BinaryExpression) SetId(t TypeValue) {
 	b.Type = t
 }
 
@@ -826,10 +826,10 @@ func (s *StructExpression) GetSpan() Span {
 	return s.Span
 }
 
-func (s StructExpression) SetType(t TypeValue) {
+func (s StructExpression) SetId(t TypeValue) {
 	// TODO: check union conversibility
 	if !(StructType{Name: s.Name}.Eq(t)) {
-		panic("StructValue type does not match type provided to SetType")
+		panic("StructValue type does not match type provided to SetId")
 	}
 }
 
@@ -858,9 +858,9 @@ type Closure struct {
 	captures   map[string]TypeValue
 }
 
-// SetType implements Expression.
-func (c *Closure) SetType(t TypeValue) {
-	println("TODO: Closure.SetType")
+// SetId implements Expression.
+func (c *Closure) SetId(t TypeValue) {
+	println("TODO: Closure.SetId")
 }
 
 // GetSpan implements Expression.
