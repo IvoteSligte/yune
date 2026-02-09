@@ -17,7 +17,7 @@ longString(text: String): (String, Expression) =
 
 noArguments(): () = a: Int = 0
 
-main(): Int =
+main(): () =
     a: Int = fibonacci(add(N, N))
     true and false
     "string galore"
@@ -29,4 +29,3 @@ main(): Int =
         It contains several newlines.
         Something fancy it supports is quotes "" and even hashtags#!
     printlnString s
-    0

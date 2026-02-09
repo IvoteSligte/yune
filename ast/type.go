@@ -32,8 +32,8 @@ func UnmarshalType(data *fj.Value) Type {
 }
 
 var MainType = FnType{
-	Argument: NewTupleType(),
-	Return:   IntType{},
+	Argument: TupleType{},
+	Return:   TupleType{},
 }
 
 // kinds of Expression types
