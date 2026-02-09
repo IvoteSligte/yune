@@ -17,10 +17,11 @@ type Expression interface {
 	StatementBase
 	GetMacros() []*Macro
 
-	// Sets the type, in order to resolve ambiguities when the expression needs
-	// to be inferred differently from the default. This is the case when an
-	// Expression is used in a Type, or represents syntax the user has generated.
 	SetId(t TypeValue)
+	// `expected` indicates the expected type, if any, in order to resolve ambiguities
+	// when the expression needs to be inferred differently from the default.
+	// This is the case when an Expression is used in a Type, or represents syntax
+	// the user has generated.
 	InferType(expected TypeValue, deps DeclarationTable) (errors Errors)
 	GetType() TypeValue
 	Lower(defs *[]cpp.Definition) cpp.Expression
