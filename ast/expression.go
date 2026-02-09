@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"yune/cpp"
 	"yune/util"
 
@@ -886,7 +887,7 @@ func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 	definition := fmt.Sprintf(`struct {
     %s operator()(%s) const %s
     std::string serialize() const {
-        return R"({ "FnId": "%d" })";
+        return R"({ "ClosureId": "%d" })";
     }
     %s
 } %s{%s};`,
@@ -976,6 +977,13 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			ReturnType: UnmarshalType(v.Get("returnType")),
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
+	case "ClosureId":
+		base := 10
+		id, err := strconv.ParseUint(string(v.GetStringBytes()), base, 64)
+		if err != nil {
+			log.Fatalf("Failed to parse closure id. JSON: %s. Error: %s", v, err)
+		}
+		expr = registeredNodes[id].(Expression)
 	default:
 		// expr = nil
 	}
