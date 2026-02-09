@@ -272,8 +272,13 @@ func (f FnType) Eq(other TypeValue) bool {
 }
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	arguments := util.JoinFunction(wrapTupleType(f.Argument).Elements, ", ", TypeValue.Lower)
-	return fmt.Sprintf("std::function<%s(%s)>", _return, arguments)
+	argumentTuple := wrapTupleType(f.Argument)
+	if len(argumentTuple.Elements) == 0 {
+		return fmt.Sprintf("ty::Function<%s>", _return)
+	} else {
+		arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.Lower)
+		return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
+	}
 }
 
 type StructType struct {

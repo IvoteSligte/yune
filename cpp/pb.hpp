@@ -14,13 +14,6 @@ template <class T> Box<T> box(T value) {
 
 namespace ty {
   template <class... T>
-  struct overloaded : T... {
-    using T::operator()...;
-  };
-  template <class... T>
-  overloaded(T...) -> overloaded<T...>;
-
-  template <class... T>
   struct Union {
     // Create from element
     template <class U>
@@ -33,6 +26,38 @@ namespace ty {
                          subset)) {}
 
     std::variant<T...> variant;
+  };
+
+  // A serializable function class similar to std::function
+  template <class Return, class... Args>
+  struct Function {
+    struct Concept {
+      virtual ~Concept() = default;
+      virtual Return operator()(Args &&...args) const = 0;
+      virtual std::string serialize() const = 0;
+    };
+    template <class F>
+    struct Model final : Concept {
+      explicit Model(F f) : function(std::move(f)) {}
+
+      Return operator()(Args &&...args) const override {
+        return function(std::forward<Args>(args)...);
+      }
+      std::string serialize() const override { return function.serialize(); }
+      
+      F function;
+    };
+    template <class F>
+    Function(F function) : self(std::make_unique<Model<F>>(std::move(function))) {}
+
+    Return operator()(Args... args) const {
+      return (*self)(std::forward<Args>(args)...);
+    }
+    std::string serialize() const {
+      return self->serialize();
+    }
+    
+    std::unique_ptr<Concept> self;
   };
 
   struct Span {
