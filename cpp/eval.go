@@ -42,13 +42,15 @@ func Evaluate(module Module, batch []Expression) []string {
 		}
 	}
 	addStmt(`outputFile.close();`)
+	addStmt(`return 0;`)
 
-	module.Declarations = append(module.Declarations, FunctionDeclaration(
-		"main",
-		[]FunctionParameter{},
-		"int",
-		Block(statements),
-	))
+	module.Declarations = append(module.Declarations, Declaration{
+		Header: "",
+		Implementation: fmt.Sprintf(`int main() {
+    %s
+    return 0;
+}`, strings.Join(statements, "\n")),
+	})
 	Run(module)
 	bytes, err := os.ReadFile(outputFileName)
 	if err != nil {
@@ -56,5 +58,5 @@ func Evaluate(module Module, batch []Expression) []string {
 	}
 	println(string(bytes))
 	evalJsons := strings.Split(string(bytes), "\n") // not deserialized here to prevent module import loop
-	return evalJsons[:len(evalJsons)-1] // skip trailing line
+	return evalJsons[:len(evalJsons)-1]             // skip trailing line
 }

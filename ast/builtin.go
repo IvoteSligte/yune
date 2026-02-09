@@ -306,6 +306,7 @@ func (b BuiltinFunctionDeclaration) GetValueDependencies() []Name {
 // Lower implements TopLevelDeclaration.
 func (b BuiltinFunctionDeclaration) Lower() cpp.Declaration {
 	return cpp.FunctionDeclaration(
+		registerStoredDeclaration(b),
 		b.Name,
 		util.Map(b.Parameters, func(p BuiltinFunctionParameter) string {
 			return p.Type.Lower() + " " + p.Name

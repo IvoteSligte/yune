@@ -13,20 +13,28 @@ type Declaration struct {
 }
 
 func NewDeclaration(header string, implementation string) Declaration {
-	if header[0] == '\n' {
+	if len(header) > 0 && header[0] == '\n' {
 		header = header[1:]
 	}
-	if implementation[0] == '\n' {
+	if len(implementation) > 0 && implementation[0] == '\n' {
 		implementation = implementation[1:]
 	}
 	return Declaration{Header: header, Implementation: implementation}
 }
 
-func FunctionDeclaration(name string, parameters []FunctionParameter, returnType Type, body Body) Declaration {
-	prefix := fmt.Sprintf(`%s %s(%s)`, returnType, name, strings.Join(parameters, ", "))
+func FunctionDeclaration(id uint64, name string, parameters []FunctionParameter, returnType Type, body Body) Declaration {
+	params := strings.Join(parameters, ", ")
 	return NewDeclaration(
-		/* Header */ prefix+";",
-		/* Implementation */ prefix+body,
+		/* Header */ fmt.Sprintf(`
+struct _%d {
+    %s operator()(%s) const;
+    std::string serialize() const;
+} %s;`, id, returnType, params, name),
+		/* Implementation */ fmt.Sprintf(`
+%s _%d::operator()(%s) const %s
+std::string _%d::serialize() const {
+    return R"({ "FnId": "%d" })";
+}`, returnType, id, params, body, id, id),
 	)
 }
 

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -10,7 +9,11 @@ import (
 )
 
 func defString(defs []cpp.Definition) string {
-	return strings.Join(defs, "\n") + "\n"
+	s := ""
+	for _, def := range defs {
+		s += def + "\n"
+	}
+	return s
 }
 
 type StatementBase interface {

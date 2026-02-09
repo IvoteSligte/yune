@@ -1,9 +1,23 @@
 package ast
 
 import (
+	"math/rand/v2"
 	"yune/cpp"
 	"yune/util"
 )
+
+type Id = uint64
+
+// Stores declarations that need to be serializable from C++, such as functions.
+var storedDeclarations = map[Id]Declaration{}
+
+// TODO: free stored declarations use human-readable strings as Id,
+// and only add declarations to the map once
+func registerStoredDeclaration(d Declaration) Id {
+	id := rand.Uint64()
+	storedDeclarations[id] = d
+	return id
+}
 
 // Type checks a possibly unnamed function. `declaration == nil` for unnamed functions.
 func typeCheckFunction(declaration *FunctionDeclaration, parameters []FunctionParameter, returnType Type, body Block, deps DeclarationTable) (errors Errors) {
@@ -147,8 +161,9 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 }
 
 // Lower implements Declaration.
-func (d FunctionDeclaration) Lower() cpp.Declaration {
+func (d *FunctionDeclaration) Lower() cpp.Declaration {
 	return cpp.FunctionDeclaration(
+		registerStoredDeclaration(d),
 		d.Name.String,
 		util.Map(d.Parameters, FunctionParameter.Lower),
 		d.ReturnType.Lower(),

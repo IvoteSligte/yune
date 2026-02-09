@@ -20,13 +20,13 @@ func (m Module) Header() string {
 #include <vector>     // std::vector
 #include <fstream>    // std::fstream
 #include <iostream>   // std::cout
-` + util.JoinFunction(m.Declarations, "\n", func(d Declaration) string {
+` + util.JoinFunction(m.Declarations, "\n\n", func(d Declaration) string {
 		return d.Header
 	})
 }
 
 func (m Module) Implementation() string {
-	return util.JoinFunction(m.Declarations, "\n", func(d Declaration) string {
+	return util.JoinFunction(m.Declarations, "\n\n", func(d Declaration) string {
 		return d.Implementation
 	})
 }
