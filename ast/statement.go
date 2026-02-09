@@ -105,7 +105,7 @@ func (d *VariableDeclaration) InferType(deps DeclarationTable) (errors Errors) {
 func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
 		d.Type.value.Lower(), // TODO: actually register the type too (if a StructType)
-		d.Name.String,
+		d.Name.Lower(),
 		cpp.LambdaBlock(d.Body.Lower()),
 	)
 	if isLast {

@@ -11,7 +11,7 @@ import (
 
 // TODO: skip evaluation if batch is all-nil
 func Evaluate(module Module, batch []Expression) []string {
-	// NOTE: main function is assumed not to exist
+	// NOTE: main function is assumed not to exist and is ignored if it does
 
 	fmt.Println("--- Start Evaluation ---")
 	defer fmt.Println("--- End Evaluation ---")

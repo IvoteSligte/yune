@@ -276,7 +276,7 @@ func (v *Variable) InferType(deps DeclarationTable) (errors Errors) {
 
 // Lower implements Expression.
 func (v *Variable) Lower(defs *[]cpp.Definition) cpp.Expression {
-	return v.Name.String
+	return v.Name.Lower()
 }
 
 type FunctionCall struct {

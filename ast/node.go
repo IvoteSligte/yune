@@ -27,6 +27,16 @@ type Name struct {
 	String string
 }
 
+// Lowers a name, renaming in case of naming conflicts with reserved identifiers.
+func (n Name) Lower() string {
+	switch n.String {
+	case "main":
+		return "main_"
+	default:
+		return n.String
+	}
+}
+
 type Node interface {
 	GetSpan() Span
 }

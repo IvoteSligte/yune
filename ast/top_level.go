@@ -164,7 +164,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 func (d *FunctionDeclaration) Lower() cpp.Declaration {
 	return cpp.FunctionDeclaration(
 		registerStoredDeclaration(d),
-		d.Name.String,
+		d.Name.Lower(),
 		util.Map(d.Parameters, FunctionParameter.Lower),
 		d.ReturnType.Lower(),
 		cpp.Block(d.Body.Lower()),
@@ -300,7 +300,7 @@ func (d ConstantDeclaration) GetValueDependencies() []Name {
 // Lower implements Declaration.
 func (d ConstantDeclaration) Lower() cpp.Declaration {
 	return cpp.ConstantDeclaration(
-		d.Name.String,
+		d.Name.Lower(),
 		d.Type.Lower(),
 		cpp.LambdaBlock(d.Body.Lower()),
 	)

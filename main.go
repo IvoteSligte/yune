@@ -92,5 +92,11 @@ func main() {
 	fmt.Println("--- CPP implementation (should #include header) ---")
 	cpp.PrintFormatted(cppModule.Implementation())
 	fmt.Println("--- Output ---")
+	// TODO: add main function in yune/ast or yune/cpp
+	cppModule.Declarations = append(cppModule.Declarations, cpp.NewDeclaration("", `
+int main() {
+    main_();
+    return 0;
+}`))
 	cpp.Run(cppModule)
 }
