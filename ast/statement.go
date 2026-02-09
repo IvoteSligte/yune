@@ -64,11 +64,7 @@ func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
 
 // GetTypeDependencies implements Statement.
 func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
-	d.Type.Expression.SetType(TypeType{})
-	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: SetType{&d.Type.value},
-	})
+	deps = append(deps, NewTypeQuery(&d.Type))
 	return append(deps, d.Body.GetTypeDependencies()...)
 }
 
@@ -254,7 +250,7 @@ func (b *BranchStatement) GetValueDependencies() (deps []Name) {
 
 // InferType implements Statement.
 func (b *BranchStatement) InferType(deps DeclarationTable) (errors Errors) {
-	b.Condition.SetType(BoolType{})
+	b.Condition.SetId(BoolType{})
 	errors = b.Condition.InferType(deps)
 	errors = append(errors, b.Then.InferType(deps.NewScope())...)
 	errors = append(errors, b.Else.InferType(deps.NewScope())...)

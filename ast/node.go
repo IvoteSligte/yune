@@ -150,7 +150,7 @@ type IName interface {
 
 type Errors = []error
 
-type Query struct {
+type Query interface {
 	Expression
-	Destination
+	SetValue(json string)
 }

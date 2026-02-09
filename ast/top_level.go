@@ -77,11 +77,7 @@ func getFunctionType(parameters []FunctionParameter, returnType Type) FnType {
 
 func getFunctionTypeDependencies(parameters []FunctionParameter, returnType *Type, body Block) (deps []Query) {
 	deps = util.FlatMapPtr(parameters, (*FunctionParameter).GetTypeDependencies)
-	returnType.Expression.SetId(TypeType{})
-	deps = append(deps, Query{
-		Expression:  returnType.Expression,
-		Destination: SetType{Type: &returnType.value},
-	})
+	deps = append(deps, NewTypeQuery(returnType))
 	deps = append(deps, body.GetTypeDependencies()...)
 	return
 }
@@ -221,11 +217,7 @@ func (d FunctionParameter) GetMacroValueDependencies() (deps []Name) {
 
 // GetTypeDependencies implements Declaration
 func (d *FunctionParameter) GetTypeDependencies() (deps []Query) {
-	d.Type.Expression.SetId(TypeType{})
-	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: SetType{&d.Type.value},
-	})
+	deps = append(deps, NewTypeQuery(&d.Type))
 	return
 }
 
@@ -283,11 +275,7 @@ func (d ConstantDeclaration) GetMacroValueDependencies() []Name {
 
 // GetTypeDependencies implements Declaration.
 func (d *ConstantDeclaration) GetTypeDependencies() (deps []Query) {
-	d.Type.Expression.SetId(TypeType{})
-	deps = append(deps, Query{
-		Expression:  d.Type.Expression,
-		Destination: SetType{Type: &d.Type.value},
-	})
+	deps = append(deps, NewTypeQuery(&d.Type))
 	deps = append(deps, d.Body.GetTypeDependencies()...)
 	return
 }

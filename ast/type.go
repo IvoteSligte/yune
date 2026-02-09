@@ -43,7 +43,10 @@ var BoolLiteralType = StructType{Name: "BoolLiteral"}
 var StringLiteralType = StructType{Name: "StringLiteral"}
 var ExpressionType = StructType{Name: "Expression"}
 
-var MacroReturnType = NewTupleType(StringType{}, ExpressionType)
+var MacroFunctionType = FnType{
+	Argument: StringType{},
+	Return:   NewTupleType(StringType{}, ExpressionType),
+}
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
@@ -104,6 +107,46 @@ func typeEqual(left, right TypeValue) bool {
 		return false
 	}
 	return left.Eq(right)
+}
+
+type TypeQuery struct {
+	Expression
+	Value *TypeValue
+}
+
+var _ Query = TypeQuery{}
+
+func NewTypeQuery(t *Type) TypeQuery {
+	return TypeQuery{
+		Expression: t.Expression,
+		Value:      &t.value,
+	}
+}
+
+// InferType implements Expression
+// Subtle: InferType shadows Expression.InferType
+func (t TypeQuery) InferType(deps DeclarationTable) (errors Errors) {
+	t.Expression.SetId(TypeType{})
+	errors = t.Expression.InferType(deps)
+	if len(errors) > 0 {
+		return
+	}
+	if !t.Expression.GetType().Eq(TypeType{}) {
+		errors = append(errors, UnexpectedType{
+			Expected: TypeType{},
+			Found:    t.Expression.GetType(),
+			At:       t.Expression.GetSpan(),
+		})
+	}
+	return
+}
+
+// SetValue implements Query
+func (t TypeQuery) SetValue(json string) {
+	if t.Value == nil {
+		panic("SetType type should not be nil. JSON: " + json)
+	}
+	*t.Value = UnmarshalTypeValue(fj.MustParse(json))
 }
 
 type DefaultTypeValue struct{}

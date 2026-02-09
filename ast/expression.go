@@ -492,21 +492,6 @@ func (m *Macro) SetId(t TypeValue) {
 	m.Result.SetId(t)
 }
 
-// SetValue implements Destination.
-func (m *Macro) SetValue(json string) {
-	v := fj.MustParse(json)
-	elements := v.GetArray("Tuple", "elements")
-	if elements == nil {
-		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
-	}
-	errorMessage := string(elements[0].GetStringBytes())
-	expression := UnmarshalExpression(elements[1])
-	m.Result = expression
-	if errorMessage != "" {
-		panic("Macro returned error: " + errorMessage)
-	}
-}
-
 // GetSpan implements Expression.
 func (m *Macro) GetSpan() Span {
 	return m.Span
@@ -572,6 +557,54 @@ func (m *Macro) GetType() TypeValue {
 type MacroLine struct {
 	Span
 	Text string
+}
+
+type MacroQuery struct {
+	FunctionCall
+	Macro *Macro
+}
+
+var _ Query = (*MacroQuery)(nil)
+
+func NewMacroQuery(m *Macro) *MacroQuery {
+	return &MacroQuery{
+		FunctionCall: m.AsFunctionCall(),
+		Macro:        m,
+	}
+}
+
+// InferType implements Expression
+// Subtle: InferType shadows FunctionCall.InferType
+func (m MacroQuery) InferType(deps DeclarationTable) (errors Errors) {
+	errors = m.Macro.Function.InferType(deps)
+	if len(errors) > 0 {
+		return
+	}
+	functionType := m.Macro.Function.GetType()
+	if !functionType.Eq(MacroFunctionType) {
+		// TODO: custom "invalid macro function type" error
+		errors = append(errors, UnexpectedType{
+			Expected: MacroFunctionType,
+			Found:    functionType,
+			At:       m.Macro.Function.GetSpan(),
+		})
+	}
+	return
+}
+
+// SetValue implements Query
+func (m MacroQuery) SetValue(json string) {
+	v := fj.MustParse(json)
+	elements := v.GetArray("Tuple", "elements")
+	if elements == nil {
+		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
+	}
+	errorMessage := string(elements[0].GetStringBytes())
+	expression := UnmarshalExpression(elements[1])
+	m.Macro.Result = expression
+	if errorMessage != "" {
+		panic("Macro returned error: " + errorMessage)
+	}
 }
 
 // TODO: allow "lowering" UnaryExpression, BinaryExpression and Tuple to a cpp ty::Expression

@@ -28,18 +28,3 @@ func fjUnmarshalUnion(object *fj.Object) (key string, value *fj.Value) {
 	})
 	return
 }
-
-type Destination interface {
-	SetValue(json string)
-}
-
-type SetType struct {
-	Type *TypeValue
-}
-
-func (s SetType) SetValue(json string) {
-	if s.Type == nil {
-		panic("SetType type should not be nil. JSON: " + json)
-	}
-	*s.Type = UnmarshalTypeValue(fj.MustParse(json))
-}

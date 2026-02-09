@@ -9,13 +9,13 @@ import (
 )
 
 func newQueryEvalNode(query Query, declarationToNode map[string]*evalNode, stageNodes evalSet) (node *evalNode, errors Errors) {
-	if len(query.Expression.GetMacros()) != 0 {
+	if len(query.GetMacros()) != 0 {
 		panic("Query expressions are assumed to not contain macros.")
 	}
-	if len(query.Expression.GetTypeDependencies()) != 0 {
+	if len(query.GetTypeDependencies()) != 0 {
 		panic("Query expression type dependencies are assumed to not exist.")
 	}
-	depNames := query.Expression.GetValueDependencies()
+	depNames := query.GetValueDependencies()
 	requires := mapset.NewThreadUnsafeSet[*evalNode]()
 	for _, depName := range depNames {
 		if len(depName.String) == 0 {
@@ -81,12 +81,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		decl := node.Declaration
 
 		for _, macro := range decl.GetMacros() {
-			call := macro.AsFunctionCall()
-			call.SetType(MacroReturnType)
-			query := Query{
-				Expression:  &call,
-				Destination: macro,
-			}
+			query := NewMacroQuery(macro)
 			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
 			macroNode.UpdateHook = node
 			errors = append(errors, _errors...)
@@ -150,9 +145,8 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 
 		// type check all expressions and declarations
 		for _, node := range evalNodes {
-			query := node.Query
-			if query.Expression != nil {
-				errors = append(errors, query.Expression.InferType(table)...)
+			if node.Query != nil {
+				errors = append(errors, node.Query.InferType(table)...)
 			}
 			if node.Declaration != nil {
 				errors = append(errors, node.Declaration.TypeCheckBody(table)...)
@@ -170,25 +164,28 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		// the last lowered stage is simply the runtime code
 		if unevaluated.Cardinality() == 0 {
 			for _, node := range evalNodes {
-				if node.Query.Expression != nil {
+				if node.Query != nil {
 					// should be unreachable
-					log.Fatalln("Unreachable: Last compilation stage (runtime) has expression queued. Expression:", node.Query.Expression)
+					log.Fatalln(
+						"Last compilation stage (runtime) should not have an expression queued. Expression:",
+						node.Query,
+					)
 				}
 			}
 			return
 		}
 		// TODO: make sure the main() function is always in the last stage
 		evalJsons := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
-			if node.Query.Expression != nil {
+			if node.Query != nil {
 				var defs []cpp.Definition
-				lowered := node.Query.Expression.Lower(&defs)
+				lowered := node.Query.Lower(&defs)
 				return defString(defs) + lowered
 			} else {
 				return ""
 			}
 		}))
 		for i, json := range evalJsons {
-			if evalNodes[i].Query.Expression == nil {
+			if evalNodes[i].Query == nil {
 				if json != "" {
 					log.Fatalf(
 						"Passed nil expression to the C++ evaluator, but received non-empty string '%s'.",

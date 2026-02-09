@@ -30,8 +30,8 @@ func (e *evalNode) String() string {
 	if e.Declaration != nil {
 		return e.Declaration.GetName().String
 	}
-	if e.Query.Expression != nil {
-		return "<expression at " + e.Query.Expression.GetSpan().String() + ">"
+	if e.Query != nil {
+		return "<expression at " + e.Query.GetSpan().String() + ">"
 	}
 	return "<empty>"
 
