@@ -9,13 +9,13 @@ import (
 type Id = uint64
 
 // Stores declarations that need to be serializable from C++, such as functions.
-var storedDeclarations = map[Id]Declaration{}
+var registeredNodes = map[Id]Node{}
 
 // TODO: free stored declarations use human-readable strings as Id,
-// and only add declarations to the map once
-func registerStoredDeclaration(d Declaration) Id {
+// and only add nodes to the map once (instead of every call to Lower)
+func registerNode(node Node) Id {
 	id := rand.Uint64()
-	storedDeclarations[id] = d
+	registeredNodes[id] = node
 	return id
 }
 
@@ -159,7 +159,7 @@ func (d *FunctionDeclaration) GetTypeDependencies() (deps []Query) {
 // Lower implements Declaration.
 func (d *FunctionDeclaration) Lower() cpp.Declaration {
 	return cpp.FunctionDeclaration(
-		registerStoredDeclaration(d),
+		registerNode(d),
 		d.Name.Lower(),
 		util.Map(d.Parameters, FunctionParameter.Lower),
 		d.ReturnType.Lower(),

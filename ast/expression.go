@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand/v2"
-	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -795,7 +793,6 @@ type Closure struct {
 
 // SetId implements Expression.
 func (c *Closure) SetId() {
-	println("TODO: Closure.SetId")
 }
 
 // GetSpan implements Expression.
@@ -871,7 +868,8 @@ func (c *Closure) InferType(expected TypeValue, deps DeclarationTable) (errors E
 // Lower implements Expression.
 func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 	// TODO: fully prevent naming conflicts instead of using rand
-	name := fmt.Sprintf("closure_%x_", rand.Uint64())
+	id := registerNode(c)
+	name := fmt.Sprintf("closure_%x_", id)
 	if c.captures == nil {
 		panic("Closure.Lower called without callng GetValueDependencies first.")
 	}
@@ -886,14 +884,16 @@ func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 	}
 	// declares the struct and immediately captures the right variables from the environment
 	definition := fmt.Sprintf(`struct {
-    %s operator()(%s) const {
-        %s
+    %s operator()(%s) const %s
+    std::string serialize() const {
+        return R"({ "FnId": "%d" })";
     }
     %s
 } %s{%s};`,
 		c.ReturnType.Lower(),
 		util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower),
-		strings.Join(c.Body.Lower(), "\n"),
+		cpp.Block(c.Body.Lower()),
+		id,
 		fields,
 		name, captures)
 	*defs = append(*defs, definition)
