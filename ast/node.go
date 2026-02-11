@@ -150,8 +150,74 @@ type IName interface {
 
 type Errors = []error
 
-type Query interface {
+type Query struct {
 	Expression
-	CheckType(deps DeclarationTable) (errors Errors)
-	SetValue(json string)
+	Setter func(json string)
+}
+
+func (q Query) SetValue(json string) {
+	panic("unimplemented") // NOTE: also need to call Analyze again on wrapper around destination (macro/type)
+}
+
+type Analyzer struct {
+	Errors      *Errors
+	NeedsTypeOf *[]Name
+	Queries     *[]Query
+	Table       DeclarationTable
+}
+
+func (a Analyzer) PushError(err error) {
+	*a.Errors = append(*a.Errors, err)
+}
+
+func (a Analyzer) AppendErrors(errors ...error) {
+	*a.Errors = append(*a.Errors, errors...)
+}
+
+func (a Analyzer) HasErrors() bool {
+	return len(*a.Errors) > 0
+}
+
+func SubAnalyze[T any](a Analyzer, f func(Analyzer) T) T {
+	sub := Analyzer{
+		Errors:      a.Errors,
+		Queries:     a.Queries,
+		NeedsTypeOf: &[]Name{},
+		// Evaluation cannot depend on variable declarations in the outer scope
+		// as the values of these are not known.
+		Table: a.Table.TopLevel(),
+	}
+	return f(sub)
+}
+
+func (a Analyzer) Evaluate(expr Expression, setter func(json string)) {
+	*a.Queries = append(*a.Queries, Query{
+		Expression: expr,
+		Setter:     setter,
+	})
+}
+
+func (a Analyzer) IsDone() bool {
+	return len(*a.Queries) == 0 && len(*a.Errors) == 0
+}
+
+func (a Analyzer) NewScope() Analyzer {
+	a.Table = a.Table.NewScope()
+	return a
+}
+
+func (a Analyzer) GetType(name Name) TypeValue {
+	decl, ok := a.Table.Get(name.String)
+	if !ok {
+		panic("Unknown declaration: " + name.String)
+	}
+	_type := decl.GetDeclaredType()
+	// if _type == nil {
+	// 	*a.NeedsTypeOf = append(*a.NeedsTypeOf, name)
+	// }
+	return _type
+}
+
+func (a Analyzer) GetScope() map[string]Declaration {
+	return a.Table.declarations
 }

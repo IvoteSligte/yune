@@ -42,7 +42,7 @@ func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	return declaration, ok
 }
 
-func (table *DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bool) {
+func (table DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bool) {
 	if table.parent != nil {
 		return table.parent.GetTopLevel(name)
 	}
@@ -50,26 +50,23 @@ func (table *DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bo
 	return declaration.(TopLevelDeclaration), ok
 }
 
+func (table DeclarationTable) TopLevel() DeclarationTable {
+	if table.parent != nil {
+		return table.parent.TopLevel()
+	}
+	return table
+}
+
 type Declaration interface {
 	Node
 	GetName() Name
-
-	GetMacroTypeDependencies() []Query
-	GetMacroValueDependencies() []Name
-
-	GetMacros() []*Macro
-	// Queries the type expressions used in this declaration, including in the body.
-	GetTypeDependencies() []Query
-	// Queries the names of constants such as global variables and functions
-	// used in this declaration's body.
-	GetValueDependencies() []Name
 
 	// Returns the type of this declaration.
 	GetDeclaredType() TypeValue
 
 	// Type checks the declaration's body, possibly resulting in errors.
 	// Assumes the declaration's type has been calculated.
-	TypeCheckBody(deps DeclarationTable) (errors Errors)
+	Analyze(anal Analyzer) TypeValue
 }
 
 var _ Declaration = &FunctionDeclaration{}

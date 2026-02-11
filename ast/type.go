@@ -31,6 +31,35 @@ func UnmarshalType(data *fj.Value) Type {
 	}
 }
 
+func (t *Type) Analyze(anal Analyzer) TypeValue {
+	if t.value != nil {
+		return t.value
+	}
+	// type expressions operate in a different environment from regular expressions
+	typeAnal := Analyzer{
+		Errors:      anal.Errors,
+		Queries:     anal.Queries,
+		NeedsTypeOf: &[]Name{},
+		// Evaluation cannot depend on variable declarations in the outer scope
+		// as the values of these are not known.
+		Table: anal.Table.TopLevel(),
+	}
+	expressionType := t.Expression.Analyze(TypeType{}, typeAnal)
+	// TODO: check if expressionType is part of the union TypeType rather than equal
+	// (is this necessary?)
+	if expressionType != nil && !expressionType.Eq(TypeType{}) {
+		anal.PushError(UnexpectedType{
+			Expected: TypeType{},
+			Found:    t.value,
+			At:       t.Expression.GetSpan(),
+		})
+	}
+	anal.Evaluate(t.Expression, func(json string) {
+		t.value = UnmarshalTypeValue(fj.MustParse(json))
+	})
+	return nil
+}
+
 var MainType = FnType{
 	Argument: TupleType{},
 	Return:   TupleType{},
@@ -99,52 +128,6 @@ type TypeValue interface {
 	typeValue()
 	Lower() cpp.Type
 	Eq(other TypeValue) bool
-}
-
-// Compares two TypeValues, without panicking on nil.
-func typeEqual(left, right TypeValue) bool {
-	if left == nil || right == nil {
-		return false
-	}
-	return left.Eq(right)
-}
-
-type TypeQuery struct {
-	Expression
-	Value *TypeValue
-}
-
-var _ Query = TypeQuery{}
-
-func NewTypeQuery(t *Type) TypeQuery {
-	return TypeQuery{
-		Expression: t.Expression,
-		Value:      &t.value,
-	}
-}
-
-// CheckType implements Query
-func (t TypeQuery) CheckType(deps DeclarationTable) (errors Errors) {
-	errors = t.Expression.InferType(TypeType{}, deps)
-	if len(errors) > 0 {
-		return
-	}
-	if !t.Expression.GetType().Eq(TypeType{}) {
-		errors = append(errors, UnexpectedType{
-			Expected: TypeType{},
-			Found:    t.Expression.GetType(),
-			At:       t.Expression.GetSpan(),
-		})
-	}
-	return
-}
-
-// SetValue implements Query
-func (t TypeQuery) SetValue(json string) {
-	if t.Value == nil {
-		panic("SetType type should not be nil. JSON: " + json)
-	}
-	*t.Value = UnmarshalTypeValue(fj.MustParse(json))
 }
 
 type DefaultTypeValue struct{}
@@ -223,7 +206,7 @@ func (t TupleType) Eq(other TypeValue) bool {
 		return false
 	}
 	for i, element := range t.Elements {
-		if !typeEqual(element, otherTuple.Elements[i]) {
+		if !element.Eq(otherTuple.Elements[i]) {
 			return false
 		}
 	}
@@ -250,7 +233,7 @@ func (l ListType) String() string {
 
 func (l ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(ListType)
-	return ok && typeEqual(l.Element, otherList.Element)
+	return ok && l.Element.Eq(otherList.Element)
 }
 func (l ListType) Lower() cpp.Type {
 	return "std::vector<" + l.Element.Lower() + ">"
@@ -268,8 +251,9 @@ func (f FnType) String() string {
 
 func (f FnType) Eq(other TypeValue) bool {
 	otherFn, ok := other.(FnType)
-	return ok && typeEqual(f.Argument, otherFn.Argument) && typeEqual(f.Return, otherFn.Return)
+	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
 }
+
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
 	argumentTuple := wrapTupleType(f.Argument)

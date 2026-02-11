@@ -78,11 +78,11 @@ func Identity[T any](value T) T {
 	return value
 }
 
-func Any[T any](f func(T) bool, slice ...T) bool {
+func Any[T any](slice []T, f func(T) bool) bool {
 	return slices.ContainsFunc(slice, f)
 }
 
-func All[T any](f func(T) bool, slice ...T) bool {
+func All[T any](slice []T, f func(T) bool) bool {
 	for _, elem := range slice {
 		if !f(elem) {
 			return false

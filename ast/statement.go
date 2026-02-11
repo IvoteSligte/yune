@@ -16,28 +16,11 @@ func defString(defs []cpp.Definition) string {
 	return s
 }
 
-type StatementBase interface {
-	Node
-
-	GetType() TypeValue
-	GetMacros() []*Macro
-
-	// Get*Dependencies, but retrieves the dependencies added by evaluated macros.
-	GetMacroTypeDependencies() (deps []Query)
-	GetMacroValueDependencies() (deps []Name)
-
-	GetTypeDependencies() (deps []Query)
-	GetValueDependencies() (deps []Name)
-
-	// Infers the type, returning errors in case of mismatches.
-	// GetType() should return a non-nil result if this returns no errors.
-	InferType(expected TypeValue, deps DeclarationTable) Errors
-}
-
 type Statement interface {
-	StatementBase
+	Node
 	// Lower the statement, adding the "return" prefix if `isLast` is true.
 	Lower(isLast bool) cpp.Statement
+	Analyze(expected TypeValue, anal Analyzer) TypeValue
 }
 
 type VariableDeclaration struct {
@@ -47,54 +30,23 @@ type VariableDeclaration struct {
 	Body Block
 }
 
-// GetMacros implements Statement.
-func (d *VariableDeclaration) GetMacros() []*Macro {
-	return d.Body.GetMacros()
-}
-
 // TypeCheckBody implements Declaration.
 func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Errors) {
 	panic("TypeCheckBody should not be called on VariableDeclaration (use InferType).")
 }
 
-// GetMacroTypeDependencies implements Statement.
-func (d *VariableDeclaration) GetMacroTypeDependencies() (deps []Query) {
-	return append(deps, d.Body.GetMacroTypeDependencies()...)
-}
-
-// GetTypeDependencies implements Statement.
-func (d *VariableDeclaration) GetTypeDependencies() (deps []Query) {
-	deps = append(deps, NewTypeQuery(&d.Type))
-	return append(deps, d.Body.GetTypeDependencies()...)
-}
-
-// GetMacroValueDependencies implements Statement.
-func (d VariableDeclaration) GetMacroValueDependencies() []Name {
-	return d.Body.GetMacroValueDependencies()
-}
-
-// GetValueDependencies implements Statement.
-func (d VariableDeclaration) GetValueDependencies() []Name {
-	return d.Body.GetValueDependencies()
-}
-
 // InferType implements Statement.
-func (d *VariableDeclaration) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = d.Body.InferType(d.Type.Get(), deps)
-	if len(errors) > 0 {
-		return
-	}
-	declType := d.Type.Get()
-	bodyType := d.Body.GetType()
-	if !typeEqual(declType, bodyType) {
-		errors = append(errors, VariableTypeMismatch{
+func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	bodyType := d.Body.Analyze(d.Type.Get(), anal)
+	declType := d.Type.Analyze(anal)
+	if bodyType != nil && declType != nil && !declType.Eq(bodyType) {
+		anal.PushError(VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
-		return
 	}
-	return
+	return TupleType{}
 }
 
 // Lower implements Statement.
@@ -129,52 +81,18 @@ type Assignment struct {
 	Body   Block
 }
 
-// GetMacros implements Statement.
-func (a *Assignment) GetMacros() []*Macro {
-	return a.Body.GetMacros()
-}
-
-// GetMacroTypeDependencies implements Statement.
-func (a *Assignment) GetMacroTypeDependencies() []Query {
-	return a.Body.GetMacroTypeDependencies()
-}
-
-// GetMacroValueDependencies implements Statement.
-func (a *Assignment) GetMacroValueDependencies() []Name {
-	return append(a.Target.GetMacroValueDependencies(), a.Body.GetMacroValueDependencies()...)
-}
-
-// GetTypeDependencies implements Statement.
-func (a *Assignment) GetTypeDependencies() []Query {
-	return a.Body.GetTypeDependencies()
-}
-
-// GetValueDependencies implements Statement.
-func (a *Assignment) GetValueDependencies() []Name {
-	return append(a.Target.GetValueDependencies(), a.Body.GetValueDependencies()...)
-}
-
-// InferType implements Statement.
-func (a *Assignment) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = a.Target.InferType(nil, deps)
-	if len(errors) > 0 {
-		return
-	}
-	targetType := a.Target.GetType()
-	errors = a.Body.InferType(targetType, deps.NewScope())
-	if len(errors) > 0 {
-		return
-	}
-	bodyType := a.Body.GetType()
-	if !typeEqual(targetType, bodyType) {
-		errors = append(errors, AssignmentTypeMismatch{
+// Analyze implements Statement.
+func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	targetType := a.Target.Analyze(nil, anal)
+	bodyType := a.Body.Analyze(targetType, anal.NewScope())
+	if targetType != nil && bodyType != nil && !targetType.Eq(bodyType) {
+		anal.PushError(AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
 			At:       a.Body.GetSpan(),
 		})
-		return
 	}
-	return
+	return TupleType{}
 }
 
 // Lower implements Statement.
@@ -214,72 +132,27 @@ type BranchStatement struct {
 	Else      Block
 }
 
-// GetMacros implements Statement.
-func (b *BranchStatement) GetMacros() (macros []*Macro) {
-	macros = append(b.Condition.GetMacros(), b.Then.GetMacros()...)
-	macros = append(macros, b.Else.GetMacros()...)
-	return
-}
+// Analyze implements Statement.
+func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	conditionType := b.Condition.Analyze(BoolType{}, anal)
+	thenType := b.Then.Analyze(expected, anal.NewScope())
+	elseType := b.Else.Analyze(expected, anal.NewScope())
 
-// GetType implements Statement.
-func (b *BranchStatement) GetType() TypeValue {
-	return b.Type
-}
-
-// GetMacroTypeDependencies implements Statement.
-func (b *BranchStatement) GetMacroTypeDependencies() (deps []Query) {
-	return append(b.Then.GetMacroTypeDependencies(), b.Else.GetMacroTypeDependencies()...)
-}
-
-// GetMacroValueDependencies implements Statement.
-func (b *BranchStatement) GetMacroValueDependencies() (deps []Name) {
-	deps = b.Condition.GetMacroValueDependencies()
-	deps = append(deps, b.Then.GetMacroValueDependencies()...)
-	deps = append(deps, b.Else.GetMacroValueDependencies()...)
-	return
-}
-
-// GetTypeDependencies implements Statement.
-func (b *BranchStatement) GetTypeDependencies() (deps []Query) {
-	return append(b.Then.GetTypeDependencies(), b.Else.GetTypeDependencies()...)
-}
-
-// GetValueDependencies implements Statement.
-func (b *BranchStatement) GetValueDependencies() (deps []Name) {
-	deps = b.Condition.GetValueDependencies()
-	deps = append(deps, b.Then.GetValueDependencies()...)
-	deps = append(deps, b.Else.GetValueDependencies()...)
-	return
-}
-
-// InferType implements Statement.
-func (b *BranchStatement) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = b.Condition.InferType(BoolType{}, deps)
-	errors = append(errors, b.Then.InferType(expected, deps.NewScope())...)
-	errors = append(errors, b.Else.InferType(expected, deps.NewScope())...)
-	if len(errors) > 0 {
-		return
-	}
-	conditionType := b.Condition.GetType()
-	thenType := b.Then.GetType()
-	elseType := b.Else.GetType()
-
-	if !typeEqual(conditionType, BoolType{}) {
-		errors = append(errors, InvalidConditionType{
+	if conditionType != nil && !conditionType.Eq(BoolType{}) {
+		anal.PushError(InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),
 		})
 	}
-	if !typeEqual(thenType, elseType) {
-		errors = append(errors, BranchTypeNotEqual{
+	if thenType != nil && elseType != nil && !thenType.Eq(elseType) {
+		anal.PushError(BranchTypeNotEqual{
 			Then:   thenType,
 			ThenAt: b.Then.GetSpan(),
 			Else:   elseType,
 			ElseAt: b.Else.GetSpan(),
 		})
 	}
-	b.Type = thenType
-	return
+	return thenType // TODO: union with elseType
 }
 
 // Lower implements Statement.
@@ -305,83 +178,26 @@ func (b Block) GetSpan() Span {
 	return b.Span
 }
 
-func (b Block) GetType() TypeValue {
-	return b.Statements[len(b.Statements)-1].GetType()
-}
-
-func (b *Block) GetMacroValueDependencies() (deps []Name) {
-	locals := map[string]Declaration{}
-	for _, stmt := range b.Statements {
-		for _, dep := range stmt.GetMacroValueDependencies() {
-			_, ok := locals[dep.String]
-			if !ok {
-				deps = append(deps, dep)
-			}
-		}
-		// register local after getting dependencies to prevent cyclic definitions
-		decl, ok := stmt.(Declaration)
-		if ok {
-			locals[decl.GetName().String] = decl
-		}
-	}
-	return
-}
-
-func (b *Block) GetValueDependencies() (deps []Name) {
-	locals := map[string]Declaration{}
-	for _, stmt := range b.Statements {
-		for _, dep := range stmt.GetValueDependencies() {
-			_, ok := locals[dep.String]
-			if !ok {
-				deps = append(deps, dep)
-			}
-		}
-		// register local after getting dependencies to prevent cyclic definitions
-		decl, ok := stmt.(Declaration)
-		if ok {
-			locals[decl.GetName().String] = decl
-		}
-	}
-	return
-}
-
-func (b *Block) GetMacros() []*Macro {
-	return util.FlatMap(b.Statements, Statement.GetMacros)
-}
-
-func (b *Block) GetMacroTypeDependencies() (deps []Query) {
-	for _, stmt := range b.Statements {
-		decl, ok := stmt.(Declaration)
-		if ok {
-			deps = append(deps, decl.GetMacroTypeDependencies()...)
-		}
-	}
-	return
-}
-
-func (b *Block) GetTypeDependencies() (deps []Query) {
-	for _, stmt := range b.Statements {
-		deps = append(deps, stmt.GetTypeDependencies()...)
-	}
-	return
-}
-
-func (b *Block) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
+	scope := anal.GetScope()
 	for i := range b.Statements {
-		// Only the last statement has a known expected type, the rest do not matter.
+		// Only the last statement has a known expected type, the rest should use the default.
 		expected := expected
 		if i+1 < len(b.Statements) {
 			expected = nil
 		}
-		errors = append(errors, b.Statements[i].InferType(expected, deps)...)
-		if len(errors) > 0 {
-			return
-		}
+		_type = b.Statements[i].Analyze(expected, anal)
 		decl, ok := b.Statements[i].(Declaration)
 		if ok {
-			if err := deps.Add(decl); err != nil {
-				errors = append(errors, err)
+			name := decl.GetName().String
+			_, exists := scope[name]
+			if exists {
+				anal.PushError(DuplicateDeclaration{
+					First:  scope[name],
+					Second: decl,
+				})
 			}
+			scope[name] = decl
 		}
 	}
 	return
@@ -455,4 +271,3 @@ var _ Statement = &VariableDeclaration{}
 var _ Statement = &Assignment{}
 var _ Statement = &BranchStatement{}
 var _ Statement = &ExpressionStatement{}
-var _ StatementBase = &Block{}

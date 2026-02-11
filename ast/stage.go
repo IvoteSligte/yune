@@ -7,6 +7,31 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
+type GetQuery interface {
+	Analyze(st *State)
+	GetQuery() Query
+	SetValue(json string)
+	GetValue() any
+}
+
+type State struct {
+	// The top-level declaration currently being analyzed.
+	Declaration TopLevelDeclaration
+	Table       DeclarationTable
+	EvalQueue   *mapset.Set[any]
+}
+
+func (st *State) Evaluate(gq GetQuery) (value any) {
+	value = gq.GetValue()
+	if value != nil {
+		return
+	}
+
+}
+
+func (st *State) GetType(name Name) (_type TypeValue) {
+}
+
 type evalNode struct {
 	// Query to be evaluated. May be empty.
 	Query Query

@@ -13,50 +13,12 @@ import (
 
 type Expression interface {
 	Node
-	StatementBase
-	GetMacros() []*Macro
-
 	SetId()
-	// `expected` indicates the expected type, if any, in order to resolve ambiguities
-	// when the expression needs to be inferred differently from the default.
-	// This is the case when an Expression is used in a Type, or represents syntax
-	// the user has generated.
-	InferType(expected TypeValue, deps DeclarationTable) (errors Errors)
-	GetType() TypeValue
+	Analyze(expected TypeValue, anal Analyzer) TypeValue
 	Lower(defs *[]cpp.Definition) cpp.Expression
 }
 
 type DefaultExpression struct{}
-
-// GetMacroTypeDependencies implements Expression.
-func (d DefaultExpression) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements Expression.
-func (d DefaultExpression) GetMacroValueDependencies() []Name {
-	return []Name{}
-}
-
-// GetMacros implements Expression.
-func (d DefaultExpression) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
-// GetTypeDependencies implements Expression.
-func (d DefaultExpression) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements Expression.
-func (d DefaultExpression) GetValueDependencies() []Name {
-	return []Name{}
-}
-
-// InferType implements Expression.
-func (d DefaultExpression) InferType(expected TypeValue, deps DeclarationTable) (errors []error) {
-	return
-}
 
 type Integer struct {
 	DefaultExpression
@@ -78,8 +40,8 @@ func (i Integer) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", i.Value)
 }
 
-// GetType implements Expression.
-func (i Integer) GetType() TypeValue {
+// Analyze implements Expression.
+func (i Integer) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return IntType{}
 }
 
@@ -103,8 +65,8 @@ func (f Float) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", f.Value)
 }
 
-// GetType implements Expression.
-func (f Float) GetType() TypeValue {
+// Analyze implements Expression.
+func (f Float) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return FloatType{}
 }
 
@@ -128,8 +90,8 @@ func (b Bool) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return fmt.Sprintf("%v", b.Value)
 }
 
-// GetType implements Expression.
-func (b Bool) GetType() TypeValue {
+// Analyze implements Expression.
+func (b Bool) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return BoolType{}
 }
 
@@ -154,14 +116,13 @@ func (s String) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return string(bytes)
 }
 
-// GetType implements Expression.
-func (s String) GetType() TypeValue {
+// Analyze implements Expression.
+func (s String) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return StringType{}
 }
 
 type Variable struct {
 	DefaultExpression
-	Type TypeValue
 	Name Name
 }
 
@@ -174,36 +135,9 @@ func (v *Variable) GetSpan() Span {
 	return v.Name.Span
 }
 
-// GetType implements Expression.
-func (v *Variable) GetType() TypeValue {
-	return v.Type
-}
-
-// GetMacroValueDependencies implements Expression.
-func (v *Variable) GetMacroValueDependencies() (deps []Name) {
-	return []Name{v.Name}
-}
-
-// GetValueDependencies implements Expression.
-func (v *Variable) GetValueDependencies() (deps []Name) {
-	return []Name{v.Name}
-}
-
-// InferType implements Expression.
-func (v *Variable) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	decl, _ := deps.Get(v.Name.String)
-	if decl.GetDeclaredType() == nil {
-		log.Fatalf("Type queried at %s before being calculated on declaration '%s'.", v.Name.Span, v.Name.String)
-	}
-	if v.Type != nil && !v.Type.Eq(decl.GetDeclaredType()) {
-		errors = append(errors, UnexpectedType{
-			Expected: v.Type,
-			Found:    decl.GetDeclaredType(),
-			At:       v.GetSpan(),
-		})
-	}
-	v.Type = decl.GetDeclaredType()
-	return
+// Analyze implements Expression.
+func (v *Variable) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	return anal.GetType(v.Name)
 }
 
 // Lower implements Expression.
@@ -213,9 +147,10 @@ func (v *Variable) Lower(defs *[]cpp.Definition) cpp.Expression {
 
 type FunctionCall struct {
 	DefaultExpression
-	Span     Span
-	Function Expression
-	Argument Expression
+	Span            Span
+	Function        Expression
+	Argument        Expression
+	ArgumentIsTuple bool
 }
 
 // SetId implements Expression.
@@ -227,60 +162,39 @@ func (f *FunctionCall) GetSpan() Span {
 	return f.Span
 }
 
-// GetMacros implements Expression.
-func (f *FunctionCall) GetMacros() []*Macro {
-	return append(f.Function.GetMacros(), f.Argument.GetMacros()...)
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (f *FunctionCall) GetMacroTypeDependencies() []Query {
-	return append(f.Function.GetMacroTypeDependencies(), f.Argument.GetMacroTypeDependencies()...)
-}
-
-// GetTypeDependencies implements Expression.
-func (f *FunctionCall) GetTypeDependencies() []Query {
-	return append(f.Function.GetTypeDependencies(), f.Argument.GetTypeDependencies()...)
-}
-
-// GetType implements Expression.
-func (f *FunctionCall) GetType() TypeValue {
-	return f.Function.GetType().(FnType).Return
-}
-
-// GetMacroValueDependencies implements Expression.
-func (f *FunctionCall) GetMacroValueDependencies() []Name {
-	return append(f.Function.GetMacroValueDependencies(), f.Argument.GetMacroValueDependencies()...)
-}
-
-// GetValueDependencies implements Expression.
-func (f *FunctionCall) GetValueDependencies() []Name {
-	return append(f.Function.GetValueDependencies(), f.Argument.GetValueDependencies()...)
-}
-
-// InferType implements Expression.
-func (f *FunctionCall) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = f.Function.InferType(nil, deps)
-	if len(errors) > 0 {
-		return
-	}
-	maybeFunctionType := f.Function.GetType()
+// Analyze implements Expression.
+func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
+	maybeFunctionType := f.Function.Analyze(nil, anal)
 	functionType, isFunction := maybeFunctionType.(FnType)
-	if !isFunction {
-		errors = append(errors, NotAFunction{
+	if maybeFunctionType != nil && !isFunction {
+		anal.PushError(NotAFunction{
 			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
 		})
-		return
 	}
-	errors = f.Argument.InferType(functionType.Argument, deps)
+	var expectedArgumentType TypeValue
+	if isFunction {
+		expectedArgumentType = functionType.Argument
+		returnType = functionType.Return
+	}
+	argumentType := f.Argument.Analyze(expectedArgumentType, anal)
+	if argumentType != nil && expectedArgumentType != nil && !argumentType.Eq(expectedArgumentType) {
+		anal.PushError(UnexpectedType{
+			Expected: expectedArgumentType,
+			Found:    argumentType,
+			At:       f.Argument.GetSpan(),
+		})
+	}
+	if argumentType != nil {
+		_, argumentIsTuple := argumentType.(TupleType)
+		f.ArgumentIsTuple = argumentIsTuple
+	}
 	return
 }
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower(defs *[]cpp.Definition) cpp.Expression {
-	argumentType := f.Argument.GetType()
-	_, isTuple := argumentType.(TupleType)
-	if isTuple {
+	if f.ArgumentIsTuple {
 		// calls the function with a tuple of arguments
 		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(defs), f.Argument.Lower(defs))
 	}
@@ -303,63 +217,33 @@ func (t *Tuple) GetSpan() Span {
 	return t.Span
 }
 
-// GetMacros implements Expression.
-func (t *Tuple) GetMacros() []*Macro {
-	return util.FlatMap(t.Elements, Expression.GetMacros)
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (t *Tuple) GetMacroTypeDependencies() []Query {
-	return util.FlatMap(t.Elements, Expression.GetMacroTypeDependencies)
-}
-
-// GetMacroValueDependencies implements Expression.
-func (t *Tuple) GetMacroValueDependencies() (deps []Name) {
-	for i := range t.Elements {
-		deps = append(deps, t.Elements[i].GetMacroValueDependencies()...)
-	}
-	return
-}
-
-// GetTypeDependencies implements Expression.
-func (t *Tuple) GetTypeDependencies() []Query {
-	return util.FlatMap(t.Elements, Expression.GetTypeDependencies)
-}
-
-// GetValueDependencies implements Expression.
-func (t *Tuple) GetValueDependencies() (deps []Name) {
-	for i := range t.Elements {
-		deps = append(deps, t.Elements[i].GetValueDependencies()...)
-	}
-	return
-}
-
-// InferType implements Expression.
-func (t *Tuple) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
+// Analyze implements Expression.
+func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	expectedTupleType, isTuple := expected.(TupleType)
+	_type := TupleType{}
 
 	if isTuple && len(expectedTupleType.Elements) != len(t.Elements) {
-		errors = append(errors, ArityMismatch{
+		anal.PushError(ArityMismatch{
 			Expected: len(expectedTupleType.Elements),
 			Found:    len(t.Elements),
 			At:       t.GetSpan(),
 		})
-		return
 	}
 	for i := range t.Elements {
 		var expected TypeValue
-		if isTuple {
+		if isTuple && len(expectedTupleType.Elements) >= i {
 			expected = expectedTupleType.Elements[i]
-		} else if typeEqual(expected, TypeType{}) {
+		} else if expected != nil && !expected.Eq(TypeType{}) {
 			expected = TypeType{}
 		}
-		errors = append(errors, t.Elements[i].InferType(expected, deps)...)
+		elementType := t.Elements[i].Analyze(expected, anal)
+		_type.Elements = append(_type.Elements, elementType)
 	}
-	if len(errors) > 0 {
-		return
+	t.IsType = expected != nil && expected.Eq(TypeType{})
+	if t.IsType {
+		return TypeType{}
 	}
-	t.IsType = typeEqual(expected, TypeType{})
-	return
+	return _type
 }
 
 // Lower implements Expression.
@@ -377,16 +261,6 @@ func (t *Tuple) Lower(defs *[]cpp.Definition) cpp.Expression {
 			return e.Lower(defs)
 		}))
 	}
-}
-
-// GetType implements Expression.
-func (t *Tuple) GetType() TypeValue {
-	if t.IsType {
-		return TypeType{}
-	}
-	return NewTupleType(util.Map(t.Elements, func(e Expression) TypeValue {
-		return e.GetType()
-	})...)
 }
 
 // TODO: type check Function
@@ -415,45 +289,40 @@ func (m *Macro) GetText() string {
 	})
 }
 
-func (m *Macro) AsFunctionCall() FunctionCall {
-	return FunctionCall{
-		Span:     m.Span,
-		Function: &m.Function,
-		Argument: &String{
-			Span:  m.Lines[0].Span,
-			Value: m.GetText(),
-		},
+// Analyze implements Expression.
+func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	if m.Result == nil {
+		functionType := m.Function.Analyze(MacroFunctionType, anal)
+		anal.PushError(UnexpectedType{
+			Expected: MacroFunctionType,
+			Found:    functionType,
+			At:       m.Function.GetSpan(),
+		})
+		macroFunctionCall := FunctionCall{
+			Span:     m.Span,
+			Function: &m.Function,
+			Argument: &String{
+				Span:  m.Lines[0].Span,
+				Value: m.GetText(),
+			},
+		}
+		anal.Evaluate(&macroFunctionCall, func(json string) {
+			v := fj.MustParse(json)
+			elements := v.GetArray("Tuple", "elements")
+			if elements == nil {
+				log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
+			}
+			errorMessage := string(elements[0].GetStringBytes())
+			expression := UnmarshalExpression(elements[1])
+			m.Result = expression
+			if errorMessage != "" {
+				panic("Macro returned error: " + errorMessage)
+			}
+		})
+		return nil
+	} else {
+		return m.Result.Analyze(expected, anal)
 	}
-}
-
-// GetMacros implements Expression.
-func (m *Macro) GetMacros() []*Macro {
-	return []*Macro{m}
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (m *Macro) GetMacroTypeDependencies() []Query {
-	return m.Result.GetTypeDependencies()
-}
-
-// GetMacroValueDependencies implements Expression.
-func (m *Macro) GetMacroValueDependencies() []Name {
-	return m.Result.GetValueDependencies()
-}
-
-// GetTypeDependencies implements Expression.
-func (m *Macro) GetTypeDependencies() []Query {
-	return m.Function.GetTypeDependencies()
-}
-
-// GetValueDependencies implements Expression.
-func (m *Macro) GetValueDependencies() []Name {
-	return m.Function.GetValueDependencies()
-}
-
-// InferType implements Expression.
-func (m *Macro) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	return m.Result.InferType(expected, deps)
 }
 
 // Lower implements Expression.
@@ -461,61 +330,9 @@ func (m *Macro) Lower(defs *[]cpp.Definition) cpp.Expression {
 	return m.Result.Lower(defs)
 }
 
-// GetType implements Expression.
-func (m *Macro) GetType() TypeValue {
-	return m.Result.GetType()
-}
-
 type MacroLine struct {
 	Span
 	Text string
-}
-
-type MacroQuery struct {
-	FunctionCall
-	Macro *Macro
-}
-
-var _ Query = (*MacroQuery)(nil)
-
-func NewMacroQuery(m *Macro) *MacroQuery {
-	return &MacroQuery{
-		FunctionCall: m.AsFunctionCall(),
-		Macro:        m,
-	}
-}
-
-// CheckType implements Query
-func (m MacroQuery) CheckType(deps DeclarationTable) (errors Errors) {
-	errors = m.Macro.Function.InferType(MacroFunctionType, deps)
-	if len(errors) > 0 {
-		return
-	}
-	functionType := m.Macro.Function.GetType()
-	if !functionType.Eq(MacroFunctionType) {
-		// TODO: custom "invalid macro function type" error
-		errors = append(errors, UnexpectedType{
-			Expected: MacroFunctionType,
-			Found:    functionType,
-			At:       m.Macro.Function.GetSpan(),
-		})
-	}
-	return
-}
-
-// SetValue implements Query
-func (m MacroQuery) SetValue(json string) {
-	v := fj.MustParse(json)
-	elements := v.GetArray("Tuple", "elements")
-	if elements == nil {
-		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
-	}
-	errorMessage := string(elements[0].GetStringBytes())
-	expression := UnmarshalExpression(elements[1])
-	m.Macro.Result = expression
-	if errorMessage != "" {
-		panic("Macro returned error: " + errorMessage)
-	}
 }
 
 type UnaryExpression struct {
@@ -534,57 +351,22 @@ func (u *UnaryExpression) GetSpan() Span {
 	return u.Span
 }
 
-// GetMacros implements Expression.
-func (u *UnaryExpression) GetMacros() []*Macro {
-	return u.Expression.GetMacros()
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (u *UnaryExpression) GetMacroTypeDependencies() []Query {
-	return u.Expression.GetMacroTypeDependencies()
-}
-
-// GetTypeDependencies implements Expression.
-func (u *UnaryExpression) GetTypeDependencies() []Query {
-	return u.Expression.GetTypeDependencies()
-}
-
-// GetType implements Expression.
-func (u *UnaryExpression) GetType() TypeValue {
-	return u.Expression.GetType()
-}
-
-// GetMacroValueDependencies implements Expression.
-func (u *UnaryExpression) GetMacroValueDependencies() []Name {
-	return u.Expression.GetMacroValueDependencies()
-}
-
-// GetValueDependencies implements Expression.
-func (u *UnaryExpression) GetValueDependencies() []Name {
-	return u.Expression.GetValueDependencies()
-}
-
-// InferType implements Expression.
-func (u *UnaryExpression) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	errors = u.Expression.InferType(nil, deps)
-	if len(errors) > 0 {
-		return
-	}
-	expressionType := u.Expression.GetType()
+// Analyze implements Expression.
+func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	expressionType := u.Expression.Analyze(nil, anal)
 	switch {
 	case
-		typeEqual(expressionType, IntType{}),
-		typeEqual(expressionType, FloatType{}):
+		expressionType != nil && expressionType.Eq(IntType{}),
+		expressionType != nil && expressionType.Eq(FloatType{}):
 		break
 	default:
-		errors = append(errors, InvalidUnaryExpressionType{
+		anal.PushError(InvalidUnaryExpressionType{
 			Op:   u.Op,
 			Type: expressionType,
 			At:   u.Span,
 		})
-		return
 	}
-	return
+	return expressionType
 }
 
 // Lower implements Expression.
@@ -606,7 +388,6 @@ const (
 type BinaryExpression struct {
 	DefaultExpression
 	Span  Span
-	Type  TypeValue
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
@@ -621,56 +402,21 @@ func (b *BinaryExpression) GetSpan() Span {
 	return b.Span
 }
 
-// GetMacros implements Expression.
-func (b *BinaryExpression) GetMacros() []*Macro {
-	return append(b.Left.GetMacros(), b.Right.GetMacros()...)
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (b *BinaryExpression) GetMacroTypeDependencies() []Query {
-	return append(b.Left.GetMacroTypeDependencies(), b.Right.GetMacroTypeDependencies()...)
-}
-
-// GetTypeDependencies implements Expression.
-func (b *BinaryExpression) GetTypeDependencies() []Query {
-	return append(b.Left.GetTypeDependencies(), b.Right.GetTypeDependencies()...)
-}
-
-// GetType implements Expression.
-func (b *BinaryExpression) GetType() TypeValue {
-	return b.Type
-}
-
-// GetMacroValueDependencies implements Expression.
-func (b *BinaryExpression) GetMacroValueDependencies() []Name {
-	return append(b.Left.GetMacroValueDependencies(), b.Right.GetMacroValueDependencies()...)
-}
-
-// GetValueDependencies implements Expression.
-func (b *BinaryExpression) GetValueDependencies() []Name {
-	return append(b.Left.GetValueDependencies(), b.Right.GetValueDependencies()...)
-}
-
-// InferType implements Expression.
-func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	// TODO: the expected type (used by InferType) for Left and Right differs depending on the operator
-	errors = append(b.Left.InferType(nil, deps), b.Right.InferType(nil, deps)...)
-	if len(errors) > 0 {
-		return
-	}
-	leftType := b.Left.GetType()
-	rightType := b.Right.GetType()
-	if !typeEqual(leftType, rightType) {
-		errors = append(errors, InvalidBinaryExpressionTypes{
+// Analyze implements Expression.
+func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	// TODO: the expected type (used by Analyze) for Left and Right differs depending on the operator
+	leftType := b.Left.Analyze(nil, anal)
+	rightType := b.Right.Analyze(nil, anal)
+	if leftType != nil && rightType != nil && !leftType.Eq(rightType) {
+		anal.PushError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
 			Right: rightType,
 			At:    b.Span,
 		})
-		return
 	}
 	emitErr := func() {
-		errors = append(errors, InvalidBinaryExpressionTypes{
+		anal.PushError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
 			Right: rightType,
@@ -687,26 +433,27 @@ func (b *BinaryExpression) InferType(expected TypeValue, deps DeclarationTable) 
 		GreaterEqual,
 		Less,
 		LessEqual:
-		if !typeEqual(leftType, IntType{}) && !typeEqual(leftType, FloatType{}) {
+		if leftType != nil && rightType != nil && !leftType.Eq(IntType{}) && !leftType.Eq(FloatType{}) {
 			emitErr()
-			return
 		}
-		b.Type = leftType
+		if leftType != nil {
+			return leftType
+		} else {
+			return rightType
+		}
 	case
 		Equal,
 		NotEqual:
-		b.Type = BoolType{}
+		return BoolType{}
 	case
 		Or, And:
-		if !typeEqual(leftType, BoolType{}) {
+		if leftType != nil && rightType != nil && !leftType.Eq(BoolType{}) {
 			emitErr()
-			return
 		}
-		b.Type = BoolType{}
+		return BoolType{}
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	return
 }
 
 // Lower implements Expression.
@@ -767,12 +514,8 @@ func (s *StructExpression) GetSpan() Span {
 func (s StructExpression) SetId() {
 }
 
-func (s StructExpression) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	return
-}
-
-func (s StructExpression) GetType() TypeValue {
-	return StructType{Name: s.Name}
+func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	panic("unimplemented")
 }
 
 func (s StructExpression) Lower(defs *[]cpp.Definition) cpp.Expression {
@@ -801,69 +544,13 @@ func (c *Closure) GetSpan() Span {
 	return c.Span
 }
 
-// GetMacros implements Expression.
-func (c *Closure) GetMacros() (macros []*Macro) {
-	macros = util.FlatMap(c.Parameters, FunctionParameter.GetMacros)
-	macros = append(macros, c.Body.GetMacros()...)
-	return
-}
-
-// GetMacroTypeDependencies implements Expression.
-func (c *Closure) GetMacroTypeDependencies() (deps []Query) {
-	deps = util.FlatMapPtr(c.Parameters, (*FunctionParameter).GetMacroTypeDependencies)
-	deps = append(deps, c.Body.GetMacroTypeDependencies()...)
-	return
-}
-
-// GetTypeDependencies implements Expression.
-func (c *Closure) GetTypeDependencies() (deps []Query) {
-	return getFunctionTypeDependencies(c.Parameters, &c.ReturnType, c.Body)
-}
-
-// GetType implements Expression.
-func (c *Closure) GetType() TypeValue {
-	return getFunctionType(c.Parameters, c.ReturnType)
-}
-
-// GetMacroValueDependencies implements Expression.
-func (c *Closure) GetMacroValueDependencies() (deps []Name) {
-	for _, depName := range c.Body.GetMacroValueDependencies() {
-		equals := func(param FunctionParameter) bool {
-			return depName.String == param.GetName().String
-		}
-		if !util.Any(equals, c.Parameters...) {
-			deps = append(deps, depName)
-		}
+// Analyze implements Expression.
+func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	_type, captures := analyzeFunction(anal, nil, c.Parameters, &c.ReturnType, c.Body)
+	for _, name := range captures {
+		c.captures[name.String] = anal.GetType(name)
 	}
-	return
-}
-
-// GetValueDependencies implements Expression.
-func (c *Closure) GetValueDependencies() (deps []Name) {
-	// make non-nil to prevent nil-dereference error when adding elements
-	c.captures = map[string]TypeValue{}
-	for _, depName := range c.Body.GetValueDependencies() {
-		equals := func(param FunctionParameter) bool {
-			return depName.String == param.GetName().String
-		}
-		if !util.Any(equals, c.Parameters...) {
-			deps = append(deps, depName)
-			c.captures[depName.String] = nil // type is not known yet
-		}
-	}
-	return
-}
-
-// InferType implements Expression.
-func (c *Closure) InferType(expected TypeValue, deps DeclarationTable) (errors Errors) {
-	for name := range c.captures {
-		declaration, ok := deps.Get(name)
-		if !ok {
-			log.Fatalf("Declaration table does not contain closure capture '%s'", name)
-		}
-		c.captures[name] = declaration.GetDeclaredType()
-	}
-	return typeCheckFunction(nil, c.Parameters, c.ReturnType, c.Body, deps)
+	return _type
 }
 
 // Lower implements Expression.
