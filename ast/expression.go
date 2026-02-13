@@ -166,7 +166,7 @@ func (f *FunctionCall) GetSpan() Span {
 func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
 	maybeFunctionType := f.Function.Analyze(nil, anal)
 	functionType, isFunction := maybeFunctionType.(FnType)
-	if maybeFunctionType != nil && !isFunction {
+	if !isFunction {
 		anal.PushError(NotAFunction{
 			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
@@ -178,17 +178,15 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 		returnType = functionType.Return
 	}
 	argumentType := f.Argument.Analyze(expectedArgumentType, anal)
-	if argumentType != nil && expectedArgumentType != nil && !argumentType.Eq(expectedArgumentType) {
+	if !argumentType.Eq(expectedArgumentType) {
 		anal.PushError(UnexpectedType{
 			Expected: expectedArgumentType,
 			Found:    argumentType,
 			At:       f.Argument.GetSpan(),
 		})
 	}
-	if argumentType != nil {
-		_, argumentIsTuple := argumentType.(TupleType)
-		f.ArgumentIsTuple = argumentIsTuple
-	}
+	_, argumentIsTuple := argumentType.(TupleType)
+	f.ArgumentIsTuple = argumentIsTuple
 	return
 }
 
@@ -291,38 +289,33 @@ func (m *Macro) GetText() string {
 
 // Analyze implements Expression.
 func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	if m.Result == nil {
-		functionType := m.Function.Analyze(MacroFunctionType, anal)
-		anal.PushError(UnexpectedType{
-			Expected: MacroFunctionType,
-			Found:    functionType,
-			At:       m.Function.GetSpan(),
-		})
-		macroFunctionCall := FunctionCall{
-			Span:     m.Span,
-			Function: &m.Function,
-			Argument: &String{
-				Span:  m.Lines[0].Span,
-				Value: m.GetText(),
-			},
-		}
-		anal.Evaluate(&macroFunctionCall, func(json string) {
-			v := fj.MustParse(json)
-			elements := v.GetArray("Tuple", "elements")
-			if elements == nil {
-				log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
-			}
-			errorMessage := string(elements[0].GetStringBytes())
-			expression := UnmarshalExpression(elements[1])
-			m.Result = expression
-			if errorMessage != "" {
-				panic("Macro returned error: " + errorMessage)
-			}
-		})
-		return nil
-	} else {
-		return m.Result.Analyze(expected, anal)
+	functionType := m.Function.Analyze(MacroFunctionType, anal)
+	anal.PushError(UnexpectedType{
+		Expected: MacroFunctionType,
+		Found:    functionType,
+		At:       m.Function.GetSpan(),
+	})
+	macroFunctionCall := FunctionCall{
+		Span:     m.Span,
+		Function: &m.Function,
+		Argument: &String{
+			Span:  m.Lines[0].Span,
+			Value: m.GetText(),
+		},
 	}
+	json := anal.Evaluate(&macroFunctionCall)
+	v := fj.MustParse(json)
+	elements := v.GetArray("Tuple", "elements")
+	if elements == nil {
+		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
+	}
+	errorMessage := string(elements[0].GetStringBytes())
+	expression := UnmarshalExpression(elements[1])
+	m.Result = expression
+	if errorMessage != "" {
+		panic("Macro returned error: " + errorMessage)
+	}
+	return m.Result.Analyze(expected, anal)
 }
 
 // Lower implements Expression.
@@ -356,8 +349,8 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	expressionType := u.Expression.Analyze(nil, anal)
 	switch {
 	case
-		expressionType != nil && expressionType.Eq(IntType{}),
-		expressionType != nil && expressionType.Eq(FloatType{}):
+		expressionType.Eq(IntType{}),
+		expressionType.Eq(FloatType{}):
 		break
 	default:
 		anal.PushError(InvalidUnaryExpressionType{
@@ -407,7 +400,7 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 	// TODO: the expected type (used by Analyze) for Left and Right differs depending on the operator
 	leftType := b.Left.Analyze(nil, anal)
 	rightType := b.Right.Analyze(nil, anal)
-	if leftType != nil && rightType != nil && !leftType.Eq(rightType) {
+	if !leftType.Eq(rightType) {
 		anal.PushError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
@@ -433,21 +426,17 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 		GreaterEqual,
 		Less,
 		LessEqual:
-		if leftType != nil && rightType != nil && !leftType.Eq(IntType{}) && !leftType.Eq(FloatType{}) {
+		if !leftType.Eq(IntType{}) && !leftType.Eq(FloatType{}) {
 			emitErr()
 		}
-		if leftType != nil {
-			return leftType
-		} else {
-			return rightType
-		}
+		return leftType
 	case
 		Equal,
 		NotEqual:
 		return BoolType{}
 	case
 		Or, And:
-		if leftType != nil && rightType != nil && !leftType.Eq(BoolType{}) {
+		if !leftType.Eq(BoolType{}) {
 			emitErr()
 		}
 		return BoolType{}
@@ -558,9 +547,6 @@ func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 	// TODO: fully prevent naming conflicts instead of using rand
 	id := registerNode(c)
 	name := fmt.Sprintf("closure_%x_", id)
-	if c.captures == nil {
-		panic("Closure.Lower called without callng GetValueDependencies first.")
-	}
 	fields := ""
 	captures := ""
 	for captureName, captureType := range c.captures {
