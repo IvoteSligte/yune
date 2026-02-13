@@ -1,7 +1,6 @@
 package cpp
 
 import (
-	_ "embed"
 	"fmt"
 	"log"
 	"os"
@@ -9,9 +8,6 @@ import (
 	"path"
 	"strings"
 )
-
-//go:embed "pb.hpp"
-var pbHeader string
 
 func format(code string) (formatted string, err error) {
 	cmd := exec.Command("clang-format")

@@ -1,62 +1,62 @@
 package cpp
 
 import (
-	"fmt"
+	_ "embed"
+	"io"
 	"log"
-	"os"
-	"strings"
+	"os/exec"
 )
 
-// TODO: manage memory of pb.Type and such
+//go:embed "pb.hpp"
+var pbHeader string
 
-// TODO: skip evaluation if batch is all-nil
-func Evaluate(module Module, batch []Expression) []string {
-	// NOTE: main function is assumed not to exist and is ignored if it does
-
-	fmt.Println("--- Start Evaluation ---")
-	defer fmt.Println("--- End Evaluation ---")
-
-	outputFile, err := os.CreateTemp("", "yune-eval")
+var Cling cling = func() cling {
+	cmd := exec.Command("cling")
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		log.Fatalln("Failed to create temporary file during compile-time C++ evaluation. Error:", err)
+		log.Fatalln("Failed to get stdin pipe from Cling command. Error:", err)
 	}
-	outputFileName := outputFile.Name()
-	if err := outputFile.Close(); err != nil {
-		log.Fatalln("Failed to close temporary file during compile-time C++ evaluation. Error:", err)
-	}
-	defer os.Remove(outputFileName)
-
-	statements := []Statement{}
-
-	addStmt := func(s string) {
-		statements = append(statements, s)
-	}
-	addStmt(fmt.Sprintf(`std::ofstream outputFile("%s", std::ios::binary);`, outputFileName))
-
-	for _, e := range batch {
-		// data separated by newlines (newlines are escaped in string literals)
-		if e == "" {
-			addStmt(`outputFile << "\n";`) // no data
-		} else {
-			addStmt(fmt.Sprintf(`outputFile << ty::serialize(%s) << "\n";`, e))
-		}
-	}
-	addStmt(`outputFile.close();`)
-	addStmt(`return 0;`)
-
-	module.Declarations = append(module.Declarations, Declaration{
-		Header: "",
-		Implementation: fmt.Sprintf(`int main() {
-    %s
-    return 0;
-}`, strings.Join(statements, "\n")),
-	})
-	Run(module)
-	bytes, err := os.ReadFile(outputFileName)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatalln("Failed to read output file during compile-time C++ evaluation. Error:", err)
+		log.Fatalln("Failed to get stdout pipe from Cling command. Error:", err)
 	}
-	println(string(bytes))
-	evalJsons := strings.Split(string(bytes), "\n") // not deserialized here to prevent module import loop
-	return evalJsons[:len(evalJsons)-1]             // skip trailing line
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalln("Failed to run Cling. Error:", err)
+	}
+	c := cling{stdin, stdout, ""}
+	err = c.Declare(pbHeader)
+	if err != nil {
+		log.Fatalln("Failed to declare PB header in Cling. Error:", err)
+	}
+	return c
+}()
+
+type cling struct {
+	stdin    io.Writer
+	stdout   io.Reader
+	declared string
+}
+
+func (c *cling) Evaluate(expr Expression) (output string, err error) {
+	_, err = c.stdin.Write([]byte("std::cout << ty::serialize(" + expr + ") << std::endl;"))
+	if err != nil {
+		return
+	}
+	bytes := []byte{}
+	_, err = c.stdout.Read(bytes)
+	output = string(bytes)
+	log.Printf("Cling evaluated '%s' to '%s'\n", expr, output)
+	return
+}
+
+// Write text without expecting a response, such as for function or constant declarations.
+func (c *cling) Declare(text string) (err error) {
+	_, err = c.stdin.Write([]byte(text))
+	c.declared += "\n" + text
+	return
+}
+
+func (c *cling) GetDeclared() string {
+	return c.declared
 }
