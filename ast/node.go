@@ -143,27 +143,13 @@ type Node interface {
 	GetSpan() Span
 }
 
-type IName interface {
-	GetName() string
-	GetSpan() Span
-}
-
 type Errors = []error
 
-type Query struct {
-	Expression
-	Setter func(json string)
-}
-
-func (q Query) SetValue(json string) {
-	panic("unimplemented") // NOTE: also need to call Analyze again on wrapper around destination (macro/type)
-}
-
 type Analyzer struct {
-	Errors      *Errors
-	NeedsTypeOf *[]Name
-	Queries     *[]Query
-	Table       DeclarationTable
+	Errors                *Errors
+	Declarations          map[string]TopLevelDeclaration
+	EvaluatedDeclarations map[string]TopLevelDeclaration
+	Table                 DeclarationTable
 }
 
 func (a Analyzer) PushError(err error) {
@@ -180,9 +166,7 @@ func (a Analyzer) HasErrors() bool {
 
 func SubAnalyze[T any](a Analyzer, f func(Analyzer) T) T {
 	sub := Analyzer{
-		Errors:      a.Errors,
-		Queries:     a.Queries,
-		NeedsTypeOf: &[]Name{},
+		Errors: a.Errors,
 		// Evaluation cannot depend on variable declarations in the outer scope
 		// as the values of these are not known.
 		Table: a.Table.TopLevel(),
@@ -190,15 +174,16 @@ func SubAnalyze[T any](a Analyzer, f func(Analyzer) T) T {
 	return f(sub)
 }
 
-func (a Analyzer) Evaluate(expr Expression, setter func(json string)) {
-	*a.Queries = append(*a.Queries, Query{
-		Expression: expr,
-		Setter:     setter,
-	})
-}
-
-func (a Analyzer) IsDone() bool {
-	return len(*a.Queries) == 0 && len(*a.Errors) == 0
+// Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
+func (a Analyzer) Evaluate(expr Expression) (json string) {
+	definitions := []cpp.Definition{}
+	lowered := expr.Lower(&definitions)
+	// braces group the definitions and expression together into a single "transaction"
+	json, err := cpp.Cling.Evaluate("{\n" + defString(definitions) + lowered + "}\n")
+	if err != nil {
+		panic("Failed to evaluate lowered expression. Error: " + err.Error())
+	}
+	return
 }
 
 func (a Analyzer) NewScope() Analyzer {
@@ -211,11 +196,7 @@ func (a Analyzer) GetType(name Name) TypeValue {
 	if !ok {
 		panic("Unknown declaration: " + name.String)
 	}
-	_type := decl.GetDeclaredType()
-	// if _type == nil {
-	// 	*a.NeedsTypeOf = append(*a.NeedsTypeOf, name)
-	// }
-	return _type
+	return decl.GetDeclaredType()
 }
 
 func (a Analyzer) GetScope() map[string]Declaration {
