@@ -5,29 +5,31 @@ import (
 )
 
 type DeclarationTable struct {
-	parent       *DeclarationTable
-	declarations map[string]Declaration
+	parent               *DeclarationTable
+	topLevelDeclarations map[string]TopLevelDeclaration
+	localDeclarations    map[string]Declaration
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
-	prev, exists := table.declarations[decl.GetName().String]
+	prev, exists := table.localDeclarations[decl.GetName().String]
 	if exists {
 		return DuplicateDeclaration{
 			First:  prev,
 			Second: decl,
 		}
 	}
-	if table.declarations == nil {
-		table.declarations = map[string]Declaration{}
+	if table.localDeclarations == nil {
+		table.localDeclarations = map[string]Declaration{}
 	}
-	table.declarations[decl.GetName().String] = decl
+	table.localDeclarations[decl.GetName().String] = decl
 	return nil
 }
 
 func (table DeclarationTable) NewScope() DeclarationTable {
 	return DeclarationTable{
-		parent:       &table,
-		declarations: map[string]Declaration{},
+		parent:               &table,
+		topLevelDeclarations: table.topLevelDeclarations,
+		localDeclarations:    map[string]Declaration{},
 	}
 }
 
@@ -35,19 +37,20 @@ func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	if table == table.parent {
 		log.Panicf("Table at address %p has itself as parent.", table)
 	}
-	declaration, ok := table.declarations[name]
+	local, ok := table.localDeclarations[name]
 	if !ok && table.parent != nil {
 		return table.parent.Get(name)
 	}
-	return declaration, ok
+	if !ok {
+		topLevel, ok := table.topLevelDeclarations[name]
+		return topLevel, ok
+	}
+	return local, ok
 }
 
-func (table DeclarationTable) GetTopLevel(name string) (TopLevelDeclaration, bool) {
-	if table.parent != nil {
-		return table.parent.GetTopLevel(name)
-	}
-	declaration, ok := table.declarations[name]
-	return declaration.(TopLevelDeclaration), ok
+func (table DeclarationTable) GetTopLevel(name string) (topLevel TopLevelDeclaration, ok bool) {
+	topLevel, ok = table.topLevelDeclarations[name]
+	return
 }
 
 func (table DeclarationTable) TopLevel() DeclarationTable {
@@ -63,10 +66,6 @@ type Declaration interface {
 
 	// Returns the type of this declaration.
 	GetDeclaredType() TypeValue
-
-	// Type checks the declaration's body, possibly resulting in errors.
-	// Assumes the declaration's type has been calculated.
-	Analyze(anal Analyzer) TypeValue
 }
 
 var _ Declaration = &FunctionDeclaration{}

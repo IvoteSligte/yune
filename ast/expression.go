@@ -261,7 +261,6 @@ func (t *Tuple) Lower(defs *[]cpp.Definition) cpp.Expression {
 	}
 }
 
-// TODO: type check Function
 type Macro struct {
 	DefaultExpression
 	Span Span
@@ -310,8 +309,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
 	}
 	errorMessage := string(elements[0].GetStringBytes())
-	expression := UnmarshalExpression(elements[1])
-	m.Result = expression
+	m.Result = UnmarshalExpression(elements[1])
 	if errorMessage != "" {
 		panic("Macro returned error: " + errorMessage)
 	}

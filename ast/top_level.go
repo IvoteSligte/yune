@@ -203,6 +203,8 @@ type TopLevelDeclaration interface {
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
 	Lower() cpp.Declaration
+
+	Analyze(anal Analyzer) TypeValue
 }
 
 // TODO: when types and type aliases can be created, make sure that

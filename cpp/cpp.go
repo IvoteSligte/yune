@@ -35,3 +35,5 @@ type Field struct {
 }
 
 type Statement = string
+
+type Module = string

@@ -179,7 +179,6 @@ func (b Block) GetSpan() Span {
 }
 
 func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
-	scope := anal.GetScope()
 	for i := range b.Statements {
 		// Only the last statement has a known expected type, the rest should use the default.
 		expected := expected
@@ -187,17 +186,12 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 			expected = nil
 		}
 		_type = b.Statements[i].Analyze(expected, anal)
-		decl, ok := b.Statements[i].(Declaration)
-		if ok {
-			name := decl.GetName().String
-			_, exists := scope[name]
-			if exists {
-				anal.PushError(DuplicateDeclaration{
-					First:  scope[name],
-					Second: decl,
-				})
+		decl, isDeclaration := b.Statements[i].(Declaration)
+		if isDeclaration {
+			err := anal.Table.Add(decl)
+			if err != nil {
+				anal.PushError(err)
 			}
-			scope[name] = decl
 		}
 	}
 	return

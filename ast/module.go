@@ -1,232 +1,60 @@
 package ast
 
 import (
-	"log"
 	"yune/cpp"
-	"yune/util"
-
-	mapset "github.com/deckarep/golang-set/v2"
 )
-
-func newQueryEvalNode(query Query, declarationToNode map[string]*evalNode, stageNodes evalSet) (node *evalNode, errors Errors) {
-	if len(query.GetMacros()) != 0 {
-		panic("Query expressions are assumed to not contain macros.")
-	}
-	if len(query.GetTypeDependencies()) != 0 {
-		panic("Query expression type dependencies are assumed to not exist.")
-	}
-	depNames := query.GetValueDependencies()
-	requires := mapset.NewThreadUnsafeSet[*evalNode]()
-	for _, depName := range depNames {
-		if len(depName.String) == 0 {
-			log.Printf("WARN: Empty string name in dependency of query.")
-		}
-		requiredNode, exists := declarationToNode[depName.String]
-		if !exists {
-			errors = append(errors, UndefinedType(depName))
-		}
-		requires.Add(requiredNode)
-	}
-	node = &evalNode{
-		Query:    query,
-		After:    mapset.NewThreadUnsafeSet[*evalNode](),
-		Requires: requires,
-	}
-	stageNodes.Add(node)
-	return
-}
 
 type Module struct {
 	Declarations []TopLevelDeclaration
 }
 
 func (m Module) Lower() (lowered cpp.Module, errors Errors) {
-	// thread unsafe set used so that iteration and removal can be done simultaneously
-	// (deadlocks otherwise)
-	stageNodes := mapset.NewThreadUnsafeSet[*evalNode]()
-	declarationToNode := map[string]*evalNode{}
+	declarations := map[string]TopLevelDeclaration{}
 
-	// Add builtin declarations to the module's list of  declarations.
-	m.Declarations = append(BuiltinDeclarations, m.Declarations...)
-
+	// Register builtin declarations
+	for _, decl := range BuiltinDeclarations {
+		declarations[decl.GetName().String] = decl
+	}
 	// get unique mapping of name -> declaration
 	for _, decl := range m.Declarations {
 		name := decl.GetName()
-		other, exists := declarationToNode[name.String]
+		other, exists := declarations[name.String]
 
 		if exists {
-			errors = append(errors, DuplicateDeclaration{
-				First:  other.Declaration,
-				Second: decl,
-			})
+			errors = append(errors, DuplicateDeclaration{First: other, Second: decl})
 		} else {
-			_, isRawBuiltin := decl.(BuiltinRawDeclaration)
-			_, isConstantBuiltin := decl.(BuiltinConstantDeclaration)
-			_, isFunctionBuiltin := decl.(BuiltinFunctionDeclaration)
-			isBuiltin := isRawBuiltin || isConstantBuiltin || isFunctionBuiltin
-			node := &evalNode{
-				Declaration:   decl,
-				After:         mapset.NewThreadUnsafeSet[*evalNode](), // filled later
-				Requires:      mapset.NewThreadUnsafeSet[*evalNode](), // filled later
-				IsPrecomputed: isBuiltin,
-			}
-			declarationToNode[name.String] = node
-			stageNodes.Add(node)
+			declarations[name.String] = decl
 		}
 	}
 	if len(errors) > 0 {
 		return
 	}
-	for name, node := range declarationToNode {
-		decl := node.Declaration
-
-		for _, macro := range decl.GetMacros() {
-			query := NewMacroQuery(macro)
-			macroNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
-			macroNode.UpdateHook = node
-			errors = append(errors, _errors...)
-			// another node for delay because the macro needs to be executed 2 stages
-			// before the declaration itself (as it can add type dependencies to the declaration)
-			depNode := &evalNode{
-				After:    mapset.NewThreadUnsafeSet(macroNode),
-				Requires: mapset.NewThreadUnsafeSet[*evalNode](),
-			}
-			node.After.Add(depNode)
-			stageNodes.Add(depNode)
-		}
-		for _, query := range decl.GetTypeDependencies() {
-			depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
-			errors = append(errors, _errors...)
-			node.After.Add(depNode)
-		}
-		for _, depName := range decl.GetValueDependencies() {
-			if len(depName.String) == 0 {
-				log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", name)
-			}
-			depNode, exists := declarationToNode[depName.String]
-			if !exists {
-				errors = append(errors, UndefinedVariable(depName))
-			}
-			node.Requires.Add(depNode)
-		}
-	}
-	if len(errors) > 0 {
-		return
-	}
-	table := DeclarationTable{
-		parent:       nil,
-		declarations: map[string]Declaration{},
-	}
-	for name, node := range declarationToNode {
-		table.declarations[name] = node.Declaration
-	}
-	evaluated := mapset.NewThreadUnsafeSet[*evalNode]()
-	unevaluated := stageNodes
-
-	// add precomputed nodes to 'evaluated'
-	for node := range unevaluated.Iter() {
-		if node.IsPrecomputed {
-			unevaluated.Remove(node)
-			evaluated.Add(node)
-		}
-	}
-	// sort precomputed nodes
-	lowered.Declarations = util.Map(
-		sortedEvaluatableNodes(evaluated.Clone(), mapset.NewThreadUnsafeSet[*evalNode]()),
-		func(node *evalNode) cpp.Declaration {
-			return node.Declaration.Lower()
+	anal := Analyzer{
+		Errors:                &errors,
+		EvaluatedDeclarations: map[string]TopLevelDeclaration{},
+		Table: DeclarationTable{
+			topLevelDeclarations: declarations,
 		},
-	)
-	// iteratively evaluate nodes
-	iteration := 0
-	for unevaluated.Cardinality() > 0 {
-		log.Printf("Compilation iteration: %d\n", iteration)
-		evalNodes := extractEvaluatableNodes(unevaluated, evaluated)
-
-		// type check all expressions and declarations
-		for _, node := range evalNodes {
-			if node.Query != nil {
-				errors = append(errors, node.Query.CheckType(table)...)
-			}
-			if node.Declaration != nil {
-				errors = append(errors, node.Declaration.TypeCheckBody(table)...)
-			}
-		}
-		if len(errors) > 0 {
-			return
-		}
-		// add the actual code
-		for _, node := range evalNodes {
-			if node.Declaration != nil {
-				lowered.Declarations = append(lowered.Declarations, node.Declaration.Lower())
-			}
-		}
-		// the last lowered stage is simply the runtime code
-		if unevaluated.Cardinality() == 0 {
-			for _, node := range evalNodes {
-				if node.Query != nil {
-					// should be unreachable
-					log.Fatalln(
-						"Last compilation stage (runtime) should not have an expression queued. Expression:",
-						node.Query,
-					)
-				}
-			}
-			return
-		}
-		// TODO: make sure the main() function is always in the last stage
-		evalJsons := cpp.Evaluate(lowered, util.Map(evalNodes, func(node *evalNode) cpp.Expression {
-			if node.Query != nil {
-				var defs []cpp.Definition
-				lowered := node.Query.Lower(&defs)
-				return defString(defs) + lowered
-			} else {
-				return ""
-			}
-		}))
-		for i, json := range evalJsons {
-			if evalNodes[i].Query == nil {
-				if json != "" {
-					log.Fatalf(
-						"Passed nil expression to the C++ evaluator, but received non-empty string '%s'.",
-						json,
-					)
-				}
-				continue
-			}
-			evalNodes[i].Query.SetValue(json)
-
-			// Update node that depends on the result of this query.
-			node := evalNodes[i].UpdateHook
-			if node == nil {
-				continue
-			}
-			decl := node.Declaration
-			if decl == nil {
-				// NOTE: can non-declarations also contain macros?
-				panic("only declaration nodes should be used as macro update hooks")
-			}
-			for _, query := range decl.GetMacroTypeDependencies() {
-				depNode, _errors := newQueryEvalNode(query, declarationToNode, stageNodes)
-				errors = append(errors, _errors...)
-				node.After.Add(depNode)
-			}
-			for _, depName := range decl.GetMacroValueDependencies() {
-				if len(depName.String) == 0 {
-					log.Printf("WARN: Empty string name of value dependency of declaration '%s'.", decl.GetName().String)
-				}
-				depNode, exists := declarationToNode[depName.String]
-				if !exists {
-					errors = append(errors, UndefinedVariable(depName))
-				}
-				node.Requires.Add(depNode)
-			}
-		}
-		if len(errors) > 0 {
-			return
-		}
-		evaluated.Append(evalNodes...)
-		iteration += 1
 	}
+	for _, decl := range BuiltinDeclarations {
+		anal.Table.Add(decl)
+	}
+	for _, decl := range m.Declarations {
+		anal.Table.Add(decl)
+	}
+	for _, decl := range m.Declarations {
+		// FIXME: if the main function is not evaluated last then Cling evaluation breaks
+		_, evaluated := anal.EvaluatedDeclarations[decl.GetName().String]
+		if !evaluated {
+			decl.Analyze(anal)
+		}
+	}
+	if len(errors) > 0 {
+		return
+	}
+	if len(anal.EvaluatedDeclarations) != len(anal.Declarations) {
+		panic("The number of evaluated declarations does not match the total number of declarations, even though the evaluation process has finished.")
+	}
+	lowered = cpp.Cling.GetDeclared() // NOTE: this should probably reset the Cling process so multiple calls to Lower do not break things
 	return
 }

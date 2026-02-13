@@ -61,12 +61,14 @@ func Run(module Module) {
 	}
 	defer os.RemoveAll(dir)
 
-	header := module.Header()
-	fmt.Println("-- Header --")
-	PrintFormatted(header)
-	fmt.Println("-- End Header --")
+	// header := module.Header()
+	// fmt.Println("-- Header --")
+	// PrintFormatted(header)
+	// fmt.Println("-- End Header --")
+	header := ""
 
-	implementation := module.Implementation()
+	// implementation := module.Implementation()
+	implementation := module
 	fmt.Println("-- Implementation --")
 	PrintFormatted(implementation)
 	fmt.Println("-- End Implementation --")
