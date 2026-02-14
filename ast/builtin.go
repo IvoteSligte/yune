@@ -28,11 +28,6 @@ type BuiltinRawDeclaration struct {
 	Implementation string
 }
 
-// GetMacros implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
 // GetName implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -48,26 +43,6 @@ func (b BuiltinRawDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
-// GetMacroTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetMacroValueDependencies() []Name {
-	return []Name{}
-}
-
-// GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetValueDependencies() []Name {
-	return util.Map(b.Requires, func(s string) Name { return Name{String: s} })
-}
-
 // Lower implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
 	return cpp.Declaration{
@@ -76,9 +51,9 @@ func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
 	}
 }
 
-// TypeCheckBody implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) TypeCheckBody(deps DeclarationTable) (errors []error) {
-	return
+// Analyze implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) Analyze(anal Analyzer) {
+	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 }
 
 var _ TopLevelDeclaration = BuiltinRawDeclaration{}
@@ -98,11 +73,6 @@ type BuiltinStructDeclaration struct {
 	Fields []BuiltinFieldDeclaration
 }
 
-// GetMacros implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetMacros() []*Macro {
-	return []*Macro{}
-}
-
 // GetName implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -118,26 +88,6 @@ func (b BuiltinStructDeclaration) GetDeclaredType() TypeValue {
 	return TypeType{}
 }
 
-// GetMacroTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetMacroValueDependencies() []Name {
-	return []Name{}
-}
-
-// GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetValueDependencies() []Name {
-	return []Name{}
-}
-
 // Lower implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
 	return cpp.StructDeclaration(
@@ -148,9 +98,9 @@ func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
 	)
 }
 
-// TypeCheckBody implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) TypeCheckBody(deps DeclarationTable) (errors []error) {
-	return
+// Analyze implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) Analyze(anal Analyzer) {
+	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 }
 
 var _ TopLevelDeclaration = BuiltinStructDeclaration{}
@@ -166,9 +116,9 @@ type BuiltinConstantDeclaration struct {
 	Value string
 }
 
-// GetMacros implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetMacros() []*Macro {
-	return []*Macro{}
+// Analyze implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) Analyze(anal Analyzer) {
+	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 }
 
 // GetName implements TopLevelDeclaration.
@@ -186,34 +136,9 @@ func (b BuiltinConstantDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
-// GetMacroTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetMacroValueDependencies() []Name {
-	return []Name{}
-}
-
-// GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetValueDependencies() []Name {
-	return []Name{}
-}
-
 // Lower implements TopLevelDeclaration.
 func (b BuiltinConstantDeclaration) Lower() cpp.Declaration {
 	return cpp.ConstantDeclaration(b.Name, b.Type.Lower(), b.Value)
-}
-
-// TypeCheckBody implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) TypeCheckBody(deps DeclarationTable) (errors []error) {
-	return
 }
 
 var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
@@ -256,9 +181,9 @@ type BuiltinFunctionDeclaration struct {
 	Body       string
 }
 
-// GetMacros implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetMacros() []*Macro {
-	return []*Macro{}
+// Analyze implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
+	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 }
 
 // GetName implements TopLevelDeclaration.
@@ -283,26 +208,6 @@ func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	return FnType{Argument: argument, Return: b.ReturnType}
 }
 
-// GetMacroTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetMacroTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetMacroValueDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetMacroValueDependencies() []Name {
-	return []Name{}
-}
-
-// GetTypeDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetTypeDependencies() []Query {
-	return []Query{}
-}
-
-// GetValueDependencies implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetValueDependencies() []Name {
-	return []Name{}
-}
-
 // Lower implements TopLevelDeclaration.
 func (b BuiltinFunctionDeclaration) Lower() cpp.Declaration {
 	return cpp.FunctionDeclaration(
@@ -314,11 +219,6 @@ func (b BuiltinFunctionDeclaration) Lower() cpp.Declaration {
 		b.ReturnType.Lower(),
 		cpp.Block(strings.Split(b.Body, "\n")),
 	)
-}
-
-// TypeCheckBody implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) TypeCheckBody(deps DeclarationTable) (errors []error) {
-	return
 }
 
 var FnDeclaration = BuiltinFunctionDeclaration{

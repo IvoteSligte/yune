@@ -43,7 +43,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		anal.Table.Add(decl)
 	}
 	for _, decl := range m.Declarations {
-		// FIXME: if the main function is not evaluated last then Cling evaluation breaks
+		// FIXME: if the main function is not evaluated last then clang-repl evaluation breaks
 		_, evaluated := anal.EvaluatedDeclarations[decl.GetName().String]
 		if !evaluated {
 			decl.Analyze(anal)
@@ -55,6 +55,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(anal.EvaluatedDeclarations) != len(anal.Declarations) {
 		panic("The number of evaluated declarations does not match the total number of declarations, even though the evaluation process has finished.")
 	}
-	lowered = cpp.Cling.GetDeclared() // NOTE: this should probably reset the Cling process so multiple calls to Lower do not break things
+	lowered = cpp.Repl.GetDeclared() // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
 	return
 }

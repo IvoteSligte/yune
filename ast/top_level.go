@@ -88,7 +88,7 @@ func (d *FunctionDeclaration) GetSpan() Span {
 }
 
 // TypeCheckBody implements Declaration.
-func (d *FunctionDeclaration) Analyze(anal Analyzer) TypeValue {
+func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	_, _ = analyzeFunction(anal, d, d.Parameters, &d.ReturnType, d.Body)
 	declaredType := d.GetDeclaredType()
 	if d.GetName().String == "main" && declaredType != nil && !declaredType.Eq(MainType) {
@@ -97,7 +97,6 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) TypeValue {
 			At:    d.Name.GetSpan(),
 		})
 	}
-	return nil // not used
 }
 
 // Lower implements Declaration.
@@ -125,10 +124,8 @@ type FunctionParameter struct {
 	Type Type
 }
 
-// Analyze implements Declaration.
-func (d *FunctionParameter) Analyze(anal Analyzer) TypeValue {
+func (d *FunctionParameter) Analyze(anal Analyzer) {
 	_ = d.Type.Analyze(anal)
-	return nil // not used
 }
 
 func (d FunctionParameter) Lower() cpp.FunctionParameter {
@@ -158,7 +155,7 @@ func (d *ConstantDeclaration) GetSpan() Span {
 }
 
 // Analyze implements TopLevelDeclaration.
-func (d *ConstantDeclaration) Analyze(anal Analyzer) TypeValue {
+func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 	declaredType := d.Type.Get()
 	bodyType := d.Body.Analyze(declaredType, anal.NewScope())
 
@@ -169,7 +166,6 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) TypeValue {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	return nil // not used
 }
 
 // Lower implements Declaration.
@@ -204,7 +200,7 @@ type TopLevelDeclaration interface {
 	// the same code to run.
 	Lower() cpp.Declaration
 
-	Analyze(anal Analyzer) TypeValue
+	Analyze(anal Analyzer)
 }
 
 // TODO: when types and type aliases can be created, make sure that
