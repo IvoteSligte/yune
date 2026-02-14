@@ -32,6 +32,7 @@ func UnmarshalType(data *fj.Value) Type {
 }
 
 func (t *Type) Analyze(anal Analyzer) TypeValue {
+	// FIXME: t.Expression.Analyze can now access local variables
 	expressionType := t.Expression.Analyze(TypeType{}, anal)
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)

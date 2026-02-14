@@ -97,6 +97,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 			At:    d.Name.GetSpan(),
 		})
 	}
+	anal.Define(d)
 }
 
 // Lower implements Declaration.
@@ -166,6 +167,7 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
+	anal.Define(d)
 }
 
 // Lower implements Declaration.

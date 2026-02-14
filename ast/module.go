@@ -30,8 +30,8 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		return
 	}
 	anal := Analyzer{
-		Errors:                &errors,
-		EvaluatedDeclarations: map[string]TopLevelDeclaration{},
+		Errors:  &errors,
+		Defined: map[TopLevelDeclaration]struct{}{},
 		Table: DeclarationTable{
 			topLevelDeclarations: declarations,
 		},
@@ -44,7 +44,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	}
 	for _, decl := range m.Declarations {
 		// FIXME: if the main function is not evaluated last then clang-repl evaluation breaks
-		_, evaluated := anal.EvaluatedDeclarations[decl.GetName().String]
+		_, evaluated := anal.Defined[decl]
 		if !evaluated {
 			decl.Analyze(anal)
 		}
@@ -52,8 +52,8 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	if len(anal.EvaluatedDeclarations) != len(anal.Declarations) {
-		panic("The number of evaluated declarations does not match the total number of declarations, even though the evaluation process has finished.")
+	if len(anal.Defined) != len(anal.Declarations) {
+		panic("The number of definitions does not match the number of declarations, even though the evaluation process has finished.")
 	}
 	lowered = cpp.Repl.GetDeclared() // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
 	return
