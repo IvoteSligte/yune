@@ -32,19 +32,7 @@ func UnmarshalType(data *fj.Value) Type {
 }
 
 func (t *Type) Analyze(anal Analyzer) TypeValue {
-	if t.value != nil {
-		return t.value
-	}
-	// type expressions operate in a different environment from regular expressions
-	typeAnal := Analyzer{
-		Errors:      anal.Errors,
-		Queries:     anal.Queries,
-		NeedsTypeOf: &[]Name{},
-		// Evaluation cannot depend on variable declarations in the outer scope
-		// as the values of these are not known.
-		Table: anal.Table.TopLevel(),
-	}
-	expressionType := t.Expression.Analyze(TypeType{}, typeAnal)
+	expressionType := t.Expression.Analyze(TypeType{}, anal)
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
 	if expressionType != nil && !expressionType.Eq(TypeType{}) {
@@ -54,10 +42,9 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 			At:       t.Expression.GetSpan(),
 		})
 	}
-	anal.Evaluate(t.Expression, func(json string) {
-		t.value = UnmarshalTypeValue(fj.MustParse(json))
-	})
-	return nil
+	json := anal.Evaluate(t.Expression)
+	t.value = UnmarshalTypeValue(fj.MustParse(json))
+	return t.value
 }
 
 var MainType = FnType{

@@ -125,7 +125,7 @@ type FunctionParameter struct {
 }
 
 func (d *FunctionParameter) Analyze(anal Analyzer) {
-	_ = d.Type.Analyze(anal)
+	d.Type.Analyze(anal)
 }
 
 func (d FunctionParameter) Lower() cpp.FunctionParameter {

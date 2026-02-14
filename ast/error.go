@@ -83,7 +83,7 @@ type UnexpectedType struct {
 }
 
 func (e UnexpectedType) Error() string {
-	if typeEqual(e.Expected, TypeType{}) {
+	if e.Expected.Eq(TypeType{}) {
 		return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
 	} else {
 		return fmt.Sprintf("Expected type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
