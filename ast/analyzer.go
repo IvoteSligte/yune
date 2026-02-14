@@ -7,7 +7,6 @@ import (
 
 type Analyzer struct {
 	Errors          *Errors
-	Declarations    map[string]TopLevelDeclaration
 	Defined         map[TopLevelDeclaration]struct{}
 	Table           DeclarationTable
 	GetTypeCallback func(Name)
@@ -46,6 +45,21 @@ func (a Analyzer) GetType(name Name) TypeValue {
 	}
 	if a.GetTypeCallback != nil {
 		a.GetTypeCallback(name)
+	}
+	topLevel, isTopLevel := decl.(TopLevelDeclaration)
+	if isTopLevel {
+		_, isDone := a.Defined[topLevel]
+		if !isDone {
+			// Keep only the relevant data for a top-level analyzer.
+			topLevel.Analyze(Analyzer{
+				Errors:  a.Errors,
+				Defined: a.Defined,
+				Table: DeclarationTable{
+					topLevelDeclarations: a.Table.topLevelDeclarations,
+				},
+				GetTypeCallback: nil,
+			})
+		}
 	}
 	return decl.GetDeclaredType()
 }

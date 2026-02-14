@@ -52,7 +52,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	if len(errors) > 0 {
 		return
 	}
-	if len(anal.Defined) != len(anal.Declarations) {
+	if len(anal.Defined) != len(declarations) {
 		panic("The number of definitions does not match the number of declarations, even though the evaluation process has finished.")
 	}
 	lowered = cpp.Repl.GetDeclared() // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
