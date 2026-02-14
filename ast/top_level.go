@@ -19,30 +19,25 @@ func registerNode(node Node) Id {
 	return id
 }
 
-// Analyzes a possibly unnamed function. `declaration == nil` for unnamed functions.
-func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters []FunctionParameter, returnType *Type, body Block) (_type TypeValue, usedVariables []Name) {
-	originalNeedsTypeOf := anal.NeedsTypeOf
-	anal = anal.NewScope()
-	scope := anal.GetScope()
-	anal.NeedsTypeOf = &usedVariables
+// Analyzes a possibly unnamed function. `declaration` should be nil for unnamed functions.
+// If non-nil, `captureCallback` is called with instances of variables that refer to declarations outside the function body.
+func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters []FunctionParameter, returnType *Type, body Block, captureCallback func(Name)) {
+	anal = anal.NewScope(captureCallback)
+
+	if declaration != nil { // allow recursion by registering the function
+		if err := anal.Table.Add(declaration); err != nil {
+			panic("Duplicate declaration error in new scope: " + err.Error())
+		}
+	}
 	// check for duplicate parameters
 	for i := range parameters {
 		param := &parameters[i]
-		prev, exists := scope[param.GetName().String]
-		if exists {
-			anal.PushError(DuplicateDeclaration{
-				First:  prev,
-				Second: param,
-			})
-		} else {
-			scope[param.GetName().String] = param
+		if err := anal.Table.Add(param); err != nil {
+			anal.PushError(err)
 		}
 	}
-	if declaration != nil { // allow recursion by registering the function
-		scope[declaration.GetName().String] = declaration
-	}
 	_returnType := returnType.Analyze(anal)
-	bodyType := body.Analyze(_returnType, anal.NewScope())
+	bodyType := body.Analyze(_returnType, anal)
 	if _returnType != nil && bodyType != nil && !_returnType.Eq(bodyType) {
 		anal.PushError(ReturnTypeMismatch{
 			Expected: _returnType,
@@ -50,9 +45,7 @@ func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters
 			At:       body.Statements[len(body.Statements)-1].GetSpan(),
 		})
 	}
-	*originalNeedsTypeOf = append(*originalNeedsTypeOf, usedVariables...)
-	_type = getFunctionType(parameters, *returnType)
-	return
+
 }
 
 func getFunctionType(parameters []FunctionParameter, returnType Type) TypeValue {
@@ -89,7 +82,7 @@ func (d *FunctionDeclaration) GetSpan() Span {
 
 // TypeCheckBody implements Declaration.
 func (d *FunctionDeclaration) Analyze(anal Analyzer) {
-	_, _ = analyzeFunction(anal, d, d.Parameters, &d.ReturnType, d.Body)
+	analyzeFunction(anal, d, d.Parameters, &d.ReturnType, d.Body, nil)
 	declaredType := d.GetDeclaredType()
 	if d.GetName().String == "main" && declaredType != nil && !declaredType.Eq(MainType) {
 		anal.PushError(InvalidMainSignature{
@@ -158,7 +151,7 @@ func (d *ConstantDeclaration) GetSpan() Span {
 // Analyze implements TopLevelDeclaration.
 func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 	declaredType := d.Type.Get()
-	bodyType := d.Body.Analyze(declaredType, anal.NewScope())
+	bodyType := d.Body.Analyze(declaredType, anal.NewScope(nil))
 
 	if declaredType != nil && bodyType != nil && !declaredType.Eq(bodyType) {
 		anal.PushError(ConstantTypeMismatch{

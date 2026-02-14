@@ -8,6 +8,8 @@ type DeclarationTable struct {
 	parent               *DeclarationTable
 	topLevelDeclarations map[string]TopLevelDeclaration
 	localDeclarations    map[string]Declaration
+	// Callback to be called when a variable cannot be found in the current scope.
+	callback func(Name)
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
@@ -25,39 +27,29 @@ func (table *DeclarationTable) Add(decl Declaration) error {
 	return nil
 }
 
-func (table DeclarationTable) NewScope() DeclarationTable {
+func (table DeclarationTable) NewScope(callback func(Name)) DeclarationTable {
 	return DeclarationTable{
 		parent:               &table,
 		topLevelDeclarations: table.topLevelDeclarations,
 		localDeclarations:    map[string]Declaration{},
+		callback:             callback,
 	}
 }
 
-func (table *DeclarationTable) Get(name string) (Declaration, bool) {
+func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 	if table == table.parent {
 		log.Panicf("Table at address %p has itself as parent.", table)
 	}
-	local, ok := table.localDeclarations[name]
+	local, ok := table.localDeclarations[name.String]
 	if !ok && table.parent != nil {
+		table.callback(name)
 		return table.parent.Get(name)
 	}
 	if !ok {
-		topLevel, ok := table.topLevelDeclarations[name]
+		topLevel, ok := table.topLevelDeclarations[name.String]
 		return topLevel, ok
 	}
 	return local, ok
-}
-
-func (table DeclarationTable) GetTopLevel(name string) (topLevel TopLevelDeclaration, ok bool) {
-	topLevel, ok = table.topLevelDeclarations[name]
-	return
-}
-
-func (table DeclarationTable) TopLevel() DeclarationTable {
-	if table.parent != nil {
-		return table.parent.TopLevel()
-	}
-	return table
 }
 
 type Declaration interface {

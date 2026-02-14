@@ -533,11 +533,11 @@ func (c *Closure) GetSpan() Span {
 
 // Analyze implements Expression.
 func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	_type, captures := analyzeFunction(anal, nil, c.Parameters, &c.ReturnType, c.Body)
-	for _, name := range captures {
+	captureCallback := func(name Name) {
 		c.captures[name.String] = anal.GetType(name)
 	}
-	return _type
+	analyzeFunction(anal, nil, c.Parameters, &c.ReturnType, c.Body, captureCallback)
+	return getFunctionType(c.Parameters, c.ReturnType)
 }
 
 // Lower implements Expression.

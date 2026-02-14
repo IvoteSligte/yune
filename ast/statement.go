@@ -84,7 +84,7 @@ type Assignment struct {
 // Analyze implements Statement.
 func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	targetType := a.Target.Analyze(nil, anal)
-	bodyType := a.Body.Analyze(targetType, anal.NewScope())
+	bodyType := a.Body.Analyze(targetType, anal.NewScope(nil))
 	if targetType != nil && bodyType != nil && !targetType.Eq(bodyType) {
 		anal.PushError(AssignmentTypeMismatch{
 			Expected: targetType,
@@ -135,8 +135,8 @@ type BranchStatement struct {
 // Analyze implements Statement.
 func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	conditionType := b.Condition.Analyze(BoolType{}, anal)
-	thenType := b.Then.Analyze(expected, anal.NewScope())
-	elseType := b.Else.Analyze(expected, anal.NewScope())
+	thenType := b.Then.Analyze(expected, anal.NewScope(nil))
+	elseType := b.Else.Analyze(expected, anal.NewScope(nil))
 
 	if conditionType != nil && !conditionType.Eq(BoolType{}) {
 		anal.PushError(InvalidConditionType{

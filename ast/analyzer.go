@@ -22,16 +22,6 @@ func (a Analyzer) HasErrors() bool {
 	return len(*a.Errors) > 0
 }
 
-func SubAnalyze[T any](a Analyzer, f func(Analyzer) T) T {
-	sub := Analyzer{
-		Errors: a.Errors,
-		// Evaluation cannot depend on variable declarations in the outer scope
-		// as the values of these are not known.
-		Table: a.Table.TopLevel(),
-	}
-	return f(sub)
-}
-
 // Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
 func (a Analyzer) Evaluate(expr Expression) (json string) {
 	definitions := []cpp.Definition{}
@@ -44,13 +34,13 @@ func (a Analyzer) Evaluate(expr Expression) (json string) {
 	return
 }
 
-func (a Analyzer) NewScope() Analyzer {
-	a.Table = a.Table.NewScope()
+func (a Analyzer) NewScope(callback func(Name)) Analyzer {
+	a.Table = a.Table.NewScope(callback)
 	return a
 }
 
 func (a Analyzer) GetType(name Name) TypeValue {
-	decl, ok := a.Table.Get(name.String)
+	decl, ok := a.Table.Get(name)
 	if !ok {
 		panic("Unknown declaration: " + name.String)
 	}
