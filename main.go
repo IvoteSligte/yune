@@ -87,16 +87,14 @@ func main() {
 		}
 		log.Fatalln("Errors found, exiting.")
 	}
-	fmt.Println("--- CPP header ---")
-	cpp.PrintFormatted(cppModule.Header())
-	fmt.Println("--- CPP implementation (should #include header) ---")
-	cpp.PrintFormatted(cppModule.Implementation())
-	fmt.Println("--- Output ---")
 	// TODO: add main function in yune/ast or yune/cpp
-	cppModule.Declarations = append(cppModule.Declarations, cpp.NewDeclaration("", `
+	cpp.PrintFormatted(cppModule + `
+
 int main() {
     main_();
     return 0;
-}`))
+}`)
+
+	fmt.Println("--- Output ---")
 	cpp.Run(cppModule)
 }
