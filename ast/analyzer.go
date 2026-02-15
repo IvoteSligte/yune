@@ -71,6 +71,14 @@ func (a Analyzer) GetType(name Name) TypeValue {
 // NOTE: probably want top-level declarations to declare their prototypes as soon as those are known,
 // and their full definitions after when they have been type checked
 
+func (a Analyzer) Declare(decl TopLevelDeclaration) {
+	lowered := decl.Lower()
+	err := cpp.Repl.Write(lowered.Header)
+	if err != nil {
+		panic("Failed to declare " + decl.GetName().String)
+	}
+}
+
 func (a Analyzer) Define(decl TopLevelDeclaration) {
 	_, alreadyDefined := a.Defined[decl]
 	if alreadyDefined {
@@ -78,7 +86,7 @@ func (a Analyzer) Define(decl TopLevelDeclaration) {
 	}
 	a.Defined[decl] = struct{}{}
 	lowered := decl.Lower()
-	err := cpp.Repl.Declare(lowered.Implementation)
+	err := cpp.Repl.Write(lowered.Implementation)
 	if err != nil {
 		panic("Failed to define declaration " + decl.GetName().String)
 	}

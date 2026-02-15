@@ -10,6 +10,27 @@ import (
 	"strings"
 )
 
+// TODO: properly close file
+var evalLogFile = func() *os.File {
+	filename := "/tmp/yune-eval.log"
+	_ = os.Remove(filename)
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println("Failed to open evaluation log file for writing. Error:", err)
+		return nil
+	}
+	return file
+}()
+
+func evalLog(s string) {
+	if evalLogFile != nil {
+		_, err := evalLogFile.Write([]byte(s))
+		if err != nil {
+			log.Println("Failed to write to open evaluation log file. Error:", err)
+		}
+	}
+}
+
 //go:embed "pb.hpp"
 var pbHeader string
 
@@ -33,7 +54,7 @@ var Repl repl = func() repl {
 		stdout:   bufio.NewReader(stdout),
 		declared: "",
 	}
-	err = r.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
+	err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
 	if err != nil {
 		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
 	}
@@ -52,6 +73,7 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
+	evalLog(expr + "\n")
 	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;"
 	_, err = r.stdin.Write([]byte(text + "\n"))
 	if err != nil {
@@ -74,7 +96,8 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 }
 
 // Write text without expecting a response, such as for function or constant declarations.
-func (r *repl) Declare(text string) (err error) {
+func (r *repl) Write(text string) (err error) {
+	evalLog(text + "\n")
 	_, err = r.stdin.Write([]byte(sanitize(text) + "\n"))
 	r.declared += text + "\n"
 	return

@@ -19,16 +19,8 @@ func registerNode(node Node) Id {
 	return id
 }
 
-// Analyzes a possibly unnamed function. `declaration` should be nil for unnamed functions.
-// If non-nil, `captureCallback` is called with instances of variables that refer to declarations outside the function body.
-func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters []FunctionParameter, returnType *Type, body Block, captureCallback func(Name)) {
-	anal = anal.NewScope(captureCallback)
-
-	if declaration != nil { // allow recursion by registering the function
-		if err := anal.Table.Add(declaration); err != nil {
-			panic("Duplicate declaration error in new scope: " + err.Error())
-		}
-	}
+// Assumes that the analyzer is in the function's body scope.
+func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, returnType *Type) {
 	// check for duplicate parameters
 	for i := range parameters {
 		param := &parameters[i]
@@ -37,11 +29,15 @@ func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters
 		}
 		param.Analyze(anal)
 	}
-	_returnType := returnType.Analyze(anal)
-	bodyType := body.Analyze(_returnType, anal)
-	if !_returnType.Eq(bodyType) {
+	returnType.Analyze(anal)
+}
+
+// Assumes that the analyzer is in the function's body scope and parameters have been declared.
+func analyzeFunctionBody(anal Analyzer, returnType TypeValue, body Block) {
+	bodyType := body.Analyze(returnType, anal)
+	if !returnType.Eq(bodyType) {
 		anal.PushError(ReturnTypeMismatch{
-			Expected: _returnType,
+			Expected: returnType,
 			Found:    bodyType,
 			At:       body.Statements[len(body.Statements)-1].GetSpan(),
 		})
@@ -85,7 +81,14 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	if d.ReturnType.Get() != nil {
 		return // already (being) analyzed
 	}
-	analyzeFunction(anal, d, d.Parameters, &d.ReturnType, d.Body, nil)
+	anal = anal.NewScope(nil)
+
+	if err := anal.Table.Add(d); err != nil {
+		panic("Duplicate declaration error in new scope: " + err.Error())
+	}
+	analyzeFunctionHeader(anal, d.Parameters, &d.ReturnType)
+	anal.Declare(d)
+	analyzeFunctionBody(anal, d.ReturnType.Get(), d.Body)
 	declaredType := d.GetDeclaredType()
 	if d.GetName().String == "main" && declaredType != nil && !declaredType.Eq(MainType) {
 		anal.PushError(InvalidMainSignature{
@@ -202,7 +205,7 @@ type TopLevelDeclaration interface {
 	// NOTE: when the value has been computed, this function should
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
-	Lower() cpp.Declaration
+	Lower() cpp.Declaration // NOTE: should this be split into separate functions for lowering to declaration and definition
 
 	Analyze(anal Analyzer)
 }

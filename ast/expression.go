@@ -536,7 +536,9 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	captureCallback := func(name Name) {
 		c.captures[name.String] = anal.GetType(name)
 	}
-	analyzeFunction(anal, nil, c.Parameters, &c.ReturnType, c.Body, captureCallback)
+	anal = anal.NewScope(captureCallback)
+	analyzeFunctionHeader(anal, c.Parameters, &c.ReturnType)
+	analyzeFunctionBody(anal, c.ReturnType.Get(), c.Body)
 	return getFunctionType(c.Parameters, c.ReturnType)
 }
 
