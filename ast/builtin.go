@@ -54,6 +54,7 @@ func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
 // Analyze implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Define(b)
 }
 
 var _ TopLevelDeclaration = BuiltinRawDeclaration{}
@@ -101,6 +102,7 @@ func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
 // Analyze implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Define(b)
 }
 
 var _ TopLevelDeclaration = BuiltinStructDeclaration{}
@@ -119,6 +121,7 @@ type BuiltinConstantDeclaration struct {
 // Analyze implements TopLevelDeclaration.
 func (b BuiltinConstantDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Define(b)
 }
 
 // GetName implements TopLevelDeclaration.
@@ -184,6 +187,7 @@ type BuiltinFunctionDeclaration struct {
 // Analyze implements TopLevelDeclaration.
 func (b BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Define(b)
 }
 
 // GetName implements TopLevelDeclaration.

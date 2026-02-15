@@ -1,6 +1,7 @@
 package cpp
 
 import (
+	"bufio"
 	_ "embed"
 	"io"
 	"log"
@@ -27,35 +28,43 @@ var Repl repl = func() repl {
 	if err != nil {
 		log.Fatalln("Failed to run clang-repl. Error:", err)
 	}
-	c := repl{stdin, stdout, ""}
-	err = c.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
+	r := repl{
+		stdin:    stdin,
+		stdout:   bufio.NewReader(stdout),
+		declared: "",
+	}
+	err = r.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
 	if err != nil {
 		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
 	}
-	return c
+	return r
 }()
 
 // clang-repl wrapper struct
 type repl struct {
 	stdin    io.Writer
-	stdout   io.Reader
+	stdout   *bufio.Reader
 	declared string
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
 	text := "std::cout << ty::serialize(" + strings.ReplaceAll(expr, "\n", "") + ") << std::endl;"
 	println("Evaluating:", text)
-	_, err = r.stdin.Write([]byte(text))
+	_, err = r.stdin.Write([]byte(text + "\n"))
 	if err != nil {
 		return
 	}
-	bytes := []byte{}
-	_, err = r.stdout.Read(bytes)
-	output = string(bytes)
+	output, err = r.stdout.ReadString('\n')
+	if err != nil {
+		return
+	}
 	if output == "" {
-		println(r.declared + text)
 		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
 	} else {
+		// NOTE: why is there an extra newline at the end of the string?
+		if output[len(output)-1] == '\n' {
+			output = output[:len(output)-1]
+		}
 		log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
 	}
 	return
