@@ -28,7 +28,7 @@ var Repl repl = func() repl {
 		log.Fatalln("Failed to run clang-repl. Error:", err)
 	}
 	c := repl{stdin, stdout, ""}
-	err = c.Declare(pbHeader)
+	err = c.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
 	if err != nil {
 		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
 	}
@@ -63,8 +63,8 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 
 // Write text without expecting a response, such as for function or constant declarations.
 func (r *repl) Declare(text string) (err error) {
-	_, err = r.stdin.Write([]byte(text))
-	r.declared += "\n" + text
+	_, err = r.stdin.Write([]byte(text + "\n"))
+	r.declared += text + "\n"
 	return
 }
 
