@@ -46,6 +46,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		// FIXME: if the main function is not evaluated last then clang-repl evaluation breaks
 		_, evaluated := anal.Defined[decl]
 		if !evaluated {
+			println("analyzing top-level", decl.GetName().String)
 			decl.Analyze(anal)
 		}
 	}

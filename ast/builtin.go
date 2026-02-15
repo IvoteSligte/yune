@@ -7,16 +7,16 @@ import (
 )
 
 var BuiltinDeclarations = []TopLevelDeclaration{
-	IntDeclaration,
-	FloatDeclaration,
-	BoolDeclaration,
-	StringDeclaration,
-	ListDeclaration,
-	FnDeclaration,
-	TypeDeclaration,
-	ExpressionDeclaration,
-	StringLiteralDeclaration,
-	PrintStringDeclaration,
+	&IntDeclaration,
+	&FloatDeclaration,
+	&BoolDeclaration,
+	&StringDeclaration,
+	&ListDeclaration,
+	&FnDeclaration,
+	&TypeDeclaration,
+	&ExpressionDeclaration,
+	&StringLiteralDeclaration,
+	&PrintStringDeclaration,
 }
 
 // Declares a type that will exist in the C++ code, but not in the Yune code.
@@ -52,12 +52,12 @@ func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
 }
 
 // Analyze implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) Analyze(anal Analyzer) {
+func (b *BuiltinRawDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 	anal.Define(b)
 }
 
-var _ TopLevelDeclaration = BuiltinRawDeclaration{}
+var _ TopLevelDeclaration = (*BuiltinRawDeclaration)(nil)
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
@@ -119,7 +119,7 @@ type BuiltinConstantDeclaration struct {
 }
 
 // Analyze implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) Analyze(anal Analyzer) {
+func (b *BuiltinConstantDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 	anal.Define(b)
 }
@@ -144,7 +144,7 @@ func (b BuiltinConstantDeclaration) Lower() cpp.Declaration {
 	return cpp.ConstantDeclaration(b.Name, b.Type.Lower(), b.Value)
 }
 
-var _ TopLevelDeclaration = BuiltinConstantDeclaration{}
+var _ TopLevelDeclaration = (*BuiltinConstantDeclaration)(nil)
 
 var TypeDeclaration = BuiltinConstantDeclaration{
 	Name:  "Type",
@@ -185,7 +185,7 @@ type BuiltinFunctionDeclaration struct {
 }
 
 // Analyze implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
+func (b *BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
 	anal.Define(b)
 }
@@ -271,7 +271,7 @@ std::cout << string << std::endl;
 return std::make_tuple();`,
 }
 
-var _ TopLevelDeclaration = BuiltinFunctionDeclaration{}
+var _ TopLevelDeclaration = (*BuiltinFunctionDeclaration)(nil)
 
 type BuiltinFunctionParameter struct {
 	Name string

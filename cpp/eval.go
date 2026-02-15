@@ -47,9 +47,12 @@ type repl struct {
 	declared string
 }
 
+func sanitize(s string) string {
+	return strings.ReplaceAll(s, "\n", "")
+}
+
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
-	text := "std::cout << ty::serialize(" + strings.ReplaceAll(expr, "\n", "") + ") << std::endl;"
-	println("Evaluating:", text)
+	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;"
 	_, err = r.stdin.Write([]byte(text + "\n"))
 	if err != nil {
 		return
@@ -72,7 +75,7 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 
 // Write text without expecting a response, such as for function or constant declarations.
 func (r *repl) Declare(text string) (err error) {
-	_, err = r.stdin.Write([]byte(text + "\n"))
+	_, err = r.stdin.Write([]byte(sanitize(text) + "\n"))
 	r.declared += text + "\n"
 	return
 }

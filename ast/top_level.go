@@ -35,17 +35,17 @@ func analyzeFunction(anal Analyzer, declaration *FunctionDeclaration, parameters
 		if err := anal.Table.Add(param); err != nil {
 			anal.PushError(err)
 		}
+		param.Analyze(anal)
 	}
 	_returnType := returnType.Analyze(anal)
 	bodyType := body.Analyze(_returnType, anal)
-	if _returnType != nil && bodyType != nil && !_returnType.Eq(bodyType) {
+	if !_returnType.Eq(bodyType) {
 		anal.PushError(ReturnTypeMismatch{
 			Expected: _returnType,
 			Found:    bodyType,
 			At:       body.Statements[len(body.Statements)-1].GetSpan(),
 		})
 	}
-
 }
 
 func getFunctionType(parameters []FunctionParameter, returnType Type) TypeValue {
@@ -82,6 +82,9 @@ func (d *FunctionDeclaration) GetSpan() Span {
 
 // TypeCheckBody implements Declaration.
 func (d *FunctionDeclaration) Analyze(anal Analyzer) {
+	if d.ReturnType.Get() != nil {
+		return // already (being) analyzed
+	}
 	analyzeFunction(anal, d, d.Parameters, &d.ReturnType, d.Body, nil)
 	declaredType := d.GetDeclaredType()
 	if d.GetName().String == "main" && declaredType != nil && !declaredType.Eq(MainType) {
@@ -119,6 +122,9 @@ type FunctionParameter struct {
 }
 
 func (d *FunctionParameter) Analyze(anal Analyzer) {
+	if d.Type.Get() != nil {
+		panic("Re-analyzing function parameter '" + d.Name.String + "'")
+	}
 	d.Type.Analyze(anal)
 }
 
@@ -150,6 +156,9 @@ func (d *ConstantDeclaration) GetSpan() Span {
 
 // Analyze implements TopLevelDeclaration.
 func (d *ConstantDeclaration) Analyze(anal Analyzer) {
+	if d.Type.Get() != nil {
+		return // already (being) analyzed
+	}
 	declaredType := d.Type.Analyze(anal)
 	bodyType := d.Body.Analyze(declaredType, anal.NewScope(nil))
 

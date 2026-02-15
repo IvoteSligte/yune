@@ -42,7 +42,9 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 	}
 	local, ok := table.localDeclarations[name.String]
 	if !ok && table.parent != nil {
-		table.callback(name)
+		if table.callback != nil {
+			table.callback(name)
+		}
 		return table.parent.Get(name)
 	}
 	if !ok {

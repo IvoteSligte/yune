@@ -61,7 +61,11 @@ func (a Analyzer) GetType(name Name) TypeValue {
 			})
 		}
 	}
-	return decl.GetDeclaredType()
+	_type := decl.GetDeclaredType()
+	if _type == nil {
+		panic("Declaration.GetDeclaredType() returned nil on declaration '" + name.String + "'")
+	}
+	return _type
 }
 
 // NOTE: probably want top-level declarations to declare their prototypes as soon as those are known,
