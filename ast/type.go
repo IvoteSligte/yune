@@ -32,12 +32,11 @@ func UnmarshalType(data *fj.Value) Type {
 }
 
 func (t *Type) Analyze(anal Analyzer) TypeValue {
-	println("start analyzing type")
 	// FIXME: t.Expression.Analyze can access local variables right now
 	expressionType := t.Expression.Analyze(TypeType{}, anal)
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
-	if expressionType != nil && !expressionType.Eq(TypeType{}) {
+	if !expressionType.Eq(TypeType{}) {
 		anal.PushError(UnexpectedType{
 			Expected: TypeType{},
 			Found:    t.value,
@@ -46,7 +45,6 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	}
 	json := anal.Evaluate(t.Expression)
 	t.value = UnmarshalTypeValue(fj.MustParse(json))
-	println("finish analyzing type")
 	return t.value
 }
 

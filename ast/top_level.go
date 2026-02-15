@@ -150,10 +150,10 @@ func (d *ConstantDeclaration) GetSpan() Span {
 
 // Analyze implements TopLevelDeclaration.
 func (d *ConstantDeclaration) Analyze(anal Analyzer) {
-	declaredType := d.Type.Get()
+	declaredType := d.Type.Analyze(anal)
 	bodyType := d.Body.Analyze(declaredType, anal.NewScope(nil))
 
-	if declaredType != nil && bodyType != nil && !declaredType.Eq(bodyType) {
+	if !declaredType.Eq(bodyType) {
 		anal.PushError(ConstantTypeMismatch{
 			Expected: declaredType,
 			Found:    bodyType,

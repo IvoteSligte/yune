@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 //go:embed "pb.hpp"
@@ -41,25 +42,32 @@ type repl struct {
 	declared string
 }
 
-func (c *repl) Evaluate(expr Expression) (output string, err error) {
-	_, err = c.stdin.Write([]byte("std::cout << ty::serialize(" + expr + ") << std::endl;"))
+func (r *repl) Evaluate(expr Expression) (output string, err error) {
+	text := "std::cout << ty::serialize(" + strings.ReplaceAll(expr, "\n", "") + ") << std::endl;"
+	println("Evaluating:", text)
+	_, err = r.stdin.Write([]byte(text))
 	if err != nil {
 		return
 	}
 	bytes := []byte{}
-	_, err = c.stdout.Read(bytes)
+	_, err = r.stdout.Read(bytes)
 	output = string(bytes)
-	log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
+	if output == "" {
+		println(r.declared + text)
+		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
+	} else {
+		log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
+	}
 	return
 }
 
 // Write text without expecting a response, such as for function or constant declarations.
-func (c *repl) Declare(text string) (err error) {
-	_, err = c.stdin.Write([]byte(text))
-	c.declared += "\n" + text
+func (r *repl) Declare(text string) (err error) {
+	_, err = r.stdin.Write([]byte(text))
+	r.declared += "\n" + text
 	return
 }
 
-func (c *repl) GetDeclared() string {
-	return c.declared
+func (r *repl) GetDeclared() string {
+	return r.declared
 }
