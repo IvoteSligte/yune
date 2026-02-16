@@ -542,7 +542,7 @@ func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
 	definition := fmt.Sprintf(`struct {
     %s operator()(%s) const %s
     std::string serialize() const {
-        return R"({ "ClosureId": "%d" })";
+        return R"({ "ClosureId": "%s" })";
     }
     %s
 } %s{%s};`,
