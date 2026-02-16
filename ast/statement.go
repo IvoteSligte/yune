@@ -37,8 +37,8 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 
 // InferType implements Statement.
 func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	bodyType := d.Body.Analyze(d.Type.Get(), anal)
 	declType := d.Type.Analyze(anal)
+	bodyType := d.Body.Analyze(d.Type.Get(), anal)
 	if bodyType != nil && declType != nil && !declType.Eq(bodyType) {
 		anal.PushError(VariableTypeMismatch{
 			Expected: declType,
@@ -52,7 +52,7 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 // Lower implements Statement.
 func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
-		d.Type.value.Lower(), // TODO: actually register the type too (if a StructType)
+		d.Type.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.Lower(),
 		cpp.LambdaBlock(d.Body.Lower()),
 	)
