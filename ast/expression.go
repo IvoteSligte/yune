@@ -515,6 +515,8 @@ func (c *Closure) GetSpan() Span {
 
 // Analyze implements Expression.
 func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	// FIXME: causes loop due to this function being called by DeclarationTable.Get
+	// and also calling it through anal.GetType
 	captureCallback := func(name Name) {
 		c.captures[name.String] = anal.GetType(name)
 	}
@@ -526,7 +528,6 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 
 // Lower implements Expression.
 func (c *Closure) Lower(defs *[]cpp.Definition) cpp.Expression {
-	// TODO: fully prevent naming conflicts instead of using rand
 	id := registerNode(c)
 	name := fmt.Sprintf("closure_%x_", id)
 	fields := ""
