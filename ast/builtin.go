@@ -28,6 +28,11 @@ type BuiltinRawDeclaration struct {
 	Implementation string
 }
 
+// GetId implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) GetId() string {
+	return b.Name
+}
+
 // GetName implements TopLevelDeclaration.
 func (b BuiltinRawDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -54,6 +59,7 @@ func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
 // Analyze implements TopLevelDeclaration.
 func (b *BuiltinRawDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Declare(b)
 	anal.Define(b)
 }
 
@@ -72,6 +78,11 @@ ty::Expression stringLiteral(std::string str) {
 type BuiltinStructDeclaration struct {
 	Name   string
 	Fields []BuiltinFieldDeclaration
+}
+
+// GetId implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) GetId() string {
+	return b.Name
 }
 
 // GetName implements TopLevelDeclaration.
@@ -100,12 +111,13 @@ func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
 }
 
 // Analyze implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) Analyze(anal Analyzer) {
+func (b *BuiltinStructDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Declare(b)
 	anal.Define(b)
 }
 
-var _ TopLevelDeclaration = BuiltinStructDeclaration{}
+var _ TopLevelDeclaration = (*BuiltinStructDeclaration)(nil)
 
 type BuiltinFieldDeclaration struct {
 	Name string
@@ -118,9 +130,15 @@ type BuiltinConstantDeclaration struct {
 	Value string
 }
 
+// GetId implements TopLevelDeclaration.
+func (b BuiltinConstantDeclaration) GetId() string {
+	return b.Name
+}
+
 // Analyze implements TopLevelDeclaration.
 func (b *BuiltinConstantDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Declare(b)
 	anal.Define(b)
 }
 
@@ -184,9 +202,15 @@ type BuiltinFunctionDeclaration struct {
 	Body       string
 }
 
+// GetId implements TopLevelDeclaration.
+func (b BuiltinFunctionDeclaration) GetId() string {
+	return b.Name
+}
+
 // Analyze implements TopLevelDeclaration.
 func (b *BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
+	anal.Declare(b)
 	anal.Define(b)
 }
 

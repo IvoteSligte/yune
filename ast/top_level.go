@@ -1,20 +1,19 @@
 package ast
 
 import (
-	"math/rand/v2"
 	"yune/cpp"
 	"yune/util"
 )
 
-type Id = uint64
+type GetId interface {
+	GetId() string
+}
 
 // Stores declarations that need to be serializable from C++, such as functions.
-var registeredNodes = map[Id]Node{}
+var registeredNodes = map[string]GetId{}
 
-// TODO: free stored declarations use human-readable strings as Id,
-// and only add nodes to the map once (instead of every call to Lower)
-func registerNode(node Node) Id {
-	id := rand.Uint64()
+func registerNode(node GetId) string {
+	id := node.GetId()
 	registeredNodes[id] = node
 	return id
 }
@@ -69,6 +68,11 @@ type FunctionDeclaration struct {
 	Parameters []FunctionParameter
 	ReturnType Type
 	Body       Block
+}
+
+// GetId implements TopLevelDeclaration.
+func (d *FunctionDeclaration) GetId() string {
+	return d.Name.String
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -152,6 +156,11 @@ type ConstantDeclaration struct {
 	Body Block
 }
 
+// GetId implements TopLevelDeclaration.
+func (d *ConstantDeclaration) GetId() string {
+	return d.Name.String
+}
+
 // GetSpan implements TopLevelDeclaration.
 func (d *ConstantDeclaration) GetSpan() Span {
 	return d.Name.GetSpan()
@@ -199,6 +208,8 @@ func (d ConstantDeclaration) GetDeclarationType() Type {
 
 type TopLevelDeclaration interface {
 	Declaration
+	GetId
+
 	// Lowers the declaration to executable C++ code.
 	// Assumes type checking has been performed.
 	//

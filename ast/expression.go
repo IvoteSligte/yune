@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"yune/cpp"
 	"yune/util"
 
@@ -13,21 +12,13 @@ import (
 
 type Expression interface {
 	Node
-	SetId()
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
 	Lower(defs *[]cpp.Definition) cpp.Expression
 }
 
-type DefaultExpression struct{}
-
 type Integer struct {
-	DefaultExpression
 	Span  Span
 	Value int64
-}
-
-// SetId implements Expression.
-func (i *Integer) SetId() {
 }
 
 // GetSpan implements Expression.
@@ -46,13 +37,12 @@ func (i Integer) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 type Float struct {
-	DefaultExpression
 	Span  Span
 	Value float64
 }
 
-// SetId implements Expression.
-func (f *Float) SetId() {
+// GetId implements Expression.
+func (f *Float) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -71,13 +61,12 @@ func (f Float) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 type Bool struct {
-	DefaultExpression
 	Span  Span
 	Value bool
 }
 
-// SetId implements Expression.
-func (b *Bool) SetId() {
+// GetId implements Expression.
+func (b *Bool) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -96,13 +85,12 @@ func (b Bool) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 type String struct {
-	DefaultExpression
 	Span  Span
 	Value string
 }
 
-// SetId implements Expression.
-func (s *String) SetId() {
+// GetId implements Expression.
+func (s *String) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -122,12 +110,11 @@ func (s String) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 type Variable struct {
-	DefaultExpression
 	Name Name
 }
 
-// SetId implements Expression.
-func (v *Variable) SetId() {
+// GetId implements Expression.
+func (v *Variable) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -146,15 +133,14 @@ func (v *Variable) Lower(defs *[]cpp.Definition) cpp.Expression {
 }
 
 type FunctionCall struct {
-	DefaultExpression
 	Span            Span
 	Function        Expression
 	Argument        Expression
 	ArgumentIsTuple bool
 }
 
-// SetId implements Expression.
-func (f *FunctionCall) SetId() {
+// GetId implements Expression.
+func (f *FunctionCall) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -200,14 +186,13 @@ func (f *FunctionCall) Lower(defs *[]cpp.Definition) cpp.Expression {
 }
 
 type Tuple struct {
-	DefaultExpression
 	Span     Span
 	IsType   bool
 	Elements []Expression
 }
 
-// SetId implements Expression.
-func (t *Tuple) SetId() {
+// GetId implements Expression.
+func (t *Tuple) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -262,7 +247,6 @@ func (t *Tuple) Lower(defs *[]cpp.Definition) cpp.Expression {
 }
 
 type Macro struct {
-	DefaultExpression
 	Span Span
 	// Function that evaluates the macro.
 	Function Variable
@@ -271,8 +255,8 @@ type Macro struct {
 	Result Expression
 }
 
-// SetId implements Expression.
-func (m *Macro) SetId() {
+// GetId implements Expression.
+func (m *Macro) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -327,14 +311,13 @@ type MacroLine struct {
 }
 
 type UnaryExpression struct {
-	DefaultExpression
 	Span       Span
 	Op         UnaryOp
 	Expression Expression
 }
 
-// SetId implements Expression.
-func (u *UnaryExpression) SetId() {
+// GetId implements Expression.
+func (u *UnaryExpression) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -377,15 +360,14 @@ const (
 )
 
 type BinaryExpression struct {
-	DefaultExpression
 	Span  Span
 	Op    BinaryOp
 	Left  Expression
 	Right Expression
 }
 
-// SetId implements Expression.
-func (b *BinaryExpression) SetId() {
+// GetId implements Expression.
+func (b *BinaryExpression) GetId() {
 }
 
 // GetSpan implements Expression.
@@ -487,7 +469,6 @@ const (
 )
 
 type StructExpression struct {
-	DefaultExpression
 	Span   Span
 	Name   string
 	Fields map[string]Expression
@@ -498,7 +479,7 @@ func (s *StructExpression) GetSpan() Span {
 	return s.Span
 }
 
-func (s StructExpression) SetId() {
+func (s StructExpression) GetId() {
 }
 
 func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
@@ -514,7 +495,6 @@ func (s StructExpression) Lower(defs *[]cpp.Definition) cpp.Expression {
 }
 
 type Closure struct {
-	DefaultExpression
 	Span       Span
 	Parameters []FunctionParameter
 	ReturnType Type
@@ -522,8 +502,10 @@ type Closure struct {
 	captures   map[string]TypeValue
 }
 
-// SetId implements Expression.
-func (c *Closure) SetId() {
+// GetId implements Expression.
+func (c *Closure) GetId() string {
+	// NOTE: this requires unique Span for C++-generated Closure definitions
+	return fmt.Sprintf("closure_%d_%d", c.Span.Line, c.Span.Column)
 }
 
 // GetSpan implements Expression.
@@ -651,12 +633,8 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
 	case "ClosureId":
-		base := 10
-		id, err := strconv.ParseUint(string(v.GetStringBytes()), base, 64)
-		if err != nil {
-			log.Fatalf("Failed to parse closure id. JSON: %s. Error: %s", v, err)
-		}
-		expr = registeredNodes[id].(Expression)
+		id := string(v.GetStringBytes())
+		expr = registeredNodes[id].(*Closure)
 	default:
 		// expr = nil
 	}

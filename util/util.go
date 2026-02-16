@@ -102,6 +102,15 @@ func NewSet[T comparable](values ...T) Set[T] {
 	return set
 }
 
+func (s Set[T]) Add(element T) {
+	s[element] = struct{}{}
+}
+
+func (s Set[T]) Contains(element T) bool {
+	_, contains := s[element]
+	return contains
+}
+
 func Contains[Map ~map[K]V, K comparable, V any](m Map, keys ...K) bool {
 	for _, key := range keys {
 		_, ok := m[key]

@@ -22,18 +22,18 @@ func NewDeclaration(header string, implementation string) Declaration {
 	return Declaration{Header: header, Implementation: implementation}
 }
 
-func FunctionDeclaration(id uint64, name string, parameters []FunctionParameter, returnType Type, body Body) Declaration {
+func FunctionDeclaration(id string, name string, parameters []FunctionParameter, returnType Type, body Body) Declaration {
 	params := strings.Join(parameters, ", ")
 	return NewDeclaration(
 		/* Header */ fmt.Sprintf(`
-struct _%d {
+struct %s_ {
     %s operator()(%s) const;
     std::string serialize() const;
 } %s;`, id, returnType, params, name),
 		/* Implementation */ fmt.Sprintf(`
-%s _%d::operator()(%s) const %s
-std::string _%d::serialize() const {
-    return R"({ "FnId": "%d" })";
+%s %s_::operator()(%s) const %s
+std::string %s_::serialize() const {
+    return R"({ "FnId": "%s" })";
 }`, returnType, id, params, body, id, id),
 	)
 }
