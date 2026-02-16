@@ -515,10 +515,10 @@ func (c *Closure) GetSpan() Span {
 
 // Analyze implements Expression.
 func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	// FIXME: causes loop due to this function being called by DeclarationTable.Get
-	// and also calling it through anal.GetType
-	captureCallback := func(name Name) {
-		c.captures[name.String] = anal.GetType(name)
+	c.captures = map[string]TypeValue{} // prevents nil dereference error when adding to map
+	captureCallback := func(name Name, decl Declaration) {
+		// NOTE: this should not call anal.GetType because that causes a feedback loop
+		c.captures[name.String] = decl.GetDeclaredType()
 	}
 	anal = anal.NewScope(captureCallback)
 	analyzeFunctionHeader(anal, c.Parameters, &c.ReturnType)

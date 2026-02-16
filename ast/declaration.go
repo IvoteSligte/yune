@@ -9,7 +9,7 @@ type DeclarationTable struct {
 	topLevelDeclarations map[string]TopLevelDeclaration
 	localDeclarations    map[string]Declaration
 	// Callback to be called when a variable cannot be found in the current scope.
-	callback func(Name)
+	callback func(Name, Declaration)
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
@@ -27,7 +27,7 @@ func (table *DeclarationTable) Add(decl Declaration) error {
 	return nil
 }
 
-func (table DeclarationTable) NewScope(callback func(Name)) DeclarationTable {
+func (table DeclarationTable) NewScope(callback func(Name, Declaration)) DeclarationTable {
 	return DeclarationTable{
 		parent:               &table,
 		topLevelDeclarations: table.topLevelDeclarations,
@@ -42,10 +42,11 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 	}
 	local, ok := table.localDeclarations[name.String]
 	if !ok && table.parent != nil {
-		if table.callback != nil {
-			table.callback(name)
+		decl, found := table.parent.Get(name)
+		if found && table.callback != nil {
+			table.callback(name, decl)
 		}
-		return table.parent.Get(name)
+		return decl, found
 	}
 	if !ok {
 		topLevel, ok := table.topLevelDeclarations[name.String]

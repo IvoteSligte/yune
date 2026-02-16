@@ -33,7 +33,7 @@ func (a Analyzer) Evaluate(expr Expression) (json string) {
 	return
 }
 
-func (a Analyzer) NewScope(callback func(Name)) Analyzer {
+func (a Analyzer) NewScope(callback func(Name, Declaration)) Analyzer {
 	a.Table = a.Table.NewScope(callback)
 	return a
 }
