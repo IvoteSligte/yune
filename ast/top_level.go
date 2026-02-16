@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"yune/cpp"
 	"yune/util"
 )
@@ -103,15 +104,23 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	anal.Define(d)
 }
 
-// Lower implements Declaration.
-func (d *FunctionDeclaration) Lower() cpp.Declaration {
-	return cpp.FunctionDeclaration(
-		registerNode(d),
-		d.Name.Lower(),
-		util.Map(d.Parameters, FunctionParameter.Lower),
-		d.ReturnType.Lower(),
-		cpp.Block(d.Body.Lower()),
-	)
+// LowerDeclaration implements TopLevelDeclaration.
+func (d *FunctionDeclaration) LowerDeclaration() cpp.Declaration {
+	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
+	return fmt.Sprintf(`struct %s_ {
+    %s operator()(%s) const;
+    std::string serialize() const;
+} %s;`, d.GetId(), d.ReturnType.Lower(), params, d.Name.Lower())
+}
+
+// LowerDefinition implements TopLevelDeclaration.
+func (d *FunctionDeclaration) LowerDefinition() cpp.Definition {
+	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
+	id := d.GetId()
+	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
+std::string %s_::serialize() const {
+    return R"({ "FnId": "%s" })";
+}`, d.ReturnType.Lower(), id, params, cpp.Block(d.Body.Lower()), id, id)
 }
 
 func (d FunctionDeclaration) GetName() Name {
@@ -136,7 +145,7 @@ func (d *FunctionParameter) Analyze(anal Analyzer) {
 }
 
 func (d FunctionParameter) Lower() cpp.FunctionParameter {
-	return d.Type.Lower() + " " + d.Name.String
+	return d.Type.Lower() + " " + d.Name.Lower()
 }
 
 // GetName implements Declaration
@@ -184,13 +193,14 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 	anal.Define(d)
 }
 
-// Lower implements Declaration.
-func (d ConstantDeclaration) Lower() cpp.Declaration {
-	return cpp.ConstantDeclaration(
-		d.Name.Lower(),
-		d.Type.Lower(),
-		cpp.LambdaBlock(d.Body.Lower()),
-	)
+// LowerDeclaration implements TopLevelDeclaration.
+func (d ConstantDeclaration) LowerDeclaration() cpp.Declaration {
+	return fmt.Sprintf("extern %s %s;", d.Type.Lower(), d.Name.Lower())
+}
+
+// LowerDefinition implements TopLevelDeclaration.
+func (d ConstantDeclaration) LowerDefinition() cpp.Definition {
+	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower()))
 }
 
 // GetType implements Declaration.
@@ -210,13 +220,17 @@ type TopLevelDeclaration interface {
 	Declaration
 	GetId
 
-	// Lowers the declaration to executable C++ code.
+	// Lowers the declaration to a C++ forward declaration.
 	// Assumes type checking has been performed.
+	LowerDeclaration() cpp.Declaration
+
+	// Lowers the declaration to executable C++ code.
+	// Assumes LowerDeclaration has been called.
 	//
 	// NOTE: when the value has been computed, this function should
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
-	Lower() cpp.Declaration // NOTE: should this be split into separate functions for lowering to declaration and definition
+	LowerDefinition() cpp.Definition
 
 	Analyze(anal Analyzer)
 }

@@ -25,10 +25,6 @@ func Block(b []Statement) string {
 	return "{\n" + strings.Join(b, "\n") + "\n}"
 }
 
-// Only the implementation part of a declaration.
-// Useful for local declarations (i.e. declarations within functions).
-type Definition = string
-
 type Field struct {
 	Name string
 	Type Type
@@ -37,3 +33,10 @@ type Field struct {
 type Statement = string
 
 type Module = string
+
+type Body = string
+
+type Declaration = string
+type Definition = string
+
+type FunctionParameter = string

@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"strings"
+	"fmt"
 	"yune/cpp"
 	"yune/util"
 )
@@ -21,11 +21,11 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 
 // Declares a type that will exist in the C++ code, but not in the Yune code.
 type BuiltinRawDeclaration struct {
-	Name           string
-	Type           TypeValue
-	Requires       []string
-	Header         string
-	Implementation string
+	Name        string
+	Type        TypeValue
+	Requires    []string
+	Declaration string
+	Definition  string
 }
 
 // GetId implements TopLevelDeclaration.
@@ -48,12 +48,14 @@ func (b BuiltinRawDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
-// Lower implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) Lower() cpp.Declaration {
-	return cpp.Declaration{
-		Header:         b.Header,
-		Implementation: b.Implementation,
-	}
+// LowerDeclaration implements TopLevelDeclaration.
+func (b BuiltinRawDeclaration) LowerDeclaration() cpp.Declaration {
+	return b.Declaration
+}
+
+// LowerDefinition implements TopLevelDefinition.
+func (b BuiltinRawDeclaration) LowerDefinition() cpp.Definition {
+	return b.Definition
 }
 
 // Analyze implements TopLevelDeclaration.
@@ -69,7 +71,7 @@ var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
 	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
-	Implementation: `
+	Definition: `
 ty::Expression stringLiteral(std::string str) {
     return ty::StringLiteral { .value = str };
 };`,
@@ -100,14 +102,17 @@ func (b BuiltinStructDeclaration) GetDeclaredType() TypeValue {
 	return TypeType{}
 }
 
-// Lower implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) Lower() cpp.Declaration {
-	return cpp.StructDeclaration(
-		b.Name,
-		util.Map(b.Fields, func(f BuiltinFieldDeclaration) string {
-			return cpp.NewField(f.Name, f.Type)
-		}),
-	)
+// LowerDeclaration implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) LowerDeclaration() cpp.Declaration {
+	fields := util.Map(b.Fields, func(f BuiltinFieldDeclaration) string {
+		return fmt.Sprintf("%s %s;", f.Name, f.Type)
+	})
+	return fmt.Sprintf("struct %s %s;", b.Name, cpp.Block(fields))
+}
+
+// LowerDefinition implements TopLevelDeclaration.
+func (b BuiltinStructDeclaration) LowerDefinition() cpp.Definition {
+	return ""
 }
 
 // Analyze implements TopLevelDeclaration.
@@ -157,9 +162,14 @@ func (b BuiltinConstantDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
-// Lower implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) Lower() cpp.Declaration {
-	return cpp.ConstantDeclaration(b.Name, b.Type.Lower(), b.Value)
+// LowerDeclaration implements TopLevelDeclaration.
+func (d BuiltinConstantDeclaration) LowerDeclaration() cpp.Declaration {
+	return fmt.Sprintf("extern %s %s;", d.Type.Lower(), d.Name)
+}
+
+// LowerDefinition implements TopLevelDeclaration.
+func (d BuiltinConstantDeclaration) LowerDefinition() cpp.Definition {
+	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name, d.Value)
 }
 
 var _ TopLevelDeclaration = (*BuiltinConstantDeclaration)(nil)
@@ -236,17 +246,23 @@ func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	return FnType{Argument: argument, Return: b.ReturnType}
 }
 
-// Lower implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) Lower() cpp.Declaration {
-	return cpp.FunctionDeclaration(
-		registerNode(b),
-		b.Name,
-		util.Map(b.Parameters, func(p BuiltinFunctionParameter) string {
-			return p.Type.Lower() + " " + p.Name
-		}),
-		b.ReturnType.Lower(),
-		cpp.Block(strings.Split(b.Body, "\n")),
-	)
+// LowerDeclaration implements TopLevelDeclaration.
+func (d *BuiltinFunctionDeclaration) LowerDeclaration() cpp.Declaration {
+	params := util.JoinFunction(d.Parameters, ", ", BuiltinFunctionParameter.Lower)
+	return fmt.Sprintf(`struct %s_ {
+    %s operator()(%s) const;
+    std::string serialize() const;
+} %s;`, d.GetId(), d.ReturnType.Lower(), params, d.Name)
+}
+
+// LowerDefinition implements TopLevelDeclaration.
+func (d *BuiltinFunctionDeclaration) LowerDefinition() cpp.Definition {
+	params := util.JoinFunction(d.Parameters, ", ", BuiltinFunctionParameter.Lower)
+	id := d.GetId()
+	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
+std::string %s_::serialize() const {
+    return R"({ "FnId": "%s" })";
+}`, d.ReturnType.Lower(), id, params, "{"+d.Body+"\n}", id, id)
 }
 
 var FnDeclaration = BuiltinFunctionDeclaration{
@@ -300,4 +316,8 @@ var _ TopLevelDeclaration = (*BuiltinFunctionDeclaration)(nil)
 type BuiltinFunctionParameter struct {
 	Name string
 	Type TypeValue
+}
+
+func (b BuiltinFunctionParameter) Lower() cpp.Declaration {
+	return b.Type.Lower() + " " + b.Name
 }

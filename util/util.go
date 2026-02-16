@@ -156,3 +156,7 @@ func FirstError(s ...error) error {
 	}
 	return nil
 }
+
+func TrimSpace(s string) (output string) {
+	return strings.Trim(s, " \t\n")
+}
