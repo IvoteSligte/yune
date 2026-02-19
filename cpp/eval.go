@@ -32,7 +32,7 @@ func evalLog(s string) {
 }
 
 var Repl repl = func() repl {
-	cmd := exec.Command("clang-repl")
+	cmd := exec.Command("clang-repl", "-Xcc=-std=c++20")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatalln("Failed to get stdin pipe from clang-repl command. Error:", err)
@@ -66,13 +66,13 @@ type repl struct {
 }
 
 func sanitize(s string) string {
-	return strings.ReplaceAll(s, "\n", "")
+	return strings.ReplaceAll(s, "\n", "\\\n")
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
-	evalLog(expr + "; // evaluate\n")
-	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;"
-	_, err = r.stdin.Write([]byte(text + "\n"))
+	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;\n"
+	evalLog(text)
+	_, err = r.stdin.Write([]byte(text))
 	if err != nil {
 		return
 	}
@@ -94,8 +94,9 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 
 // Write text without expecting a response, such as for function or constant declarations.
 func (r *repl) Write(text string) (err error) {
-	evalLog(text + "\n")
-	_, err = r.stdin.Write([]byte(sanitize(text) + "\n"))
+	input := sanitize(text) + "\n"
+	evalLog(input)
+	_, err = r.stdin.Write([]byte(input))
 	r.declared += text + "\n"
 	return
 }

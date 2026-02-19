@@ -34,9 +34,15 @@ namespace ty {
     std::variant<T...> variant;
   };
 
+template<class F, class Return, class... Args>
+concept FunctionLike =
+  requires(F f, Args... args) {
+    { f(std::forward<Args>(args)...) } -> std::convertible_to<Return>;
+    { f.serialize() } -> std::convertible_to<std::string>;
+  };
+  
   // A serializable function class similar to std::function
-  template <class Return, class... Args>
-  struct Function {
+  template <class Return, class... Args> struct Function {
     struct Concept {
       virtual ~Concept() = default;
       virtual Return operator()(Args &&...args) const = 0;
@@ -54,7 +60,12 @@ namespace ty {
       F function;
     };
     template <class F>
-    Function(F function) : self(std::make_shared<Model<F>>(std::move(function))) {}
+    requires FunctionLike<F, Return, Args...>
+    Function(F function)
+    : self(std::make_shared<Model<F>>(std::move(function))) {
+      static_assert(std::is_class_v<F>,
+                    "Function requires callable object, not function pointer");
+    }
 
     Return operator()(Args... args) const {
       return (*self)(std::forward<Args>(args)...);

@@ -533,7 +533,6 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 // Lower implements Expression.
 func (c *Closure) Lower() cpp.Expression {
 	id := registerNode(c)
-	name := fmt.Sprintf("closure_%x_", id)
 	fields := ""
 	captures := ""
 	for captureName, captureType := range c.captures {
@@ -556,8 +555,8 @@ func (c *Closure) Lower() cpp.Expression {
             return R"({ "ClosureId": "%s" })";
         }
         %s
-    } %s{%s};
-    return %s;
+    } closure{%s};
+    return closure;
 }()`,
 		captureSymbol,
 		c.ReturnType.Lower(),
@@ -565,8 +564,7 @@ func (c *Closure) Lower() cpp.Expression {
 		cpp.Block(c.Body.Lower()),
 		id,
 		fields,
-		name, captures,
-		name)
+		captures)
 	return lowered
 }
 

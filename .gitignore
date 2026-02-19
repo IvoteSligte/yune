@@ -10,7 +10,6 @@ parser/YuneParser.tokens
 parser/YuneLexer.interp
 parser/YuneParser.interp
 
-# generated (protobuf)
-cpp/includes/proto/*.pb.h
-cpp/includes/proto/*.pb.cc
-pb/pb_wrap.cxx
+# clangd (C++ LSP) generated
+cpp/.cache/
+
