@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"log"
 	"yune/cpp"
 )
 
@@ -54,7 +55,17 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		return
 	}
 	if len(anal.Defined) != len(declarations) {
-		panic("The number of definitions does not match the number of declarations, even though the evaluation process has finished.")
+		for _, decl := range declarations {
+			_, defined := anal.Defined[decl]
+			if !defined {
+				log.Panicf("Declaration '%s' not defined even though evaluation has finished.", decl.GetName().String)
+			}
+		}
+		log.Panicf(
+			"The number of definitions (%d) does not match the number of declarations (%d), even though the evaluation process has finished.",
+			len(anal.Defined),
+			len(declarations),
+		)
 	}
 	lowered = cpp.Repl.GetDeclared() // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
 	return
