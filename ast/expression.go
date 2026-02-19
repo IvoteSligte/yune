@@ -12,6 +12,7 @@ import (
 
 type Expression interface {
 	Node
+	fmt.Stringer
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
 	Lower() cpp.Expression
 }
@@ -19,6 +20,10 @@ type Expression interface {
 type Integer struct {
 	Span  Span
 	Value int64
+}
+
+func (i Integer) String() string {
+	return fmt.Sprintf("%v", i.Value)
 }
 
 // GetSpan implements Expression.
@@ -41,8 +46,8 @@ type Float struct {
 	Value float64
 }
 
-// GetId implements Expression.
-func (f *Float) GetId() {
+func (f Float) String() string {
+	return fmt.Sprintf("%v", f.Value)
 }
 
 // GetSpan implements Expression.
@@ -65,8 +70,8 @@ type Bool struct {
 	Value bool
 }
 
-// GetId implements Expression.
-func (b *Bool) GetId() {
+func (b Bool) String() string {
+	return fmt.Sprintf("%v", b.Value)
 }
 
 // GetSpan implements Expression.
@@ -89,8 +94,8 @@ type String struct {
 	Value string
 }
 
-// GetId implements Expression.
-func (s *String) GetId() {
+func (s String) String() string {
+	return fmt.Sprintf("%v", s.Value)
 }
 
 // GetSpan implements Expression.
@@ -113,8 +118,8 @@ type Variable struct {
 	Name Name
 }
 
-// GetId implements Expression.
-func (v *Variable) GetId() {
+func (v Variable) String() string {
+	return fmt.Sprintf("%v", v.Name.String)
 }
 
 // GetSpan implements Expression.
@@ -139,8 +144,13 @@ type FunctionCall struct {
 	ArgumentIsTuple bool
 }
 
-// GetId implements Expression.
-func (f *FunctionCall) GetId() {
+func (f FunctionCall) String() string {
+	_, argumentIsTuple := f.Argument.(*Tuple)
+	if argumentIsTuple {
+		return fmt.Sprintf("%s%s", f.Function, f.Argument)
+	} else {
+		return fmt.Sprintf("%s %s", f.Function, f.Argument)
+	}
 }
 
 // GetSpan implements Expression.
@@ -191,8 +201,13 @@ type Tuple struct {
 	Elements []Expression
 }
 
-// GetId implements Expression.
-func (t *Tuple) GetId() {
+func (t Tuple) String() string {
+	s := "("
+	for _, element := range t.Elements {
+		s += element.String() + ", "
+	}
+	s += ")"
+	return s
 }
 
 // GetSpan implements Expression.
@@ -255,8 +270,12 @@ type Macro struct {
 	Result Expression
 }
 
-// GetId implements Expression.
-func (m *Macro) GetId() {
+func (m Macro) String() string {
+	s := m.Function.String() + "#"
+	for _, line := range m.Lines {
+		s += line.Text + "\n"
+	}
+	return s
 }
 
 // GetSpan implements Expression.
@@ -321,8 +340,8 @@ type UnaryExpression struct {
 	Expression Expression
 }
 
-// GetId implements Expression.
-func (u *UnaryExpression) GetId() {
+func (u UnaryExpression) String() string {
+	return string(u.Op) + u.Expression.String()
 }
 
 // GetSpan implements Expression.
@@ -371,8 +390,8 @@ type BinaryExpression struct {
 	Right Expression
 }
 
-// GetId implements Expression.
-func (b *BinaryExpression) GetId() {
+func (b BinaryExpression) String() string {
+	return b.Left.String() + " " + string(b.Op) + " " + b.Right.String()
 }
 
 // GetSpan implements Expression.
@@ -479,6 +498,10 @@ type StructExpression struct {
 	Fields map[string]Expression
 }
 
+func (s StructExpression) String() string {
+	return s.Name + "<fields>"
+}
+
 // GetSpan implements Expression.
 func (s *StructExpression) GetSpan() Span {
 	return s.Span
@@ -505,6 +528,10 @@ type Closure struct {
 	ReturnType Type
 	Body       Block
 	captures   map[string]TypeValue
+}
+
+func (c Closure) String() string {
+	return "<closure>"
 }
 
 // GetId implements Expression.
