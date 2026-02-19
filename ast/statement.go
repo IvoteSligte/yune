@@ -8,14 +8,6 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
-func defString(defs []cpp.Definition) string {
-	s := ""
-	for _, def := range defs {
-		s += def + "\n"
-	}
-	return s
-}
-
 type Statement interface {
 	Node
 	// Lower the statement, adding the "return" prefix if `isLast` is true.
@@ -160,13 +152,12 @@ func (b *BranchStatement) Lower(isLast bool) cpp.Statement {
 	if !isLast {
 		panic("Branch statement should always be the last statement in a block.")
 	}
-	var defs []cpp.Definition
 	lowered := fmt.Sprintf(`if (%s) %s else %s`,
-		b.Condition.Lower(&defs),
+		b.Condition.Lower(),
 		cpp.Block(b.Then.Lower()),
 		cpp.Block(b.Else.Lower()),
 	)
-	return defString(defs) + lowered
+	return lowered
 }
 
 type Block struct {
@@ -213,12 +204,12 @@ type ExpressionStatement struct {
 
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower(isLast bool) cpp.Statement {
-	var defs []cpp.Definition
-	lowered := e.Expression.Lower(&defs)
+	lowered := e.Expression.Lower()
 	if isLast {
-		lowered = "return " + lowered
+		return "return " + lowered + ";"
+	} else {
+		return lowered + ";"
 	}
-	return defString(defs) + lowered + ";"
 }
 
 func UnmarshalBlock(data *fj.Value) (block Block) {

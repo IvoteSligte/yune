@@ -23,14 +23,8 @@ func (a Analyzer) HasErrors() bool {
 
 // Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
 func (a Analyzer) Evaluate(expr Expression) (json string) {
-	definitions := []cpp.Definition{}
-	lowered := expr.Lower(&definitions)
-	// braces group the definitions and expression together into a single "transaction"
-	eval := lowered
-	if len(definitions) > 0 {
-		eval = "[&](){\n" + defString(definitions) + "return " + lowered + ";\n}()"
-	}
-	json, err := cpp.Repl.Evaluate(eval)
+	lowered := expr.Lower()
+	json, err := cpp.Repl.Evaluate(lowered)
 	if err != nil {
 		panic("Failed to evaluate lowered expression. Error: " + err.Error())
 	}
