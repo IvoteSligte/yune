@@ -9,7 +9,7 @@ type Type = string
 // A code block in the form of a Lambda function that is immediately invoked.
 // This is a way to allow code blocks to be used where expressions can be used.
 func LambdaBlock(b []Statement) string {
-	return "[=](){" + strings.Join(b, "") + "}()"
+	return "[](){" + strings.Join(b, "") + "}()"
 }
 
 func String(s string) string {

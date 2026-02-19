@@ -54,7 +54,7 @@ namespace ty {
       F function;
     };
     template <class F>
-    Function(F function) : self(std::make_unique<Model<F>>(std::move(function))) {}
+    Function(F function) : self(std::make_shared<Model<F>>(std::move(function))) {}
 
     Return operator()(Args... args) const {
       return (*self)(std::forward<Args>(args)...);
@@ -62,7 +62,7 @@ namespace ty {
     std::string serialize() const { return self->serialize(); }
     // TODO: copy and move operators
     
-    std::unique_ptr<Concept> self;
+    std::shared_ptr<Concept> self;
   };
 
   struct Span {
