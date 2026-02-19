@@ -272,6 +272,7 @@ type Macro struct {
 
 func (m Macro) String() string {
 	s := m.Function.String() + "#"
+	// NOTE: missing indentation
 	for _, line := range m.Lines {
 		s += line.Text + "\n"
 	}
@@ -317,8 +318,9 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	if errorMessage != "" {
 		panic("Macro returned error: " + errorMessage)
 	}
+	// unmarshalled closure should already be analyzed, since it is referenced
+	// by the analyzed macro function
 	closure := UnmarshalExpression(elements[1]).(*Closure)
-	closure.Analyze(expected, anal)
 	json = anal.Evaluate(&FunctionCall{Function: closure, Argument: &Tuple{}})
 	m.Result = UnmarshalExpression(fj.MustParse(json))
 	return m.Result.Analyze(expected, anal)
@@ -547,6 +549,9 @@ func (c *Closure) GetSpan() Span {
 
 // Analyze implements Expression.
 func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	if c.captures != nil {
+		panic("Closure analyzed multiple times. Expressions should only be analyzed once.")
+	}
 	c.captures = map[string]TypeValue{} // prevents nil dereference error when adding to map
 	anal = anal.NewScope()
 	analyzeFunctionHeader(anal, c.Parameters, &c.ReturnType)

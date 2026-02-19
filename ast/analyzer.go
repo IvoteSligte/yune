@@ -59,9 +59,11 @@ func (a Analyzer) GetType(name Name) TypeValue {
 			})
 		}
 	}
+	// Non-top-level declarations are analyzed in sequential order,
+	// so this type should already be available.
 	_type := decl.GetDeclaredType()
 	if _type == nil {
-		panic("Declaration.GetDeclaredType() returned nil on declaration '" + name.String + "'")
+		panic("Declaration.GetDeclaredType() returned nil on local declaration '" + name.String + "'")
 	}
 	return _type
 }
