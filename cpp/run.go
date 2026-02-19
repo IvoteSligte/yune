@@ -61,26 +61,15 @@ func Run(module Module) {
 	}
 	defer os.RemoveAll(dir)
 
-	// header := module.Header()
-	// fmt.Println("-- Header --")
-	// PrintFormatted(header)
-	// fmt.Println("-- End Header --")
-	header := ""
-
-	// implementation := module.Implementation()
-	implementation := module
 	fmt.Println("-- Implementation --")
-	PrintFormatted(implementation)
+	PrintFormatted(module)
 	fmt.Println("-- End Implementation --")
 
-	writeFile(dir, "pb.hpp", pbHeader)
-	writeFile(dir, "code.h", `
-#include "pb.hpp"
-`+header) // TODO: close files
-
-	writeFile(dir, "code.cpp", `
-#include "code.h"
-`+implementation)
+	writeFile(dir, "code.cpp", module+`
+int main() {
+    main_();
+    return 0;
+}`)
 
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := path.Join(dir, "code.bin")

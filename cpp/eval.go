@@ -31,9 +31,6 @@ func evalLog(s string) {
 	}
 }
 
-//go:embed "pb.hpp"
-var pbHeader string
-
 var Repl repl = func() repl {
 	cmd := exec.Command("clang-repl")
 	stdin, err := cmd.StdinPipe()
