@@ -69,7 +69,7 @@ var _ TopLevelDeclaration = (*BuiltinRawDeclaration)(nil)
 
 var StringLiteralDeclaration = BuiltinRawDeclaration{
 	Name:     "stringLiteral",
-	Type:     FnType{Argument: StringType{}, Return: ExpressionType},
+	Type:     &FnType{Argument: &StringType{}, Return: ExpressionType},
 	Requires: []string{"Expression"},
 	Definition: `
 ty::Expression stringLiteral(std::string str) {
@@ -99,7 +99,7 @@ func (b BuiltinStructDeclaration) GetSpan() Span {
 
 // GetDeclaredType implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetDeclaredType() TypeValue {
-	return TypeType{}
+	return &TypeType{}
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
@@ -176,32 +176,32 @@ var _ TopLevelDeclaration = (*BuiltinConstantDeclaration)(nil)
 
 var TypeDeclaration = BuiltinConstantDeclaration{
 	Name:  "Type",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `ty::TypeType{}`,
 }
 var IntDeclaration = BuiltinConstantDeclaration{
 	Name:  "Int",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `ty::IntType{}`,
 }
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `ty::FloatType{}`,
 }
 var BoolDeclaration = BuiltinConstantDeclaration{
 	Name:  "Bool",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `ty::BoolType{}`,
 }
 var StringDeclaration = BuiltinConstantDeclaration{
 	Name:  "String",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `ty::StringType{}`,
 }
 var ExpressionDeclaration = BuiltinConstantDeclaration{
 	Name:  "Expression",
-	Type:  TypeType{},
+	Type:  &TypeType{},
 	Value: `box(ty::StructType{"Expression"})`,
 }
 
@@ -243,7 +243,7 @@ func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	} else {
 		argument = NewTupleType(params...)
 	}
-	return FnType{Argument: argument, Return: b.ReturnType}
+	return &FnType{Argument: argument, Return: b.ReturnType}
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
@@ -270,14 +270,14 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "argumentType",
-			Type: TypeType{},
+			Type: &TypeType{},
 		},
 		{
 			Name: "returnType",
-			Type: TypeType{},
+			Type: &TypeType{},
 		},
 	},
-	ReturnType: TypeType{},
+	ReturnType: &TypeType{},
 	Body: `
 return box((ty::FnType){
     .argument = std::move(argumentType),
@@ -290,10 +290,10 @@ var ListDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "elementType",
-			Type: TypeType{},
+			Type: &TypeType{},
 		},
 	},
-	ReturnType: TypeType{},
+	ReturnType: &TypeType{},
 	Body:       `return box((ty::ListType){ .element = std::move(elementType) });`,
 }
 
@@ -302,10 +302,10 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 	Parameters: []BuiltinFunctionParameter{
 		{
 			Name: "string",
-			Type: StringType{},
+			Type: &StringType{},
 		},
 	},
-	ReturnType: TupleType{},
+	ReturnType: &TupleType{},
 	Body: `
 std::cout << string << std::endl;
 return std::make_tuple();`,

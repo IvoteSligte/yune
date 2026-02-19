@@ -46,7 +46,7 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	return TupleType{}
+	return &TupleType{}
 }
 
 // Lower implements Statement.
@@ -67,7 +67,7 @@ func (d VariableDeclaration) GetName() Name {
 }
 
 func (d VariableDeclaration) GetType() TypeValue {
-	return TupleType{}
+	return &TupleType{}
 }
 
 func (d VariableDeclaration) GetDeclaredType() TypeValue {
@@ -92,7 +92,7 @@ func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 			At:       a.Body.GetSpan(),
 		})
 	}
-	return TupleType{}
+	return &TupleType{}
 }
 
 // Lower implements Statement.
@@ -109,7 +109,7 @@ func (a *Assignment) Lower(isLast bool) cpp.Statement {
 }
 
 func (a Assignment) GetType() TypeValue {
-	return TupleType{}
+	return &TupleType{}
 }
 
 type AssignmentOp string
@@ -134,11 +134,11 @@ type BranchStatement struct {
 
 // Analyze implements Statement.
 func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	conditionType := b.Condition.Analyze(BoolType{}, anal)
+	conditionType := b.Condition.Analyze(&BoolType{}, anal)
 	thenType := b.Then.Analyze(expected, anal.NewScope(nil))
 	elseType := b.Else.Analyze(expected, anal.NewScope(nil))
 
-	if conditionType != nil && !conditionType.Eq(BoolType{}) {
+	if conditionType != nil && !conditionType.Eq(&BoolType{}) {
 		anal.PushError(InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),

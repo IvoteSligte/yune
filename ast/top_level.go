@@ -60,7 +60,7 @@ func getFunctionType(parameters []FunctionParameter, returnType Type) TypeValue 
 	if len(parameters) == 1 {
 		argument = paramTypes[0]
 	}
-	return FnType{Argument: argument, Return: returnType.Get()}
+	return &FnType{Argument: argument, Return: returnType.Get()}
 }
 
 type FunctionDeclaration struct {

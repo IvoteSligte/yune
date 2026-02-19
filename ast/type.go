@@ -36,12 +36,12 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 		panic("Called Type.Analyze on already-analyzed type.")
 	}
 	// FIXME: t.Expression.Analyze can access local variables right now
-	expressionType := t.Expression.Analyze(TypeType{}, anal)
+	expressionType := t.Expression.Analyze(&TypeType{}, anal)
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
-	if !expressionType.Eq(TypeType{}) {
+	if !expressionType.Eq(&TypeType{}) {
 		anal.PushError(UnexpectedType{
-			Expected: TypeType{},
+			Expected: &TypeType{},
 			Found:    t.value,
 			At:       t.Expression.GetSpan(),
 		})
@@ -51,21 +51,21 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	return t.value
 }
 
-var MainType = FnType{
-	Argument: TupleType{},
-	Return:   TupleType{},
+var MainType = &FnType{
+	Argument: &TupleType{},
+	Return:   &TupleType{},
 }
 
 // kinds of Expression types
-var IntegerLiteralType = StructType{Name: "IntegerLiteral"}
-var FloatLiteralType = StructType{Name: "FloatLiteral"}
-var BoolLiteralType = StructType{Name: "BoolLiteral"}
-var StringLiteralType = StructType{Name: "StringLiteral"}
-var ExpressionType = StructType{Name: "Expression"}
+var IntegerLiteralType = &StructType{Name: "IntegerLiteral"}
+var FloatLiteralType = &StructType{Name: "FloatLiteral"}
+var BoolLiteralType = &StructType{Name: "BoolLiteral"}
+var StringLiteralType = &StructType{Name: "StringLiteral"}
+var ExpressionType = &StructType{Name: "Expression"}
 
-var MacroFunctionType = FnType{
-	Argument: StringType{},
-	Return:   NewTupleType(StringType{}, ExpressionType),
+var MacroFunctionType = &FnType{
+	Argument: &StringType{},
+	Return:   NewTupleType(&StringType{}, ExpressionType),
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
@@ -73,30 +73,30 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())
 	switch key {
 	case "TypeType":
-		t = TypeType{}
+		t = &TypeType{}
 	case "IntType":
-		t = IntType{}
+		t = &IntType{}
 	case "FloatType":
-		t = FloatType{}
+		t = &FloatType{}
 	case "BoolType":
-		t = BoolType{}
+		t = &BoolType{}
 	case "StringType":
-		t = StringType{}
+		t = &StringType{}
 	case "TupleType":
-		t = TupleType{
+		t = &TupleType{
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalTypeValue),
 		}
 	case "ListType":
-		t = ListType{
+		t = &ListType{
 			Element: UnmarshalTypeValue(v.Get("element")),
 		}
 	case "FnType":
-		t = FnType{
+		t = &FnType{
 			Argument: UnmarshalTypeValue(v.Get("argument")),
 			Return:   UnmarshalTypeValue(v.Get("return")),
 		}
 	case "StructType":
-		t = StructType{
+		t = &StructType{
 			Name: string(v.GetStringBytes("name")),
 		}
 	default:
@@ -106,8 +106,8 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 }
 
 // Wraps self in a TupleType, if self is not already a TupleType
-func wrapTupleType(t TypeValue) TupleType {
-	tupleType, ok := t.(TupleType)
+func wrapTupleType(t TypeValue) *TupleType {
+	tupleType, ok := t.(*TupleType)
 	if ok {
 		return tupleType
 	}
@@ -139,8 +139,8 @@ var _ TypeValue = DefaultTypeValue{}
 type TypeType struct{ DefaultTypeValue }
 
 func (TypeType) String() string { return "Type" }
-func (t TypeType) Eq(other TypeValue) bool {
-	_, ok := other.(TypeType)
+func (t *TypeType) Eq(other TypeValue) bool {
+	_, ok := other.(*TypeType)
 	return ok
 }
 func (TypeType) Lower() cpp.Type { return "ty::Type" }
@@ -148,18 +148,17 @@ func (TypeType) Lower() cpp.Type { return "ty::Type" }
 type IntType struct{ DefaultTypeValue }
 
 func (IntType) String() string { return "Int" }
-func (i IntType) Eq(other TypeValue) bool {
-	_, ok := other.(IntType)
+func (i *IntType) Eq(other TypeValue) bool {
+	_, ok := other.(*IntType)
 	return ok
 }
-func (IntType) Lower() cpp.Type            { return "int" }
-func (t IntType) WrapTupleType() TupleType { return NewTupleType(t) }
+func (IntType) Lower() cpp.Type { return "int" }
 
 type FloatType struct{ DefaultTypeValue }
 
 func (FloatType) String() string { return "Float" }
-func (f FloatType) Eq(other TypeValue) bool {
-	_, ok := other.(FloatType)
+func (f *FloatType) Eq(other TypeValue) bool {
+	_, ok := other.(*FloatType)
 	return ok
 }
 func (FloatType) Lower() cpp.Type { return "float" }
@@ -167,8 +166,8 @@ func (FloatType) Lower() cpp.Type { return "float" }
 type BoolType struct{ DefaultTypeValue }
 
 func (BoolType) String() string { return "Bool" }
-func (b BoolType) Eq(other TypeValue) bool {
-	_, ok := other.(BoolType)
+func (b *BoolType) Eq(other TypeValue) bool {
+	_, ok := other.(*BoolType)
 	return ok
 }
 func (BoolType) Lower() cpp.Type { return "bool" }
@@ -176,8 +175,8 @@ func (BoolType) Lower() cpp.Type { return "bool" }
 type StringType struct{ DefaultTypeValue }
 
 func (StringType) String() string { return "String" }
-func (s StringType) Eq(other TypeValue) bool {
-	_, ok := other.(StringType)
+func (s *StringType) Eq(other TypeValue) bool {
+	_, ok := other.(*StringType)
 	return ok
 }
 func (StringType) Lower() cpp.Type { return "std::string" }
@@ -191,8 +190,8 @@ func (t TupleType) String() string {
 	return "(" + util.Join(t.Elements, ", ") + ")"
 }
 
-func (t TupleType) Eq(other TypeValue) bool {
-	otherTuple, ok := other.(TupleType)
+func (t *TupleType) Eq(other TypeValue) bool {
+	otherTuple, ok := other.(*TupleType)
 	if !ok || len(t.Elements) != len(otherTuple.Elements) {
 		return false
 	}
@@ -207,8 +206,8 @@ func (t TupleType) Lower() cpp.Type {
 	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.Lower) + ">"
 }
 
-func NewTupleType(elements ...TypeValue) TupleType {
-	return TupleType{
+func NewTupleType(elements ...TypeValue) *TupleType {
+	return &TupleType{
 		Elements: elements,
 	}
 }
@@ -222,8 +221,8 @@ func (l ListType) String() string {
 	return "List(" + l.Element.String() + ")"
 }
 
-func (l ListType) Eq(other TypeValue) bool {
-	otherList, ok := other.(ListType)
+func (l *ListType) Eq(other TypeValue) bool {
+	otherList, ok := other.(*ListType)
 	return ok && l.Element.Eq(otherList.Element)
 }
 func (l ListType) Lower() cpp.Type {
@@ -240,8 +239,8 @@ func (f FnType) String() string {
 	return "Fn(" + f.Argument.String() + ", " + f.Return.String() + ")"
 }
 
-func (f FnType) Eq(other TypeValue) bool {
-	otherFn, ok := other.(FnType)
+func (f *FnType) Eq(other TypeValue) bool {
+	otherFn, ok := other.(*FnType)
 	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
 }
 
@@ -265,8 +264,8 @@ func (s StructType) String() string {
 	return s.Name
 }
 
-func (s StructType) Eq(other TypeValue) bool {
-	otherStruct, ok := other.(StructType)
+func (s *StructType) Eq(other TypeValue) bool {
+	otherStruct, ok := other.(*StructType)
 	return ok && s.Name == otherStruct.Name
 }
 func (s StructType) Lower() cpp.Type {
@@ -274,12 +273,12 @@ func (s StructType) Lower() cpp.Type {
 	return "ty::" + s.Name
 }
 
-var _ TypeValue = TypeType{}
-var _ TypeValue = IntType{}
-var _ TypeValue = FloatType{}
-var _ TypeValue = BoolType{}
-var _ TypeValue = StringType{}
-var _ TypeValue = TupleType{}
-var _ TypeValue = ListType{}
-var _ TypeValue = FnType{}
-var _ TypeValue = StructType{}
+var _ TypeValue = (*TypeType)(nil)
+var _ TypeValue = (*IntType)(nil)
+var _ TypeValue = (*FloatType)(nil)
+var _ TypeValue = (*BoolType)(nil)
+var _ TypeValue = (*StringType)(nil)
+var _ TypeValue = (*TupleType)(nil)
+var _ TypeValue = (*ListType)(nil)
+var _ TypeValue = (*FnType)(nil)
+var _ TypeValue = (*StructType)(nil)

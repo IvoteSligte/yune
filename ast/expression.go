@@ -33,7 +33,7 @@ func (i Integer) Lower(defs *[]cpp.Definition) cpp.Expression {
 
 // Analyze implements Expression.
 func (i Integer) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return IntType{}
+	return &IntType{}
 }
 
 type Float struct {
@@ -57,7 +57,7 @@ func (f Float) Lower(defs *[]cpp.Definition) cpp.Expression {
 
 // Analyze implements Expression.
 func (f Float) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return FloatType{}
+	return &FloatType{}
 }
 
 type Bool struct {
@@ -81,7 +81,7 @@ func (b Bool) Lower(defs *[]cpp.Definition) cpp.Expression {
 
 // Analyze implements Expression.
 func (b Bool) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return BoolType{}
+	return &BoolType{}
 }
 
 type String struct {
@@ -106,7 +106,7 @@ func (s String) Lower(defs *[]cpp.Definition) cpp.Expression {
 
 // Analyze implements Expression.
 func (s String) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return StringType{}
+	return &StringType{}
 }
 
 type Variable struct {
@@ -151,7 +151,7 @@ func (f *FunctionCall) GetSpan() Span {
 // Analyze implements Expression.
 func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
 	maybeFunctionType := f.Function.Analyze(nil, anal)
-	functionType, isFunction := maybeFunctionType.(FnType)
+	functionType, isFunction := maybeFunctionType.(*FnType)
 	if !isFunction {
 		anal.PushError(NotAFunction{
 			Found: maybeFunctionType,
@@ -171,7 +171,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 			At:       f.Argument.GetSpan(),
 		})
 	}
-	_, argumentIsTuple := argumentType.(TupleType)
+	_, argumentIsTuple := argumentType.(*TupleType)
 	f.ArgumentIsTuple = argumentIsTuple
 	return
 }
@@ -202,8 +202,8 @@ func (t *Tuple) GetSpan() Span {
 
 // Analyze implements Expression.
 func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	expectedTupleType, isTuple := expected.(TupleType)
-	_type := TupleType{}
+	expectedTupleType, isTuple := expected.(*TupleType)
+	_type := &TupleType{}
 
 	if isTuple && len(expectedTupleType.Elements) != len(t.Elements) {
 		anal.PushError(ArityMismatch{
@@ -216,15 +216,15 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		var expected TypeValue
 		if isTuple && len(expectedTupleType.Elements) >= i {
 			expected = expectedTupleType.Elements[i]
-		} else if expected != nil && !expected.Eq(TypeType{}) {
-			expected = TypeType{}
+		} else if expected != nil && !expected.Eq(&TypeType{}) {
+			expected = &TypeType{}
 		}
 		elementType := t.Elements[i].Analyze(expected, anal)
 		_type.Elements = append(_type.Elements, elementType)
 	}
-	t.IsType = expected != nil && expected.Eq(TypeType{})
+	t.IsType = expected != nil && expected.Eq(&TypeType{})
 	if t.IsType {
-		return TypeType{}
+		return &TypeType{}
 	}
 	return _type
 }
@@ -273,11 +273,13 @@ func (m *Macro) GetText() string {
 // Analyze implements Expression.
 func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	functionType := m.Function.Analyze(MacroFunctionType, anal)
-	anal.PushError(UnexpectedType{
-		Expected: MacroFunctionType,
-		Found:    functionType,
-		At:       m.Function.GetSpan(),
-	})
+	if !functionType.Eq(MacroFunctionType) {
+		anal.PushError(UnexpectedType{
+			Expected: MacroFunctionType,
+			Found:    functionType,
+			At:       m.Function.GetSpan(),
+		})
+	}
 	macroFunctionCall := FunctionCall{
 		Span:     m.Span,
 		Function: &m.Function,
@@ -330,8 +332,8 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	expressionType := u.Expression.Analyze(nil, anal)
 	switch {
 	case
-		expressionType.Eq(IntType{}),
-		expressionType.Eq(FloatType{}):
+		expressionType.Eq(&IntType{}),
+		expressionType.Eq(&FloatType{}):
 		break
 	default:
 		anal.PushError(InvalidUnaryExpressionType{
@@ -406,20 +408,20 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 		GreaterEqual,
 		Less,
 		LessEqual:
-		if !leftType.Eq(IntType{}) && !leftType.Eq(FloatType{}) {
+		if !leftType.Eq(&IntType{}) && !leftType.Eq(&FloatType{}) {
 			emitErr()
 		}
 		return leftType
 	case
 		Equal,
 		NotEqual:
-		return BoolType{}
+		return &BoolType{}
 	case
 		Or, And:
-		if !leftType.Eq(BoolType{}) {
+		if !leftType.Eq(&BoolType{}) {
 			emitErr()
 		}
-		return BoolType{}
+		return &BoolType{}
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
