@@ -24,7 +24,7 @@ var evalLogFile = func() *os.File {
 
 func evalLog(s string) {
 	if evalLogFile != nil {
-		_, err := evalLogFile.Write([]byte(s))
+		_, err := evalLogFile.WriteString(s)
 		if err != nil {
 			log.Println("Failed to write to open evaluation log file. Error:", err)
 		}
@@ -70,7 +70,7 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
-	evalLog(expr + "\n")
+	evalLog("`" + expr + "`\n")
 	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;"
 	_, err = r.stdin.Write([]byte(text + "\n"))
 	if err != nil {

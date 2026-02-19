@@ -545,6 +545,7 @@ func (c *Closure) Lower() cpp.Expression {
 		captures += captureName
 	}
 	// declares the struct and immediately captures the right variables from the environment
+	// FIXME: closures that do not capture anything should not have [=] (and those that do should have it)
 	lowered := fmt.Sprintf(`[=](){
     struct {
         %s operator()(%s) const %s
