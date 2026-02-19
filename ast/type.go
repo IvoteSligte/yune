@@ -65,7 +65,10 @@ var ExpressionType = &StructType{Name: "Expression"}
 
 var MacroFunctionType = &FnType{
 	Argument: &StringType{},
-	Return:   NewTupleType(&StringType{}, ExpressionType),
+	Return: NewTupleType(&StringType{}, &FnType{
+		Argument: &TupleType{},
+		Return:   ExpressionType,
+	}),
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.

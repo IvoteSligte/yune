@@ -26,7 +26,11 @@ func (a Analyzer) Evaluate(expr Expression) (json string) {
 	definitions := []cpp.Definition{}
 	lowered := expr.Lower(&definitions)
 	// braces group the definitions and expression together into a single "transaction"
-	json, err := cpp.Repl.Evaluate("[](){\n" + defString(definitions) + "return " + lowered + ";\n}()")
+	eval := lowered
+	if len(definitions) > 0 {
+		eval = "[&](){\n" + defString(definitions) + "return " + lowered + ";\n}()"
+	}
+	json, err := cpp.Repl.Evaluate(eval)
 	if err != nil {
 		panic("Failed to evaluate lowered expression. Error: " + err.Error())
 	}

@@ -295,10 +295,13 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
 	}
 	errorMessage := string(elements[0].GetStringBytes())
-	m.Result = UnmarshalExpression(elements[1])
 	if errorMessage != "" {
 		panic("Macro returned error: " + errorMessage)
 	}
+	closure := UnmarshalExpression(elements[1]).(*Closure)
+	closure.Analyze(expected, anal)
+	json = anal.Evaluate(&FunctionCall{Function: closure, Argument: &Tuple{}})
+	m.Result = UnmarshalExpression(fj.MustParse(json))
 	return m.Result.Analyze(expected, anal)
 }
 
