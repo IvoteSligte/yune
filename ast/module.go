@@ -37,17 +37,13 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			topLevelDeclarations: declarations,
 		},
 	}
-	for _, decl := range BuiltinDeclarations {
+	for _, decl := range declarations {
 		anal.Table.Add(decl)
 	}
-	for _, decl := range m.Declarations {
-		anal.Table.Add(decl)
-	}
-	for _, decl := range m.Declarations {
+	for _, decl := range declarations {
 		// FIXME: if the main function is not evaluated last then clang-repl evaluation breaks
 		_, evaluated := anal.Defined[decl]
 		if !evaluated {
-			println("analyzing top-level", decl.GetName().String)
 			decl.Analyze(anal)
 		}
 	}

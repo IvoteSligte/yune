@@ -278,8 +278,7 @@ var FnDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: &TypeType{},
-	Body: `
-return box((ty::FnType){
+	Body: `return box((ty::FnType){
     .argument = std::move(argumentType),
     .returnType = std::move(returnType),
 });`,
@@ -306,8 +305,7 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 		},
 	},
 	ReturnType: &TupleType{},
-	Body: `
-std::cout << string << std::endl;
+	Body: `std::cout << string << std::endl;
 return std::make_tuple();`,
 }
 
