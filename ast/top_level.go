@@ -86,8 +86,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	if d.ReturnType.Get() != nil {
 		return // already (being) analyzed
 	}
-	anal = anal.NewScope(nil)
-
+	anal = anal.NewScope()
 	if err := anal.Table.Add(d); err != nil {
 		panic("Duplicate declaration error in new scope: " + err.Error())
 	}
@@ -95,7 +94,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	anal.Declare(d)
 	analyzeFunctionBody(anal, d.ReturnType.Get(), d.Body)
 	declaredType := d.GetDeclaredType()
-	if d.GetName().String == "main" && declaredType != nil && !declaredType.Eq(MainType) {
+	if d.GetName().String == "main" && !declaredType.Eq(MainType) {
 		anal.PushError(InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
@@ -159,10 +158,11 @@ func (d FunctionParameter) GetDeclaredType() TypeValue {
 }
 
 type ConstantDeclaration struct {
-	Span Span
-	Name Name
-	Type Type
-	Body Block
+	Span        Span
+	Name        Name
+	Type        Type
+	Body        Block
+	HasCaptures bool
 }
 
 // GetId implements TopLevelDeclaration.
@@ -181,7 +181,8 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 		return // already (being) analyzed
 	}
 	declaredType := d.Type.Analyze(anal)
-	bodyType := d.Body.Analyze(declaredType, anal.NewScope(nil))
+	scope := anal.NewScope()
+	bodyType := d.Body.Analyze(declaredType, scope)
 
 	if !declaredType.Eq(bodyType) {
 		anal.PushError(ConstantTypeMismatch{
@@ -190,6 +191,7 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
+	d.HasCaptures = len(*scope.Table.captures) > 0
 	anal.Define(d)
 }
 
@@ -200,7 +202,7 @@ func (d ConstantDeclaration) LowerDeclaration() cpp.Declaration {
 
 // LowerDefinition implements TopLevelDeclaration.
 func (d ConstantDeclaration) LowerDefinition() cpp.Definition {
-	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower()))
+	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower(), d.HasCaptures))
 }
 
 // GetType implements Declaration.

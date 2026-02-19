@@ -4,12 +4,16 @@ import (
 	"log"
 )
 
+type capture struct {
+	name        Name
+	declaration Declaration
+}
+
 type DeclarationTable struct {
 	parent               *DeclarationTable
 	topLevelDeclarations map[string]TopLevelDeclaration
 	localDeclarations    map[string]Declaration
-	// Callback to be called when a variable cannot be found in the current scope.
-	callback func(Name, Declaration)
+	captures             *[]capture
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
@@ -27,12 +31,12 @@ func (table *DeclarationTable) Add(decl Declaration) error {
 	return nil
 }
 
-func (table DeclarationTable) NewScope(callback func(Name, Declaration)) DeclarationTable {
+func (table DeclarationTable) NewScope() DeclarationTable {
 	return DeclarationTable{
 		parent:               &table,
 		topLevelDeclarations: table.topLevelDeclarations,
 		localDeclarations:    map[string]Declaration{},
-		callback:             callback,
+		captures:             &[]capture{},
 	}
 }
 
@@ -40,19 +44,19 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 	if table == table.parent {
 		log.Panicf("Table at address %p has itself as parent.", table)
 	}
-	local, ok := table.localDeclarations[name.String]
-	if !ok && table.parent != nil {
+	local, isLocal := table.localDeclarations[name.String]
+	if !isLocal && table.parent != nil {
 		decl, found := table.parent.Get(name)
-		if found && table.callback != nil {
-			table.callback(name, decl)
+		if found {
+			*table.captures = append(*table.captures, capture{name, decl})
 		}
 		return decl, found
 	}
-	if !ok {
-		topLevel, ok := table.topLevelDeclarations[name.String]
-		return topLevel, ok
+	if !isLocal {
+		topLevel, found := table.topLevelDeclarations[name.String]
+		return topLevel, found
 	}
-	return local, ok
+	return local, isLocal
 }
 
 type Declaration interface {

@@ -521,13 +521,12 @@ func (c *Closure) GetSpan() Span {
 // Analyze implements Expression.
 func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	c.captures = map[string]TypeValue{} // prevents nil dereference error when adding to map
-	captureCallback := func(name Name, decl Declaration) {
-		// NOTE: this should not call anal.GetType because that causes a feedback loop
-		c.captures[name.String] = decl.GetDeclaredType()
-	}
-	anal = anal.NewScope(captureCallback)
+	anal = anal.NewScope()
 	analyzeFunctionHeader(anal, c.Parameters, &c.ReturnType)
 	analyzeFunctionBody(anal, c.ReturnType.Get(), c.Body)
+	for _, capture := range *anal.Table.captures {
+		c.captures[capture.name.String] = capture.declaration.GetDeclaredType()
+	}
 	return getFunctionType(c.Parameters, c.ReturnType)
 }
 
@@ -544,9 +543,13 @@ func (c *Closure) Lower() cpp.Expression {
 		}
 		captures += captureName
 	}
+	// C++ requires that closures that do not capture anything do not have a default capture symbol
+	captureSymbol := "" // infer capture
+	if len(c.captures) > 0 {
+		captureSymbol = "=" // capture by value
+	}
 	// declares the struct and immediately captures the right variables from the environment
-	// FIXME: closures that do not capture anything should not have [=] (and those that do should have it)
-	lowered := fmt.Sprintf(`[=](){
+	lowered := fmt.Sprintf(`[%s](){
     struct {
         %s operator()(%s) const %s
         std::string serialize() const {
@@ -556,6 +559,7 @@ func (c *Closure) Lower() cpp.Expression {
     } %s{%s};
     return %s;
 }()`,
+		captureSymbol,
 		c.ReturnType.Lower(),
 		util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower),
 		cpp.Block(c.Body.Lower()),

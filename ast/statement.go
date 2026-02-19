@@ -17,9 +17,10 @@ type Statement interface {
 
 type VariableDeclaration struct {
 	Span
-	Name Name
-	Type Type
-	Body Block
+	Name        Name
+	Type        Type
+	Body        Block
+	HasCaptures bool
 }
 
 // TypeCheckBody implements Declaration.
@@ -30,14 +31,16 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 // InferType implements Statement.
 func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	declType := d.Type.Analyze(anal)
-	bodyType := d.Body.Analyze(d.Type.Get(), anal)
-	if bodyType != nil && declType != nil && !declType.Eq(bodyType) {
+	scope := anal.NewScope()
+	bodyType := d.Body.Analyze(d.Type.Get(), scope)
+	if !declType.Eq(bodyType) {
 		anal.PushError(VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
+	d.HasCaptures = len(*scope.Table.captures) > 0
 	return &TupleType{}
 }
 
@@ -46,7 +49,7 @@ func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
 		d.Type.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.Lower(),
-		cpp.LambdaBlock(d.Body.Lower()),
+		cpp.LambdaBlock(d.Body.Lower(), d.HasCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
@@ -68,22 +71,25 @@ func (d VariableDeclaration) GetDeclaredType() TypeValue {
 
 type Assignment struct {
 	Span
-	Target Variable
-	Op     AssignmentOp
-	Body   Block
+	Target      Variable
+	Op          AssignmentOp
+	Body        Block
+	HasCaptures bool
 }
 
 // Analyze implements Statement.
 func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	targetType := a.Target.Analyze(nil, anal)
-	bodyType := a.Body.Analyze(targetType, anal.NewScope(nil))
-	if targetType != nil && bodyType != nil && !targetType.Eq(bodyType) {
+	scope := anal.NewScope()
+	bodyType := a.Body.Analyze(targetType, scope)
+	if !targetType.Eq(bodyType) {
 		anal.PushError(AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
 			At:       a.Body.GetSpan(),
 		})
 	}
+	a.HasCaptures = len(*scope.Table.captures) > 0
 	return &TupleType{}
 }
 
@@ -92,7 +98,7 @@ func (a *Assignment) Lower(isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s %s;`,
 		a.Target.Name.String,
 		a.Op,
-		cpp.LambdaBlock(a.Body.Lower()),
+		cpp.LambdaBlock(a.Body.Lower(), a.HasCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
@@ -127,8 +133,8 @@ type BranchStatement struct {
 // Analyze implements Statement.
 func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	conditionType := b.Condition.Analyze(&BoolType{}, anal)
-	thenType := b.Then.Analyze(expected, anal.NewScope(nil))
-	elseType := b.Else.Analyze(expected, anal.NewScope(nil))
+	thenType := b.Then.Analyze(expected, anal.NewScope())
+	elseType := b.Else.Analyze(expected, anal.NewScope())
 
 	if conditionType != nil && !conditionType.Eq(&BoolType{}) {
 		anal.PushError(InvalidConditionType{
