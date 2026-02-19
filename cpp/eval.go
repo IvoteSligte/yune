@@ -70,7 +70,7 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
-	evalLog("`" + expr + "`\n")
+	evalLog(expr + "; // evaluate\n")
 	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;"
 	_, err = r.stdin.Write([]byte(text + "\n"))
 	if err != nil {
