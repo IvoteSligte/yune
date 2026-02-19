@@ -19,64 +19,6 @@ var BuiltinDeclarations = []TopLevelDeclaration{
 	&PrintStringDeclaration,
 }
 
-// Declares a type that will exist in the C++ code, but not in the Yune code.
-type BuiltinRawDeclaration struct {
-	Name        string
-	Type        TypeValue
-	Requires    []string
-	Declaration string
-	Definition  string
-}
-
-// GetId implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetId() string {
-	return b.Name
-}
-
-// GetName implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetName() Name {
-	return Name{String: b.Name}
-}
-
-// GetSpan implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetSpan() Span {
-	return Span{}
-}
-
-// GetDeclaredType implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) GetDeclaredType() TypeValue {
-	return b.Type
-}
-
-// LowerDeclaration implements TopLevelDeclaration.
-func (b BuiltinRawDeclaration) LowerDeclaration() cpp.Declaration {
-	return b.Declaration
-}
-
-// LowerDefinition implements TopLevelDefinition.
-func (b BuiltinRawDeclaration) LowerDefinition() cpp.Definition {
-	return b.Definition
-}
-
-// Analyze implements TopLevelDeclaration.
-func (b *BuiltinRawDeclaration) Analyze(anal Analyzer) {
-	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
-	anal.Declare(b)
-	anal.Define(b)
-}
-
-var _ TopLevelDeclaration = (*BuiltinRawDeclaration)(nil)
-
-var StringLiteralDeclaration = BuiltinRawDeclaration{
-	Name:     "stringLiteral",
-	Type:     &FnType{Argument: &StringType{}, Return: ExpressionType},
-	Requires: []string{"Expression"},
-	Definition: `
-ty::Expression stringLiteral(std::string str) {
-    return ty::StringLiteral { .value = str };
-};`,
-}
-
 type BuiltinStructDeclaration struct {
 	Name   string
 	Fields []BuiltinFieldDeclaration
@@ -307,6 +249,15 @@ var PrintStringDeclaration = BuiltinFunctionDeclaration{
 	ReturnType: &TupleType{},
 	Body: `std::cout << string << std::endl;
 return std::make_tuple();`,
+}
+
+var StringLiteralDeclaration = BuiltinFunctionDeclaration{
+	Name: "stringLiteral",
+	Parameters: []BuiltinFunctionParameter{
+		{Name: "str", Type: &StringType{}},
+	},
+	ReturnType: ExpressionType,
+	Body:       `return ty::StringLiteral { .value = str };`,
 }
 
 var _ TopLevelDeclaration = (*BuiltinFunctionDeclaration)(nil)
