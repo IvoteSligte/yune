@@ -21,14 +21,18 @@ func (a Analyzer) HasErrors() bool {
 	return len(*a.Errors) > 0
 }
 
-// Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
-func (a Analyzer) Evaluate(expr Expression) (json string) {
-	lowered := expr.Lower()
+// Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
+func (a Analyzer) EvaluateLowered(lowered string) (json string) {
 	json, err := cpp.Repl.Evaluate(lowered)
 	if err != nil {
 		panic("Failed to evaluate lowered expression. Error: " + err.Error())
 	}
 	return
+}
+
+// Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
+func (a Analyzer) Evaluate(expr Expression) (json string) {
+	return a.EvaluateLowered(expr.Lower())
 }
 
 func (a Analyzer) NewScope() Analyzer {

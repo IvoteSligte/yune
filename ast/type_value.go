@@ -22,57 +22,25 @@ var ExpressionType = &StructType{Name: "Expression"}
 
 var MacroFunctionType = &FnType{
 	Argument: &StringType{},
-	Return: NewTupleType(&StringType{}, &FnType{
-		Argument: &TupleType{},
-		Return:   ExpressionType,
-	}),
+	Return: &TupleType{Elements: []TypeValue{
+		&StringType{},
+		&FnType{
+			Argument: &TupleType{},
+			Return:   ExpressionType,
+		},
+	}},
 }
 
-// Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
-func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
-	key, v := fjUnmarshalUnion(data.GetObject())
-	switch key {
-	case "TypeType":
-		t = &TypeType{}
-	case "IntType":
-		t = &IntType{}
-	case "FloatType":
-		t = &FloatType{}
-	case "BoolType":
-		t = &BoolType{}
-	case "StringType":
-		t = &StringType{}
-	case "TupleType":
-		t = &TupleType{
-			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalTypeValue),
-		}
-	case "ListType":
-		t = &ListType{
-			Element: UnmarshalTypeValue(v.Get("element")),
-		}
-	case "FnType":
-		t = &FnType{
-			Argument: UnmarshalTypeValue(v.Get("argument")),
-			Return:   UnmarshalTypeValue(v.Get("return")),
-		}
-	case "StructType":
-		t = &StructType{
-			Name: string(v.GetStringBytes("name")),
-		}
-	default:
-		// t = nil
-	}
-	return
+type TypeId struct {
+	Value TypeValue
 }
 
-// Wraps self in a TupleType, if self is not already a TupleType
-func wrapTupleType(t TypeValue) *TupleType {
-	tupleType, ok := t.(*TupleType)
-	if ok {
-		return tupleType
-	}
-	return NewTupleType(t)
+// GetId implements GetId.
+func (t TypeId) GetId() string {
+	return t.Value.String()
 }
+
+var _ GetId = TypeId{}
 
 type TypeValue interface {
 	fmt.Stringer
@@ -84,61 +52,60 @@ type TypeValue interface {
 type DefaultTypeValue struct{}
 
 func (DefaultTypeValue) typeValue() {}
-func (DefaultTypeValue) String() string {
-	panic("DefaultTypeValue.String should be overridden")
-}
-func (DefaultTypeValue) Lower() cpp.Type {
-	panic("DefaultTypeValue.Lower should be overridden")
-}
-func (DefaultTypeValue) Eq(other TypeValue) bool {
-	panic("DefaultTypeValue.Eq should be overridden")
-}
-
-var _ TypeValue = DefaultTypeValue{}
 
 type TypeType struct{ DefaultTypeValue }
 
 func (TypeType) String() string { return "Type" }
+
 func (t *TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(*TypeType)
 	return ok
 }
+
 func (TypeType) Lower() cpp.Type { return "ty::Type" }
 
 type IntType struct{ DefaultTypeValue }
 
 func (IntType) String() string { return "Int" }
+
 func (i *IntType) Eq(other TypeValue) bool {
 	_, ok := other.(*IntType)
 	return ok
 }
+
 func (IntType) Lower() cpp.Type { return "int" }
 
 type FloatType struct{ DefaultTypeValue }
 
 func (FloatType) String() string { return "Float" }
+
 func (f *FloatType) Eq(other TypeValue) bool {
 	_, ok := other.(*FloatType)
 	return ok
 }
+
 func (FloatType) Lower() cpp.Type { return "float" }
 
 type BoolType struct{ DefaultTypeValue }
 
 func (BoolType) String() string { return "Bool" }
+
 func (b *BoolType) Eq(other TypeValue) bool {
 	_, ok := other.(*BoolType)
 	return ok
 }
+
 func (BoolType) Lower() cpp.Type { return "bool" }
 
 type StringType struct{ DefaultTypeValue }
 
 func (StringType) String() string { return "String" }
+
 func (s *StringType) Eq(other TypeValue) bool {
 	_, ok := other.(*StringType)
 	return ok
 }
+
 func (StringType) Lower() cpp.Type { return "std::string" }
 
 type TupleType struct {
@@ -162,14 +129,9 @@ func (t *TupleType) Eq(other TypeValue) bool {
 	}
 	return true
 }
+
 func (t TupleType) Lower() cpp.Type {
 	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.Lower) + ">"
-}
-
-func NewTupleType(elements ...TypeValue) *TupleType {
-	return &TupleType{
-		Elements: elements,
-	}
 }
 
 type ListType struct {
@@ -206,13 +168,15 @@ func (f *FnType) Eq(other TypeValue) bool {
 
 func (f FnType) Lower() cpp.Type {
 	_return := f.Return.Lower()
-	argumentTuple := wrapTupleType(f.Argument)
+	argumentTuple, argumentIsTuple := f.Argument.(*TupleType)
+	if !argumentIsTuple {
+		return fmt.Sprintf("ty::Function<%s, %s>", _return, f.Argument.Lower())
+	}
 	if len(argumentTuple.Elements) == 0 {
 		return fmt.Sprintf("ty::Function<%s>", _return)
-	} else {
-		arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.Lower)
-		return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
 	}
+	arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.Lower)
+	return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
 }
 
 type StructType struct {
@@ -231,6 +195,46 @@ func (s *StructType) Eq(other TypeValue) bool {
 func (s StructType) Lower() cpp.Type {
 	// TODO: register struct type if newly defined
 	return "ty::" + s.Name
+}
+
+// Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
+func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
+	key, v := fjUnmarshalUnion(data.GetObject())
+	switch key {
+	case "TypeType":
+		t = &TypeType{}
+	case "IntType":
+		t = &IntType{}
+	case "FloatType":
+		t = &FloatType{}
+	case "BoolType":
+		t = &BoolType{}
+	case "StringType":
+		t = &StringType{}
+	case "TupleType":
+		t = &TupleType{
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalTypeValue),
+		}
+	case "ListType":
+		t = &ListType{
+			Element: UnmarshalTypeValue(v.Get("element")),
+		}
+	case "FnType":
+		t = &FnType{
+			Argument: UnmarshalTypeValue(v.Get("argument")),
+			Return:   UnmarshalTypeValue(v.Get("return")),
+		}
+	case "StructType":
+		t = &StructType{
+			Name: string(v.GetStringBytes("name")),
+		}
+	case "TypeId":
+		id := string(v.GetStringBytes())
+		t = registeredNodes[id].(TypeId).Value
+	default:
+		// t = nil
+	}
+	return
 }
 
 var _ TypeValue = (*TypeType)(nil)

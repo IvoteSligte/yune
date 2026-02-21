@@ -1,3 +1,4 @@
+#pragma once
 
 // headers used by Yune programs
 #include <tuple>      // std::tuple, std::apply

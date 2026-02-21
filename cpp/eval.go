@@ -12,7 +12,7 @@ import (
 
 // TODO: properly close file
 var evalLogFile = func() *os.File {
-	filename := "/tmp/yune-eval.log"
+	filename := "/tmp/yune-eval-log.cpp"
 	_ = os.Remove(filename)
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -66,7 +66,9 @@ type repl struct {
 }
 
 func sanitize(s string) string {
-	return strings.ReplaceAll(s, "\n", "\\\n")
+	s = strings.TrimRight(s, " \n\t")
+	s = strings.ReplaceAll(s, "\n", "\\\n")
+	return s
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {

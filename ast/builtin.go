@@ -183,7 +183,7 @@ func (b BuiltinFunctionDeclaration) GetDeclaredType() TypeValue {
 	if len(b.Parameters) == 1 {
 		argument = params[0]
 	} else {
-		argument = NewTupleType(params...)
+		argument = &TupleType{Elements: params}
 	}
 	return &FnType{Argument: argument, Return: b.ReturnType}
 }
@@ -203,7 +203,7 @@ func (d *BuiltinFunctionDeclaration) LowerDefinition() cpp.Definition {
 	id := d.GetId()
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
-    return R"({ "FnId": "%s" })";
+    return R"({ "Variable": "%s" })";
 }`, d.ReturnType.Lower(), id, params, "{"+d.Body+"\n}", id, id)
 }
 

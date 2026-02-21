@@ -228,13 +228,13 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 	for i := range t.Elements {
-		var expected TypeValue
+		expectedElementType := expected
 		if isTuple && len(expectedTupleType.Elements) >= i {
-			expected = expectedTupleType.Elements[i]
-		} else if expected != nil && !expected.Eq(&TypeType{}) {
-			expected = &TypeType{}
+			expectedElementType = expectedTupleType.Elements[i]
+		} else if !expected.Eq(&TypeType{}) {
+			expectedElementType = &TypeType{}
 		}
-		elementType := t.Elements[i].Analyze(expected, anal)
+		elementType := t.Elements[i].Analyze(expectedElementType, anal)
 		_type.Elements = append(_type.Elements, elementType)
 	}
 	t.IsType = expected != nil && expected.Eq(&TypeType{})
@@ -320,8 +320,8 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	}
 	// unmarshalled closure should already be analyzed, since it is referenced
 	// by the analyzed macro function
-	closure := UnmarshalExpression(elements[1]).(*Closure)
-	json = anal.Evaluate(&FunctionCall{Function: closure, Argument: &Tuple{}})
+	closure := lowerClosureValue(elements[1].Get("Closure"))
+	json = anal.EvaluateLowered(closure + "()")
 	m.Result = UnmarshalExpression(fj.MustParse(json))
 	return m.Result.Analyze(expected, anal)
 }
@@ -562,41 +562,55 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return getFunctionType(c.Parameters, c.ReturnType)
 }
 
+func (c Closure) LowerParameters() string {
+	return util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower)
+}
+
 // Lower implements Expression.
 func (c *Closure) Lower() cpp.Expression {
 	id := registerNode(c)
 	fields := ""
+	captureArguments := ""
 	captures := ""
 	for captureName, captureType := range c.captures {
 		fields += captureType.Lower() + " " + captureName + ";\n"
-		if captures != "" {
+		if captureArguments != "" {
+			captureArguments += ", "
 			captures += ", "
 		}
-		captures += captureName
+		captureArguments += captureName
+		// not using newlines because these are automatically escaped by the evaluator
+		// which results in malformed JSON
+		captures += fmt.Sprintf(
+			`{ "name": "%s", "type": { "TypeId": "%s" }, "value": )#" + ty::serialize(%s) + R"#( }`,
+			captureName,
+			registerNode(TypeId{captureType}),
+			captureName)
 	}
 	// C++ requires that closures that do not capture anything do not have a default capture symbol
-	captureSymbol := "" // infer capture
+	lambdaSymbol := "" // infer capture
 	if len(c.captures) > 0 {
-		captureSymbol = "=" // capture by value
+		lambdaSymbol = "=" // capture by value
 	}
 	// declares the struct and immediately captures the right variables from the environment
 	lowered := fmt.Sprintf(`[%s](){
     struct {
         %s operator()(%s) const %s
         std::string serialize() const {
-            return R"({ "ClosureId": "%s" })";
+            return R"#({ "Closure": { "captures": [%s], "id": "%s" } })#";
         }
         %s
     } closure{%s};
     return closure;
 }()`,
-		captureSymbol,
+		lambdaSymbol,
 		c.ReturnType.Lower(),
-		util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower),
+		c.LowerParameters(),
 		cpp.Block(c.Body.Lower()),
+		captures,
 		id,
 		fields,
-		captures)
+		captureArguments)
 	return lowered
 }
 
@@ -660,7 +674,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 		}
 	case "StructExpression":
 		panic("TODO: unmarshal StructExpression")
-	case "Closure":
+	case "ClosureExpression":
 		expr = &Closure{
 			Span: fjUnmarshal(v.Get("span"), Span{}),
 			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
@@ -676,9 +690,6 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			ReturnType: UnmarshalType(v.Get("returnType")),
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
-	case "ClosureId":
-		id := string(v.GetStringBytes())
-		expr = registeredNodes[id].(*Closure)
 	default:
 		// expr = nil
 	}
