@@ -36,7 +36,7 @@ func lowerExpressionValue(data *fj.Value) string {
 		// not a variable with the same name currently being declared
 		//
 		// // assume func is declared in global scope
-		// std::Function<int, bool> func = func;   // func refers to the variable
+		// std::Function<int, bool> func = func;   // func refers to the variable being declared
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + string(v.GetStringBytes())
 	case "Box":
