@@ -13,6 +13,7 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <format>
 
 template <class T> using Box = std::shared_ptr<T>;
 template <class T> Box<T> box(T value) {
@@ -326,6 +327,18 @@ concept FunctionLike =
 
   template <class T> std::string serialize(T object) {
     return object.serialize();
+  }
+
+  template <class T>
+  inline std::string serialize_capture(std::string name, std::string typeId,
+                                       T value) {
+    return std::format(R"({{ "name": "{}", "type": {{ "TypeId": "{}" }}, "value": {} }})",
+                       name, typeId, ty::serialize(value));
+  }
+
+  inline std::string serialize_closure(std::string captures, std::string id) {
+    return std::format(R"({{ "Closure": {{ "captures": [{}], "id": "{}" }} }})",
+                       captures, id);
   }
 } // namespace ty
 

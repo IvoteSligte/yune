@@ -576,13 +576,13 @@ func (c *Closure) Lower() cpp.Expression {
 		fields += captureType.Lower() + " " + captureName + ";\n"
 		if captureArguments != "" {
 			captureArguments += ", "
-			captures += ", "
+			captures += ` + ", " + `
 		}
 		captureArguments += captureName
 		// not using newlines because these are automatically escaped by the evaluator
 		// which results in malformed JSON
 		captures += fmt.Sprintf(
-			`{ "name": "%s", "type": { "TypeId": "%s" }, "value": )#" + ty::serialize(%s) + R"#( }`,
+			`ty::serialize_capture(%q, %q, %s)`,
 			captureName,
 			registerNode(TypeId{captureType}),
 			captureName)
@@ -597,7 +597,7 @@ func (c *Closure) Lower() cpp.Expression {
     struct {
         %s operator()(%s) const %s
         std::string serialize() const {
-            return R"#({ "Closure": { "captures": [%s], "id": "%s" } })#";
+            return ty::serialize_closure(%s, %q);
         }
         %s
     } closure{%s};
