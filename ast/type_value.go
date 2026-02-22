@@ -230,8 +230,10 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	case "TypeId":
 		id := string(v.GetStringBytes())
 		t = registeredNodes[id].(TypeId).Value
+	case "Box":
+		return UnmarshalTypeValue(v)
 	default:
-		// t = nil
+		panic(fmt.Sprintf("unexpected type-value key when unmarshalling: %s", key))
 	}
 	return
 }

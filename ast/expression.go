@@ -615,7 +615,7 @@ func (c *Closure) Lower() cpp.Expression {
 	return lowered
 }
 
-// Tries to unmarshal an Expression, returning nil if the union key does not match an Expression.
+// Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
 	key, v := fjUnmarshalUnion(object)
@@ -691,8 +691,10 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			ReturnType: UnmarshalType(v.Get("returnType")),
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
+	case "Box": // boxing is irrelevant when unmarshalling
+		expr = UnmarshalExpression(v)
 	default:
-		// expr = nil
+		panic(fmt.Sprintf("unexpected expression key when unmarshalling: %s", key))
 	}
 	return
 }

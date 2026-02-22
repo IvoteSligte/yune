@@ -40,7 +40,7 @@ func lowerExpressionValue(data *fj.Value) string {
 		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
 			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, lowerExpressionValue(v))
 		})
-		return fmt.Sprintf(`(ty::%s) {%s\n}`, key, fields)
+		return fmt.Sprintf("(ty::%s) {%s}", key, fields)
 	}
 }
 

@@ -25,7 +25,7 @@ func (t Type) Lower() cpp.Type {
 
 func UnmarshalType(data *fj.Value) Type {
 	return Type{
-		Expression: UnmarshalExpression(data.Get("Type")),
+		Expression: UnmarshalExpression(data),
 	}
 }
 
