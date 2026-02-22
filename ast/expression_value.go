@@ -54,7 +54,7 @@ func lowerExpressionValue(data *fj.Value) string {
 // This does not include the name of the type "Closure".
 func lowerClosureValue(v *fj.Value) string {
 	id := string(v.GetStringBytes("id"))
-	closure := registeredNodes[id].(*Closure)
+	closure := registeredClosures[id]
 	lowered := closure.Lower()
 	captures := ""
 	for _, capture := range v.GetArray("captures") {

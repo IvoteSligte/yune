@@ -6,19 +6,6 @@ import (
 	"yune/util"
 )
 
-type GetId interface {
-	GetId() string
-}
-
-// Stores declarations that need to be serializable from C++, such as functions.
-var registeredNodes = map[string]GetId{}
-
-func registerNode(node GetId) string {
-	id := node.GetId()
-	registeredNodes[id] = node
-	return id
-}
-
 // Assumes that the analyzer is in the function's body scope.
 func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, returnType *Type) {
 	// check for duplicate parameters
@@ -71,12 +58,6 @@ type FunctionDeclaration struct {
 	Body       Block
 }
 
-// GetId implements TopLevelDeclaration.
-func (d *FunctionDeclaration) GetId() string {
-	return d.Name.String
-}
-
-// GetSpan implements TopLevelDeclaration.
 func (d *FunctionDeclaration) GetSpan() Span {
 	return d.Name.GetSpan()
 }
@@ -109,17 +90,16 @@ func (d *FunctionDeclaration) LowerDeclaration() cpp.Declaration {
 	return fmt.Sprintf(`struct %s_ {
     %s operator()(%s) const;
     std::string serialize() const;
-} %s;`, d.GetId(), d.ReturnType.Lower(), params, d.Name.Lower())
+} %s;`, d.Name.String, d.ReturnType.Lower(), params, d.Name.Lower())
 }
 
 // LowerDefinition implements TopLevelDeclaration.
 func (d *FunctionDeclaration) LowerDefinition() cpp.Definition {
 	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
-	id := d.GetId()
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
     return R"({ "Function": "%s" })";
-}`, d.ReturnType.Lower(), id, params, cpp.Block(d.Body.Lower()), id, id)
+}`, d.ReturnType.Lower(), d.Name.String, params, cpp.Block(d.Body.Lower()), d.Name.String, d.Name.String)
 }
 
 func (d FunctionDeclaration) GetName() Name {
@@ -163,11 +143,6 @@ type ConstantDeclaration struct {
 	Type        Type
 	Body        Block
 	HasCaptures bool
-}
-
-// GetId implements TopLevelDeclaration.
-func (d *ConstantDeclaration) GetId() string {
-	return d.Name.String
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -220,7 +195,6 @@ func (d ConstantDeclaration) GetDeclarationType() Type {
 
 type TopLevelDeclaration interface {
 	Declaration
-	GetId
 
 	// Lowers the declaration to a C++ forward declaration.
 	// Assumes type checking has been performed.

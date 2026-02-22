@@ -24,11 +24,6 @@ type BuiltinStructDeclaration struct {
 	Fields []BuiltinFieldDeclaration
 }
 
-// GetId implements TopLevelDeclaration.
-func (b BuiltinStructDeclaration) GetId() string {
-	return b.Name
-}
-
 // GetName implements TopLevelDeclaration.
 func (b BuiltinStructDeclaration) GetName() Name {
 	return Name{String: b.Name}
@@ -75,11 +70,6 @@ type BuiltinConstantDeclaration struct {
 	Name  string
 	Type  TypeValue
 	Value string
-}
-
-// GetId implements TopLevelDeclaration.
-func (b BuiltinConstantDeclaration) GetId() string {
-	return b.Name
 }
 
 // Analyze implements TopLevelDeclaration.
@@ -154,11 +144,6 @@ type BuiltinFunctionDeclaration struct {
 	Body       string
 }
 
-// GetId implements TopLevelDeclaration.
-func (b BuiltinFunctionDeclaration) GetId() string {
-	return b.Name
-}
-
 // Analyze implements TopLevelDeclaration.
 func (b *BuiltinFunctionDeclaration) Analyze(anal Analyzer) {
 	// NOTE: probably needs to Analyze parameters/returnType for ordering purposes
@@ -194,17 +179,16 @@ func (d *BuiltinFunctionDeclaration) LowerDeclaration() cpp.Declaration {
 	return fmt.Sprintf(`struct %s_ {
     %s operator()(%s) const;
     std::string serialize() const;
-} %s;`, d.GetId(), d.ReturnType.Lower(), params, d.Name)
+} %s;`, d.Name, d.ReturnType.Lower(), params, d.Name)
 }
 
 // LowerDefinition implements TopLevelDeclaration.
 func (d *BuiltinFunctionDeclaration) LowerDefinition() cpp.Definition {
 	params := util.JoinFunction(d.Parameters, ", ", BuiltinFunctionParameter.Lower)
-	id := d.GetId()
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
     return R"({ "Function": "%s" })";
-}`, d.ReturnType.Lower(), id, params, "{"+d.Body+"\n}", id, id)
+}`, d.ReturnType.Lower(), d.Name, params, "{"+d.Body+"\n}", d.Name, d.Name)
 }
 
 var FnDeclaration = BuiltinFunctionDeclaration{

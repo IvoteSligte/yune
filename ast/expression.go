@@ -10,6 +10,24 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
+// Stores declarations that need to be serializable from C++, such as functions.
+// TODO: make this a non-global
+var registeredClosures = map[string]*Closure{}
+var registeredTypeValues = map[string]TypeValue{}
+
+func registerClosure(closure *Closure) string {
+	// NOTE: this requires unique Span for C++-generated Closure definitions
+	id := fmt.Sprintf("closure_%d_%d", closure.Span.Line, closure.Span.Column)
+	registeredClosures[id] = closure
+	return id
+}
+
+func registerTypeValue(typeValue TypeValue) string {
+	id := typeValue.String()
+	registeredTypeValues[id] = typeValue
+	return id
+}
+
 type Expression interface {
 	Node
 	fmt.Stringer
@@ -509,9 +527,6 @@ func (s *StructExpression) GetSpan() Span {
 	return s.Span
 }
 
-func (s StructExpression) GetId() {
-}
-
 func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	panic("unimplemented")
 }
@@ -534,12 +549,6 @@ type Closure struct {
 
 func (c Closure) String() string {
 	return "<closure>"
-}
-
-// GetId implements Expression.
-func (c *Closure) GetId() string {
-	// NOTE: this requires unique Span for C++-generated Closure definitions
-	return fmt.Sprintf("closure_%d_%d", c.Span.Line, c.Span.Column)
 }
 
 // GetSpan implements Expression.
@@ -569,7 +578,7 @@ func (c Closure) LowerParameters() string {
 
 // Lower implements Expression.
 func (c *Closure) Lower() cpp.Expression {
-	id := registerNode(c)
+	id := registerClosure(c)
 	fields := ""
 	captureArguments := ""
 	captures := ""
@@ -585,7 +594,7 @@ func (c *Closure) Lower() cpp.Expression {
 		captures += fmt.Sprintf(
 			`ty::serialize_capture(%q, %q, %s)`,
 			captureName,
-			registerNode(TypeId{captureType}),
+			registerTypeValue(captureType),
 			captureName)
 	}
 	// C++ requires that closures that do not capture anything do not have a default capture symbol

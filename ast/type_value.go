@@ -30,17 +30,6 @@ var MacroFunctionType = &FnType{
 	}},
 }
 
-type TypeId struct {
-	Value TypeValue
-}
-
-// GetId implements GetId.
-func (t TypeId) GetId() string {
-	return t.Value.String()
-}
-
-var _ GetId = TypeId{}
-
 type TypeValue interface {
 	fmt.Stringer
 	typeValue()
@@ -229,7 +218,7 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		}
 	case "TypeId":
 		id := string(v.GetStringBytes())
-		t = registeredNodes[id].(TypeId).Value
+		t = registeredTypeValues[id]
 	case "Box":
 		return UnmarshalTypeValue(v)
 	default:
