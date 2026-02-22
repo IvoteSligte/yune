@@ -222,7 +222,7 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	case "Box":
 		return UnmarshalTypeValue(v)
 	default:
-		panic(fmt.Sprintf("unexpected type-value key when unmarshalling: %s", key))
+		panic(fmt.Sprintf("unexpected TypeValue key when unmarshalling: %s", key))
 	}
 	return
 }

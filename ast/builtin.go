@@ -66,6 +66,14 @@ type BuiltinFieldDeclaration struct {
 	Type string
 }
 
+func builtinTypeDeclaration(name string, value Expression) ConstantDeclaration {
+	return ConstantDeclaration{
+		Name: Name{String: name},
+		Type: Type{Expression: &Variable{Name: Name{String: "Type"}}},
+		Body: Block{Statements: []Statement{&ExpressionStatement{value}}},
+	}
+}
+
 type BuiltinConstantDeclaration struct {
 	Name  string
 	Type  TypeValue
@@ -106,16 +114,16 @@ func (d BuiltinConstantDeclaration) LowerDefinition() cpp.Definition {
 
 var _ TopLevelDeclaration = (*BuiltinConstantDeclaration)(nil)
 
-var TypeDeclaration = BuiltinConstantDeclaration{
-	Name:  "Type",
-	Type:  &TypeType{},
-	Value: `ty::TypeType{}`,
+func unitStruct(name string) *StructExpression {
+	return &StructExpression{Name: Name{String: name}}
 }
-var IntDeclaration = BuiltinConstantDeclaration{
-	Name:  "Int",
-	Type:  &TypeType{},
-	Value: `ty::IntType{}`,
+
+var TypeDeclaration = ConstantDeclaration{
+	Name: Name{String: "Type"},
+	Type: Type{value: &TypeType{}},
+	Body: Block{Statements: []Statement{&ExpressionStatement{unitStruct("TypeType")}}},
 }
+var IntDeclaration = builtinTypeDeclaration("Int", unitStruct("IntType"))
 var FloatDeclaration = BuiltinConstantDeclaration{
 	Name:  "Float",
 	Type:  &TypeType{},

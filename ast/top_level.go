@@ -6,6 +6,24 @@ import (
 	"yune/util"
 )
 
+type TopLevelDeclaration interface {
+	Declaration
+
+	// Lowers the declaration to a C++ forward declaration.
+	// Assumes type checking has been performed.
+	LowerDeclaration() cpp.Declaration
+
+	// Lowers the declaration to executable C++ code.
+	// Assumes LowerDeclaration has been called.
+	//
+	// NOTE: when the value has been computed, this function should
+	// lower to a more efficient representation instead of forcing
+	// the same code to run.
+	LowerDefinition() cpp.Definition
+
+	Analyze(anal Analyzer)
+}
+
 // Assumes that the analyzer is in the function's body scope.
 func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, returnType *Type) {
 	// check for duplicate parameters
@@ -143,6 +161,7 @@ type ConstantDeclaration struct {
 	Type        Type
 	Body        Block
 	HasCaptures bool
+	IsBuiltin   bool
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -152,6 +171,12 @@ func (d *ConstantDeclaration) GetSpan() Span {
 
 // Analyze implements TopLevelDeclaration.
 func (d *ConstantDeclaration) Analyze(anal Analyzer) {
+	// The definition of the builtin "Type" is recursive, which is normally not allowed.
+	if d.Name.String == "Type" {
+		anal.Declare(d)
+		anal.Define(d)
+		return
+	}
 	if d.Type.Get() != nil {
 		return // already (being) analyzed
 	}
@@ -191,24 +216,6 @@ func (d ConstantDeclaration) GetName() Name {
 
 func (d ConstantDeclaration) GetDeclarationType() Type {
 	return d.Type
-}
-
-type TopLevelDeclaration interface {
-	Declaration
-
-	// Lowers the declaration to a C++ forward declaration.
-	// Assumes type checking has been performed.
-	LowerDeclaration() cpp.Declaration
-
-	// Lowers the declaration to executable C++ code.
-	// Assumes LowerDeclaration has been called.
-	//
-	// NOTE: when the value has been computed, this function should
-	// lower to a more efficient representation instead of forcing
-	// the same code to run.
-	LowerDefinition() cpp.Definition
-
-	Analyze(anal Analyzer)
 }
 
 // TODO: when types and type aliases can be created, make sure that

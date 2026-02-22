@@ -199,7 +199,7 @@ concept FunctionLike =
   inline std::string serialize(const bool &b) { return std::to_string(b); }
   inline std::string serialize(const float &f) { return std::to_string(f); }
 
-  inline std::string serialize(const TypeType &) { return R"({ "Type", {} })"; };
+  inline std::string serialize(const TypeType &) { return R"({ "TypeType": {} })"; };
   inline std::string serialize(const IntType &) { return R"({ "IntType": {} })"; }
   inline std::string serialize(const FloatType &) {
     return R"({ "FloatType": {} })";

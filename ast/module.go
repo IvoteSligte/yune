@@ -41,7 +41,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		anal.Table.Add(decl)
 	}
 	for _, decl := range declarations {
-		// FIXME: if the main function is not evaluated last then clang-repl evaluation breaks
 		_, evaluated := anal.Defined[decl]
 		if !evaluated {
 			decl.Analyze(anal)
@@ -54,6 +53,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		for _, decl := range declarations {
 			_, defined := anal.Defined[decl]
 			if !defined {
+				// FIXME: detect recursive values and types
 				log.Panicf("Declaration '%s' not defined even though evaluation has finished.", decl.GetName().String)
 			}
 		}

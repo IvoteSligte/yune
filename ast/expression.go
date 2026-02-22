@@ -514,12 +514,12 @@ const (
 
 type StructExpression struct {
 	Span   Span
-	Name   string
+	Name   Name
 	Fields map[string]Expression
 }
 
 func (s StructExpression) String() string {
-	return s.Name + "<fields>"
+	return s.Name.String + "<fields>"
 }
 
 // GetSpan implements Expression.
@@ -536,7 +536,7 @@ func (s StructExpression) Lower() cpp.Expression {
 	for key, value := range s.Fields {
 		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower())
 	}
-	return fmt.Sprintf(`(%s){\n%s}`, s.Name, fields)
+	return fmt.Sprintf("(ty::%s){%s\n}", s.Name.String, fields)
 }
 
 type Closure struct {
