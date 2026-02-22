@@ -32,7 +32,13 @@ func lowerExpressionValue(data *fj.Value) string {
 	case "Closure":
 		return lowerClosureValue(v)
 	case "Function":
-		return string(v.GetStringBytes())
+		// the :: prefix makes sure the function refers to the globally declared one,
+		// not a variable with the same name currently being declared
+		//
+		// // assume func is declared in global scope
+		// std::Function<int, bool> func = func;   // func refers to the variable
+		// std::Function<int, bool> func = ::func; // func refers to the correct definition
+		return "::" + string(v.GetStringBytes())
 	case "Box":
 		return fmt.Sprintf(`box(%s)`, lowerExpressionValue(v))
 	default:
