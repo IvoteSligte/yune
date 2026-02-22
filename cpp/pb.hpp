@@ -318,7 +318,7 @@ concept FunctionLike =
   
   template<class T>
   std::string serialize(Box<T> box) {
-    return ty::serialize(*box.get());
+    return std::format(R"({{ "Box": {} }})", ty::serialize(*box.get()));
   }
 
   template <class... T> inline std::string serialize(const Union<T...> &u) {

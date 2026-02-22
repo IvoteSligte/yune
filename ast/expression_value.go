@@ -33,12 +33,14 @@ func lowerExpressionValue(data *fj.Value) string {
 		return lowerClosureValue(v)
 	case "Function":
 		return string(v.GetStringBytes())
+	case "Box":
+		return fmt.Sprintf(`box(%s)`, lowerExpressionValue(v))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
 			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, lowerExpressionValue(v))
 		})
-		return fmt.Sprintf("(%s) {%s\n}", key, fields)
+		return fmt.Sprintf(`(ty::%s) {%s\n}`, key, fields)
 	}
 }
 
