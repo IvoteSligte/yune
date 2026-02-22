@@ -31,8 +31,14 @@ func lowerExpressionValue(data *fj.Value) string {
 	switch key {
 	case "Closure":
 		return lowerClosureValue(v)
+	case "Function":
+		return string(v.GetStringBytes())
 	default:
-		panic(fmt.Sprintf("unexpected expression value type: %#v", key))
+		fields := ""
+		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
+			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, lowerExpressionValue(v))
+		})
+		return fmt.Sprintf("(%s) {%s\n}", key, fields)
 	}
 }
 

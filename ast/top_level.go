@@ -118,7 +118,7 @@ func (d *FunctionDeclaration) LowerDefinition() cpp.Definition {
 	id := d.GetId()
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
-    return R"({ "Variable": "%s" })";
+    return R"({ "Function": "%s" })";
 }`, d.ReturnType.Lower(), id, params, cpp.Block(d.Body.Lower()), id, id)
 }
 

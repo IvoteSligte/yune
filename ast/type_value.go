@@ -19,7 +19,6 @@ var FloatLiteralType = &StructType{Name: "FloatLiteral"}
 var BoolLiteralType = &StructType{Name: "BoolLiteral"}
 var StringLiteralType = &StructType{Name: "StringLiteral"}
 var ExpressionType = &StructType{Name: "Expression"}
-
 var MacroFunctionType = &FnType{
 	Argument: &StringType{},
 	Return: &TupleType{Elements: []TypeValue{
