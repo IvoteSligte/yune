@@ -95,6 +95,20 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 	if err != nil {
 		return
 	}
+	output, err = r.readResult()
+	if output == "" {
+		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
+	} else {
+		// NOTE: why is there an extra newline at the end of the string?
+		if output[len(output)-1] == '\n' {
+			output = output[:len(output)-1]
+		}
+		log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
+	}
+	return
+}
+
+func (r *repl) readResult() (result string, err error) {
 	for {
 		read, err := r.reader.ReadString('\n')
 		if err != nil {
@@ -107,22 +121,11 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 			panic("unimplemented")
 			// continue
 		case "result":
-			output = splits[1]
+			return splits[1], nil
 		default:
 			panic(fmt.Sprintf("Unexpected prefix for evaluation: '%s'", prefix))
 		}
-		break
 	}
-	if output == "" {
-		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
-	} else {
-		// NOTE: why is there an extra newline at the end of the string?
-		if output[len(output)-1] == '\n' {
-			output = output[:len(output)-1]
-		}
-		log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
-	}
-	return
 }
 
 // Write text without expecting a response, such as for global declarations.
