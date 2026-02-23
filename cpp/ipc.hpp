@@ -1,6 +1,6 @@
 #pragma once
 
-#include <format>
+#include "pb.hpp"
 #include <string>
 #include <iostream>
 #include <unistd.h>
@@ -73,3 +73,15 @@ private:
 
   int socket;
 } compiler_connection{};
+
+inline struct get_type_ {
+  ty::Type operator()(std::string name) const {
+    std::cerr << "TODO: get_type()" << std::endl;
+    exit(1);
+    std::string json = compiler_connection.get_type(name);
+  }
+  std::string serialize() const {
+    std::cerr << "get_type is not serializable as it is compile-time-only." << std::endl;
+    exit(1);
+  }
+} get_type;

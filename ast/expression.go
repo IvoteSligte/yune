@@ -318,15 +318,10 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 			At:       m.Function.GetSpan(),
 		})
 	}
-	macroFunctionCall := FunctionCall{
-		Span:     m.Span,
-		Function: &m.Function,
-		Argument: &String{
-			Span:  m.Lines[0].Span,
-			Value: m.GetText(),
-		},
-	}
-	json := anal.Evaluate(&macroFunctionCall)
+	json := anal.EvaluateLowered(fmt.Sprintf(
+		`(%s)(%q, get_type)`,
+		m.Function.Lower(), m.GetText(),
+	))
 	v := fj.MustParse(json)
 	elements := v.GetArray("Tuple", "elements")
 	if elements == nil {

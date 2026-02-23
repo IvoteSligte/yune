@@ -20,11 +20,13 @@ var BoolLiteralType = &StructType{Name: "BoolLiteral"}
 var StringLiteralType = &StructType{Name: "StringLiteral"}
 var ExpressionType = &StructType{Name: "Expression"}
 
-// TODO: change signature to Fn((String, Fn(String, Type)), (String, Expression))
 var MacroFunctionType = &FnType{
-	// String
-	Argument: &StringType{},
-	// (String, Expression)
+	// (text String, getType Fn(String, Type))
+	Argument: &TupleType{Elements: []TypeValue{
+		&StringType{},
+		&FnType{Argument: &StringType{}, Return: &TypeType{}},
+	}},
+	// (error String, result Expression)
 	Return: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}},
 }
 
