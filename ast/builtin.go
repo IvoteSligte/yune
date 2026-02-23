@@ -1,6 +1,6 @@
 package ast
 
-var BuiltinDeclarations = []Builtin{
+var BuiltinDeclarations = []BuiltinDeclaration{
 	{"Type", &TypeType{}},
 	{"Int", &TypeType{}},
 	{"Float", &TypeType{}},
@@ -27,36 +27,36 @@ var BuiltinDeclarations = []Builtin{
 
 // A declaration that is written in `pb.hpp`.
 // This struct only makes the compiler aware of it.
-type Builtin struct {
+type BuiltinDeclaration struct {
 	Name string
 	Type TypeValue
 }
 
 // Analyze implements TopLevelDeclaration.
-func (b *Builtin) Analyze(anal Analyzer) {
+func (b *BuiltinDeclaration) Analyze(anal Analyzer) {
 	anal.Declare(b)
 	anal.Define(b)
 }
 
 // GetDeclaredType implements TopLevelDeclaration.
-func (b *Builtin) GetDeclaredType() TypeValue {
+func (b *BuiltinDeclaration) GetDeclaredType() TypeValue {
 	return b.Type
 }
 
 // GetName implements TopLevelDeclaration.
-func (b *Builtin) GetName() Name {
+func (b *BuiltinDeclaration) GetName() Name {
 	return Name{String: b.Name}
 }
 
 // GetSpan implements TopLevelDeclaration.
-func (b *Builtin) GetSpan() Span {
+func (b *BuiltinDeclaration) GetSpan() Span {
 	return Span{}
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
-func (b *Builtin) LowerDeclaration() string { return "" }
+func (b *BuiltinDeclaration) LowerDeclaration() string { return "" }
 
 // LowerDefinition implements TopLevelDeclaration.
-func (b *Builtin) LowerDefinition() string { return "" }
+func (b *BuiltinDeclaration) LowerDefinition() string { return "" }
 
-var _ TopLevelDeclaration = (*Builtin)(nil)
+var _ TopLevelDeclaration = (*BuiltinDeclaration)(nil)
