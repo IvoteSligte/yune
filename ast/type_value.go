@@ -19,15 +19,13 @@ var FloatLiteralType = &StructType{Name: "FloatLiteral"}
 var BoolLiteralType = &StructType{Name: "BoolLiteral"}
 var StringLiteralType = &StructType{Name: "StringLiteral"}
 var ExpressionType = &StructType{Name: "Expression"}
+
+// TODO: change signature to Fn((String, Fn(String, Type)), (String, Expression))
 var MacroFunctionType = &FnType{
+	// String
 	Argument: &StringType{},
-	Return: &TupleType{Elements: []TypeValue{
-		&StringType{},
-		&FnType{
-			Argument: &TupleType{},
-			Return:   ExpressionType,
-		},
-	}},
+	// (String, Expression)
+	Return: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}},
 }
 
 type TypeValue interface {

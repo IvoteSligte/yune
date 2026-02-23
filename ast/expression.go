@@ -336,11 +336,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	if errorMessage != "" {
 		panic("Macro returned error: " + errorMessage)
 	}
-	// unmarshalled closure should already be analyzed, since it is referenced
-	// by the analyzed macro function
-	closure := lowerClosureValue(elements[1].Get("Closure"))
-	json = anal.EvaluateLowered(closure + "()")
-	m.Result = UnmarshalExpression(fj.MustParse(json))
+	m.Result = UnmarshalExpression(elements[1])
 	return m.Result.Analyze(expected, anal)
 }
 

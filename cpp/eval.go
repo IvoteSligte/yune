@@ -3,8 +3,10 @@ package cpp
 import (
 	"bufio"
 	_ "embed"
+	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,38 +33,53 @@ func evalLog(s string) {
 	}
 }
 
+// should be unused according to https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
+// (synchronised with ipc.hpp)
+const YuneCompilerPort = 11555
+
 var Repl repl = func() repl {
+	// Create connection
+	// TODO: close connection at some point
+	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", YuneCompilerPort))
+	if err != nil {
+		log.Fatalln("Failed to start TCP connection with clang-repl. Error:", err)
+	}
+	// Start REPL and setup inputs/outputs
 	cmd := exec.Command("clang-repl", "-Xcc=-std=c++20")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatalln("Failed to get stdin pipe from clang-repl command. Error:", err)
 	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatalln("Failed to get stdout pipe from clang-repl command. Error:", err)
-	}
-	cmd.Stderr = os.Stderr // TODO: also wrap this because when stderr is written to something went wrong
-	err = cmd.Start()
-	if err != nil {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr // TODO: wrap this because when stderr is written to something went wrong
+	if err = cmd.Start(); err != nil {
 		log.Fatalln("Failed to run clang-repl. Error:", err)
 	}
 	r := repl{
-		stdin:    stdin,
-		stdout:   bufio.NewReader(stdout),
-		declared: "",
+		writer:    stdin,
+		reader:    nil, // set later
+		responder: nil, // set later
+		Declared:  "",
 	}
-	err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`))
-	if err != nil {
+	if err = r.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`)); err != nil {
 		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
 	}
+	if err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/ipc.hpp"`) + "\n"); err != nil {
+		log.Fatalln("Failed to declare IPC header through clang-repl. Error:", err)
+	}
+	// have ipc.hpp connect
+	conn, err := listener.Accept()
+	r.reader = bufio.NewReader(conn)
+	r.responder = conn
 	return r
 }()
 
 // clang-repl wrapper struct
 type repl struct {
-	stdin    io.Writer
-	stdout   *bufio.Reader
-	declared string
+	writer    io.Writer
+	responder io.Writer
+	reader    *bufio.Reader
+	Declared  string
 }
 
 func sanitize(s string) string {
@@ -72,15 +89,29 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression) (output string, err error) {
-	text := "std::cout << ty::serialize(" + sanitize(expr) + ") << std::endl;\n"
+	text := "compiler_connection.yield(ty::serialize(" + sanitize(expr) + "));\n"
 	evalLog(text)
-	_, err = r.stdin.Write([]byte(text))
+	_, err = r.writer.Write([]byte(text))
 	if err != nil {
 		return
 	}
-	output, err = r.stdout.ReadString('\n')
-	if err != nil {
-		return
+	for {
+		read, err := r.reader.ReadString('\n')
+		if err != nil {
+			return "", err
+		}
+		splits := strings.SplitN(read, ":", 2)
+		prefix := splits[0]
+		switch prefix {
+		case "getType":
+			panic("unimplemented")
+			// continue
+		case "result":
+			output = splits[1]
+		default:
+			panic(fmt.Sprintf("Unexpected prefix for evaluation: '%s'", prefix))
+		}
+		break
 	}
 	if output == "" {
 		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
@@ -94,15 +125,19 @@ func (r *repl) Evaluate(expr Expression) (output string, err error) {
 	return
 }
 
-// Write text without expecting a response, such as for function or constant declarations.
+// Write text without expecting a response, such as for global declarations.
+// This does not write to the `Declared` field, which is useful for compile-time-only declarations.
 func (r *repl) Write(text string) (err error) {
 	input := sanitize(text) + "\n"
 	evalLog(input)
-	_, err = r.stdin.Write([]byte(input))
-	r.declared += text + "\n"
+	_, err = r.writer.Write([]byte(input))
 	return
 }
 
-func (r *repl) GetDeclared() string {
-	return r.declared
+// Write text without expecting a response, such as for global declarations.
+// Text written is appended to the `Declared` field.
+func (r *repl) Declare(text string) (err error) {
+	r.Write(text)
+	r.Declared += text + "\n"
+	return
 }

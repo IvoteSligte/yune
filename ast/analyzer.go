@@ -76,7 +76,7 @@ func (a Analyzer) GetType(name Name) TypeValue {
 // and their full definitions after when they have been type checked
 
 func (a Analyzer) Declare(decl TopLevelDeclaration) {
-	err := cpp.Repl.Write(decl.LowerDeclaration())
+	err := cpp.Repl.Declare(decl.LowerDeclaration())
 	if err != nil {
 		panic("Failed to declare " + decl.GetName().String)
 	}
@@ -88,7 +88,7 @@ func (a Analyzer) Define(decl TopLevelDeclaration) {
 		panic("Redefinition of declaration " + decl.GetName().String)
 	}
 	a.Defined[decl] = struct{}{}
-	err := cpp.Repl.Write(decl.LowerDefinition())
+	err := cpp.Repl.Declare(decl.LowerDefinition())
 	if err != nil {
 		panic("Failed to define declaration " + decl.GetName().String)
 	}

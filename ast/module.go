@@ -63,6 +63,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			len(declarations),
 		)
 	}
-	lowered = cpp.Repl.GetDeclared() // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
+	lowered = cpp.Repl.Declared // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
 	return
 }

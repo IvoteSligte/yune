@@ -55,6 +55,9 @@ func lowerExpressionValue(data *fj.Value) string {
 func lowerClosureValue(v *fj.Value) string {
 	id := string(v.GetStringBytes("id"))
 	closure := registeredClosures[id]
+	if closure == nil {
+		panic(fmt.Sprintf("Invalid closure ID: '%s'", id))
+	}
 	lowered := closure.Lower()
 	captures := ""
 	for _, capture := range v.GetArray("captures") {

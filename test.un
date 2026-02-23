@@ -12,9 +12,8 @@ something(f: Fn((), Int)): Int = f()
 takeTuple(t: (Int, String)): String =
     "literal"
 
-longString(text: String): (String, Fn((), Expression)) =
-    finalizer: Fn((), Expression) = ||: Expression = stringLiteral(text)
-    ("", finalizer)
+longString(text: String): (String, Expression) =
+    ("", stringLiteral(text))
 
 noArguments(): () = a: Int = 0
 
