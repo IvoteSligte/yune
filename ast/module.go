@@ -14,7 +14,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 
 	// Register builtin declarations
 	for _, decl := range BuiltinDeclarations {
-		declarations[decl.GetName().String] = decl
+		declarations[decl.GetName().String] = &decl
 	}
 	// get unique mapping of name -> declaration
 	for _, decl := range m.Declarations {

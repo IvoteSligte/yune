@@ -528,7 +528,16 @@ func (s *StructExpression) GetSpan() Span {
 }
 
 func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	panic("unimplemented")
+	maybeStructType := anal.GetType(s.Name)
+	structType, isStructType := maybeStructType.(*StructType)
+	if !isStructType {
+		anal.PushError(NotAStruct{
+			Found: structType,
+			At:    s.Name.Span,
+		})
+	}
+
+	panic("unimplemented(compare and analyze fields and check for duplicate field names)")
 }
 
 func (s StructExpression) Lower() cpp.Expression {

@@ -342,3 +342,40 @@ concept FunctionLike =
   }
 } // namespace ty
 
+inline ty::Type Type = ty::TypeType{};
+inline ty::Type Int = ty::IntType{};
+inline ty::Type Float = ty::FloatType{};
+inline ty::Type Bool = ty::BoolType{};
+inline ty::Type String = ty::StringType{};
+
+inline ty::Type List(ty::Type element) {
+  return box(ty::ListType{.element = element});
+}
+inline ty::Type Fn(ty::Type argument, ty::Type returnType) {
+  return box(ty::FnType{.argument = argument, .returnType = returnType});
+}
+
+inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
+
+inline struct stringLiteral_ {
+  ty::Expression operator()(std::string str) const {
+    return ty::StringLiteral{.value = str};
+  }
+  std::string serialize() const {
+    return R"({ "Function": "stringLiteral" })";
+  }
+} stringLiteral;
+
+inline ty::Function<ty::Expression, std::string> stringLiteral__ = stringLiteral;
+
+inline struct printlnString_ {
+  std::tuple<> operator()(std::string str) const {
+    std::cout << str << std::endl;
+    return std::make_tuple();
+  }
+  std::string serialize() const {
+    return R"({ "Function": "printlnString" })";
+  }
+} printlnString;
+
+inline ty::Function<std::tuple<>, std::string> printlnString__ = printlnString;

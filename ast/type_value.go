@@ -181,7 +181,6 @@ func (s *StructType) Eq(other TypeValue) bool {
 	return ok && s.Name == otherStruct.Name
 }
 func (s StructType) Lower() cpp.Type {
-	// TODO: register struct type if newly defined
 	return "ty::" + s.Name
 }
 

@@ -1,7 +1,0 @@
-
-// stage 1
-macro(String) -> AST
-
-// stage 2
-compiler(AST) -> CPP
-
