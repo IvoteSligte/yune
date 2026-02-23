@@ -7,6 +7,9 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
+// TODO: better error handling for JSON-related things
+// It currently always assumes success, which causes nil-pointer dereference errors to appear in unrelated places.
+
 func lowerExpressionValue(data *fj.Value) string {
 	object := data.GetObject()
 	if object == nil { // primitive (Yune does not produce top-level arrays)
