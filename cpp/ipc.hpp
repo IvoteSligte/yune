@@ -9,6 +9,11 @@
 
 constexpr int YUNE_COMPILER_PORT = 11555;
 
+static void panic(std::string message) {
+  std::cerr << "clang-repl: " << message << std::endl;
+  exit(1);
+}
+
 inline class CompilerConnection {
 public:
   CompilerConnection() {
@@ -30,26 +35,28 @@ public:
     std::cout << "clang-repl: Connected to Yune compiler." << std::endl;
   }
 
-  ~CompilerConnection() {
-    ::close(socket);
-  }
+  ~CompilerConnection() { ::close(socket); }
 
-  std::string get_type(std::string name) const {
-    std::string payload = "getType:" + name + "\n";
+  ty::Type get_type(std::string name) const {
+    ty::Type destination = ty::UninitType();
+    uintptr_t destination_address = reinterpret_cast<uintptr_t>(&destination);
+    std::string payload = "getType:" + name + ":" + std::to_string(destination_address) + "\n";
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
-      std::cerr << "clang-repl: Failed to send a type query through the compiler connection." << std::endl;
-      exit(1);
+      panic("Failed to send a type query through the compiler connection.");
     }
-    return read_line();
+    std::string line = read_line();
+    if (line != "") {
+      panic("Expected empty response to getType query. Recieved '" + line + "'");
+    }
+    return destination;    
   }
 
   void yield(std::string result) const {
     std::string payload = "result:" + result + "\n";
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
-      std::cerr << "clang-repl: Failed to send a result through the compiler connection." << std::endl;
-      exit(1);
+      panic("Failed to send a result through the compiler connection.");
     }
   }
 
@@ -61,8 +68,7 @@ private:
     while (true) {
       ssize_t n = ::recv(socket, &c, 1, 0);
       if (n == -1) {
-        std::cerr << "clang-repl: Failed to read line from the compiler connection." << std::endl;
-        exit(1);
+        panic("Failed to read line from the compiler connection.");
       }
       if (c == '\n') {
         return result;
@@ -76,9 +82,7 @@ private:
 
 inline struct get_type_ {
   ty::Type operator()(std::string name) const {
-    std::cerr << "TODO: get_type()" << std::endl;
-    exit(1);
-    std::string json = compiler_connection.get_type(name);
+    return compiler_connection.get_type(name);
   }
   std::string serialize() const {
     std::cerr << "get_type is not serializable as it is compile-time-only." << std::endl;
