@@ -114,7 +114,7 @@ func (r *repl) readResult() (result string, err error) {
 		if err != nil {
 			return "", err
 		}
-		splits := strings.SplitN(read, ":", 2)
+		splits := strings.Split(read, ":")
 		prefix := splits[0]
 		switch prefix {
 		case "getType":
