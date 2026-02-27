@@ -114,10 +114,14 @@ func (r *repl) readResult() (result string, err error) {
 		if err != nil {
 			return "", err
 		}
-		splits := strings.Split(read, ":")
+		// doing only 2 splits so that JSON is not split by ":"
+		splits := strings.SplitN(read, ":", 2)
 		prefix := splits[0]
 		switch prefix {
 		case "getType":
+			splits := strings.SplitN(splits[1], ":", 2)
+			name := splits[0]
+			destAddress := splits[1]
 			panic("unimplemented")
 			// continue
 		case "result":

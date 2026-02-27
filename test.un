@@ -13,6 +13,7 @@ takeTuple(t: (Int, String)): String =
     "literal"
 
 longString(text: String, getType: Fn(String, Type)): (String, Expression) =
+    getType("add")
     ("", stringLiteral(text))
 
 noArguments(): () = a: Int = 0
