@@ -1,6 +1,7 @@
 #pragma once
 
 // headers also used by Yune programs
+#include <regex>
 #include <tuple>      // std::tuple, std::apply
 #include <string>     // std::string
 #include <vector>     // std::vector
@@ -425,3 +426,26 @@ inline struct printlnString_ {
 } printlnString;
 
 inline ty::Function<std::tuple<>, std::string> printlnString__ = printlnString;
+
+inline struct at_ {
+  std::string operator()(std::string s, int i) const {
+    return std::string(s[i], 1);
+  }
+  std::string serialize() const {
+    return R"({ "Function": "at" })";
+  }
+} at;
+
+inline struct subString_ {
+  std::string operator()(std::string s, int start, int end) const {
+    if (end < start) {
+      // TODO: Yune-native error message
+      std::cerr << "subString end < start" << std::endl;
+      exit(1);
+    }
+    return s.substr(start, end - start);
+  }
+  std::string serialize() const {
+    return R"({ "Function": "subString" })";
+  }
+} subString;

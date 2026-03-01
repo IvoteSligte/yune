@@ -23,6 +23,14 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   &TupleType{},
 	}},
+	{"at", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}}},
+		Return:   &StringType{},
+	}},
+	{"subString", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
+		Return:   &StringType{},
+	}},
 }
 
 // A declaration that is written in `pb.hpp`.
