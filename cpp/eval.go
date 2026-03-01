@@ -93,6 +93,8 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
+	// A thread is created and detached because in order to write the result of a getType query
+	// more code needs to be evaluated by the interpreter, which causes a deadlock with only a single thread.
 	text := "std::thread([]() { compiler_connection.yield(ty::serialize(" + sanitize(expr) + ")); }).detach();\n"
 	evalLog(text)
 	_, err = r.writer.Write([]byte(text))
@@ -117,11 +119,15 @@ func (r *repl) readResult(getType func(string) Type) (result *fj.Value, err erro
 		}
 		if body := message.Get("getType"); body != nil {
 			name := string(body.GetStringBytes("name"))
-			writeAddress := body.GetUint64("write_address")
-			err := r.Write(fmt.Sprintf("*static_cast<ty::Type*>(%x) = %s;", writeAddress, getType(name)))
-			if err != nil {
-				panic(fmt.Sprintf("Failed to set type after request. Error: %s", err))
+			writeAddress := body.GetUint64("writeAddress")
+			if writeAddress == 0 {
+				panic(fmt.Sprintf("Failed to get non-zero write_address of getType request. Message: '%s'. Error: %s", message, err))
 			}
+			err = r.Write(fmt.Sprintf("*(ty::Type*)(0x%xULL) = %s;", writeAddress, getType(name)))
+			if err != nil {
+				panic(fmt.Sprintf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err))
+			}
+			r.responder.Write([]byte("wrote_getType_result\n"))
 			continue
 		}
 		panic(fmt.Sprintf("Could not parse evaluation message: '%s'", message))

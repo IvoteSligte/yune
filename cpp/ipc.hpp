@@ -40,17 +40,18 @@ public:
   ty::Type get_type(std::string name) const {
     ty::Type destination = ty::UninitType();
     uintptr_t destination_address = reinterpret_cast<uintptr_t>(&destination);
-    std::string payload = std::format(R"({{ "getType": {{ "name": "{}", "address": {} }} }})""\n", name, destination_address);
+    std::string payload = std::format(R"({{ "getType": {{ "name": "{}", "writeAddress": {} }} }})""\n", name, destination_address);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
     }
     std::string line = read_line();
-    if (line != "") {
-      panic("Expected empty response to getType query. Recieved '" + line + "'");
+    if (line != "wrote_getType_result") {
+      panic("Expected wrote_getType_result response to getType query. Recieved '" + line + "'");
     }
     return destination;
   }
+  
   void yield(std::string result) const {
     std::string payload = std::format(R"({{ "result": {} }})""\n", result);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
@@ -65,7 +66,9 @@ private:
     char c;
 
     while (true) {
+      std::cerr << ("receiving") << std::endl;;
       ssize_t n = ::recv(socket, &c, 1, 0);
+      std::cerr << ("received") << std::endl;;
       if (n == -1) {
         panic("Failed to read line from the compiler connection.");
       }
