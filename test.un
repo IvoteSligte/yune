@@ -18,6 +18,9 @@ longString(text: String, getType: Fn(String, Type)): (String, Expression) =
 
 noArguments(): () = a: Int = 0
 
+sql(text: String, getType: Fn(String, Type)): (String, Expression) =
+    ("", stringLiteral(text))
+
 main(): () =
     a: Int = fibonacci(add(N, N))
     true and false

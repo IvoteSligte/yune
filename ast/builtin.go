@@ -23,6 +23,10 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   &TupleType{},
 	}},
+	{"len", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}}},
+		Return:   &IntType{},
+	}},
 	{"at", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}}},
 		Return:   &StringType{},
