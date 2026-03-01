@@ -33,7 +33,8 @@ var MacroFunctionType = &FnType{
 type TypeValue interface {
 	fmt.Stringer
 	typeValue()
-	Lower() cpp.Type
+	LowerType() cpp.Type
+	LowerValue() cpp.Value
 	Eq(other TypeValue) bool
 }
 
@@ -50,7 +51,8 @@ func (t *TypeType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (TypeType) Lower() cpp.Type { return "ty::Type" }
+func (TypeType) LowerType() cpp.Type   { return "ty::Type" }
+func (TypeType) LowerValue() cpp.Value { return "ty::TypeType{}" }
 
 type IntType struct{ DefaultTypeValue }
 
@@ -61,7 +63,8 @@ func (i *IntType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (IntType) Lower() cpp.Type { return "int" }
+func (IntType) LowerType() cpp.Type   { return "int" }
+func (IntType) LowerValue() cpp.Value { return "ty::IntType{}" }
 
 type FloatType struct{ DefaultTypeValue }
 
@@ -72,7 +75,8 @@ func (f *FloatType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (FloatType) Lower() cpp.Type { return "float" }
+func (FloatType) LowerType() cpp.Type   { return "float" }
+func (FloatType) LowerValue() cpp.Value { return "ty::FloatType{}" }
 
 type BoolType struct{ DefaultTypeValue }
 
@@ -83,7 +87,8 @@ func (b *BoolType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (BoolType) Lower() cpp.Type { return "bool" }
+func (BoolType) LowerType() cpp.Type   { return "bool" }
+func (BoolType) LowerValue() cpp.Value { return "ty::BoolType{}" }
 
 type StringType struct{ DefaultTypeValue }
 
@@ -94,7 +99,8 @@ func (s *StringType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (StringType) Lower() cpp.Type { return "std::string" }
+func (StringType) LowerType() cpp.Type   { return "std::string" }
+func (StringType) LowerValue() cpp.Value { return "ty::StringType{}" }
 
 type TupleType struct {
 	DefaultTypeValue
@@ -118,8 +124,11 @@ func (t *TupleType) Eq(other TypeValue) bool {
 	return true
 }
 
-func (t TupleType) Lower() cpp.Type {
-	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.Lower) + ">"
+func (t TupleType) LowerType() cpp.Type {
+	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.LowerType) + ">"
+}
+func (t TupleType) LowerValue() cpp.Value {
+	return "ty::TupleType{ .elements = { " + util.JoinFunction(t.Elements, ", ", TypeValue.LowerValue) + " } }"
 }
 
 type ListType struct {
@@ -135,8 +144,11 @@ func (l *ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(*ListType)
 	return ok && l.Element.Eq(otherList.Element)
 }
-func (l ListType) Lower() cpp.Type {
-	return "std::vector<" + l.Element.Lower() + ">"
+func (l ListType) LowerType() cpp.Type {
+	return "std::vector<" + l.Element.LowerType() + ">"
+}
+func (l ListType) LowerValue() cpp.Value {
+	return "ty::ListType{ .element = " + l.Element.LowerValue() + " }"
 }
 
 type FnType struct {
@@ -154,17 +166,20 @@ func (f *FnType) Eq(other TypeValue) bool {
 	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
 }
 
-func (f FnType) Lower() cpp.Type {
-	_return := f.Return.Lower()
+func (f FnType) LowerType() cpp.Type {
+	_return := f.Return.LowerType()
 	argumentTuple, argumentIsTuple := f.Argument.(*TupleType)
 	if !argumentIsTuple {
-		return fmt.Sprintf("ty::Function<%s, %s>", _return, f.Argument.Lower())
+		return fmt.Sprintf("ty::Function<%s, %s>", _return, f.Argument.LowerType())
 	}
 	if len(argumentTuple.Elements) == 0 {
 		return fmt.Sprintf("ty::Function<%s>", _return)
 	}
-	arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.Lower)
+	arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.LowerType)
 	return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
+}
+func (f FnType) LowerValue() cpp.Value {
+	return "ty::FnType{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " }"
 }
 
 type StructType struct {
@@ -180,8 +195,11 @@ func (s *StructType) Eq(other TypeValue) bool {
 	otherStruct, ok := other.(*StructType)
 	return ok && s.Name == otherStruct.Name
 }
-func (s StructType) Lower() cpp.Type {
+func (s StructType) LowerType() cpp.Type {
 	return "ty::" + s.Name
+}
+func (s StructType) LowerValue() cpp.Type {
+	return "ty::StructType{ .name = " + s.Name + " }"
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.

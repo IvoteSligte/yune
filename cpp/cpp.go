@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+type Value = string
 type Type = string
 
 // A code block in the form of a Lambda function that is immediately invoked.

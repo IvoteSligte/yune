@@ -40,7 +40,7 @@ public:
   ty::Type get_type(std::string name) const {
     ty::Type destination = ty::UninitType();
     uintptr_t destination_address = reinterpret_cast<uintptr_t>(&destination);
-    std::string payload = "getType:" + name + ":" + std::to_string(destination_address) + "\n";
+    std::string payload = std::format(R"({{ "getType": {{ "name": "{}", "address": {} }} }})""\n", name, destination_address);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
@@ -49,11 +49,10 @@ public:
     if (line != "") {
       panic("Expected empty response to getType query. Recieved '" + line + "'");
     }
-    return destination;    
+    return destination;
   }
-
   void yield(std::string result) const {
-    std::string payload = "result:" + result + "\n";
+    std::string payload = std::format(R"({{ "result": {} }})""\n", result);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a result through the compiler connection.");

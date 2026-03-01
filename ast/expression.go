@@ -318,14 +318,13 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 			At:       m.Function.GetSpan(),
 		})
 	}
-	json := anal.EvaluateLowered(fmt.Sprintf(
+	v := anal.Evaluate(fmt.Sprintf(
 		`(%s)(%q, get_type)`,
 		m.Function.Lower(), m.GetText(),
 	))
-	v := fj.MustParse(json)
 	elements := v.GetArray("Tuple", "elements")
 	if elements == nil {
-		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", json)
+		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", v)
 	}
 	errorMessage := string(elements[0].GetStringBytes())
 	if errorMessage != "" {
@@ -583,7 +582,7 @@ func (c *Closure) Lower() cpp.Expression {
 	captureArguments := ""
 	captures := ""
 	for captureName, captureType := range c.captures {
-		fields += captureType.Lower() + " " + captureName + ";\n"
+		fields += captureType.LowerType() + " " + captureName + ";\n"
 		if captureArguments != "" {
 			captureArguments += ", "
 			captures += ` + ", " + `

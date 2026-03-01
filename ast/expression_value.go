@@ -65,7 +65,7 @@ func lowerClosureValue(v *fj.Value) string {
 	captures := ""
 	for _, capture := range v.GetArray("captures") {
 		name := string(capture.GetStringBytes("name"))
-		_type := UnmarshalTypeValue(capture.Get("type")).Lower()
+		_type := UnmarshalTypeValue(capture.Get("type")).LowerType()
 		value := lowerExpressionValue(capture.Get("value"))
 		captures += _type + " " + name + " = " + value + ";\n"
 	}

@@ -20,7 +20,7 @@ func (t Type) Get() TypeValue {
 }
 
 func (t Type) Lower() cpp.Type {
-	return t.value.Lower()
+	return t.value.LowerType()
 }
 
 func UnmarshalType(data *fj.Value) Type {
@@ -44,7 +44,7 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 			At:       t.Expression.GetSpan(),
 		})
 	}
-	json := anal.Evaluate(t.Expression)
-	t.value = UnmarshalTypeValue(fj.MustParse(json))
+	json := anal.Evaluate(t.Expression.Lower())
+	t.value = UnmarshalTypeValue(json)
 	return t.value
 }

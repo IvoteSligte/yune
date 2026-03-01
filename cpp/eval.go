@@ -2,7 +2,6 @@ package cpp
 
 import (
 	"bufio"
-	_ "embed"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	fj "github.com/valyala/fastjson"
 )
 
 // TODO: properly close file
@@ -88,47 +89,39 @@ func sanitize(s string) string {
 	return s
 }
 
-func (r *repl) Evaluate(expr Expression) (output string, err error) {
+func (r *repl) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
 	text := "compiler_connection.yield(ty::serialize(" + sanitize(expr) + "));\n"
 	evalLog(text)
 	_, err = r.writer.Write([]byte(text))
 	if err != nil {
 		return
 	}
-	output, err = r.readResult()
-	if output == "" {
-		log.Panicf("clang-repl evaluated '%s' to the empty string.\n", expr)
-	} else {
-		// NOTE: why is there an extra newline at the end of the string?
-		if output[len(output)-1] == '\n' {
-			output = output[:len(output)-1]
-		}
-		log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
-	}
+	output, err = r.readResult(getType)
+	log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
 	return
 }
 
-func (r *repl) readResult() (result string, err error) {
+func (r *repl) readResult(getType func(string) Type) (result *fj.Value, err error) {
 	for {
-		read, err := r.reader.ReadString('\n')
+		var read string
+		read, err = r.reader.ReadString('\n')
 		if err != nil {
-			return "", err
+			return
 		}
-		// doing only 2 splits so that JSON is not split by ":"
-		splits := strings.SplitN(read, ":", 2)
-		prefix := splits[0]
-		switch prefix {
-		case "getType":
-			splits := strings.SplitN(splits[1], ":", 2)
-			name := splits[0]
-			destAddress := splits[1]
-			panic("unimplemented")
-			// continue
-		case "result":
-			return splits[1], nil
-		default:
-			panic(fmt.Sprintf("Unexpected prefix for evaluation: '%s'", prefix))
+		message := fj.MustParse(read)
+		if result = message.Get("result"); result != nil {
+			return
 		}
+		if body := message.Get("getType"); body != nil {
+			name := string(body.GetStringBytes("name"))
+			writeAddress := body.GetUint64("write_address")
+			err := r.Write(fmt.Sprintf("*static_cast<*ty::Type>(%x) = %s;", writeAddress, getType(name)))
+			if err != nil {
+				panic(fmt.Sprintf("Failed to set type after request. Error: %s", err))
+			}
+			continue
+		}
+		panic(fmt.Sprintf("Unexpected evaluation message: '%s'", message))
 	}
 }
 

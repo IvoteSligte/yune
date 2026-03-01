@@ -199,3 +199,16 @@ type CyclicConstantDependency struct {
 func (e CyclicConstantDependency) Error() string {
 	return fmt.Sprintf("Cyclic constant dependency in declaration '%s' at %s.", e.In.GetName(), e.In.GetSpan())
 }
+
+type MacroRequestedUndefinedType struct {
+	Macro Variable
+	Name  string
+}
+
+func (e MacroRequestedUndefinedType) Error() string {
+	// TODO: use span of e.Name instead of e.Macro
+	return fmt.Sprintf(
+		"Macro '%s' at %s requested undefined type '%s'.",
+		e.Macro.Name.String, e.Macro.Name.Span, e.Name,
+	)
+}

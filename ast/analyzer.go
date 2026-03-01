@@ -3,6 +3,8 @@ package ast
 import (
 	"log"
 	"yune/cpp"
+
+	fj "github.com/valyala/fastjson"
 )
 
 type Analyzer struct {
@@ -22,17 +24,24 @@ func (a Analyzer) HasErrors() bool {
 }
 
 // Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
-func (a Analyzer) EvaluateLowered(lowered string) (json string) {
-	json, err := cpp.Repl.Evaluate(lowered)
+func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
+	getType := func(name string) cpp.Type {
+		span := Span{} // TODO: span
+		decl, ok := a.Table.Get(Name{String: name, Span: span})
+		if !ok {
+			a.PushError(MacroRequestedUndefinedType{
+				// TODO
+				Macro: Variable{Name: Name{Span: Span{}, String: "<unknown>"}},
+				Name:  name,
+			})
+		}
+		return decl.GetDeclaredType().LowerValue()
+	}
+	json, err := cpp.Repl.Evaluate(lowered, getType)
 	if err != nil {
 		panic("Failed to evaluate lowered expression. Error: " + err.Error())
 	}
 	return
-}
-
-// Evaluate an Expression, assuming that Expression.Analyze has already been called on it.
-func (a Analyzer) Evaluate(expr Expression) (json string) {
-	return a.EvaluateLowered(expr.Lower())
 }
 
 func (a Analyzer) NewScope() Analyzer {
