@@ -88,3 +88,4 @@ inline struct get_type_ {
     exit(1);
   }
 } get_type;
+

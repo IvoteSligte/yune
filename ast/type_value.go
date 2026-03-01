@@ -128,7 +128,7 @@ func (t TupleType) LowerType() cpp.Type {
 	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.LowerType) + ">"
 }
 func (t TupleType) LowerValue() cpp.Value {
-	return "ty::TupleType{ .elements = { " + util.JoinFunction(t.Elements, ", ", TypeValue.LowerValue) + " } }"
+	return "box(ty::TupleType{ .elements = { " + util.JoinFunction(t.Elements, ", ", TypeValue.LowerValue) + " } })"
 }
 
 type ListType struct {
@@ -148,7 +148,7 @@ func (l ListType) LowerType() cpp.Type {
 	return "std::vector<" + l.Element.LowerType() + ">"
 }
 func (l ListType) LowerValue() cpp.Value {
-	return "ty::ListType{ .element = " + l.Element.LowerValue() + " }"
+	return "box(ty::ListType{ .element = " + l.Element.LowerValue() + " })"
 }
 
 type FnType struct {
@@ -178,8 +178,9 @@ func (f FnType) LowerType() cpp.Type {
 	arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.LowerType)
 	return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
 }
+
 func (f FnType) LowerValue() cpp.Value {
-	return "ty::FnType{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " }"
+	return "box(ty::FnType{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " })"
 }
 
 type StructType struct {
@@ -199,7 +200,7 @@ func (s StructType) LowerType() cpp.Type {
 	return "ty::" + s.Name
 }
 func (s StructType) LowerValue() cpp.Type {
-	return "ty::StructType{ .name = " + s.Name + " }"
+	return "box(ty::StructType{ .name = " + s.Name + " })"
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.

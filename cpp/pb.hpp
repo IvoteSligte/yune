@@ -1,6 +1,6 @@
 #pragma once
 
-// headers used by Yune programs
+// headers also used by Yune programs
 #include <tuple>      // std::tuple, std::apply
 #include <string>     // std::string
 #include <vector>     // std::vector

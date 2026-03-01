@@ -68,6 +68,9 @@ var Repl repl = func() repl {
 	if err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/ipc.hpp"`) + "\n"); err != nil {
 		log.Fatalln("Failed to declare IPC header through clang-repl. Error:", err)
 	}
+	if err = r.Write("#include <thread>\n"); err != nil {
+		log.Fatalln("Failed to declare Yune evaluator-specific C++ includes. Error:", err)
+	}
 	// have ipc.hpp connect
 	conn, err := listener.Accept()
 	r.reader = bufio.NewReader(conn)
@@ -90,7 +93,7 @@ func sanitize(s string) string {
 }
 
 func (r *repl) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
-	text := "compiler_connection.yield(ty::serialize(" + sanitize(expr) + "));\n"
+	text := "std::thread([]() { compiler_connection.yield(ty::serialize(" + sanitize(expr) + ")); }).detach();\n"
 	evalLog(text)
 	_, err = r.writer.Write([]byte(text))
 	if err != nil {
@@ -115,13 +118,13 @@ func (r *repl) readResult(getType func(string) Type) (result *fj.Value, err erro
 		if body := message.Get("getType"); body != nil {
 			name := string(body.GetStringBytes("name"))
 			writeAddress := body.GetUint64("write_address")
-			err := r.Write(fmt.Sprintf("*static_cast<*ty::Type>(%x) = %s;", writeAddress, getType(name)))
+			err := r.Write(fmt.Sprintf("*static_cast<ty::Type*>(%x) = %s;", writeAddress, getType(name)))
 			if err != nil {
 				panic(fmt.Sprintf("Failed to set type after request. Error: %s", err))
 			}
 			continue
 		}
-		panic(fmt.Sprintf("Unexpected evaluation message: '%s'", message))
+		panic(fmt.Sprintf("Could not parse evaluation message: '%s'", message))
 	}
 }
 
