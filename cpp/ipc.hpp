@@ -1,12 +1,29 @@
 #pragma once
 
 #include "pb.hpp"
+#include <semaphore>
 #include <string>
 #include <iostream>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <future>
+
+// Alternative to std::promise<ty::Type>, which gives missing symbols errors
+// when used with clang-repl.
+struct TypePromise {
+  std::binary_semaphore sync{0};
+  std::optional<ty::Type> type;
+
+  ty::Type get() {
+    this->sync.acquire();
+    return std::move(*this->type);
+  }
+
+  void set(ty::Type type) {
+    this->type = type;
+    this->sync.release();
+  }
+};
 
 constexpr int YUNE_COMPILER_PORT = 11555;
 
@@ -44,9 +61,7 @@ public:
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
     }
-    auto future = type_promise.get_future();
-    future.wait(); // wait for type to be set
-    return future.get();
+    return type_promise.get();
   }
   
   void yield(std::string result) const {
@@ -58,8 +73,7 @@ public:
   }
 
   void set_type(ty::Type type) {
-    type_promise.set_value(type);
-    type_promise = {}; // reset
+    type_promise.set(type);
   }
 
 private:
@@ -80,7 +94,7 @@ private:
   }
 
   int socket{0};
-  std::promise<ty::Type> type_promise;
+  TypePromise type_promise;
 } compiler_connection{};
 
 inline struct get_type_ {
