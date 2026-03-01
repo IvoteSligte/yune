@@ -117,17 +117,13 @@ func (r *repl) readResult(getType func(string) Type) (result *fj.Value, err erro
 		if result = message.Get("result"); result != nil {
 			return
 		}
-		if body := message.Get("getType"); body != nil {
-			name := string(body.GetStringBytes("name"))
-			writeAddress := body.GetUint64("writeAddress")
-			if writeAddress == 0 {
-				panic(fmt.Sprintf("Failed to get non-zero write_address of getType request. Message: '%s'. Error: %s", message, err))
-			}
-			err = r.Write(fmt.Sprintf("*(ty::Type*)(0x%xULL) = %s;", writeAddress, getType(name)))
+		if nameBytes := message.GetStringBytes("getType"); nameBytes != nil {
+			name := string(nameBytes)
+			// set the type and signal that it has been set
+			err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", getType(name)))
 			if err != nil {
 				panic(fmt.Sprintf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err))
 			}
-			r.responder.Write([]byte("wrote_getType_result\n"))
 			continue
 		}
 		panic(fmt.Sprintf("Could not parse evaluation message: '%s'", message))

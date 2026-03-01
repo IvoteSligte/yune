@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <future>
 
 constexpr int YUNE_COMPILER_PORT = 11555;
 
@@ -37,19 +38,15 @@ public:
 
   ~CompilerConnection() { ::close(socket); }
 
-  ty::Type get_type(std::string name) const {
-    ty::Type destination = ty::UninitType();
-    uintptr_t destination_address = reinterpret_cast<uintptr_t>(&destination);
-    std::string payload = std::format(R"({{ "getType": {{ "name": "{}", "writeAddress": {} }} }})""\n", name, destination_address);
+  ty::Type get_type(std::string name) {
+    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
     }
-    std::string line = read_line();
-    if (line != "wrote_getType_result") {
-      panic("Expected wrote_getType_result response to getType query. Recieved '" + line + "'");
-    }
-    return destination;
+    auto future = type_promise.get_future();
+    future.wait(); // wait for type to be set
+    return future.get();
   }
   
   void yield(std::string result) const {
@@ -60,15 +57,18 @@ public:
     }
   }
 
+  void set_type(ty::Type type) {
+    type_promise.set_value(type);
+    type_promise = {}; // reset
+  }
+
 private:
   std::string read_line() const {
     std::string result;
     char c;
 
     while (true) {
-      std::cerr << ("receiving") << std::endl;;
       ssize_t n = ::recv(socket, &c, 1, 0);
-      std::cerr << ("received") << std::endl;;
       if (n == -1) {
         panic("Failed to read line from the compiler connection.");
       }
@@ -79,7 +79,8 @@ private:
     }
   }
 
-  int socket;
+  int socket{0};
+  std::promise<ty::Type> type_promise;
 } compiler_connection{};
 
 inline struct get_type_ {

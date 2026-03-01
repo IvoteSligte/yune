@@ -15,20 +15,35 @@
 #include <variant>
 #include <format>
 
-template <class T> using Box = std::shared_ptr<T>;
-template <class T> Box<T> box(T value) {
-  return std::make_shared<T>(std::move(value));
+template <class T>
+using Box = std::shared_ptr<T>;
+
+template <class T>
+Box<T> box(T&& value) {
+  return std::make_shared<std::decay_t<T>>(std::forward<T>(value));
 }
 
 namespace ty {
+// Checks if T is among the classes Ts
+template <class T, class... Ts>
+inline constexpr bool is_one_of_v = (std::is_same_v<T, Ts> || ...);
+
 template <class... T> struct Union {
-  // Create from element
-  template <class U> Union(U element) : variant(element) {}
+  // Create from element directly
+  template <class U>
+    requires is_one_of_v<std::decay_t<U>, T...>
+  Union(U &&element) : variant(std::forward<U>(element)) {}
+
+  // Create from element through boxing
+  template <class U>
+    requires(!is_one_of_v<std::decay_t<U>, T...>) &&
+            is_one_of_v<std::shared_ptr<std::decay_t<U>>, T...>
+  Union(U &&element) : variant(box(std::forward<U>(element))) {}
 
   // Create from subset
   template <class... U>
-  Union(Union<U...> subset)
-      : variant(std::visit([](auto element) constexpr { return element; },
+  Union(const Union<U...> &subset)
+      : variant(std::visit([](auto &&element) constexpr { return element; },
                            subset)) {}
 
   std::variant<T...> variant;
@@ -59,7 +74,8 @@ template <class Return, class... Args> struct Function {
   };
   template <class F>
     requires FunctionLike<F, Return, Args...>
-  Function(F function) : self(std::make_shared<Model<F>>(std::move(function))) {
+  Function(F function)
+      : self(std::make_shared<std::decay_t<Model<F>>>(std::move(function))) {
     static_assert(std::is_class_v<F>,
                   "Function requires callable object, not function pointer");
   }
@@ -89,11 +105,8 @@ struct ListType;
 struct FnType;
 struct StructType;
 
-// Compiler-internal struct marking an uninitialized type.
-struct UninitType {};
-
 using Type =
-    Union<UninitType, TypeType, IntType, FloatType, BoolType, StringType,
+    Union<TypeType, IntType, FloatType, BoolType, StringType,
           Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
 
 struct TupleType {
@@ -228,7 +241,6 @@ std::string serialize(const TupleType &t);
 std::string serialize(const ListType &t);
 std::string serialize(const FnType &t);
 std::string serialize(const StructType &t);
-inline std::string serialize(const UninitType &t) { exit(1); };
 template <class T> std::string serialize(std::vector<T> elements);
 template <class... T> std::string serialize(std::tuple<T...> elements);
 template <class... T> std::string serialize(const Union<T...> &u);
