@@ -361,37 +361,46 @@ func (u *UnaryExpression) GetSpan() Span {
 
 // Analyze implements Expression.
 func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	expressionType := u.Expression.Analyze(nil, anal)
-	switch {
-	case
-		expressionType.Eq(&IntType{}),
-		expressionType.Eq(&FloatType{}):
-		break
+	var expressionType TypeValue
+	switch u.Op {
+	case "-":
+		expressionType = u.Expression.Analyze(nil, anal)
+		if !expressionType.Eq(&IntType{}) && expressionType.Eq(&FloatType{}) {
+			anal.PushError(InvalidUnaryExpressionType{
+				Op:   u.Op,
+				Type: expressionType,
+				At:   u.Span,
+			})
+		}
+	case ";":
+		expressionType = u.Expression.Analyze(&BoolType{}, anal)
+		if !expressionType.Eq(&BoolType{}) {
+			anal.PushError(InvalidUnaryExpressionType{
+				Op:   u.Op,
+				Type: expressionType,
+				At:   u.Span,
+			})
+		}
 	default:
-		anal.PushError(InvalidUnaryExpressionType{
-			Op:   u.Op,
-			Type: expressionType,
-			At:   u.Span,
-		})
+		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
 	return expressionType
 }
 
 // Lower implements Expression.
 func (u *UnaryExpression) Lower() cpp.Expression {
+	// TODO: parens as-needed
 	switch u.Op {
-	case Negate:
+	case "-":
 		return "-" + u.Expression.Lower()
+	case ";":
+		return "!" + u.Expression.Lower()
 	default:
 		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
 }
 
 type UnaryOp string
-
-const (
-	Negate UnaryOp = "-"
-)
 
 type BinaryExpression struct {
 	Span  Span
@@ -472,13 +481,12 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 		Less,
 		LessEqual,
 		Multiply,
-		NotEqual,
-		Subtract:
+		Subtract,
+		Or,
+		And:
 		op = string(b.Op)
-	case Or:
-		op = "||"
-	case And:
-		op = "&&"
+	case NotEqual:
+		op = "!="
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}

@@ -18,6 +18,70 @@ longString(text: String, getType: Fn(String, Type)): (String, Expression) =
 
 noArguments(): () = a: Int = 0
 
+findChar(text: String, offset: Int, char: String): (Int, Bool) =
+    offset >= len(text) -> (0, false)
+    at(text, offset) == char -> (offset, true)
+    findChar(text, offset + 1)
+
+findBraces(text: String, offset: Int): (Int, Int, Bool) =
+    (leftIndex, leftFound): (Int, Bool) = findChar(text, offset, "{")
+    ;leftFound -> (0, 0, false)
+    
+    (rightIndex, rightFound): (Int, Bool) = findChar(text, leftIndex + 1, "}")
+    ;rightFound -> (0, 0, false)
+    
+    (leftIndex, rightIndex, true)
+
+stringContains(string: String, char: String): Bool =
+    len(string) == 0 -> true
+    at(string, 0) == char -> true
+    stringContains(subString(string, 1, len(string)), char)
+
+stringContainsOnly(string: String, charSet: String): Bool =
+    len(string) == 0 -> true
+    ;stringContains(charSet, at(string, 0)) -> false
+    stringContainsOnly(subString(string, 1, len(string)), charSet)
+
+LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
+UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ALPHA: String == LOWER_ALPHA + UPPER_ALPHA
+DIGIT: String = "1234567890"
+ALNUM: String == ALPHA + DIGIT
+
+isAlpha(string: String): Bool = stringContainsOnly(string, ALPHA)
+isAlnum(string: String): Bool = stringContainsOnly(string, ALNUM)
+
+isIdentifier(string: String): Bool =
+    len(string) == 0 -> false
+    ;isAlpha(at(string, 0)) -> false
+    isAlnum(subString(string, 1, len(string)))
+
+Error: Type = String
+
+fmt(text: String, getType: Fn(String, Type)): Expression or Error =
+    (leftIndex, rightIndex, found): (Int, Int, Bool) = findBraces(text, 0)
+    ;found or (leftIndex + 1 == rightIndex) -> stringLiteral(text)
+    
+    braceText: String = subString(text, leftIndex + 1, rightIndex)
+    ;isIdentifier(braceText) -> "'" + braceText + "' is not a valid identifier."
+    braceTextType: Type = getType(braceText)
+    braceTextType ;= String -> "Only strings can be formatted for now."
+
+    remainderResult: Expression or Error =
+        fmt(subString(text, rightIndex + 1, len(text)), getType)
+    
+    remainderResult is error: Error -> error
+    remainderResult is right: Expression ->
+        left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), variable(braceText))
+        binaryExpression("+", left, right)
+    panic("unreachable")
+
+// is
+// (a, b): (A, B) = ...
+// unions (with or syntax)
+// binaryExpression(op, left, right)
+// variable(name)
+
 sql(text: String, getType: Fn(String, Type)): (String, Expression) =
     ("", stringLiteral(text))
 

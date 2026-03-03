@@ -25,7 +25,7 @@ LESS             : '<';
 GREATER          : '>';
 EQUAL            : '=';
 EQEQUAL          : '==';
-NOTEQUAL         : '!=';
+NOTEQUAL         : ';=';
 LESSEQUAL        : '<=';
 GREATEREQUAL     : '>=';
 PLUSEQUAL        : '+=';

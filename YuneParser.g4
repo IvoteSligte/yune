@@ -102,6 +102,7 @@ closureParameters
 unaryExpression
     : primaryExpression
     | op=MINUS primaryExpression
+    | op=SEMI primaryExpression
     ;
 
 // FIXME: precedence is most likely very incorrect

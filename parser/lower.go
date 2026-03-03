@@ -247,10 +247,10 @@ func LowerType(ctx ITypeContext) ast.Type {
 
 func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 	switch {
-	case ctx.MINUS() != nil:
+	case ctx.GetOp() != nil:
 		expr := ast.UnaryExpression{
 			Span:       GetSpan(ctx),
-			Op:         ast.Negate,
+			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
 			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
 		}
 		return &expr
@@ -259,6 +259,7 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 	default:
 		panic("unreachable")
 	}
+
 }
 
 func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDeclaration {
