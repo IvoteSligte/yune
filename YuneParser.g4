@@ -49,7 +49,13 @@ statement
     ;
 
 variableDeclaration
-    : name COLON type EQUAL statementBody
+    : variableDeclarationTarget COLON type EQUAL statementBody
+    ;
+
+variableDeclarationTarget
+    : name
+    | LPAREN RPAREN
+    | LPAREN name (COMMA name)* RPAREN
     ;
 
 assignment

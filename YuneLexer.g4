@@ -36,6 +36,8 @@ RARROW           : '->';
 
 IMPORT   : 'import';
 IN       : 'in';
+IS       : 'is';
+AS       : 'as';
 AND      : 'and';
 OR       : 'or';
 LET      : 'let';
