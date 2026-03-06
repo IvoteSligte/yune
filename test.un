@@ -58,7 +58,7 @@ isIdentifier(string: String): Bool =
 
 Error: Type = String
 
-fmt(text: String, getType: Fn(String, Type)): Expression or Error =
+fmt(text: String, getType: Fn(String, Type)): Union(Expression, Error) =
     (leftIndex, rightIndex, found): (Int, Int, Bool) = findBraces(text, 0)
     ;found or (leftIndex + 1 == rightIndex) -> stringLiteral(text)
     
@@ -67,14 +67,13 @@ fmt(text: String, getType: Fn(String, Type)): Expression or Error =
     braceTextType: Type = getType(braceText)
     braceTextType ;= String -> "Only strings can be formatted for now."
 
-    remainderResult: Expression or Error =
+    remainderResult: Union(Expression, Error) =
         fmt(subString(text, rightIndex + 1, len(text)), getType)
     
     remainderResult is error: Error -> error
-    remainderResult is right: Expression ->
-        left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), variable(braceText))
-        binaryExpression("+", left, right)
-    panic("unreachable")
+    remainderResult is right: Expression
+    left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), variable(braceText))
+    binaryExpression("+", left, right)
 
 // is
 // (a, b): (A, B) = ...
