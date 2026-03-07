@@ -215,8 +215,8 @@ func (f *FunctionCall) Lower() cpp.Expression {
 
 type Tuple struct {
 	Span     Span
-	IsType   bool
 	Elements []Expression
+	isType   bool
 }
 
 func (t Tuple) String() string {
@@ -255,8 +255,8 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		elementType := t.Elements[i].Analyze(expectedElementType, anal)
 		_type.Elements = append(_type.Elements, elementType)
 	}
-	t.IsType = expected != nil && expected.Eq(&TypeType{})
-	if t.IsType {
+	t.isType = expected != nil && expected.Eq(&TypeType{})
+	if t.isType {
 		return &TypeType{}
 	}
 	return _type
@@ -264,7 +264,7 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 
 // Lower implements Expression.
 func (t *Tuple) Lower() cpp.Expression {
-	if t.IsType {
+	if t.isType {
 		if len(t.Elements) == 0 {
 			return `box((ty::TupleType){})`
 		}

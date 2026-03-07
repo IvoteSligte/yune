@@ -1,6 +1,10 @@
 package parser
 
 import (
+	"fmt"
+	"iter"
+	"math/rand/v2"
+	"slices"
 	"strconv"
 	"yune/ast"
 	"yune/util"
@@ -40,16 +44,44 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 	}
 }
 
+func DesugarIsExpression(ctx IIsExpressionContext) condition {
+	// Input:
+	// expression is name: type
+	// Becomes:
+	// is_expr_8fa932bc_: auto = expression
+	// isVariant(type)(is_expr_8fa932bc_) ->
+	//     name: type = getVariant(type)(is_expr_8fa932bc_)
+	//     ...
+}
+
 func LowerBranchStatement(ctx IBranchStatementContext) ast.BranchStatement {
-	elseBlock := ast.Block{
-		Span:       GetSpan(ctx.ElseBlock()),
-		Statements: util.Map(ctx.ElseBlock().AllStatement(), LowerStatement),
-	}
-	return ast.BranchStatement{
-		Span:      GetSpan(ctx),
-		Condition: LowerExpression(ctx.Expression()),
-		Then:      LowerStatementBody(ctx.StatementBody()),
-		Else:      elseBlock,
+	switch {
+	case ctx.Expression() != nil:
+		return ast.BranchStatement{
+			Span:      GetSpan(ctx),
+			Condition: LowerExpression(ctx.Expression()),
+			Then:      LowerStatementBody(ctx.StatementBody()),
+			Else: ast.Block{
+				Span:       GetSpan(ctx.ElseBlock()),
+				Statements: LowerStatements(ctx.ElseBlock().AllStatement()),
+			},
+		}
+	case ctx.IsExpression() != nil:
+		condition := LowerExpression(ctx.IsExpression())
+		thenBlock := LowerStatementBody(ctx.StatementBody())
+		thenBlock.Statements = util.Prepend(thenBlock.Statements)
+		elseBlock := ast.Block{
+			Span:       GetSpan(ctx.ElseBlock()),
+			Statements: LowerStatements(ctx.ElseBlock().AllStatement()),
+		}
+		return ast.BranchStatement{
+			Span:      GetSpan(ctx),
+			Condition: condition,
+			Then:      thenBlock,
+			Else:      elseBlock,
+		}
+	default:
+		panic("unreachable")
 	}
 }
 
@@ -188,34 +220,45 @@ func LowerClosureExpression(ctx IClosureExpressionContext) ast.Expression {
 	}
 }
 
-func LowerStatement(ctx IStatementContext) ast.Statement {
-	switch {
-	case ctx.VariableDeclaration() != nil:
-		stmt := LowerVariableDeclaration(ctx.VariableDeclaration())
-		return &stmt
-	case ctx.Assignment() != nil:
-		stmt := LowerAssignment(ctx.Assignment())
-		return &stmt
-	case ctx.ClosureExpression() != nil:
-		return &ast.ExpressionStatement{
-			Expression: LowerClosureExpression(ctx.ClosureExpression()),
+func LowerStatement(ctx IStatementContext) iter.Seq[ast.Statement] {
+	return func(yield func(ast.Statement) bool) {
+		switch {
+		case ctx.VariableDeclaration() != nil:
+			LowerVariableDeclaration(ctx.VariableDeclaration())(yield)
+		case ctx.Assignment() != nil:
+			stmt := LowerAssignment(ctx.Assignment())
+			yield(&stmt)
+		case ctx.ClosureExpression() != nil:
+			yield(&ast.ExpressionStatement{
+				Expression: LowerClosureExpression(ctx.ClosureExpression()),
+			})
+		case ctx.Expression() != nil:
+			yield(&ast.ExpressionStatement{
+				Expression: LowerExpression(ctx.Expression()),
+			})
+		case ctx.BranchStatement() != nil:
+			stmt := LowerBranchStatement(ctx.BranchStatement())
+			yield(&stmt)
+		case ctx.IsExpression() != nil:
+			panic("todo")
+		default:
+			panic("unreachable")
 		}
-	case ctx.Expression() != nil:
-		return &ast.ExpressionStatement{
-			Expression: LowerExpression(ctx.Expression()),
-		}
-	case ctx.BranchStatement() != nil:
-		stmt := LowerBranchStatement(ctx.BranchStatement())
-		return &stmt
-	default:
-		panic("unreachable")
 	}
+}
+
+func LowerStatements(statements []IStatementContext) (output []ast.Statement) {
+	return slices.Collect(func(yield func(ast.Statement) bool) {
+		for _, stmt := range statements {
+			LowerStatement(stmt)(yield)
+		}
+	})
 }
 
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	return ast.Block{
 		Span:       GetSpan(ctx),
-		Statements: util.Map(ctx.AllStatement(), LowerStatement),
+		Statements: LowerStatements(ctx.AllStatement()),
 	}
 }
 
@@ -262,12 +305,60 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 
 }
 
-func LowerVariableDeclaration(ctx IVariableDeclarationContext) ast.VariableDeclaration {
-	return ast.VariableDeclaration{
-		Span: GetSpan(ctx),
-		Name: LowerName(ctx.Name()),
-		Type: LowerType(ctx.Type_()),
-		Body: LowerStatementBody(ctx.StatementBody()),
+func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Statement] {
+	return func(yield func(ast.Statement) bool) {
+		target := ctx.Target()
+
+		// Regular variable declaration
+		if len(target.AllName()) == 1 {
+			yield(&ast.VariableDeclaration{
+				Span: GetSpan(ctx),
+				Name: LowerName(target.Name(0)),
+				Type: LowerType(target.Type_(0)),
+				Body: LowerStatementBody(ctx.StatementBody()),
+			})
+			return
+		}
+		// Tuple pattern matching that needs to be desugared
+		// Input:
+		// (x: Int, y: String) = body
+		// Becomes:
+		// tuple_3af823129b_: (Int, String) = body
+		// x: Int = getTupleElement(tuple_3af823129b_, 0)
+		// y: String = getTupleElement(tuple_3af823129b_, 1)
+		tupleSpan := GetSpan(ctx)
+		tupleName := fmt.Sprintf("tuple_%x_", rand.Uint64()) // TODO: do not use a random number
+		elementTypes := util.Map(target.AllType_(), LowerType)
+		tupleType := ast.Type{
+			Expression: &ast.Tuple{
+				Span: tupleSpan,
+				Elements: util.Map(elementTypes, func(t ast.Type) ast.Expression {
+					return t.Expression
+				}),
+			},
+		}
+		if !yield(&ast.VariableDeclaration{
+			Span: tupleSpan,
+			Name: ast.Name{
+				Span:   tupleSpan,
+				String: tupleName,
+			},
+			Type: tupleType,
+			Body: LowerStatementBody(ctx.StatementBody()),
+		}) {
+			return
+		}
+		for i, name := range target.AllName() {
+			_type := elementTypes[i]
+			if !yield(&ast.VariableDeclaration{
+				Span: GetSpan(ctx),
+				Name: LowerName(name),
+				Type: _type,
+				Body: LowerStatementBody(ctx.StatementBody()),
+			}) {
+				return
+			}
+		}
 	}
 }
 

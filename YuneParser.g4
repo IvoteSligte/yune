@@ -50,13 +50,13 @@ statement
     ;
 
 variableDeclaration
-    : variableDeclarationTarget COLON type EQUAL statementBody
+    : target EQUAL statementBody
     ;
 
-variableDeclarationTarget
-    : name
+target
+    : name COLON type
     | LPAREN RPAREN
-    | LPAREN name (COMMA name)* RPAREN
+    | LPAREN name COLON type (COMMA name COLON type)* RPAREN
     ;
 
 assignment
@@ -147,10 +147,8 @@ elseBlock
     ;
 
 branchStatement
-    : condition RARROW statementBody elseBlock
+    : (expression | isExpression) RARROW statementBody elseBlock
     ;
 
-condition
-    : expression
-    | isExpression
-    ;
+
+

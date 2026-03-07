@@ -24,10 +24,10 @@ findChar(text: String, offset: Int, char: String): (Int, Bool) =
     findChar(text, offset + 1)
 
 findBraces(text: String, offset: Int): (Int, Int, Bool) =
-    (leftIndex, leftFound): (Int, Bool) = findChar(text, offset, "{")
+    (leftIndex: Int, leftFound: Bool) = findChar(text, offset, "{")
     ;leftFound -> (0, 0, false)
     
-    (rightIndex, rightFound): (Int, Bool) = findChar(text, leftIndex + 1, "}")
+    (rightIndex: Int, rightFound: Bool) = findChar(text, leftIndex + 1, "}")
     ;rightFound -> (0, 0, false)
     
     (leftIndex, rightIndex, true)
@@ -44,9 +44,9 @@ stringContainsOnly(string: String, charSet: String): Bool =
 
 LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
 UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-ALPHA: String == LOWER_ALPHA + UPPER_ALPHA
+ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
 DIGIT: String = "1234567890"
-ALNUM: String == ALPHA + DIGIT
+ALNUM: String = ALPHA + DIGIT
 
 isAlpha(string: String): Bool = stringContainsOnly(string, ALPHA)
 isAlnum(string: String): Bool = stringContainsOnly(string, ALNUM)
@@ -59,7 +59,7 @@ isIdentifier(string: String): Bool =
 Error: Type = String
 
 fmt(text: String, getType: Fn(String, Type)): Union(Expression, Error) =
-    (leftIndex, rightIndex, found): (Int, Int, Bool) = findBraces(text, 0)
+    (leftIndex: Int, rightIndex: Int, found: Bool) = findBraces(text, 0)
     ;found or (leftIndex + 1 == rightIndex) -> stringLiteral(text)
     
     braceText: String = subString(text, leftIndex + 1, rightIndex)
