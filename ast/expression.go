@@ -159,7 +159,7 @@ type FunctionCall struct {
 	Span            Span
 	Function        Expression
 	Argument        Expression
-	ArgumentIsTuple bool
+	argumentIsTuple bool
 }
 
 func (f FunctionCall) String() string {
@@ -200,13 +200,13 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 		})
 	}
 	_, argumentIsTuple := argumentType.(*TupleType)
-	f.ArgumentIsTuple = argumentIsTuple
+	f.argumentIsTuple = argumentIsTuple
 	return
 }
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
-	if f.ArgumentIsTuple {
+	if f.argumentIsTuple {
 		// calls the function with a tuple of arguments
 		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(), f.Argument.Lower())
 	}

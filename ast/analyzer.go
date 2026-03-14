@@ -8,10 +8,20 @@ import (
 )
 
 type Analyzer struct {
-	Errors          *Errors
-	Defined         map[TopLevelDeclaration]struct{}
-	Table           DeclarationTable
-	GetTypeCallback func(Name)
+	Errors  *Errors
+	Defined map[TopLevelDeclaration]struct{}
+	Table   DeclarationTable
+}
+
+// Returns an analyzer with only the relevant data for a top-level analysis.
+func (a Analyzer) TopLevel() Analyzer {
+	return Analyzer{
+		Errors:  a.Errors,
+		Defined: a.Defined,
+		Table: DeclarationTable{
+			topLevelDeclarations: a.Table.topLevelDeclarations,
+		},
+	}
 }
 
 func (a Analyzer) PushError(err error) {
@@ -54,22 +64,11 @@ func (a Analyzer) GetType(name Name) TypeValue {
 	if !ok {
 		panic("Unknown declaration: " + name.String)
 	}
-	if a.GetTypeCallback != nil {
-		a.GetTypeCallback(name)
-	}
 	topLevel, isTopLevel := decl.(TopLevelDeclaration)
 	if isTopLevel {
 		_, isDone := a.Defined[topLevel]
 		if !isDone {
-			// Keep only the relevant data for a top-level analyzer.
-			topLevel.Analyze(Analyzer{
-				Errors:  a.Errors,
-				Defined: a.Defined,
-				Table: DeclarationTable{
-					topLevelDeclarations: a.Table.topLevelDeclarations,
-				},
-				GetTypeCallback: nil,
-			})
+			topLevel.Analyze(a.TopLevel())
 		}
 	}
 	// Non-top-level declarations are analyzed in sequential order,

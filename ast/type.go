@@ -33,8 +33,7 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	if t.value != nil {
 		panic("Called Type.Analyze on already-analyzed type.")
 	}
-	// FIXME: t.Expression.Analyze can access local variables right now
-	expressionType := t.Expression.Analyze(&TypeType{}, anal)
+	expressionType := t.Expression.Analyze(&TypeType{}, anal.TopLevel())
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
 	if !expressionType.Eq(&TypeType{}) {

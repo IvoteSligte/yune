@@ -46,7 +46,7 @@ statement
     | closureExpression
     // only this should have a newline because all statements end in an expression
     | expression NEWLINE
-    | isExpression NEWLINE
+    | isStatement
     ;
 
 variableDeclaration
@@ -138,16 +138,20 @@ closureExpression
     | left=binaryExpression op=OR right=closureExpression
     ;
 
+block
+    : statement*
+    ;
+
 isExpression
     : expression IS name COLON type
     ;
 
-elseBlock
-    : statement*
+isStatement
+    : isExpression NEWLINE block
     ;
 
 branchStatement
-    : (expression | isExpression) RARROW statementBody elseBlock
+    : (expression | isExpression) RARROW statementBody block
     ;
 
 

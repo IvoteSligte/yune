@@ -18,9 +18,10 @@ type Statement interface {
 type VariableDeclaration struct {
 	Span
 	Name        Name
+	InferType   bool
 	Type        Type
 	Body        Block
-	HasCaptures bool
+	hasCaptures bool
 }
 
 // TypeCheckBody implements Declaration.
@@ -30,17 +31,20 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 
 // InferType implements Statement.
 func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	declType := d.Type.Analyze(anal)
+	var declType TypeValue
+	if !d.InferType {
+		declType = d.Type.Analyze(anal)
+	}
 	scope := anal.NewScope()
 	bodyType := d.Body.Analyze(d.Type.Get(), scope)
-	if !declType.Eq(bodyType) {
+	if !d.InferType && !declType.Eq(bodyType) {
 		anal.PushError(VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	d.HasCaptures = len(*scope.Table.captures) > 0
+	d.hasCaptures = len(*scope.Table.captures) > 0
 	return &TupleType{}
 }
 
@@ -49,7 +53,7 @@ func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
 		d.Type.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.Lower(),
-		cpp.LambdaBlock(d.Body.Lower(), d.HasCaptures),
+		cpp.LambdaBlock(d.Body.Lower(), d.hasCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
