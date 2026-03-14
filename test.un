@@ -77,9 +77,10 @@ fmt(text: String, getType: Fn(String, Type)): Union(Expression, Error) =
 
 // is
 // (a, b): (A, B) = ...
-// unions (with or syntax)
+// unions
 // binaryExpression(op, left, right)
 // variable(name)
+// serialization of Box (validity can be checked with constinit)
 
 sql(text: String, getType: Fn(String, Type)): (String, Expression) =
     ("", stringLiteral(text))
