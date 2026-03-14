@@ -427,7 +427,7 @@ inline struct printlnString_ {
 inline ty::Function<std::tuple<>, std::string> printlnString__ = printlnString;
 
 inline struct len_ {
-  int operator()(std::string s, int i) const {
+  int operator()(std::string s) const {
     return s.length();
   }
   std::string serialize() const {

@@ -9,9 +9,9 @@ type Type = string
 
 // A code block in the form of a Lambda function that is immediately invoked.
 // This is a way to allow code blocks to be used where expressions can be used.
-func LambdaBlock(b []Statement, hasCaptures bool) string {
+func LambdaBlock(b []Statement, hasLocalCaptures bool) string {
 	captureSymbol := ""
-	if hasCaptures {
+	if hasLocalCaptures {
 		captureSymbol = "="
 	}
 	return "[" + captureSymbol + "](){" + strings.Join(b, "") + "}()"

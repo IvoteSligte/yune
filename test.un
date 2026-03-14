@@ -21,7 +21,7 @@ noArguments(): () = a: Int = 0
 findChar(text: String, offset: Int, char: String): (Int, Bool) =
     offset >= len(text) -> (0, false)
     at(text, offset) == char -> (offset, true)
-    findChar(text, offset + 1)
+    findChar(text, offset + 1, char)
 
 findBraces(text: String, offset: Int): (Int, Int, Bool) =
     (leftIndex: Int, leftFound: Bool) = findChar(text, offset, "{")

@@ -191,7 +191,7 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	d.HasCaptures = len(*scope.Table.captures) > 0
+	d.HasCaptures = len(*scope.Table.localCaptures) > 0
 	anal.Define(d)
 }
 

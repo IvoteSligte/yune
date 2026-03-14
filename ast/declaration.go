@@ -13,7 +13,7 @@ type DeclarationTable struct {
 	parent               *DeclarationTable
 	topLevelDeclarations map[string]TopLevelDeclaration
 	localDeclarations    map[string]Declaration
-	captures             *[]capture
+	localCaptures        *[]capture
 }
 
 func (table *DeclarationTable) Add(decl Declaration) error {
@@ -36,7 +36,7 @@ func (table DeclarationTable) NewScope() DeclarationTable {
 		parent:               &table,
 		topLevelDeclarations: table.topLevelDeclarations,
 		localDeclarations:    map[string]Declaration{},
-		captures:             &[]capture{},
+		localCaptures:        &[]capture{},
 	}
 }
 
@@ -47,8 +47,9 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 	local, isLocal := table.localDeclarations[name.String]
 	if !isLocal && table.parent != nil {
 		decl, found := table.parent.Get(name)
-		if found {
-			*table.captures = append(*table.captures, capture{name, decl})
+		_, isTopLevel := decl.(TopLevelDeclaration)
+		if found && !isTopLevel {
+			*table.localCaptures = append(*table.localCaptures, capture{name, decl})
 		}
 		return decl, found
 	}

@@ -440,11 +440,20 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 		})
 	}
 	switch b.Op {
+	case Add:
+		if !leftType.Eq(&IntType{}) && !leftType.Eq(&FloatType{}) && !leftType.Eq(&StringType{}) {
+			emitErr()
+		}
+		return leftType
 	case
-		Add,
 		Divide,
 		Multiply,
-		Subtract,
+		Subtract:
+		if !leftType.Eq(&IntType{}) && !leftType.Eq(&FloatType{}) {
+			emitErr()
+		}
+		return leftType
+	case
 		Greater,
 		GreaterEqual,
 		Less,
@@ -452,7 +461,7 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 		if !leftType.Eq(&IntType{}) && !leftType.Eq(&FloatType{}) {
 			emitErr()
 		}
-		return leftType
+		return &BoolType{}
 	case
 		Equal,
 		NotEqual:
@@ -573,7 +582,7 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	analyzeFunctionHeader(anal, c.Parameters, &c.ReturnType)
 	analyzeFunctionBody(anal, c.ReturnType.Get(), c.Body)
 	// FIXME: this should not capture the types used in the closure's signature
-	for _, capture := range *anal.Table.captures {
+	for _, capture := range *anal.Table.localCaptures {
 		c.captures[capture.name.String] = capture.declaration.GetDeclaredType()
 	}
 	return getFunctionType(c.Parameters, c.ReturnType)
@@ -588,7 +597,7 @@ func (c *Closure) Lower() cpp.Expression {
 	id := registerClosure(c)
 	fields := ""
 	captureArguments := ""
-	captures := ""
+	captures := `""`
 	for captureName, captureType := range c.captures {
 		fields += captureType.LowerType() + " " + captureName + ";\n"
 		if captureArguments != "" {
