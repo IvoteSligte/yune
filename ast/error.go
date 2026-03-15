@@ -99,6 +99,15 @@ func (e UnexpectedType) Error() string {
 	}
 }
 
+type ExpectedTuple struct {
+	Found TypeValue
+	At    Span
+}
+
+func (e ExpectedTuple) Error() string {
+	return fmt.Sprintf("Expected tuple, but found type '%s' at %s.", e.Found, e.At)
+}
+
 type AssignmentTypeMismatch struct {
 	Expected TypeValue
 	Found    TypeValue

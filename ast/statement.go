@@ -44,6 +44,9 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
+	if d.InferType {
+		d.Type.value = bodyType
+	}
 	d.hasLocalCaptures = len(*scope.Table.localCaptures) > 0
 	return &TupleType{}
 }

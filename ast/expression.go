@@ -40,7 +40,7 @@ type Integer struct {
 	Value int64
 }
 
-func (i Integer) String() string {
+func (i *Integer) String() string {
 	return fmt.Sprintf("%v", i.Value)
 }
 
@@ -64,7 +64,7 @@ type Float struct {
 	Value float64
 }
 
-func (f Float) String() string {
+func (f *Float) String() string {
 	return fmt.Sprintf("%v", f.Value)
 }
 
@@ -88,7 +88,7 @@ type Bool struct {
 	Value bool
 }
 
-func (b Bool) String() string {
+func (b *Bool) String() string {
 	return fmt.Sprintf("%v", b.Value)
 }
 
@@ -112,7 +112,7 @@ type String struct {
 	Value string
 }
 
-func (s String) String() string {
+func (s *String) String() string {
 	return fmt.Sprintf("%v", s.Value)
 }
 
@@ -176,8 +176,40 @@ func (f *FunctionCall) GetSpan() Span {
 	return f.Span
 }
 
+func checkIsTuple(t TypeValue, at Span, anal Analyzer) (tupleType *TupleType) {
+	tupleType, argumentIsTuple := t.(*TupleType)
+	if !argumentIsTuple {
+		anal.PushError(ExpectedTuple{Found: t, At: at})
+	}
+	return
+}
+
 // Analyze implements Expression.
 func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
+	// match builtin functions that need to be handled differently
+	{
+		name, functionIsVariable := f.getFunctionName()
+		if functionIsVariable {
+			switch name {
+			// getTupleElement_(<any tuple type>, index Int): <element type at index>
+			case "getTupleElement_":
+				argumentType := f.Argument.Analyze(nil, anal)
+				tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+				if len(tupleArgumentType.Elements) != 2 {
+					anal.PushError(ArityMismatch{
+						Expected: 2,
+						Found:    len(tupleArgumentType.Elements),
+						At:       f.Argument.GetSpan(),
+					})
+				}
+				firstElementTupleType := checkIsTuple(tupleArgumentType.Elements[0], f.Argument.GetSpan(), anal)
+				// the second argument should always be an integer, since the compiler constructs it itself
+				_ = tupleArgumentType.Elements[1].(*IntType)
+				index := f.Argument.(*Tuple).Elements[1].(*Integer)
+				return firstElementTupleType.Elements[index.Value]
+			}
+		}
+	}
 	maybeFunctionType := f.Function.Analyze(nil, anal)
 	functionType, isFunction := maybeFunctionType.(*FnType)
 	if !isFunction {
@@ -204,19 +236,31 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 	return
 }
 
+func (f *FunctionCall) getFunctionName() (string, bool) {
+	functionVariable, functionIsVariable := f.Function.(*Variable)
+	if functionIsVariable {
+		return functionVariable.Name.String, true
+	}
+	return "", false
+}
+
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
 	// match builtin functions that need to be handled differently
 	{
-		functionVariable, functionIsVariable := f.Function.(*Variable)
+		name, functionIsVariable := f.getFunctionName()
 		if functionIsVariable {
-			name := functionVariable.Name.String
 			switch name {
-			case "isVariant", "getVariant":
+			case "isVariant_", "getVariant_":
 				tupleArgument, _ := f.Argument.(*Tuple)
 				variant := tupleArgument.Elements[0].Lower()
 				variantType := tupleArgument.Elements[1].(*ConstExpression).Lower()
 				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
+			case "getTupleElement_":
+				tupleArgument, _ := f.Argument.(*Tuple)
+				tuple := tupleArgument.Elements[0].Lower()
+				index := tupleArgument.Elements[1].(*Integer).Value
+				return fmt.Sprintf(`std::get<%d>(%s)`, index, tuple)
 			}
 		}
 	}
@@ -310,7 +354,7 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		expectedElementType := expected
 		if isTuple && len(expectedTupleType.Elements) >= i {
 			expectedElementType = expectedTupleType.Elements[i]
-		} else if !expected.Eq(&TypeType{}) {
+		} else if expected != nil && !expected.Eq(&TypeType{}) {
 			expectedElementType = &TypeType{}
 		}
 		elementType := t.Elements[i].Analyze(expectedElementType, anal)
@@ -573,7 +617,7 @@ const (
 	Less         BinaryOp = "<"
 	Greater      BinaryOp = ">"
 	Equal        BinaryOp = "=="
-	NotEqual     BinaryOp = "!="
+	NotEqual     BinaryOp = ";="
 	LessEqual    BinaryOp = "<="
 	GreaterEqual BinaryOp = ">="
 	Or           BinaryOp = "or"

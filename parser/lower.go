@@ -84,7 +84,9 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 			// NOTE: the type is currently evaluated twice, first here
 			Argument: &ast.Tuple{Elements: []ast.Expression{
 				&ast.Variable{Name: temporary},
-				LowerExpression(ctx.Type_().Expression()),
+				&ast.ConstExpression{
+					Expression: LowerExpression(ctx.Type_().Expression()),
+				},
 			}},
 		}
 		// name := getVariant_(is_expr_xxxx_, type)
@@ -110,7 +112,9 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 						},
 						Argument: &ast.Tuple{Elements: []ast.Expression{
 							&ast.Variable{Name: temporary},
-							LowerExpression(ctx.Type_().Expression()),
+							&ast.ConstExpression{
+								Expression: LowerExpression(ctx.Type_().Expression()),
+							},
 						}},
 					}},
 				},
@@ -431,10 +435,13 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 		// (x: Int, y: String) = body
 		// Becomes:
 		// tuple_3af823129b_: (Int, String) = body
-		// x := getTupleElement(tuple_3af823129b_, 0)
-		// y := getTupleElement(tuple_3af823129b_, 1)
+		// x := getTupleElement_(tuple_3af823129b_, 0)
+		// y := getTupleElement_(tuple_3af823129b_, 1)
 		tupleSpan := GetSpan(ctx)
-		tupleName := fmt.Sprintf("tuple_%x_", rand.Uint64()) // TODO: do not use a random number
+		tupleName := ast.Name{
+			Span:   tupleSpan,
+			String: fmt.Sprintf("tuple_%x_", rand.Uint64()), // TODO: do not use a random number
+		}
 		tupleType := ast.Type{
 			Expression: &ast.Tuple{
 				Span: tupleSpan,
@@ -445,21 +452,41 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 		}
 		if !yield(&ast.VariableDeclaration{
 			Span: tupleSpan,
-			Name: ast.Name{
-				Span:   tupleSpan,
-				String: tupleName,
-			},
+			Name: tupleName,
 			Type: tupleType,
 			Body: LowerStatementBody(ctx.StatementBody()),
 		}) {
 			return
 		}
-		for _, name := range target.AllName() {
+		for i, name := range target.AllName() {
+			span := GetSpan(name)
 			if !yield(&ast.VariableDeclaration{
-				Span:      GetSpan(ctx),
+				Span:      span,
 				Name:      LowerName(name),
 				InferType: true,
-				Body:      LowerStatementBody(ctx.StatementBody()),
+				Body: ast.Block{
+					Span: tupleSpan,
+					Statements: []ast.Statement{
+						&ast.ExpressionStatement{
+							Expression: &ast.FunctionCall{
+								Span: span,
+								Function: &ast.Variable{
+									Name: ast.Name{
+										Span:   span,
+										String: "getTupleElement_",
+									},
+								},
+								Argument: &ast.Tuple{Elements: []ast.Expression{
+									&ast.Variable{Name: tupleName},
+									&ast.Integer{
+										Span:  span,
+										Value: int64(i),
+									},
+								}},
+							},
+						},
+					},
+				},
 			}) {
 				return
 			}
