@@ -14,11 +14,21 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <concepts>
 #include <variant>
 #include <format>
 
-template <class T>
-using Box = std::shared_ptr<T>;
+template <class T> struct Box {
+  Box(T&& value) : ptr(std::make_shared<std::decay_t<T>>(std::forward<T>(value))) {}  
+  Box(std::shared_ptr<T> ptr) : ptr(ptr) {}
+
+  bool operator==(const Box<T> &other) const {
+    return this->get() == other.get(); // compare inner values (not pointers)
+  }
+  T &get() const { return *this->ptr.get(); }
+
+  std::shared_ptr<T> ptr;  
+};
 
 template <class T>
 Box<T> box(T&& value) {
@@ -48,6 +58,8 @@ template <class... T> struct Union {
       : variant(std::visit([](auto &&element) constexpr { return element; },
                            subset)) {}
 
+  bool operator==(const Union<T...>& other) const = default;
+  
   std::variant<T...> variant;
 };
 
@@ -97,11 +109,21 @@ struct Span {
   int column;
 };
 
-struct TypeType {};
-struct IntType {};
-struct FloatType {};
-struct BoolType {};
-struct StringType {};
+struct TypeType {
+  bool operator==(const TypeType& other) const { return true; }
+};
+struct IntType  {
+  bool operator==(const IntType& other) const { return true; }
+};
+struct FloatType {
+  bool operator==(const FloatType& other) const { return true; }
+};
+struct BoolType {
+  bool operator==(const BoolType& other) const { return true; }
+};
+struct StringType {
+  bool operator==(const StringType& other) const { return true; }
+};
 struct TupleType;
 struct ListType;
 struct FnType;
@@ -114,19 +136,24 @@ using Type =
 
 struct TupleType {
   std::vector<Type> elements;
+  bool operator==(const TupleType& other) const = default;
 };
 struct ListType {
   Type element;
+  bool operator==(const ListType &other) const = default;
 };
 struct FnType {
   Type argument;
   Type returnType;
+  bool operator==(const FnType &other) const = default;
 };
 struct StructType {
   std::string name;
+  bool operator==(const StructType &other) const = default;
 };
 struct UnionType {
   std::vector<Type> variants;
+  bool operator==(const UnionType &other) const = default;
 };
 
 template <class T> struct Literal {
@@ -377,7 +404,7 @@ inline std::string serialize(const BranchStatement &e) {
 }
 
 template <class T> std::string serialize(Box<T> box) {
-  return std::format(R"({{ "Box": {} }})", ty::serialize(*box.get()));
+  return std::format(R"({{ "Box": {} }})", ty::serialize(box.get()));
 }
 
 template <class... T> inline std::string serialize(const Union<T...> &u) {
@@ -401,6 +428,24 @@ inline std::string serialize_closure(std::string captures, std::string id) {
   return std::format(R"({{ "Closure": {{ "captures": [{}], "id": "{}" }} }})",
                      captures, id);
 }
+
+// check that all types have operator==
+static_assert(std::equality_comparable<ty::TypeType>);
+static_assert(std::equality_comparable<ty::IntType>);
+static_assert(std::equality_comparable<ty::FloatType>);
+static_assert(std::equality_comparable<ty::BoolType>);
+static_assert(std::equality_comparable<ty::StringType>);
+static_assert(std::equality_comparable<ty::TupleType>);
+static_assert(std::equality_comparable<ty::ListType>);
+static_assert(std::equality_comparable<ty::FnType>);
+static_assert(std::equality_comparable<ty::StructType>);
+static_assert(std::equality_comparable<ty::UnionType>);
+static_assert(std::equality_comparable<ty::TupleType>);
+static_assert(std::equality_comparable<ty::Type>);
+static_assert(std::equality_comparable<Box<ty::Type>>);
+
+// check that all expressions have operator==
+static_assert(std::equality_comparable<Box<ty::Expression>>);
 } // namespace ty
 
 inline ty::Type Type = ty::TypeType{};
@@ -419,10 +464,12 @@ inline ty::Type Fn(ty::Type argument, ty::Type returnType) {
 inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
 
 inline struct panic_ {
-  std::tuple<> operator()(std::string message) const {
-    std::cerr << "panic: " << message << std::endl;    
+  [[noreturn]]
+  void operator()(std::string message) const {
+    std::cerr << "panic: " << message << std::endl;
     exit(1);
   }
+  std::string serialize() const { return R"({ "Function": "stringLiteral" })"; }
 } panic;
 
 inline struct stringLiteral_ {
@@ -433,9 +480,6 @@ inline struct stringLiteral_ {
     return R"({ "Function": "stringLiteral" })";
   }
 } stringLiteral;
-
-inline ty::Function<ty::Expression, std::string> stringLiteral__ = stringLiteral;
-
 
 inline struct variable_ {
   ty::Expression operator()(std::string name) const {
@@ -448,7 +492,7 @@ inline struct variable_ {
 
 inline struct binaryExpression_ {
   ty::Expression operator()(std::string op, ty::Expression left, ty::Expression right) const {
-    return ty::BinaryExpression{.op = op, .left = left, .right = right};
+    return box(ty::BinaryExpression{.op = op, .left = left, .right = right});
   }
   std::string serialize() const {
     return R"({ "Function": "binaryExpression" })";
@@ -498,27 +542,18 @@ inline struct subString_ {
   }
 } subString;
 
-inline struct isVariant__ {
-  template <typename T, typename... V> bool operator()(ty::Union<V...> _union) const {
-    return std::holds_alternative<T>(_union.variant);
-  }
-  std::string serialize() const {
-    return R"({ "Function": "isVariant_" })";
-  }  
-} isVariant_;
+template <typename T, typename... V>
+bool isVariant_(ty::Union<V...> _union) {
+  return std::holds_alternative<T>(_union.variant);
+}
 
-inline struct getVariant__ {
-  template <typename T, typename... V>
-  T operator()(ty::Union<V...> _union) const {
-    if (!std::holds_alternative<T>(_union.variant)) {
-      panic("getVariant: variant mismatch");
-    }
-    return std::get<T>(_union.variant);
+template <typename T, typename... V>
+T getVariant_(ty::Union<V...> _union) {
+  if (!std::holds_alternative<T>(_union.variant)) {
+    panic("getVariant: variant mismatch");
   }
-  std::string serialize() const {
-    return R"({ "Function": "getVariant_" })";
-  }  
-} getVariant_;
+  return std::get<T>(_union.variant);
+}
 
 inline struct Union_ {
   ty::Type operator()(std::vector<ty::Type> variants) const {
@@ -530,7 +565,7 @@ inline struct Union_ {
     for (const auto &variant : variants) {
       if (std::holds_alternative<Box<ty::UnionType>>(variant.variant)) {
         for (auto nested_variant :
-             std::get<Box<ty::UnionType>>(variant.variant)->variants) {
+             std::get<Box<ty::UnionType>>(variant.variant).get().variants) {
           flat_variants.push_back(nested_variant);
         }
       } else {
@@ -550,7 +585,7 @@ inline struct Union_ {
         }
       }
     }    
-    return ty::UnionType{ .variants = unique_variants };
+    return box(ty::UnionType{ .variants = unique_variants });
   }
   std::string serialize() const {
     return R"({ "Function": "Union" })";

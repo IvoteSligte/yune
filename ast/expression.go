@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"yune/cpp"
@@ -123,8 +122,7 @@ func (s String) GetSpan() Span {
 
 // Lower implements Expression.
 func (s String) Lower() cpp.Expression {
-	bytes, _ := json.Marshal(s.Value)
-	return string(bytes)
+	return fmt.Sprintf(`std::string(%q)`, s.Value)
 }
 
 // Analyze implements Expression.
@@ -288,7 +286,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 			case "isVariant_", "getVariant_":
 				tupleArgument, _ := f.Argument.(*Tuple)
 				variant := tupleArgument.Elements[0].Lower()
-				variantType := f.builtinData.(TypeValue)
+				variantType := f.builtinData.(TypeValue).LowerType()
 				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
 			}
 		}
