@@ -155,10 +155,6 @@ func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 			At:    b.Condition.GetSpan(),
 		})
 	}
-	// Unions do not allow variants with the same type.
-	if thenType.Eq(elseType) {
-		return thenType
-	}
 	return NewUnionType(thenType, elseType)
 }
 
@@ -195,7 +191,6 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 			expected = nil
 		}
 		_type = b.Statements[i].Analyze(expected, anal)
-		fmt.Printf("%#v\n", _type)
 		decl, isDeclaration := b.Statements[i].(Declaration)
 		if isDeclaration {
 			err := anal.Table.Add(decl)

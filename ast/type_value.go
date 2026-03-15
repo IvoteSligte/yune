@@ -234,9 +234,6 @@ func (u UnionType) LowerValue() cpp.Type {
 
 // Creates a union with the same logic as in pb.hpp
 func NewUnionType(variants ...TypeValue) TypeValue {
-	if len(variants) == 1 {
-		return variants[0]
-	}
 	// Flattens variants non-recursively.
 	flatVariants := []TypeValue{}
 	for _, variant := range variants {
@@ -247,15 +244,19 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 			flatVariants = append(flatVariants, variant)
 		}
 	}
-	// Checks for duplicate variants.
-	for i, variant := range flatVariants {
-		for j, other := range flatVariants {
-			if i != j && variant.Eq(other) {
-				panic("duplicate variant in union")
-			}
+	// Remove duplicate variants.
+	uniqueVariants := []TypeValue{}
+	for _, variant := range flatVariants {
+		if !util.Any(uniqueVariants, func(other TypeValue) bool {
+			return other.Eq(variant)
+		}) {
+			uniqueVariants = append(uniqueVariants, variant)
 		}
 	}
-	return &UnionType{Variants: flatVariants}
+	if len(uniqueVariants) == 1 {
+		return uniqueVariants[0]
+	}
+	return &UnionType{Variants: uniqueVariants}
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.

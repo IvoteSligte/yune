@@ -72,6 +72,7 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 		}) {
 			return
 		}
+		typeExpression := LowerExpression(ctx.Type_().Expression())
 		// isVariant_(is_expr_xxxx_, type)
 		condition := &ast.FunctionCall{
 			Span: span,
@@ -81,24 +82,17 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 					String: "isVariant_",
 				},
 			},
-			// NOTE: the type is currently evaluated twice, first here
 			Argument: &ast.Tuple{Elements: []ast.Expression{
 				&ast.Variable{Name: temporary},
-				&ast.ConstExpression{
-					Expression: LowerExpression(ctx.Type_().Expression()),
-				},
+				// NOTE: the type is currently evaluated twice, first here
+				typeExpression,
 			}},
 		}
 		// name := getVariant_(is_expr_xxxx_, type)
 		thenBlock.Statements = append([]ast.Statement{&ast.VariableDeclaration{
-			Span: GetSpan(ctx.Name()),
-			Name: ast.Name{
-				Span:   GetSpan(ctx.Name()),
-				String: ctx.Name().GetText(),
-			},
+			Span:      GetSpan(ctx.Name()),
+			Name:      LowerName(ctx.Name()),
 			InferType: true,
-			// NOTE: the type is currently evaluated twice, second here
-			Type: LowerType(ctx.Type_()),
 			Body: ast.Block{
 				Span: span,
 				Statements: []ast.Statement{
@@ -112,9 +106,8 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 						},
 						Argument: &ast.Tuple{Elements: []ast.Expression{
 							&ast.Variable{Name: temporary},
-							&ast.ConstExpression{
-								Expression: LowerExpression(ctx.Type_().Expression()),
-							},
+							// NOTE: the type is currently evaluated twice, second here
+							typeExpression,
 						}},
 					}},
 				},

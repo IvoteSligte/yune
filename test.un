@@ -73,6 +73,7 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     remainderResult is error: Error -> error
     remainderResult is right: Expression
     left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), variable(braceText))
+    test: Expression = right
     binaryExpression("+", left, right)
 
 sql(text: String, getType: Fn(String, Type)): (String, Expression) =

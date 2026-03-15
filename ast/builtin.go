@@ -19,9 +19,23 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   ExpressionType,
 	}},
+	{"variable", &FnType{
+		Argument: &StringType{},
+		Return:   ExpressionType,
+	}},
+	{"binaryExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			&StringType{},
+			ExpressionType,
+			ExpressionType,
+		}},
+		Return: ExpressionType,
+	}},
+	// TODO: other Expression constructors
 	{"panic", &FnType{
 		Argument: &StringType{},
-		Return:   &TupleType{},
+		// empty union type is non-constructable and Union(Union(), T, U) == Union(T, U)
+		Return: &UnionType{},
 	}},
 	{"printlnString", &FnType{
 		Argument: &StringType{},
@@ -39,14 +53,10 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
 		Return:   &StringType{},
 	}},
-	// isVariant_ and getVariant_ are private functions for the compiler
+	// isVariant_ is a private function for the compiler
 	{"isVariant_", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &TypeType{}}},
 		Return:   &BoolType{},
-	}},
-	{"getVariant_", &FnType{
-		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &TypeType{}}},
-		Return:   &TypeType{},
 	}},
 	{"Union", &FnType{
 		Argument: &ListType{Element: &TypeType{}},

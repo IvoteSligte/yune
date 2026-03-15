@@ -136,11 +136,16 @@ using IntegerLiteral = Literal<int>;
 using FloatLiteral = Literal<float>;
 using BoolLiteral = Literal<bool>;
 using StringLiteral = Literal<std::string>;
-struct TupleExpression;
+struct Variable;
 struct FunctionCall;
+struct TupleExpression;
+struct UnaryExpression;
+struct BinaryExpression;
 
-using Expression = Union<IntegerLiteral, FloatLiteral, BoolLiteral,
-                         StringLiteral, Box<TupleExpression>>;
+using Expression =
+    Union<IntegerLiteral, FloatLiteral, BoolLiteral, StringLiteral, Variable,
+          Box<FunctionCall>, Box<TupleExpression>, Box<UnaryExpression>,
+          Box<BinaryExpression>>;
 
 struct Variable {
   std::string name;
@@ -431,6 +436,25 @@ inline struct stringLiteral_ {
 
 inline ty::Function<ty::Expression, std::string> stringLiteral__ = stringLiteral;
 
+
+inline struct variable_ {
+  ty::Expression operator()(std::string name) const {
+    return ty::Variable{.name = name};
+  }
+  std::string serialize() const {
+    return R"({ "Function": "variable" })";
+  }
+} variable;
+
+inline struct binaryExpression_ {
+  ty::Expression operator()(std::string op, ty::Expression left, ty::Expression right) const {
+    return ty::BinaryExpression{.op = op, .left = left, .right = right};
+  }
+  std::string serialize() const {
+    return R"({ "Function": "binaryExpression" })";
+  }
+} binaryExpression;
+
 inline struct printlnString_ {
   std::tuple<> operator()(std::string str) const {
     std::cout << str << std::endl;
@@ -440,8 +464,6 @@ inline struct printlnString_ {
     return R"({ "Function": "printlnString" })";
   }
 } printlnString;
-
-inline ty::Function<std::tuple<>, std::string> printlnString__ = printlnString;
 
 inline struct len_ {
   int operator()(std::string s) const {
@@ -511,28 +533,24 @@ inline struct Union_ {
              std::get<Box<ty::UnionType>>(variant.variant)->variants) {
           flat_variants.push_back(nested_variant);
         }
+      } else {
+        flat_variants.push_back(variant);
       }
     }
-    // Sort the union so that variants are ordered.
-    // TODO: actual comparison function.    
-    std::sort(flat_variants.begin(), flat_variants.end(),
-              [](auto const &left, auto const &right) {
-                return ty::serialize(left) < ty::serialize(right);
-              });
-    // Check for type uniqueness
+    // Deduplicate types.
     // This is very stupid and inefficient, but it works.
-    // Note that it assumes that the variants are properly ordered.    
+    std::vector<ty::Type> unique_variants;      
     {
-      std::set<std::string> unique_variants;
+      std::set<std::string> unique_strings;
       for (const auto &variant : flat_variants) {
-        std::string serialized = ty::serialize(variant);        
-        if (unique_variants.contains(serialized)) {
-          panic("Union: duplicate type");
+        std::string serialized = ty::serialize(variant);
+        if (!unique_strings.contains(serialized)) {
+          unique_strings.insert(serialized);
+          unique_variants.push_back(variant);
         }
-        unique_variants.insert(serialized);
       }
     }    
-    return ty::UnionType{ .variants = flat_variants };
+    return ty::UnionType{ .variants = unique_variants };
   }
   std::string serialize() const {
     return R"({ "Function": "Union" })";

@@ -160,6 +160,9 @@ type FunctionCall struct {
 	Function        Expression
 	Argument        Expression
 	argumentIsTuple bool
+	// A field for storing data that builtin functions need to transfer
+	// between Analyze and Lower.
+	builtinData any
 }
 
 func (f FunctionCall) String() string {
@@ -184,29 +187,55 @@ func checkIsTuple(t TypeValue, at Span, anal Analyzer) (tupleType *TupleType) {
 	return
 }
 
+func checkTupleTypeArity(tupleType *TupleType, expected int, at Span, anal Analyzer) {
+	if len(tupleType.Elements) != expected {
+		anal.PushError(ArityMismatch{
+			Expected: expected,
+			Found:    len(tupleType.Elements),
+			At:       at,
+		})
+	}
+}
+
 // Analyze implements Expression.
 func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
-	// match builtin functions that need to be handled differently
+	// match builtin functions that need to be handled differently as their types
+	// cannot be expressed by Yune
 	{
 		name, functionIsVariable := f.getFunctionName()
 		if functionIsVariable {
+			argumentType := f.Argument.Analyze(nil, anal)
 			switch name {
 			// getTupleElement_(<any tuple type>, index Int): <element type at index>
 			case "getTupleElement_":
-				argumentType := f.Argument.Analyze(nil, anal)
 				tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
-				if len(tupleArgumentType.Elements) != 2 {
-					anal.PushError(ArityMismatch{
-						Expected: 2,
-						Found:    len(tupleArgumentType.Elements),
-						At:       f.Argument.GetSpan(),
-					})
-				}
+				checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
 				firstElementTupleType := checkIsTuple(tupleArgumentType.Elements[0], f.Argument.GetSpan(), anal)
-				// the second argument should always be an integer, since the compiler constructs it itself
+				// the second argument should always be an integer, since the compiler constructs this FunctionCall
 				_ = tupleArgumentType.Elements[1].(*IntType)
 				index := f.Argument.(*Tuple).Elements[1].(*Integer)
 				return firstElementTupleType.Elements[index.Value]
+			case "getVariant_", "isVariant_":
+				tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+				checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
+				// the first argument is a union, but since anything can be converted to a union of 1 element,
+				// any type is allowed
+
+				// the second argument should always be a type, since the compiler constructs this FunctionCall
+				_ = tupleArgumentType.Elements[1].(*TypeType)
+
+				// evaluate the type
+				variantTypeExpression := f.Argument.(*Tuple).Elements[1]
+				json := anal.Evaluate(variantTypeExpression.Lower())
+				variantType := UnmarshalTypeValue(json)
+				f.builtinData = variantType // required for lowering
+
+				if name == "getVariant_" {
+					return variantType
+				} else {
+					// name == "isVariant_"
+					return &BoolType{}
+				}
 			}
 		}
 	}
@@ -251,16 +280,16 @@ func (f *FunctionCall) Lower() cpp.Expression {
 		name, functionIsVariable := f.getFunctionName()
 		if functionIsVariable {
 			switch name {
-			case "isVariant_", "getVariant_":
-				tupleArgument, _ := f.Argument.(*Tuple)
-				variant := tupleArgument.Elements[0].Lower()
-				variantType := tupleArgument.Elements[1].(*ConstExpression).Lower()
-				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
 			case "getTupleElement_":
 				tupleArgument, _ := f.Argument.(*Tuple)
 				tuple := tupleArgument.Elements[0].Lower()
 				index := tupleArgument.Elements[1].(*Integer).Value
 				return fmt.Sprintf(`std::get<%d>(%s)`, index, tuple)
+			case "isVariant_", "getVariant_":
+				tupleArgument, _ := f.Argument.(*Tuple)
+				variant := tupleArgument.Elements[0].Lower()
+				variantType := f.builtinData.(TypeValue)
+				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
 			}
 		}
 	}
@@ -745,33 +774,6 @@ func (c *Closure) Lower() cpp.Expression {
 	return lowered
 }
 
-type ConstExpression struct {
-	Expression Expression
-	Result     *fj.Value
-}
-
-// Analyze implements Expression.
-func (c *ConstExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	_type := c.Expression.Analyze(expected, anal)
-	c.Result = anal.Evaluate(c.Expression.Lower())
-	return _type
-}
-
-// GetSpan implements Expression.
-func (c *ConstExpression) GetSpan() Span {
-	return c.Expression.GetSpan()
-}
-
-// Lower implements Expression.
-func (c *ConstExpression) Lower() string {
-	panic("Lower should not be called on ConstExpression as it does not have runtime code.")
-}
-
-// String implements Expression.
-func (c *ConstExpression) String() string {
-	return "<const>" + c.Expression.String()
-}
-
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -869,4 +871,3 @@ var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
 var _ Expression = &StructExpression{}
 var _ Expression = &Closure{}
-var _ Expression = &ConstExpression{}
