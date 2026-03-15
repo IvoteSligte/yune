@@ -232,6 +232,32 @@ func (u UnionType) LowerValue() cpp.Type {
 	return "box(ty::TupleType{ .variants = { " + util.JoinFunction(u.Variants, ", ", TypeValue.LowerValue) + " } })"
 }
 
+// Creates a union with the same logic as in pb.hpp
+func NewUnionType(variants ...TypeValue) TypeValue {
+	if len(variants) == 1 {
+		return variants[0]
+	}
+	// Flattens variants non-recursively.
+	flatVariants := []TypeValue{}
+	for _, variant := range variants {
+		variantUnion, variantIsUnion := variant.(*UnionType)
+		if variantIsUnion {
+			flatVariants = append(flatVariants, variantUnion.Variants...)
+		} else {
+			flatVariants = append(flatVariants, variant)
+		}
+	}
+	// Checks for duplicate variants.
+	for i, variant := range flatVariants {
+		for j, other := range flatVariants {
+			if i != j && variant.Eq(other) {
+				panic("duplicate variant in union")
+			}
+		}
+	}
+	return &UnionType{Variants: flatVariants}
+}
+
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())

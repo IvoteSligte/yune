@@ -139,25 +139,27 @@ type BranchStatement struct {
 
 // Analyze implements Statement.
 func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	if len(b.Then.Statements) == 0 {
+		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
+	}
+	if len(b.Else.Statements) == 0 {
+		panic(fmt.Sprintf("Empty else-block at %s", b.Else.Span))
+	}
 	conditionType := b.Condition.Analyze(&BoolType{}, anal)
 	thenType := b.Then.Analyze(expected, anal.NewScope())
 	elseType := b.Else.Analyze(expected, anal.NewScope())
 
-	if conditionType != nil && !conditionType.Eq(&BoolType{}) {
+	if !conditionType.Eq(&BoolType{}) {
 		anal.PushError(InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),
 		})
 	}
-	if thenType != nil && elseType != nil && !thenType.Eq(elseType) {
-		anal.PushError(BranchTypeNotEqual{
-			Then:   thenType,
-			ThenAt: b.Then.GetSpan(),
-			Else:   elseType,
-			ElseAt: b.Else.GetSpan(),
-		})
+	// Unions do not allow variants with the same type.
+	if thenType.Eq(elseType) {
+		return thenType
 	}
-	return thenType // TODO: union with elseType
+	return NewUnionType(thenType, elseType)
 }
 
 // Lower implements Statement.
@@ -183,6 +185,9 @@ func (b Block) GetSpan() Span {
 }
 
 func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
+	if len(b.Statements) == 0 {
+		panic(fmt.Sprintf("Empty block at %s", b.Span))
+	}
 	for i := range b.Statements {
 		// Only the last statement has a known expected type, the rest should use the default.
 		expected := expected
@@ -190,6 +195,7 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 			expected = nil
 		}
 		_type = b.Statements[i].Analyze(expected, anal)
+		fmt.Printf("%#v\n", _type)
 		decl, isDeclaration := b.Statements[i].(Declaration)
 		if isDeclaration {
 			err := anal.Table.Add(decl)
@@ -197,6 +203,9 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 				anal.PushError(err)
 			}
 		}
+	}
+	if _type == nil {
+		panic("Block return type is nil")
 	}
 	return
 }

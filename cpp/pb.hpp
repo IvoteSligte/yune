@@ -500,6 +500,9 @@ inline struct getVariant__ {
 
 inline struct Union_ {
   ty::Type operator()(std::vector<ty::Type> variants) const {
+    if (variants.size() == 1) {
+      return variants[0];
+    }
     // Nested unions are flattened
     std::vector<ty::Type> flat_variants;
     for (const auto &variant : variants) {

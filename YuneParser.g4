@@ -145,7 +145,7 @@ closureExpression
     ;
 
 block
-    : statement*
+    : statement+
     ;
 
 isExpression
@@ -159,6 +159,3 @@ isStatement
 branchStatement
     : (expression | isExpression) RARROW statementBody block
     ;
-
-
-

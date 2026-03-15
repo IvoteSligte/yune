@@ -143,11 +143,15 @@ func LowerBranchStatement(ctx IBranchStatementContext) iter.Seq[ast.Statement] {
 				},
 			})
 		case ctx.IsExpression() != nil:
+			thenBlock := LowerStatementBody(ctx.StatementBody())
 			elseBlock := ast.Block{
 				Span:       GetSpan(ctx.Block()),
 				Statements: LowerStatements(ctx.Block().AllStatement()),
 			}
-			DesugarIsExpression(ctx.IsExpression(), LowerStatementBody(ctx.StatementBody()), elseBlock)(yield)
+			if len(elseBlock.Statements) == 0 {
+				panic(fmt.Sprintf("Empty else-block of is-expression at %s", elseBlock.Span))
+			}
+			DesugarIsExpression(ctx.IsExpression(), thenBlock, elseBlock)(yield)
 		default:
 			panic("unreachable")
 		}
@@ -311,7 +315,7 @@ func LowerStatement(ctx IStatementContext) iter.Seq[ast.Statement] {
 		case ctx.BranchStatement() != nil:
 			LowerBranchStatement(ctx.BranchStatement())(yield)
 		case ctx.IsStatement() != nil:
-			LowerIsStatement(ctx.IsStatement())
+			LowerIsStatement(ctx.IsStatement())(yield)
 		default:
 			panic("unreachable")
 		}
@@ -319,6 +323,9 @@ func LowerStatement(ctx IStatementContext) iter.Seq[ast.Statement] {
 }
 
 func LowerStatements(statements []IStatementContext) (output []ast.Statement) {
+	if len(statements) == 0 {
+		panic("Empty slice passed to LowerStatements")
+	}
 	return slices.Collect(func(yield func(ast.Statement) bool) {
 		for _, stmt := range statements {
 			LowerStatement(stmt)(yield)

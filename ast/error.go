@@ -167,23 +167,6 @@ func (e InvalidConditionType) Error() string {
 	return fmt.Sprintf("Expected type 'Bool' for condition, but found type '%s' at %s.", e.Found, e.At)
 }
 
-type BranchTypeNotEqual struct {
-	Then   TypeValue
-	ThenAt Span
-	Else   TypeValue
-	ElseAt Span
-}
-
-func (e BranchTypeNotEqual) Error() string {
-	return fmt.Sprintf(
-		"Types of branches '%s' at %s and '%s' at %s are not equal.",
-		e.Then,
-		e.ThenAt,
-		e.Else,
-		e.ElseAt,
-	)
-}
-
 type InvalidMainSignature struct {
 	Found TypeValue
 	At    Span
