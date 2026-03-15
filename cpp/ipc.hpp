@@ -27,18 +27,12 @@ struct TypePromise {
 
 constexpr int YUNE_COMPILER_PORT = 11555;
 
-static void panic(std::string message) {
-  std::cerr << "clang-repl: " << message << std::endl;
-  exit(1);
-}
-
 inline class CompilerConnection {
 public:
   CompilerConnection() {
     socket = ::socket(AF_INET, SOCK_STREAM, 0);
     if (socket == -1) {
-      std::cerr << "clang-repl: Failed to open compiler connection socket." << std::endl;
-      exit(1);
+      panic("clang-repl: Failed to open compiler connection socket.");
     }
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -47,8 +41,7 @@ public:
 
     int err = connect(socket, (sockaddr *)&addr, sizeof(addr));
     if (err != 0) {
-      std::cerr << "clang-repl: Failed to connect to the compiler." << std::endl;
-      exit(1);
+      panic("clang-repl: Failed to connect to the compiler.");
     }
     std::cout << "clang-repl: Connected to Yune compiler." << std::endl;
   }

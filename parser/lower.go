@@ -72,23 +72,22 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 		}) {
 			return
 		}
-		// isVariant(type)(is_expr_xxxx_)
+		// isVariant_(is_expr_xxxx_, type)
 		condition := &ast.FunctionCall{
 			Span: span,
-			Function: &ast.FunctionCall{
-				Span: span,
-				Function: &ast.Variable{
-					Name: ast.Name{
-						Span:   GetSpan(ctx.Type_()),
-						String: "isVariant",
-					},
+			Function: &ast.Variable{
+				Name: ast.Name{
+					Span:   GetSpan(ctx.Type_()),
+					String: "isVariant_",
 				},
-				// NOTE: the type is currently evaluated twice, first here
-				Argument: LowerExpression(ctx.Type_().Expression()),
 			},
-			Argument: &ast.Variable{Name: temporary},
+			// NOTE: the type is currently evaluated twice, first here
+			Argument: &ast.Tuple{Elements: []ast.Expression{
+				&ast.Variable{Name: temporary},
+				LowerExpression(ctx.Type_().Expression()),
+			}},
 		}
-		// name := getVariant(type)(is_expr_xxxx_)
+		// name := getVariant_(is_expr_xxxx_, type)
 		thenBlock.Statements = append([]ast.Statement{&ast.VariableDeclaration{
 			Span: GetSpan(ctx.Name()),
 			Name: ast.Name{
@@ -103,18 +102,16 @@ func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBloc
 				Statements: []ast.Statement{
 					&ast.ExpressionStatement{Expression: &ast.FunctionCall{
 						Span: span,
-						Function: &ast.FunctionCall{
-							Span: span,
-							Function: &ast.Variable{
-								Name: ast.Name{
-									Span:   GetSpan(ctx.Type_()),
-									String: "getVariant",
-								},
+						Function: &ast.Variable{
+							Name: ast.Name{
+								Span:   GetSpan(ctx.Type_()),
+								String: "getVariant_",
 							},
-							// NOTE: the type is currently evaluated twice, first here
-							Argument: LowerExpression(ctx.Type_().Expression()),
 						},
-						Argument: &ast.Variable{Name: temporary},
+						Argument: &ast.Tuple{Elements: []ast.Expression{
+							&ast.Variable{Name: temporary},
+							LowerExpression(ctx.Type_().Expression()),
+						}},
 					}},
 				},
 			},
@@ -234,6 +231,9 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.Variable() != nil:
 		variable := LowerVariable(ctx.Variable())
 		return &variable
+	case ctx.List() != nil:
+		list := LowerList(ctx.List())
+		return &list
 	case ctx.INTEGER() != nil:
 		integer, err := strconv.ParseInt(ctx.INTEGER().GetText(), 0, 64)
 		if err != nil {
@@ -351,6 +351,13 @@ func LowerTopLevelDeclaration(ctx ITopLevelDeclarationContext) ast.TopLevelDecla
 
 func LowerTuple(ctx ITupleContext) ast.Tuple {
 	return ast.Tuple{
+		Span:     GetSpan(ctx),
+		Elements: util.Map(ctx.AllExpression(), LowerExpression),
+	}
+}
+
+func LowerList(ctx IListContext) ast.List {
+	return ast.List{
 		Span:     GetSpan(ctx),
 		Elements: util.Map(ctx.AllExpression(), LowerExpression),
 	}

@@ -1,6 +1,8 @@
 #pragma once
 
 // headers also used by Yune programs
+#include <algorithm>
+#include <set>
 #include <tuple>      // std::tuple, std::apply
 #include <string>     // std::string
 #include <vector>     // std::vector
@@ -104,10 +106,11 @@ struct TupleType;
 struct ListType;
 struct FnType;
 struct StructType;
+struct UnionType;
 
 using Type =
     Union<TypeType, IntType, FloatType, BoolType, StringType,
-          Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>>;
+          Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>, Box<UnionType>>;
 
 struct TupleType {
   std::vector<Type> elements;
@@ -121,6 +124,9 @@ struct FnType {
 };
 struct StructType {
   std::string name;
+};
+struct UnionType {
+  std::vector<Type> variants;
 };
 
 template <class T> struct Literal {
@@ -241,6 +247,7 @@ std::string serialize(const TupleType &t);
 std::string serialize(const ListType &t);
 std::string serialize(const FnType &t);
 std::string serialize(const StructType &t);
+std::string serialize(const UnionType &t);
 template <class T> std::string serialize(std::vector<T> elements);
 template <class... T> std::string serialize(std::tuple<T...> elements);
 template <class... T> std::string serialize(const Union<T...> &u);
@@ -305,6 +312,9 @@ inline std::string serialize(const FnType &t) {
 }
 inline std::string serialize(const StructType &t) {
   return R"({ "StructType": { "name": )" + ty::serialize(t.name) + " } }";
+}
+inline std::string serialize(const UnionType &t) {
+  return R"({ "UnionType": { "variants": )" + ty::serialize(t.variants) + " } }";
 }
 
 template <class T>
@@ -403,6 +413,13 @@ inline ty::Type Fn(ty::Type argument, ty::Type returnType) {
 
 inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
 
+inline struct panic_ {
+  std::tuple<> operator()(std::string message) const {
+    std::cerr << "panic: " << message << std::endl;    
+    exit(1);
+  }
+} panic;
+
 inline struct stringLiteral_ {
   ty::Expression operator()(std::string str) const {
     return ty::StringLiteral{.value = str};
@@ -438,9 +455,7 @@ inline struct len_ {
 inline struct at_ {
   std::string operator()(std::string s, int i) const {
     if (i >= s.length()) {
-      // TODO: Yune-native error message
-      std::cerr << "at: i > length" << std::endl;
-      exit(1);
+      panic("at: i > length");      
     }
     return std::string(s[i], 1);
   }
@@ -452,9 +467,7 @@ inline struct at_ {
 inline struct subString_ {
   std::string operator()(std::string s, int start, int end) const {
     if (end < start) {
-      // TODO: Yune-native error message
-      std::cerr << "subString: end < start" << std::endl;
-      exit(1);
+      panic("subString: end < start");
     }
     return s.substr(start, end - start);
   }
@@ -462,3 +475,63 @@ inline struct subString_ {
     return R"({ "Function": "subString" })";
   }
 } subString;
+
+inline struct isVariant__ {
+  template <typename T, typename... V> bool operator()(ty::Union<V...> _union) const {
+    return std::holds_alternative<T>(_union.variant);
+  }
+  std::string serialize() const {
+    return R"({ "Function": "isVariant_" })";
+  }  
+} isVariant_;
+
+inline struct getVariant__ {
+  template <typename T, typename... V>
+  T operator()(ty::Union<V...> _union) const {
+    if (!std::holds_alternative<T>(_union.variant)) {
+      panic("getVariant: variant mismatch");
+    }
+    return std::get<T>(_union.variant);
+  }
+  std::string serialize() const {
+    return R"({ "Function": "getVariant_" })";
+  }  
+} getVariant_;
+
+inline struct Union_ {
+  ty::Type operator()(std::vector<ty::Type> variants) const {
+    // Nested unions are flattened
+    std::vector<ty::Type> flat_variants;
+    for (const auto &variant : variants) {
+      if (std::holds_alternative<Box<ty::UnionType>>(variant.variant)) {
+        for (auto nested_variant :
+             std::get<Box<ty::UnionType>>(variant.variant)->variants) {
+          flat_variants.push_back(nested_variant);
+        }
+      }
+    }
+    // Sort the union so that variants are ordered.
+    // TODO: actual comparison function.    
+    std::sort(flat_variants.begin(), flat_variants.end(),
+              [](auto const &left, auto const &right) {
+                return ty::serialize(left) < ty::serialize(right);
+              });
+    // Check for type uniqueness
+    // This is very stupid and inefficient, but it works.
+    // Note that it assumes that the variants are properly ordered.    
+    {
+      std::set<std::string> unique_variants;
+      for (const auto &variant : flat_variants) {
+        std::string serialized = ty::serialize(variant);        
+        if (unique_variants.contains(serialized)) {
+          panic("Union: duplicate type");
+        }
+        unique_variants.insert(serialized);
+      }
+    }    
+    return ty::UnionType{ .variants = flat_variants };
+  }
+  std::string serialize() const {
+    return R"({ "Function": "Union" })";
+  }  
+} Union;

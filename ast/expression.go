@@ -206,11 +206,72 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 
 // Lower implements Expression.
 func (f *FunctionCall) Lower() cpp.Expression {
+	// match builtin functions that need to be handled differently
+	{
+		functionVariable, functionIsVariable := f.Function.(*Variable)
+		if functionIsVariable {
+			name := functionVariable.Name.String
+			switch name {
+			case "isVariant", "getVariant":
+				tupleArgument, _ := f.Argument.(*Tuple)
+				variant := tupleArgument.Elements[0].Lower()
+				variantType := tupleArgument.Elements[1].(*ConstExpression).Lower()
+				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
+			}
+		}
+	}
 	if f.argumentIsTuple {
 		// calls the function with a tuple of arguments
 		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(), f.Argument.Lower())
 	}
 	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(), f.Argument.Lower())
+}
+
+type List struct {
+	Span     Span
+	Elements []Expression
+}
+
+func (t List) String() string {
+	s := "("
+	for _, element := range t.Elements {
+		s += element.String() + ", "
+	}
+	s += ")"
+	return s
+}
+
+// GetSpan implements Expression.
+func (t *List) GetSpan() Span {
+	return t.Span
+}
+
+// Analyze implements Expression.
+func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	expectedListType, expectsList := expected.(*ListType)
+
+	if len(t.Elements) == 0 {
+		if expectsList {
+			return expectedListType
+		}
+		return &ListType{Element: nil} // TODO: what should the element type be?
+	}
+	var elementType TypeValue
+	if expectsList {
+		elementType = expectedListType.Element
+		t.Elements[0].Analyze(elementType, anal)
+	} else {
+		elementType = t.Elements[0].Analyze(nil, anal)
+	}
+	for i := 1; i < len(t.Elements); i++ {
+		t.Elements[1].Analyze(elementType, anal)
+	}
+	return &ListType{Element: elementType}
+}
+
+// Lower implements Expression.
+func (t *List) Lower() cpp.Expression {
+	return fmt.Sprintf(`std::vector{%s}`, util.JoinFunction(t.Elements, ", ", Expression.Lower))
 }
 
 type Tuple struct {
@@ -640,6 +701,33 @@ func (c *Closure) Lower() cpp.Expression {
 	return lowered
 }
 
+type ConstExpression struct {
+	Expression Expression
+	Result     *fj.Value
+}
+
+// Analyze implements Expression.
+func (c *ConstExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	_type := c.Expression.Analyze(expected, anal)
+	c.Result = anal.Evaluate(c.Expression.Lower())
+	return _type
+}
+
+// GetSpan implements Expression.
+func (c *ConstExpression) GetSpan() Span {
+	return c.Expression.GetSpan()
+}
+
+// Lower implements Expression.
+func (c *ConstExpression) Lower() string {
+	panic("Lower should not be called on ConstExpression as it does not have runtime code.")
+}
+
+// String implements Expression.
+func (c *ConstExpression) String() string {
+	return "<const>" + c.Expression.String()
+}
+
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -730,9 +818,11 @@ var _ Expression = &Bool{}
 var _ Expression = &String{}
 var _ Expression = &Variable{}
 var _ Expression = &FunctionCall{}
+var _ Expression = &List{}
 var _ Expression = &Tuple{}
 var _ Expression = &Macro{}
 var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
 var _ Expression = &StructExpression{}
 var _ Expression = &Closure{}
+var _ Expression = &ConstExpression{}

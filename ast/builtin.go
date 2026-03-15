@@ -19,6 +19,10 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   ExpressionType,
 	}},
+	{"panic", &FnType{
+		Argument: &StringType{},
+		Return:   &TupleType{},
+	}},
 	{"printlnString", &FnType{
 		Argument: &StringType{},
 		Return:   &TupleType{},
@@ -34,6 +38,19 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	{"subString", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
 		Return:   &StringType{},
+	}},
+	// isVariant_ and getVariant_ are private functions for the compiler
+	{"isVariant_", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &TypeType{}}},
+		Return:   &BoolType{},
+	}},
+	{"getVariant_", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &TypeType{}}},
+		Return:   &TypeType{},
+	}},
+	{"Union", &FnType{
+		Argument: &ListType{Element: &TypeType{}},
+		Return:   &TypeType{},
 	}},
 }
 

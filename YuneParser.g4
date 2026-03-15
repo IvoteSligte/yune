@@ -79,6 +79,7 @@ primaryExpression
     | bool=(TRUE | FALSE)
     | variable
     | LPAREN expression RPAREN
+    | list
     | tuple
     | macro
     ;
@@ -87,10 +88,15 @@ variable
     : name
     ;
 
+list
+    : LBRACKET RBRACKET
+    | LBRACKET expression (COMMA expression)* COMMA? RBRACKET
+    ;
+
 tuple
     : LPAREN RPAREN
     // disallows "LPAREN expression RPAREN" as unit tuples do not exist
-    | LPAREN expression (COMMA expression)+ RPAREN
+    | LPAREN expression (COMMA expression)+ COMMA? RPAREN
     ;
 
 macro

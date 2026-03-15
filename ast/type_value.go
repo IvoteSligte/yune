@@ -203,6 +203,35 @@ func (s StructType) LowerValue() cpp.Type {
 	return "box(ty::StructType{ .name = " + s.Name + " })"
 }
 
+type UnionType struct {
+	DefaultTypeValue
+	Variants []TypeValue
+}
+
+func (u UnionType) String() string {
+	return fmt.Sprintf("Union(%s)", util.Join(u.Variants, ", "))
+}
+
+func (u *UnionType) Eq(other TypeValue) bool {
+	otherUnion, ok := other.(*UnionType)
+	if !ok || len(u.Variants) != len(otherUnion.Variants) {
+		return false
+	}
+	// unions are unordered
+	for _, element := range u.Variants {
+		return util.Any(otherUnion.Variants, func(otherElement TypeValue) bool {
+			return element.Eq(otherElement)
+		})
+	}
+	return true
+}
+func (u UnionType) LowerType() cpp.Type {
+	return "ty::Union<" + util.JoinFunction(u.Variants, ", ", TypeValue.LowerType) + ">"
+}
+func (u UnionType) LowerValue() cpp.Type {
+	return "box(ty::TupleType{ .variants = { " + util.JoinFunction(u.Variants, ", ", TypeValue.LowerValue) + " } })"
+}
+
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())
@@ -234,6 +263,10 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		t = &StructType{
 			Name: string(v.GetStringBytes("name")),
 		}
+	case "UnionType":
+		t = &UnionType{
+			Variants: util.Map(v.Get("variants").GetArray(), UnmarshalTypeValue),
+		}
 	case "TypeId":
 		id := string(v.GetStringBytes())
 		t = registeredTypeValues[id]
@@ -254,3 +287,4 @@ var _ TypeValue = (*TupleType)(nil)
 var _ TypeValue = (*ListType)(nil)
 var _ TypeValue = (*FnType)(nil)
 var _ TypeValue = (*StructType)(nil)
+var _ TypeValue = (*UnionType)(nil)
