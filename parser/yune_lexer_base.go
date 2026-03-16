@@ -9,7 +9,7 @@ import (
 
 // TODO: windows line breaks
 
-const EOF = -1
+const EOF = antlr.TokenEOF
 
 type YuneLexerBase struct {
 	*antlr.BaseLexer
@@ -53,6 +53,7 @@ func (l *YuneLexerBase) Consume() {
 func (l *YuneLexerBase) onNewline() (indent int) {
 	input := l.GetInputStream()
 	indent = 0
+loop:
 	for {
 		switch input.LA(1) {
 		case ' ':
@@ -64,6 +65,23 @@ func (l *YuneLexerBase) onNewline() (indent int) {
 		case '\n':
 			indent = 0
 			l.Consume()
+		// skip line comments
+		case '/':
+			// if matching a line comment
+			if input.LA(2) == '/' {
+				l.Consume()
+				l.Consume()
+				for {
+					switch input.LA(1) {
+					case '\n', EOF:
+						goto loop
+					default:
+						l.Consume()
+					}
+				}
+			}
+			// not a comment
+			return indent
 		case EOF:
 			return 0
 		default:
