@@ -9,7 +9,7 @@ import (
 
 // TODO: windows line breaks
 
-const EOF = antlr.TokenEOF
+const EOF = -1
 
 type YuneLexerBase struct {
 	*antlr.BaseLexer
@@ -49,44 +49,45 @@ func (l *YuneLexerBase) Consume() {
 	l.Interpreter.Consume(l.GetInputStream())
 }
 
+func (l *YuneLexerBase) skipLineComment() bool {
+	input := l.GetInputStream()
+	if input.LA(1) == '/' && input.LA(2) == '/' {
+		input.Consume()
+		input.Consume()
+		for {
+			c := input.LA(1)
+			input.Consume()
+			if c == '\n' || c == EOF {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Handles lexing indentation on the new line.
 func (l *YuneLexerBase) onNewline() (indent int) {
 	input := l.GetInputStream()
 	indent = 0
-loop:
 	for {
+		if l.skipLineComment() {
+			continue
+		}
 		switch input.LA(1) {
 		case ' ':
 			indent++
-			l.Consume()
 		case '\t':
 			indent = (indent/4 + 1) * 4
-			l.Consume()
+		case '\r': // skip
 		case '\n':
 			indent = 0
-			l.Consume()
-		// skip line comments
-		case '/':
-			// if matching a line comment
-			if input.LA(2) == '/' {
-				l.Consume()
-				l.Consume()
-				for {
-					switch input.LA(1) {
-					case '\n', EOF:
-						goto loop
-					default:
-						l.Consume()
-					}
-				}
-			}
-			// not a comment
-			return indent
 		case EOF:
 			return 0
 		default:
 			return indent
+
 		}
+		l.Consume()
 	}
 }
 
@@ -99,48 +100,59 @@ func (l *YuneLexerBase) onMacroNewline() (indent int) {
 		switch input.LA(1) {
 		case ' ':
 			indent++
-			l.Consume()
-			continue
 		case '\t':
+			// Round to next multiple of 4
 			indent = (indent/4 + 1) * 4
-			l.Consume()
-			continue
+		case '\r': // skip
 		case '\n':
-			// empty lines are also passed to macros
+			// Empty lines are also passed to macros
 			return l.indent
 		case EOF:
 			return 0
+		default:
+			goto end
 		}
-		break
+		l.Consume()
 	}
+end:
 	if indent%4 != 0 {
 		log.Fatalln("Indentation is not a multiple of 4.")
 	}
 	return indent
 }
 
+// Increase indentation by 4 spaces and emit an INDENT token.
+func (l *YuneLexerBase) Indent() {
+	l.indent += 4
+	l.pushToken(l.makeCommonToken(YuneParserINDENT, "<INDENT>"))
+}
+
+// Decrease indentation by 4 spaces and emit a DEDENT token.
+func (l *YuneLexerBase) Dedent() {
+	l.indent -= 4
+	l.pushToken(l.makeCommonToken(YuneParserDEDENT, "<DEDENT>"))
+}
+
 func (l *YuneLexerBase) updateIndent(indent int) {
 	if indent%4 != 0 {
 		log.Fatalln("Indentation is not a multiple of 4.")
 	}
-	if indent < l.indent {
-		for range (l.indent - indent) / 4 {
-			l.pushToken(l.makeCommonToken(YuneParserDEDENT, "<DEDENT>"))
-		}
-	} else if indent > l.indent {
+	for l.indent > indent {
+		l.Dedent()
+	}
+	if indent > l.indent {
 		if l.indent+4 != indent {
 			log.Fatalln("Indentation is not the next multiple of 4.")
 		}
-		l.pushToken(l.makeCommonToken(YuneParserINDENT, "<INDENT>"))
+		l.Indent()
 	}
-	l.indent = indent
 }
 
 func (l *YuneLexerBase) lexMacro() {
-	// macros have increased indentation
+	// Macros have increased indentation
 	l.indent += 4
 	input := l.GetInputStream()
-	// parse the whole macro in here because macros can have empty lines,
+	// Parse the whole macro in here because macros can have empty lines,
 	// but ANTLR cannot handle MACROLINE lexing the empty string
 	text := ""
 	for {
@@ -152,13 +164,13 @@ func (l *YuneLexerBase) lexMacro() {
 			l.pushToken(l.BaseLexer.NextToken())
 			indent := l.onMacroNewline()
 			if indent < l.indent {
-				// remove indentation that was artificially added for the macro
+				// Remove indentation that was artificially added for the macro
 				l.indent -= 4
 				return
 			}
 		case EOF:
 			l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
-			// remove indentation that was artificially added for the macro
+			// Remove indentation that was artificially added for the macro
 			l.indent -= 4
 			return
 		default:
@@ -170,12 +182,24 @@ func (l *YuneLexerBase) lexMacro() {
 
 func (l *YuneLexerBase) update() {
 	token := l.BaseLexer.NextToken()
-	l.pushToken(token)
 	switch token.GetTokenType() {
 	case YuneParserHASHTAG:
+		// Push token *before* lexing macro tokens
+		l.pushToken(token)
 		l.lexMacro()
 	case YuneParserNEWLINE:
+		// Push token *before* lexing indent tokens
+		l.pushToken(token)
 		l.updateIndent(l.onNewline())
+	case YuneParserEOF:
+		// Emit the required DEDENT tokens at EOF
+		for l.indent > 0 {
+			l.Dedent()
+		}
+		// Only push EOF *after* DEDENT tokens
+		l.pushToken(token)
+	default:
+		l.pushToken(token)
 	}
 }
 

@@ -132,4 +132,3 @@ main(): () =
         Something fancy it supports is quotes "" and even hashtags#!
 
     printlnString fmt#Hello, World! This is a long string: {s}
-
