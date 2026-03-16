@@ -226,6 +226,7 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	switch {
 	case ctx.GetFunction() != nil:
 		return &ast.FunctionCall{
+			Span:     GetSpan(ctx),
 			Function: LowerPrimaryExpression(ctx.GetFunction()),
 			Argument: LowerPrimaryExpression(ctx.GetArgument()),
 		}
@@ -315,9 +316,12 @@ func LowerStatement(ctx IStatementContext) iter.Seq[ast.Statement] {
 	}
 }
 
-func LowerStatements(statements []IStatementContext) (output []ast.Statement) {
+func LowerStatements(statements []IStatementContext) []ast.Statement {
 	if len(statements) == 0 {
-		panic("Empty slice passed to LowerStatements")
+		// Empty block maps to empty tuple ()
+		return []ast.Statement{
+			&ast.ExpressionStatement{Expression: &ast.Tuple{}},
+		}
 	}
 	return slices.Collect(func(yield func(ast.Statement) bool) {
 		for _, stmt := range statements {

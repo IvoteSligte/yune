@@ -194,47 +194,54 @@ func checkTupleTypeArity(tupleType *TupleType, expected int, at Span, anal Analy
 	}
 }
 
+// Match builtin functions that need to be handled differently as their types
+// cannot be expressed by Yune. Returns `nil` if it is not a special builtin.
+func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
+	name, functionIsVariable := f.getFunctionName()
+	if functionIsVariable {
+		switch name {
+		// getTupleElement_(<any tuple type>, index Int): <element type at index>
+		case "getTupleElement_":
+			argumentType := f.Argument.Analyze(nil, anal)
+			tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+			checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
+			firstElementTupleType := checkIsTuple(tupleArgumentType.Elements[0], f.Argument.GetSpan(), anal)
+			// the second argument should always be an integer, since the compiler constructs this FunctionCall
+			_ = tupleArgumentType.Elements[1].(*IntType)
+			index := f.Argument.(*Tuple).Elements[1].(*Integer)
+			return firstElementTupleType.Elements[index.Value]
+		case "getVariant_", "isVariant_":
+			argumentType := f.Argument.Analyze(nil, anal)
+			tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+			checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
+			// the first argument is a union, but since anything can be converted to a union of 1 element,
+			// any type is allowed
+
+			// the second argument should always be a type, since the compiler constructs this FunctionCall
+			_ = tupleArgumentType.Elements[1].(*TypeType)
+
+			// evaluate the type
+			variantTypeExpression := f.Argument.(*Tuple).Elements[1]
+			json := anal.Evaluate(variantTypeExpression.Lower())
+			variantType := UnmarshalTypeValue(json)
+			f.builtinData = variantType // required for lowering
+
+			if name == "getVariant_" {
+				return variantType
+			} else {
+				// name == "isVariant_"
+				return &BoolType{}
+			}
+		default:
+		}
+	}
+	return nil
+}
+
 // Analyze implements Expression.
 func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType TypeValue) {
-	// match builtin functions that need to be handled differently as their types
-	// cannot be expressed by Yune
-	{
-		name, functionIsVariable := f.getFunctionName()
-		if functionIsVariable {
-			argumentType := f.Argument.Analyze(nil, anal)
-			switch name {
-			// getTupleElement_(<any tuple type>, index Int): <element type at index>
-			case "getTupleElement_":
-				tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
-				checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
-				firstElementTupleType := checkIsTuple(tupleArgumentType.Elements[0], f.Argument.GetSpan(), anal)
-				// the second argument should always be an integer, since the compiler constructs this FunctionCall
-				_ = tupleArgumentType.Elements[1].(*IntType)
-				index := f.Argument.(*Tuple).Elements[1].(*Integer)
-				return firstElementTupleType.Elements[index.Value]
-			case "getVariant_", "isVariant_":
-				tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
-				checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
-				// the first argument is a union, but since anything can be converted to a union of 1 element,
-				// any type is allowed
-
-				// the second argument should always be a type, since the compiler constructs this FunctionCall
-				_ = tupleArgumentType.Elements[1].(*TypeType)
-
-				// evaluate the type
-				variantTypeExpression := f.Argument.(*Tuple).Elements[1]
-				json := anal.Evaluate(variantTypeExpression.Lower())
-				variantType := UnmarshalTypeValue(json)
-				f.builtinData = variantType // required for lowering
-
-				if name == "getVariant_" {
-					return variantType
-				} else {
-					// name == "isVariant_"
-					return &BoolType{}
-				}
-			}
-		}
+	if returnType = f.AnalyzeBuiltins(anal); returnType != nil {
+		return
 	}
 	maybeFunctionType := f.Function.Analyze(nil, anal)
 	functionType, isFunction := maybeFunctionType.(*FnType)
@@ -298,8 +305,9 @@ func (f *FunctionCall) Lower() cpp.Expression {
 }
 
 type List struct {
-	Span     Span
-	Elements []Expression
+	Span        Span
+	Elements    []Expression
+	elementType TypeValue
 }
 
 func (t List) String() string {
@@ -326,22 +334,24 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		}
 		return &ListType{Element: nil} // TODO: what should the element type be?
 	}
-	var elementType TypeValue
 	if expectsList {
-		elementType = expectedListType.Element
-		t.Elements[0].Analyze(elementType, anal)
+		t.elementType = expectedListType.Element
+		t.Elements[0].Analyze(t.elementType, anal)
 	} else {
-		elementType = t.Elements[0].Analyze(nil, anal)
+		t.elementType = t.Elements[0].Analyze(nil, anal)
 	}
 	for i := 1; i < len(t.Elements); i++ {
-		t.Elements[1].Analyze(elementType, anal)
+		t.Elements[1].Analyze(t.elementType, anal)
 	}
-	return &ListType{Element: elementType}
+	return &ListType{Element: t.elementType}
 }
 
 // Lower implements Expression.
 func (t *List) Lower() cpp.Expression {
-	return fmt.Sprintf(`std::vector{%s}`, util.JoinFunction(t.Elements, ", ", Expression.Lower))
+	return fmt.Sprintf(
+		`std::vector<%s>{%s}`,
+		t.elementType.LowerType(), util.JoinFunction(t.Elements, ", ", Expression.Lower),
+	)
 }
 
 type Tuple struct {

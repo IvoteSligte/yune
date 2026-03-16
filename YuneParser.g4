@@ -145,7 +145,7 @@ closureExpression
     ;
 
 block
-    : statement+
+    : statement*
     ;
 
 isExpression
