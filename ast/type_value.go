@@ -27,7 +27,7 @@ var MacroFunctionType = &FnType{
 		&FnType{Argument: &StringType{}, Return: &TypeType{}},
 	}},
 	// (error String, result Expression)
-	Return: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}},
+	Return: &UnionType{Variants: []TypeValue{&StringType{}, ExpressionType}},
 }
 
 type TypeValue interface {
@@ -36,6 +36,18 @@ type TypeValue interface {
 	LowerType() cpp.Type
 	LowerValue() cpp.Value
 	Eq(other TypeValue) bool
+}
+
+func IsSubType(sub TypeValue, super TypeValue) bool {
+	superUnion, superIsUnion := super.(*UnionType)
+	if !superIsUnion {
+		return sub.Eq(super)
+	}
+	subUnion, subIsUnion := sub.(*UnionType)
+	if !subIsUnion {
+		return superUnion.HasVariant(sub)
+	}
+	return subUnion.IsSubUnion(superUnion)
 }
 
 type DefaultTypeValue struct{}
@@ -230,6 +242,24 @@ func (u UnionType) LowerType() cpp.Type {
 }
 func (u UnionType) LowerValue() cpp.Type {
 	return "box(ty::TupleType{ .variants = { " + util.JoinFunction(u.Variants, ", ", TypeValue.LowerValue) + " } })"
+}
+
+func (u UnionType) HasVariant(variant TypeValue) bool {
+	for _, v := range u.Variants {
+		if v.Eq(variant) {
+			return true
+		}
+	}
+	return false
+}
+
+func (u UnionType) IsSubUnion(super *UnionType) bool {
+	for _, v := range u.Variants {
+		if !super.HasVariant(v) {
+			return false
+		}
+	}
+	return true
 }
 
 // Creates a union with the same logic as in pb.hpp

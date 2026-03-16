@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"log"
 	"yune/cpp"
 	"yune/util"
 
@@ -251,7 +250,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 		returnType = functionType.Return
 	}
 	argumentType := f.Argument.Analyze(expectedArgumentType, anal)
-	if !argumentType.Eq(expectedArgumentType) {
+	if !IsSubType(argumentType, expectedArgumentType) {
 		anal.PushError(UnexpectedType{
 			Expected: expectedArgumentType,
 			Found:    argumentType,
@@ -454,15 +453,16 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		`(%s)(%q, get_type)`,
 		m.Function.Lower(), m.GetText(),
 	))
-	elements := v.GetArray("Tuple", "elements")
-	if elements == nil {
-		log.Fatalf("Failed to parse macro output as Tuple. Output: %s", v)
+	// v is Union[String, Expression]
+	// First try to unmarshal a String.
+	errorBytes := v.GetStringBytes()
+	if errorBytes != nil {
+		anal.PushError(MacroOutputError{
+			Macro:   m.Function,
+			Message: string(errorBytes),
+		})
 	}
-	errorMessage := string(elements[0].GetStringBytes())
-	if errorMessage != "" {
-		panic("Macro returned error: " + errorMessage)
-	}
-	m.Result = UnmarshalExpression(elements[1])
+	m.Result = UnmarshalExpression(v)
 	return m.Result.Analyze(expected, anal)
 }
 

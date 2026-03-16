@@ -204,3 +204,15 @@ func (e MacroRequestedUndefinedType) Error() string {
 		e.Macro.Name.String, e.Macro.Name.Span, e.Name,
 	)
 }
+
+type MacroOutputError struct {
+	Macro   Variable
+	Message string
+}
+
+func (e MacroOutputError) Error() string {
+	return fmt.Sprintf(
+		"Macro '%s' at %s returned error: %s",
+		e.Macro.Name.String, e.Macro.Name.Span, e.Message,
+	)
+}

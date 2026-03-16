@@ -40,7 +40,7 @@ func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, return
 // Assumes that the analyzer is in the function's body scope and parameters have been declared.
 func analyzeFunctionBody(anal Analyzer, returnType TypeValue, body Block) {
 	bodyType := body.Analyze(returnType, anal)
-	if !returnType.Eq(bodyType) {
+	if !IsSubType(bodyType, returnType) {
 		anal.PushError(ReturnTypeMismatch{
 			Expected: returnType,
 			Found:    bodyType,
@@ -184,7 +184,7 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 	scope := anal.NewScope()
 	bodyType := d.Body.Analyze(declaredType, scope)
 
-	if !declaredType.Eq(bodyType) {
+	if !IsSubType(bodyType, declaredType) {
 		anal.PushError(ConstantTypeMismatch{
 			Expected: declaredType,
 			Found:    bodyType,

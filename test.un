@@ -12,9 +12,9 @@ something(f: Fn((), Int)): Int = f()
 takeTuple(t: (Int, String)): String =
     "literal"
 
-longString(text: String, getType: Fn(String, Type)): (String, Expression) =
-    getType("add")
-    ("", stringLiteral(text))
+longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
+    getType("add") // test getType
+    stringLiteral(text)
 
 noArguments(): () = a: Int = 0
 
@@ -77,8 +77,8 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     test: Expression = right
     binaryExpression("+", left, right)
 
-sql(text: String, getType: Fn(String, Type)): (String, Expression) =
-    ("", stringLiteral(text))
+sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =
+    stringLiteral(text)
 
 main(): () =
     a: Int = fibonacci(add(N, N))
@@ -92,4 +92,5 @@ main(): () =
         It contains several newlines.
         Something fancy it supports is quotes "" and even hashtags#!
 
+    printlnString fmt#Hello, World!
     printlnString s

@@ -37,7 +37,7 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 	}
 	scope := anal.NewScope()
 	bodyType := d.Body.Analyze(d.Type.Get(), scope)
-	if !d.InferType && !declType.Eq(bodyType) {
+	if !d.InferType && !IsSubType(bodyType, declType) {
 		anal.PushError(VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
@@ -89,7 +89,7 @@ func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	targetType := a.Target.Analyze(nil, anal)
 	scope := anal.NewScope()
 	bodyType := a.Body.Analyze(targetType, scope)
-	if !targetType.Eq(bodyType) {
+	if !IsSubType(bodyType, targetType) {
 		anal.PushError(AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
