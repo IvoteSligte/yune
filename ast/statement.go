@@ -216,13 +216,31 @@ func (b *Block) Lower() (statements []cpp.Statement) {
 var _ Node = &Block{}
 
 type ExpressionStatement struct {
-	Expression
+	Expression Expression
+	noReturn   bool
+}
+
+// Analyze implements Statement.
+func (e *ExpressionStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	_type := e.Expression.Analyze(expected, anal)
+	// An empty union cannot be instantiated and is therefore
+	// used as marker for functions that do not return.
+	e.noReturn = _type.Eq(&UnionType{})
+	return _type
+}
+
+// GetSpan implements Statement.
+func (e *ExpressionStatement) GetSpan() Span {
+	return e.Expression.GetSpan()
 }
 
 // Lower implements Statement.
 func (e *ExpressionStatement) Lower(isLast bool) cpp.Statement {
 	lowered := e.Expression.Lower()
-	if isLast {
+	// Only the last statement in a block should return.
+	// Even if the expression does not return, C++ type checking
+	// may still fail if it is used as a return statement.
+	if isLast && !e.noReturn {
 		return "return " + lowered + ";"
 	} else {
 		return lowered + ";"

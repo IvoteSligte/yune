@@ -58,9 +58,19 @@ template <class... T> struct Union {
       : variant(std::visit([](auto &&element) constexpr { return element; },
                            subset)) {}
 
+  // Construct from empty Union.
+  // This is never actually called, but required for type checking.
+  Union(const Union<> &)  : variant(*(std::variant<T...>*)(nullptr)) {}
+
   bool operator==(const Union<T...>& other) const = default;
   
   std::variant<T...> variant;
+};
+
+// Specialization of Union for zero elements.
+// This is not constructable in Yune, but required for certain type signatures.
+template<> struct Union<>{
+  bool operator==(const Union<>& other) const = default;
 };
 
 template <class F, class Return, class... Args>
@@ -465,7 +475,7 @@ inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
 
 inline struct panic_ {
   [[noreturn]]
-  void operator()(std::string message) const {
+  ty::Union<> operator()(std::string message) const {
     std::cerr << "panic: " << message << std::endl;
     exit(1);
   }
