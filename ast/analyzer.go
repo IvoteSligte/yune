@@ -62,7 +62,10 @@ func (a Analyzer) NewScope() Analyzer {
 func (a Analyzer) GetType(name Name) TypeValue {
 	decl, ok := a.Table.Get(name)
 	if !ok {
-		panic("Unknown declaration: " + name.String)
+		a.PushError(UndefinedVariable{
+			Span:   name.Span,
+			String: name.String,
+		})
 	}
 	topLevel, isTopLevel := decl.(TopLevelDeclaration)
 	if isTopLevel {
