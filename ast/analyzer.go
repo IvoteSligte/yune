@@ -26,7 +26,7 @@ func (a Analyzer) TopLevel() Analyzer {
 
 func (a Analyzer) PushError(err error) {
 	*a.Errors = append(*a.Errors, err)
-	log.Fatalln("Analyzer error: ", err) // TODO: only exit when needed
+	log.Fatalf("Analyzer error: %s", err) // TODO: only exit when needed
 }
 
 func (a Analyzer) HasErrors() bool {

@@ -44,110 +44,41 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 	}
 }
 
-// Input:
-// expression is name: type
-// Becomes:
-// is_expr_8fa932bc_ := expression
-// isVariant(type)(is_expr_8fa932bc_) ->
-//
-//	name := getVariant(type)(is_expr_8fa932bc_)
-//	...
-func DesugarIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBlock ast.Block) iter.Seq[ast.Statement] {
-	return func(yield func(ast.Statement) bool) {
-		span := GetSpan(ctx)
-		temporary := ast.Name{
-			String: fmt.Sprintf("is_expr_%x_", rand.Uint64()),
-			Span:   span,
-		}
-		if !yield(&ast.VariableDeclaration{
-			Span:      span,
-			Name:      temporary,
-			InferType: true,
-			Body: ast.Block{
-				Span: GetSpan(ctx.Expression()),
-				Statements: []ast.Statement{
-					&ast.ExpressionStatement{Expression: LowerExpression(ctx.Expression())},
-				},
-			},
-		}) {
-			return
-		}
-		typeExpression := LowerExpression(ctx.Type_().Expression())
-		// isVariant_(is_expr_xxxx_, type)
-		condition := &ast.FunctionCall{
-			Span: span,
-			Function: &ast.Variable{
-				Name: ast.Name{
-					Span:   GetSpan(ctx.Type_()),
-					String: "isVariant_",
-				},
-			},
-			Argument: &ast.Tuple{Elements: []ast.Expression{
-				&ast.Variable{Name: temporary},
-				// NOTE: the type is currently evaluated twice, first here
-				typeExpression,
-			}},
-		}
-		// name := getVariant_(is_expr_xxxx_, type)
-		thenBlock.Statements = append([]ast.Statement{&ast.VariableDeclaration{
-			Span:      GetSpan(ctx.Name()),
-			Name:      LowerName(ctx.Name()),
-			InferType: true,
-			Body: ast.Block{
-				Span: span,
-				Statements: []ast.Statement{
-					&ast.ExpressionStatement{Expression: &ast.FunctionCall{
-						Span: span,
-						Function: &ast.Variable{
-							Name: ast.Name{
-								Span:   GetSpan(ctx.Type_()),
-								String: "getVariant_",
-							},
-						},
-						Argument: &ast.Tuple{Elements: []ast.Expression{
-							&ast.Variable{Name: temporary},
-							// NOTE: the type is currently evaluated twice, second here
-							typeExpression,
-						}},
-					}},
-				},
-			},
-		}}, thenBlock.Statements...)
-		yield(&ast.BranchStatement{
-			Span:      span,
-			Condition: condition,
-			Then:      thenBlock,
-			Else:      elseBlock,
-		})
+func LowerIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBlock ast.Block) ast.Statement {
+	return &ast.IsBranchStatement{
+		Span:       GetSpan(ctx),
+		Expression: LowerExpression(ctx.Expression()),
+		Name:       LowerName(ctx.Name()),
+		Type:       LowerType(ctx.Type_()),
+		Then:       thenBlock,
+		Else:       elseBlock,
 	}
 }
 
-func LowerBranchStatement(ctx IBranchStatementContext) iter.Seq[ast.Statement] {
-	return func(yield func(ast.Statement) bool) {
-		switch {
-		case ctx.Expression() != nil:
-			yield(&ast.BranchStatement{
-				Span:      GetSpan(ctx),
-				Condition: LowerExpression(ctx.Expression()),
-				Then:      LowerStatementBody(ctx.StatementBody()),
-				Else: ast.Block{
-					Span:       GetSpan(ctx.Block()),
-					Statements: LowerStatements(ctx.Block().AllStatement()),
-				},
-			})
-		case ctx.IsExpression() != nil:
-			thenBlock := LowerStatementBody(ctx.StatementBody())
-			elseBlock := ast.Block{
+func LowerBranchStatement(ctx IBranchStatementContext) ast.Statement {
+	switch {
+	case ctx.Expression() != nil:
+		return &ast.BranchStatement{
+			Span:      GetSpan(ctx),
+			Condition: LowerExpression(ctx.Expression()),
+			Then:      LowerStatementBody(ctx.StatementBody()),
+			Else: ast.Block{
 				Span:       GetSpan(ctx.Block()),
 				Statements: LowerStatements(ctx.Block().AllStatement()),
-			}
-			if len(elseBlock.Statements) == 0 {
-				panic(fmt.Sprintf("Empty else-block of is-expression at %s", elseBlock.Span))
-			}
-			DesugarIsExpression(ctx.IsExpression(), thenBlock, elseBlock)(yield)
-		default:
-			panic("unreachable")
+			},
 		}
+	case ctx.IsExpression() != nil:
+		thenBlock := LowerStatementBody(ctx.StatementBody())
+		elseBlock := ast.Block{
+			Span:       GetSpan(ctx.Block()),
+			Statements: LowerStatements(ctx.Block().AllStatement()),
+		}
+		if len(elseBlock.Statements) == 0 {
+			panic(fmt.Sprintf("Empty else-block of is-expression at %s", elseBlock.Span))
+		}
+		return LowerIsExpression(ctx.IsExpression(), thenBlock, elseBlock)
+	default:
+		panic("unreachable")
 	}
 }
 
@@ -307,9 +238,9 @@ func LowerStatement(ctx IStatementContext) iter.Seq[ast.Statement] {
 				Expression: LowerExpression(ctx.Expression()),
 			})
 		case ctx.BranchStatement() != nil:
-			LowerBranchStatement(ctx.BranchStatement())(yield)
+			yield(LowerBranchStatement(ctx.BranchStatement()))
 		case ctx.IsStatement() != nil:
-			LowerIsStatement(ctx.IsStatement())(yield)
+			yield(LowerIsStatement(ctx.IsStatement()))
 		default:
 			panic("unreachable")
 		}
@@ -394,30 +325,28 @@ func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
 
 }
 
-func LowerIsStatement(ctx IIsStatementContext) iter.Seq[ast.Statement] {
-	return func(yield func(ast.Statement) bool) {
-		span := GetSpan(ctx)
-		thenBlock := LowerBlock(ctx.Block())
-		elseBlock := ast.Block{
-			Span: span,
-			Statements: []ast.Statement{
-				&ast.ExpressionStatement{Expression: &ast.FunctionCall{
-					Span: span,
-					Function: &ast.Variable{
-						Name: ast.Name{
-							Span:   span,
-							String: "panic",
-						},
+func LowerIsStatement(ctx IIsStatementContext) ast.Statement {
+	span := GetSpan(ctx)
+	thenBlock := LowerBlock(ctx.Block())
+	elseBlock := ast.Block{
+		Span: span,
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{Expression: &ast.FunctionCall{
+				Span: span,
+				Function: &ast.Variable{
+					Name: ast.Name{
+						Span:   span,
+						String: "panic",
 					},
-					Argument: &ast.String{
-						Span:  span,
-						Value: fmt.Sprintf("is-statement assertion at %s returned false", span),
-					},
-				}},
-			},
-		}
-		DesugarIsExpression(ctx.IsExpression(), thenBlock, elseBlock)(yield)
+				},
+				Argument: &ast.String{
+					Span:  span,
+					Value: fmt.Sprintf("is-statement assertion at %s returned false", span),
+				},
+			}},
+		},
 	}
+	return LowerIsExpression(ctx.IsExpression(), thenBlock, elseBlock)
 }
 
 func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Statement] {

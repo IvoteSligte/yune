@@ -739,7 +739,10 @@ func (c *Closure) Lower() cpp.Expression {
 	id := registerClosure(c)
 	fields := ""
 	captureArguments := ""
-	captures := `""`
+	captures := ""
+	if len(c.captures) == 0 {
+		captures = `""`
+	}
 	for captureName, captureType := range c.captures {
 		fields += captureType.LowerType() + " " + captureName + ";\n"
 		if captureArguments != "" {

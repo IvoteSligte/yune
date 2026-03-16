@@ -167,6 +167,16 @@ func (e InvalidConditionType) Error() string {
 	return fmt.Sprintf("Expected type 'Bool' for condition, but found type '%s' at %s.", e.Found, e.At)
 }
 
+type ImpossibleIsExpression struct {
+	SuperType TypeValue
+	SubType   TypeValue
+	At        Span
+}
+
+func (e ImpossibleIsExpression) Error() string {
+	return fmt.Sprintf("Is-expression at %s is always false because '%s' is not a sub-type of '%s'.", e.At, e.SubType, e.SuperType)
+}
+
 type InvalidMainSignature struct {
 	Found TypeValue
 	At    Span

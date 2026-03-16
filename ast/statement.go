@@ -2,6 +2,8 @@ package ast
 
 import (
 	"fmt"
+	"math/rand/v2"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -171,6 +173,74 @@ func (b *BranchStatement) Lower(isLast bool) cpp.Statement {
 	return lowered
 }
 
+// Always the last statement in a list, since the remaining
+// statements in a block are is in its .Else field.
+type IsBranchStatement struct {
+	Span
+	Expression Expression
+	Name       Name
+	Type       Type
+	Then       Block
+	Else       Block
+}
+
+// GetDeclaredType implements Declaration.
+func (b *IsBranchStatement) GetDeclaredType() TypeValue {
+	return b.Type.Get()
+}
+
+// GetName implements Declaration.
+func (b *IsBranchStatement) GetName() Name {
+	return b.Name
+}
+
+// Analyze implements Statement.
+func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	if len(b.Then.Statements) == 0 {
+		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
+	}
+	if len(b.Else.Statements) == 0 {
+		panic(fmt.Sprintf("Empty else-block at %s", b.Else.Span))
+	}
+	isType := b.Type.Analyze(anal)
+	expressionType := b.Expression.Analyze(isType, anal)
+
+	if !IsSubType(isType, expressionType) {
+		anal.PushError(ImpossibleIsExpression{
+			SuperType: expressionType,
+			SubType:   isType,
+			At:        b.Expression.GetSpan(),
+		})
+	}
+	thenScope := anal.NewScope()
+	// The is-expression declares b.Name in the then-scope.
+	thenScope.Table.Add(b)
+	thenType := b.Then.Analyze(expected, thenScope)
+	elseType := b.Else.Analyze(expected, anal.NewScope())
+	return NewUnionType(thenType, elseType)
+}
+
+// Lower implements Statement.
+func (b *IsBranchStatement) Lower(isLast bool) cpp.Statement {
+	if !isLast {
+		panic("Is-statement should always be the last statement in a block.")
+	}
+	isType := b.Type.Get().LowerType()
+	name := fmt.Sprintf("is_expr_%x_", rand.Uint64())
+	return fmt.Sprintf(
+		`auto %s = %s;
+if (isVariant_<%s>(%s)) {
+    auto %s = getVariant_<%s>(%s);
+    %s
+} else %s`,
+		name, b.Expression.Lower(),
+		isType, name,
+		b.Name.Lower(), isType, name,
+		strings.Join(b.Then.Lower(), "\n"),
+		cpp.Block(b.Else.Lower()),
+	)
+}
+
 type Block struct {
 	Span       Span
 	Statements []Statement
@@ -290,4 +360,7 @@ func UnmarshalStatement(data *fj.Value) (stmt Statement) {
 var _ Statement = &VariableDeclaration{}
 var _ Statement = &Assignment{}
 var _ Statement = &BranchStatement{}
+var _ Statement = &IsBranchStatement{}
 var _ Statement = &ExpressionStatement{}
+
+var _ Declaration = &IsBranchStatement{}

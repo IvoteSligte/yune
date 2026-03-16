@@ -71,6 +71,7 @@ func (l *YuneLexerBase) onNewline() (indent int) {
 	indent = 0
 	for {
 		if l.skipLineComment() {
+			indent = 0
 			continue
 		}
 		switch input.LA(1) {
@@ -135,14 +136,14 @@ func (l *YuneLexerBase) Dedent() {
 
 func (l *YuneLexerBase) updateIndent(indent int) {
 	if indent%4 != 0 {
-		log.Fatalln("Indentation is not a multiple of 4.")
+		log.Fatalf("Indentation %d is not a multiple of 4 on line %d.", indent, l.GetLine())
 	}
 	for l.indent > indent {
 		l.Dedent()
 	}
 	if indent > l.indent {
 		if l.indent+4 != indent {
-			log.Fatalln("Indentation is not the next multiple of 4.")
+			log.Fatalf("Indentation %d is not the next multiple of 4 on line %d.", indent, l.GetLine())
 		}
 		l.Indent()
 	}

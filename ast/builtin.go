@@ -53,11 +53,6 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
 		Return:   &StringType{},
 	}},
-	// isVariant_ is a private function for the compiler
-	{"isVariant_", &FnType{
-		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &TypeType{}}},
-		Return:   &BoolType{},
-	}},
 	{"Union", &FnType{
 		Argument: &ListType{Element: &TypeType{}},
 		Return:   &TypeType{},

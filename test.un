@@ -18,10 +18,10 @@ longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
 
 noArguments(): () = a: Int = 0
 
-findChar(text: String, offset: Int, char: String): (Int, Bool) =
-    offset >= len(text) -> (0, false)
-    at(text, offset) == char -> (offset, true)
-    findChar(text, offset + 1, char)
+findChar(text: String, offset: Int, char: String): Union[Int, ()] =
+    offset < len(text) ->
+        at(text, offset) == char -> offset
+        findChar(text, offset + 1, char)
 
 findBraces(text: String, offset: Int): Union[(Int, Int), ()] =
     findChar(text, offset, "{") is leftIndex: Int ->
@@ -86,12 +86,15 @@ println(value: Union[Int, Bool, String]): () =
 
 // String interpolation (a.k.a. formatting or f-string) macro.
 fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
-    (leftIndex: Int, rightIndex: Int, found: Bool) = findBraces(text, 0)
-    ;found or (leftIndex + 1 == rightIndex) ->
-        println(;found) // FIXME: why does this error without the parens?
-        println(leftIndex + 1)
-        println rightIndex
+    notFound: Fn((), Expression) = ||: Expression =
+        // FIXME: why does `func(;x)` error without the parens?
         stringLiteral(text)
+    
+    braces: Union[(Int, Int), ()] = findBraces(text, 0)
+    braces is nothing: () -> notFound()
+    braces is found: (Int, Int)
+    (leftIndex: Int, rightIndex: Int) = found
+    leftIndex + 1 == rightIndex -> notFound()
 
     braceText: String = subString(text, leftIndex + 1, rightIndex)
     ;isIdentifier(braceText) -> "'" + braceText + "' is not a valid identifier."
