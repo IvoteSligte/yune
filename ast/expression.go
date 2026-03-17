@@ -210,28 +210,6 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 			_ = tupleArgumentType.Elements[1].(*IntType)
 			index := f.Argument.(*Tuple).Elements[1].(*Integer)
 			return firstElementTupleType.Elements[index.Value]
-		case "getVariant_", "isVariant_":
-			argumentType := f.Argument.Analyze(nil, anal)
-			tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
-			checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
-			// the first argument is a union, but since anything can be converted to a union of 1 element,
-			// any type is allowed
-
-			// the second argument should always be a type, since the compiler constructs this FunctionCall
-			_ = tupleArgumentType.Elements[1].(*TypeType)
-
-			// evaluate the type
-			variantTypeExpression := f.Argument.(*Tuple).Elements[1]
-			json := anal.Evaluate(variantTypeExpression.Lower())
-			variantType := UnmarshalTypeValue(json)
-			f.builtinData = variantType // required for lowering
-
-			if name == "getVariant_" {
-				return variantType
-			} else {
-				// name == "isVariant_"
-				return &BoolType{}
-			}
 		default:
 		}
 	}
@@ -289,11 +267,6 @@ func (f *FunctionCall) Lower() cpp.Expression {
 				tuple := tupleArgument.Elements[0].Lower()
 				index := tupleArgument.Elements[1].(*Integer).Value
 				return fmt.Sprintf(`std::get<%d>(%s)`, index, tuple)
-			case "isVariant_", "getVariant_":
-				tupleArgument, _ := f.Argument.(*Tuple)
-				variant := tupleArgument.Elements[0].Lower()
-				variantType := f.builtinData.(TypeValue).LowerType()
-				return fmt.Sprintf(`%s<%s>(%s)`, name, variantType, variant)
 			}
 		}
 	}
