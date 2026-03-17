@@ -34,6 +34,26 @@ func evalLog(s string) {
 	}
 }
 
+type ProxyStderr struct{}
+
+// Write implements io.Writer.
+func (ProxyStderr) Write(p []byte) (n int, err error) {
+	n, err = os.Stderr.Write(p)
+	if err != nil {
+		return
+	}
+	if strings.Contains(string(p), "error: Parsing failed.") {
+		err = fmt.Errorf("clang-repl returned an error, stopping evaluation.")
+		// NOTE: using this for now since errors returned from this function are simply ignored
+		log.Fatalf("%s", err)
+	}
+	return
+}
+
+var _ io.Writer = ProxyStderr{}
+
+// error: Parsing failed.
+
 // should be unused according to https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 // (synchronised with ipc.hpp)
 const YuneCompilerPort = 11555
@@ -52,7 +72,7 @@ var Repl repl = func() repl {
 		log.Fatalln("Failed to get stdin pipe from clang-repl command. Error:", err)
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr // TODO: wrap this because when stderr is written to something went wrong
+	cmd.Stderr = ProxyStderr{}
 	if err = cmd.Start(); err != nil {
 		log.Fatalln("Failed to run clang-repl. Error:", err)
 	}
@@ -120,13 +140,14 @@ func (r *repl) readResult(getType func(string) Type) (result *fj.Value, err erro
 		if nameBytes := message.GetStringBytes("getType"); nameBytes != nil {
 			name := string(nameBytes)
 			// set the type and signal that it has been set
-			err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", getType(name)))
-			if err != nil {
-				panic(fmt.Sprintf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err))
+			if err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", getType(name))); err != nil {
+				err = fmt.Errorf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err)
+				return
 			}
 			continue
 		}
-		panic(fmt.Sprintf("Could not parse evaluation message: '%s'", message))
+		err = fmt.Errorf("Could not parse evaluation message: '%s'", message)
+		return
 	}
 }
 

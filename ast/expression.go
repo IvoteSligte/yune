@@ -284,11 +284,14 @@ type List struct {
 }
 
 func (t List) String() string {
-	s := "("
-	for _, element := range t.Elements {
-		s += element.String() + ", "
+	s := "["
+	for i, element := range t.Elements {
+		s += element.String()
+		if i+1 < len(t.Elements) {
+			s += ", "
+		}
 	}
-	s += ")"
+	s += "]"
 	return s
 }
 
@@ -309,13 +312,14 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	}
 	if expectsList {
 		t.elementType = expectedListType.Element
-		t.Elements[0].Analyze(t.elementType, anal)
 	} else {
-		t.elementType = t.Elements[0].Analyze(nil, anal)
+		t.elementType = &UnionType{}
 	}
-	for i := 1; i < len(t.Elements); i++ {
-		t.Elements[1].Analyze(t.elementType, anal)
+	for _, element := range t.Elements {
+		elementType := element.Analyze(t.elementType, anal)
+		t.elementType = NewUnionType(t.elementType, elementType)
 	}
+	fmt.Printf("List = %s: %s\n", t, expected.String())
 	return &ListType{Element: t.elementType}
 }
 
@@ -335,8 +339,11 @@ type Tuple struct {
 
 func (t Tuple) String() string {
 	s := "("
-	for _, element := range t.Elements {
-		s += element.String() + ", "
+	for i, element := range t.Elements {
+		s += element.String()
+		if i+1 < len(t.Elements) {
+			s += ", "
+		}
 	}
 	s += ")"
 	return s

@@ -55,7 +55,7 @@ template <class... T> struct Union {
   // Create from subset
   template <class... U>
   Union(const Union<U...> &subset)
-      : variant(std::visit([](auto &&element) constexpr { return element; },
+      : variant(std::visit([](auto element) constexpr { return element; },
                            subset)) {}
 
   // Construct from empty Union.
