@@ -1,3 +1,33 @@
+mod(n: Int, m: Int): Int =
+    n - ((n / m) * m)
+
+boolToString(value: Bool): String =
+    value == true -> "true"
+    "false"
+
+intToString(value: Int): String =
+    value < 0 -> "-" + intToString(-value)
+    value == 0 -> "0"
+    value == 1 -> "1"
+    value == 2 -> "2"
+    value == 3 -> "3"
+    value == 4 -> "4"
+    value == 5 -> "5"
+    value == 6 -> "6"
+    value == 7 -> "7"
+    value == 8 -> "8"                       
+    value == 9 -> "9"
+    intToString(value / 10) + intToString(mod(value, 10))
+
+toString(value: Union[Int, Bool, String, ()]): String =
+    value is int: Int -> intToString(int)
+    value is bool: Bool -> boolToString(bool)
+    value is string: String -> string
+    "()"
+
+println(value: Union[Int, Bool, String, ()]): () =
+    printlnString(toString(value)) // FIXME: things break without parens, presumably because of precedence
+
 N: Int = 12
 
 fibonacci(n: Int): Int =
@@ -27,6 +57,8 @@ findBraces(text: String, offset: Int): Union[(Int, Int), ()] =
     findChar(text, offset, "{") is leftIndex: Int ->
         findChar(text, leftIndex + 1, "}") is rightIndex: Int ->
             (leftIndex, rightIndex)
+        println("not right")
+    println("not left")
 
 stringContains(string: String, char: String): Bool =
     len(string) == 0 -> true
@@ -54,47 +86,21 @@ isIdentifier(string: String): Bool =
 
 Error: Type = String
 
-mod(n: Int, m: Int): Int =
-    n - ((n / m) * m)
-
-boolToString(value: Bool): String =
-    value == true -> "true"
-    "false"
-
-intToString(value: Int): String =
-    value < 0 -> "-" + intToString(-value)
-    value == 0 -> "0"
-    value == 1 -> "1"
-    value == 2 -> "2"
-    value == 3 -> "3"
-    value == 4 -> "4"
-    value == 5 -> "5"
-    value == 6 -> "6"
-    value == 7 -> "7"
-    value == 8 -> "8"                       
-    value == 9 -> "9"
-    intToString(value / 10) + intToString(mod(value, 10))
-
-toString(value: Union[Int, Bool, String]): String =
-    value is int: Int -> intToString(int)
-    value is bool: Bool -> boolToString(bool)
-    value is string: String
-    string
-
-println(value: Union[Int, Bool, String]): () =
-    printlnString(toString(value)) // FIXME: things break without parens, presumably because of precedence
-
 // String interpolation (a.k.a. formatting or f-string) macro.
 fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
-    notFound: Fn((), Expression) = ||: Expression =
-        // FIXME: why does `func(;x)` error without the parens?
-        stringLiteral(text)
-    
+    // FIXME: why does `func(;x)` error without the parens?
+
     braces: Union[(Int, Int), ()] = findBraces(text, 0)
-    braces is nothing: () -> notFound()
+    braces is nothing: () ->
+        println("EMTPY")
+        stringLiteral(text)
     braces is found: (Int, Int)
     (leftIndex: Int, rightIndex: Int) = found
-    leftIndex + 1 == rightIndex -> notFound()
+    leftIndex + 1 == rightIndex ->
+        println("AYE CAPN")
+        println(leftIndex+1)
+        println(rightIndex)
+        stringLiteral(text)
 
     braceText: String = subString(text, leftIndex + 1, rightIndex)
     ;isIdentifier(braceText) -> "'" + braceText + "' is not a valid identifier."
@@ -129,5 +135,7 @@ main(): () =
         multi-line string.
         It contains several newlines.
         Something fancy it supports is quotes "" and even hashtags#!
+
+    println(findChar("this contains ! somewhere", 0, "!"))
 
     printlnString fmt#Hello, World! This is a long string: {s}
