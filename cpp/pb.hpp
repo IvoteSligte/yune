@@ -534,7 +534,7 @@ inline struct at_ {
     if (i >= s.length()) {
       panic("at: i > length");      
     }
-    return std::string(s[i], 1);
+    return std::string(1, s[i]);
   }
   std::string serialize() const {
     return R"({ "Function": "at" })";

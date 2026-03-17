@@ -127,10 +127,6 @@ main(): () =
     f: Fn((), Int) = ||: Int = 0
     f()
 
-    println 97213
-    println true
-    println "test string"
-
     s: String = longString#This is a very long,
         multi-line string.
         It contains several newlines.
