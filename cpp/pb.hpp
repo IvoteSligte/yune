@@ -55,12 +55,13 @@ template <class... T> struct Union {
   // Create from subset
   template <class... U>
   Union(const Union<U...> &subset)
-      : variant(std::visit([](auto element) constexpr { return element; },
-                           subset)) {}
+      : variant(std::visit(
+            [](auto &&element) -> std::variant<T...> { return element; },
+            subset.variant)) {}
 
   // Construct from empty Union.
   // This is never actually called, but required for type checking.
-  Union(const Union<> &)  : variant(*(std::variant<T...>*)(nullptr)) {}
+  Union(const Union<> &) : variant(*(std::variant<T...>*)(nullptr)) {}
 
   bool operator==(const Union<T...>& other) const = default;
   
