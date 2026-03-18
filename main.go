@@ -21,6 +21,18 @@ func readFile(path string) string {
 	return string(bytes)
 }
 
+type ParserErrorListener struct {
+	*antlr.DefaultErrorListener
+	Errors []error
+}
+
+// SyntaxError implements antlr.ErrorListener.
+func (p *ParserErrorListener) SyntaxError(recognizer antlr.Recognizer, offendingSymbol any, line int, column int, msg string, e antlr.RecognitionException) {
+	p.Errors = append(p.Errors, fmt.Errorf("line %d:%d %s", line, column, msg))
+}
+
+var _ antlr.ErrorListener = (*ParserErrorListener)(nil)
+
 func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 	tokenStream.Fill()
 	maxSymbolLen := 0
@@ -52,17 +64,24 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 
 func loadModule(fileName string, sourceCode string) ast.Module {
 	inputStream := antlr.NewInputStream(sourceCode)
+	errorListener := ParserErrorListener{}
 	lexer := parser.NewYuneLexer(inputStream)
+	lexer.RemoveErrorListeners()
+	lexer.AddErrorListener(&errorListener)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
 	// printTokens(lexer, tokenStream)
 
 	_parser := parser.NewYuneParser(tokenStream)
+	_parser.RemoveErrorListeners()
+	_parser.AddErrorListener(&errorListener)
 	parseTreeModule := _parser.Module()
 
-	// FIXME: does not panic on recoverable error
-	if _parser.HasError() {
-		log.Fatalf("Parse error in file %s: %s", fileName, _parser.GetError())
+	if len(errorListener.Errors) > 0 {
+		for _, error := range errorListener.Errors {
+			log.Printf("Parse error in file '%s': %s\n", fileName, error)
+		}
+		log.Fatalf("%d parse errors found. Stopping compilation.", len(errorListener.Errors))
 	}
 	fmt.Printf("Lowering Parse Tree to AST for file '%s'...\n", fileName)
 	parser.FileName = fileName
