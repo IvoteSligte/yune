@@ -93,10 +93,12 @@ func loadModuleFromFile(filePath string) ast.Module {
 	return loadModule(filePath, readFile(filePath))
 }
 
-// TODO: embedding
-var stdAstModule = loadModuleFromFile("std.un")
-
 func runModule(fileName string, sourceCode string) {
+	// TODO: embedding
+	// NOTE: std.un is not cached because relowering a module is not possible
+	// due to the fact that lowering is performed during analysis and analysis
+	// is assumed to only be done once.
+	stdAstModule := loadModuleFromFile("std.un")
 	astModule := loadModule(fileName, sourceCode)
 	astModule = ast.JoinModules(stdAstModule, astModule)
 

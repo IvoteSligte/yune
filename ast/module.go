@@ -72,6 +72,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			len(declarations),
 		)
 	}
-	lowered = anal.Interpreter.Declared // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
+	lowered = anal.Interpreter.Declared
+	anal.Interpreter.Close()
 	return
 }
