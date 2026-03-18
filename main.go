@@ -11,7 +11,7 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
-func readFile() string {
+func readFile(path string) string {
 	bytes, err := os.ReadFile("./test.un")
 	if err != nil {
 		log.Fatalln("Failed to open test.un. Error:", err)
@@ -61,22 +61,24 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 }
 
 func main() {
-	sourceCode := readFile()
-	fmt.Println(sourceCode)
+	filePath := "test.un"
+	sourceCode := readFile(filePath)
 	inputStream := antlr.NewInputStream(sourceCode)
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
 	// printTokens(lexer, tokenStream)
 
-	yuneParser := parser.NewYuneParser(tokenStream)
-	parseTreeModule := yuneParser.Module()
+	_parser := parser.NewYuneParser(tokenStream)
+	parseTreeModule := _parser.Module()
 
 	// FIXME: does not panic on recoverable error
-	if yuneParser.HasError() {
-		log.Fatalln("Parse error:", yuneParser.GetError())
+	if _parser.HasError() {
+		log.Fatalln("Parse error:", _parser.GetError())
 	}
 	fmt.Println("Lowering Parse Tree to AST...")
+	parser.FileName = filePath
+	parser.SourceCode = sourceCode
 	astModule := parser.LowerModule(parseTreeModule)
 
 	fmt.Println("Lowering AST to CPP...")
@@ -87,14 +89,6 @@ func main() {
 		}
 		log.Fatalln("Errors found, exiting.")
 	}
-	// TODO: add main function in yune/ast or yune/cpp
-	cpp.PrintFormatted(cppModule + `
-
-int main() {
-    main_();
-    return 0;
-}`)
-
 	fmt.Println("--- Output ---")
 	cpp.Run(cppModule)
 }

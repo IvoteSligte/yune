@@ -2,7 +2,31 @@ package ast
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 )
+
+func makeCodeError(errorText string, span Span, message string) string {
+	sourceLine := slices.Collect(strings.Lines(span.Source))[span.Line]
+	if sourceLine[len(sourceLine)-1] == '\n' {
+		sourceLine = sourceLine[:len(sourceLine)-1]
+	}
+	leftPad := strings.Repeat(" ", len(fmt.Sprintf("%d", span.Line)))
+	midPad := strings.Repeat(" ", span.Column)
+	underline := strings.Repeat("~", max(span.Length, 1))
+	return fmt.Sprintf(`
+%s
+---> %s line %d column %d
+%s |
+%d |  %s
+%s |  %s%s %s`,
+		errorText,
+		span.File, span.Line, span.Column,
+		leftPad,
+		span.Line, sourceLine,
+		leftPad, midPad, underline, message,
+	)
+}
 
 type DuplicateDeclaration struct {
 	First  Declaration
@@ -10,7 +34,8 @@ type DuplicateDeclaration struct {
 }
 
 func (e DuplicateDeclaration) Error() string {
-	return fmt.Sprintf("'%s' previously defined at %s redefined at %s.", e.First.GetName().String, e.First.GetSpan(), e.Second.GetSpan())
+	text := fmt.Sprintf("'%s' previously defined at %s redefined at %s.", e.First.GetName().String, e.First.GetSpan(), e.Second.GetSpan())
+	return makeCodeError(text, e.Second.GetSpan(), "redefined here")
 }
 
 type InvalidUnaryExpressionType struct {
@@ -20,12 +45,11 @@ type InvalidUnaryExpressionType struct {
 }
 
 func (e InvalidUnaryExpressionType) Error() string {
-	return fmt.Sprintf(
-		"Unary operator %s cannot be applied to expression of type '%s' at %s.",
-		e.Op,
-		e.Type,
-		e.At,
+	text := fmt.Sprintf(
+		"Unary operator %s cannot be applied to expression of type '%s'.",
+		e.Op, e.Type,
 	)
+	return makeCodeError(text, e.At, "")
 }
 
 type InvalidBinaryExpressionTypes struct {
@@ -36,25 +60,18 @@ type InvalidBinaryExpressionTypes struct {
 }
 
 func (e InvalidBinaryExpressionTypes) Error() string {
-	return fmt.Sprintf(
-		"Binary operator %s cannot be applied to expressions of types '%s' and '%s' at %s.",
-		e.Op,
-		e.Left,
-		e.Right,
-		e.At,
+	text := fmt.Sprintf(
+		"Binary operator %s cannot be applied to expressions of types '%s' and '%s'.",
+		e.Op, e.Left, e.Right,
 	)
+	return makeCodeError(text, e.At, "")
 }
 
 type UndefinedVariable Name
 
 func (e UndefinedVariable) Error() string {
-	return fmt.Sprintf("Variable '%s' used at %s is not defined.", e.String, e.Span)
-}
-
-type UndefinedType Name
-
-func (e UndefinedType) Error() string {
-	return fmt.Sprintf("Type '%s' used at %s is not defined.", e.String, e.Span)
+	text := fmt.Sprintf("Variable '%s' is not defined.", e.String)
+	return makeCodeError(text, e.Span, "")
 }
 
 type NotAFunction struct {
@@ -63,7 +80,8 @@ type NotAFunction struct {
 }
 
 func (e NotAFunction) Error() string {
-	return fmt.Sprintf("Function call on non-function type '%s' at %s.", e.Found, e.At)
+	text := fmt.Sprintf("Function call on non-function type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type NotAStruct struct {
@@ -72,7 +90,8 @@ type NotAStruct struct {
 }
 
 func (e NotAStruct) Error() string {
-	return fmt.Sprintf("Tried to construct non-struct type '%s' at %s.", e.Found, e.At)
+	text := fmt.Sprintf("Tried to construct non-struct type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type ArityMismatch struct {
@@ -82,7 +101,8 @@ type ArityMismatch struct {
 }
 
 func (e ArityMismatch) Error() string {
-	return fmt.Sprintf("Expected a tuple with arity %d, but found a tuple with arity %d at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected a tuple with arity %d, but found a tuple with arity %d.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type UnexpectedType struct {
@@ -92,11 +112,13 @@ type UnexpectedType struct {
 }
 
 func (e UnexpectedType) Error() string {
+	var text string
 	if e.Expected.Eq(&TypeType{}) {
-		return fmt.Sprintf("Non-type '%s' used as type at %s.", e.Found, e.At)
+		text = fmt.Sprintf("Non-type '%s' used as type.", e.Found)
 	} else {
-		return fmt.Sprintf("Expected type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+		text = fmt.Sprintf("Expected type '%s', but found type '%s'.", e.Expected, e.Found)
 	}
+	return makeCodeError(text, e.At, "")
 }
 
 type ExpectedTuple struct {
@@ -105,7 +127,8 @@ type ExpectedTuple struct {
 }
 
 func (e ExpectedTuple) Error() string {
-	return fmt.Sprintf("Expected tuple, but found type '%s' at %s.", e.Found, e.At)
+	text := fmt.Sprintf("Expected tuple, but found type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type AssignmentTypeMismatch struct {
@@ -115,7 +138,8 @@ type AssignmentTypeMismatch struct {
 }
 
 func (e AssignmentTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected variable type '%s' for assignment, but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected variable type '%s' for assignment, but found type '%s'.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type ReturnTypeMismatch struct {
@@ -125,7 +149,8 @@ type ReturnTypeMismatch struct {
 }
 
 func (e ReturnTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected return type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected return type '%s', but found type '%s'.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type VariableTypeMismatch struct {
@@ -135,7 +160,8 @@ type VariableTypeMismatch struct {
 }
 
 func (e VariableTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected declared variable type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected declared variable type '%s', but found type '%s'.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type ConstantTypeMismatch struct {
@@ -145,7 +171,8 @@ type ConstantTypeMismatch struct {
 }
 
 func (e ConstantTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected declared constant type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected declared constant type '%s', but found type '%s'.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type ArgumentTypeMismatch struct {
@@ -155,7 +182,8 @@ type ArgumentTypeMismatch struct {
 }
 
 func (e ArgumentTypeMismatch) Error() string {
-	return fmt.Sprintf("Expected argument type '%s', but found type '%s' at %s.", e.Expected, e.Found, e.At)
+	text := fmt.Sprintf("Expected argument type '%s', but found type '%s'.", e.Expected, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type InvalidConditionType struct {
@@ -164,7 +192,8 @@ type InvalidConditionType struct {
 }
 
 func (e InvalidConditionType) Error() string {
-	return fmt.Sprintf("Expected type 'Bool' for condition, but found type '%s' at %s.", e.Found, e.At)
+	text := fmt.Sprintf("Expected type 'Bool' for condition, but found type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type ImpossibleIsExpression struct {
@@ -174,7 +203,8 @@ type ImpossibleIsExpression struct {
 }
 
 func (e ImpossibleIsExpression) Error() string {
-	return fmt.Sprintf("Is-expression at %s is always false because '%s' is not a sub-type of '%s'.", e.At, e.SubType, e.SuperType)
+	text := fmt.Sprintf("Is-expression is always false because '%s' is not a sub-type of '%s'.", e.SubType, e.SuperType)
+	return makeCodeError(text, e.At, "")
 }
 
 type InvalidMainSignature struct {
@@ -183,7 +213,8 @@ type InvalidMainSignature struct {
 }
 
 func (e InvalidMainSignature) Error() string {
-	return fmt.Sprintf("The main function at %s must have a type signature of '%s', found '%s'.", e.At, MainType, e.Found)
+	text := fmt.Sprintf("The main function must have a type signature of '%s', found '%s'.", MainType, e.Found)
+	return makeCodeError(text, e.At, "")
 }
 
 type CyclicTypeDependency struct {
@@ -191,7 +222,8 @@ type CyclicTypeDependency struct {
 }
 
 func (e CyclicTypeDependency) Error() string {
-	return fmt.Sprintf("Cyclic type dependency in declaration '%s' at %s.", e.In.GetName(), e.In.GetSpan())
+	text := fmt.Sprintf("Cyclic type dependency in declaration '%s'.", e.In.GetName())
+	return makeCodeError(text, e.In.GetSpan(), "")
 }
 
 type CyclicConstantDependency struct {
@@ -199,7 +231,8 @@ type CyclicConstantDependency struct {
 }
 
 func (e CyclicConstantDependency) Error() string {
-	return fmt.Sprintf("Cyclic constant dependency in declaration '%s' at %s.", e.In.GetName(), e.In.GetSpan())
+	text := fmt.Sprintf("Cyclic constant dependency in declaration '%s'.", e.In.GetName())
+	return makeCodeError(text, e.In.GetSpan(), "")
 }
 
 type MacroRequestedUndefinedVariable struct {
@@ -210,8 +243,8 @@ type MacroRequestedUndefinedVariable struct {
 func (e MacroRequestedUndefinedVariable) Error() string {
 	// TODO: use span of e.Name instead of e.Macro
 	return fmt.Sprintf(
-		"Macro '%s' at %s requested undefined variable '%s'.",
-		e.Macro.Name.String, e.Macro.Name.Span, e.Name,
+		"Macro '%s' requested undefined variable '%s' at %s.",
+		e.Macro.Name.String, e.Name, e.Macro.Name.Span,
 	)
 }
 
