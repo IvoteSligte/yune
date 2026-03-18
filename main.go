@@ -61,8 +61,7 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 	}
 }
 
-func loadModule(filePath string) ast.Module {
-	sourceCode := readFile(filePath)
+func loadModule(fileName string, sourceCode string) ast.Module {
 	inputStream := antlr.NewInputStream(sourceCode)
 	lexer := parser.NewYuneLexer(inputStream)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
@@ -77,14 +76,20 @@ func loadModule(filePath string) ast.Module {
 		log.Fatalln("Parse error:", _parser.GetError())
 	}
 	fmt.Println("Lowering Parse Tree to AST...")
-	parser.FileName = filePath
+	parser.FileName = fileName
 	parser.SourceCode = sourceCode
 	return parser.LowerModule(parseTreeModule)
 }
 
-func main() {
-	stdAstModule := loadModule("std.un")
-	astModule := loadModule("test.un")
+func loadModuleFromFile(filePath string) ast.Module {
+	return loadModule(filePath, readFile(filePath))
+}
+
+// TODO: embedding
+var stdAstModule = loadModuleFromFile("std.un")
+
+func runModule(fileName string, sourceCode string) {
+	astModule := loadModule(fileName, sourceCode)
 	astModule = ast.JoinModules(stdAstModule, astModule)
 
 	fmt.Println("Lowering AST to CPP...")
@@ -97,4 +102,12 @@ func main() {
 	}
 	fmt.Println("--- Output ---")
 	cpp.Run(cppModule)
+}
+
+func runModuleFromFile(filePath string) {
+	runModule(filePath, readFile(filePath))
+}
+
+func main() {
+	runModuleFromFile("test.un")
 }
