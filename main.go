@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"yune/ast"
 	"yune/cpp"
 	"yune/parser"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func readFile(path string) string {
-	bytes, err := os.ReadFile("./test.un")
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalln("Failed to open test.un. Error:", err)
 	}
@@ -60,8 +61,7 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 	}
 }
 
-func main() {
-	filePath := "test.un"
+func loadModule(filePath string) ast.Module {
 	sourceCode := readFile(filePath)
 	inputStream := antlr.NewInputStream(sourceCode)
 	lexer := parser.NewYuneLexer(inputStream)
@@ -79,7 +79,13 @@ func main() {
 	fmt.Println("Lowering Parse Tree to AST...")
 	parser.FileName = filePath
 	parser.SourceCode = sourceCode
-	astModule := parser.LowerModule(parseTreeModule)
+	return parser.LowerModule(parseTreeModule)
+}
+
+func main() {
+	stdAstModule := loadModule("std.un")
+	astModule := loadModule("test.un")
+	astModule = ast.JoinModules(stdAstModule, astModule)
 
 	fmt.Println("Lowering AST to CPP...")
 	cppModule, errors := astModule.Lower()

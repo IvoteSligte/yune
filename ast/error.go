@@ -16,11 +16,13 @@ func makeCodeError(errorText string, span Span, message string) string {
 	underline := strings.Repeat("~", max(span.Length, 1))
 	return fmt.Sprintf(`
 %s
+'%s'
 ---> %s line %d column %d
 %s |
 %d |  %s
 %s |  %s%s %s`,
 		errorText,
+		span.Content,
 		span.File, span.Line, span.Column,
 		leftPad,
 		span.Line, sourceLine,

@@ -9,6 +9,13 @@ type Module struct {
 	Declarations []TopLevelDeclaration
 }
 
+func JoinModules(modules ...Module) (result Module) {
+	for _, m := range modules {
+		result.Declarations = append(result.Declarations, m.Declarations...)
+	}
+	return
+}
+
 func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	declarations := map[string]TopLevelDeclaration{}
 

@@ -17,11 +17,12 @@ var SourceCode string
 
 func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 	return ast.Span{
-		File:   FileName,
-		Source: SourceCode,
-		Line:   ctx.GetStart().GetLine(),
-		Column: ctx.GetStart().GetColumn(),
-		Length: len(ctx.GetText()),
+		File:    FileName,
+		Source:  SourceCode,
+		Line:    ctx.GetStart().GetLine(),
+		Column:  ctx.GetStart().GetColumn(),
+		Length:  len(ctx.GetText()),
+		Content: ctx.GetText(),
 	}
 }
 

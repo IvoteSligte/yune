@@ -6,11 +6,12 @@ import (
 )
 
 type Span struct {
-	File   string
-	Source string
-	Line   int
-	Column int
-	Length int
+	File    string
+	Source  string
+	Line    int
+	Column  int
+	Length  int
+	Content string // TEMP
 }
 
 func (s Span) GetSpan() Span {
