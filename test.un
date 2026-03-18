@@ -1,33 +1,3 @@
-mod(n: Int, m: Int): Int =
-    n - ((n / m) * m)
-
-boolToString(value: Bool): String =
-    value == true -> "true"
-    "false"
-
-intToString(value: Int): String =
-    value < 0 -> "-" + intToString(-value)
-    value == 0 -> "0"
-    value == 1 -> "1"
-    value == 2 -> "2"
-    value == 3 -> "3"
-    value == 4 -> "4"
-    value == 5 -> "5"
-    value == 6 -> "6"
-    value == 7 -> "7"
-    value == 8 -> "8"                       
-    value == 9 -> "9"
-    intToString(value / 10) + intToString(mod(value, 10))
-
-toString(value: Union[Int, Bool, String, ()]): String =
-    value is int: Int -> intToString(int)
-    value is bool: Bool -> boolToString(bool)
-    value is string: String -> string
-    "()"
-
-println(value: Union[Int, Bool, String, ()]): () =
-    printlnString(toString(value)) // FIXME: things break without parens, presumably because of precedence
-
 N: Int = 12
 
 fibonacci(n: Int): Int =
@@ -48,53 +18,15 @@ longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
 
 noArguments(): () = a: Int = 0
 
-findChar(text: String, offset: Int, char: String): Union[Int, ()] =
-    offset < len(text) ->
-        at(text, offset) == char -> offset
-        findChar(text, offset + 1, char)
-
 findBraces(text: String, offset: Int): Union[(Int, Int), ()] =
     findChar(text, offset, "{") is leftIndex: Int ->
         findChar(text, leftIndex + 1, "}") is rightIndex: Int ->
             (leftIndex, rightIndex)
 
-stringContains(string: String, char: String): Bool =
-    len(string) == 0 -> true
-    at(string, 0) == char -> true
-    stringContains(subString(string, 1, len(string)), char)
-
-stringContainsOnly(string: String, charSet: String): Bool =
-    len(string) == 0 -> true
-    ;stringContains(charSet, at(string, 0)) -> false
-    stringContainsOnly(subString(string, 1, len(string)), charSet)
-
-LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
-UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
-DIGIT: String = "1234567890"
-ALNUM: String = ALPHA + DIGIT
-
-isLower(string: String): Bool = stringContainsOnly(string, LOWER_ALPHA)
-isAlpha(string: String): Bool = stringContainsOnly(string, ALPHA)
-isAlnum(string: String): Bool = stringContainsOnly(string, ALNUM)
-
 isIdentifier(string: String): Bool =
     len(string) == 0 -> false
     ;isAlpha(at(string, 0)) -> false
     isAlnum(subString(string, 1, len(string)))
-
-mapChar(char: String, from: String, to: String): String =
-    len(from) ;= len(to) -> panic("mapChar 'from' and 'to' strings must be of equal length.")
-    len(from) == 0 -> char
-    at(from, 0) == char -> at(to, 0)
-    mapChar(char, subString(from, 1, len(from)), subString(to, 1, len(to)))
-
-mapString(text: String, from: String, to: String): String =
-    len(text) == 0 -> ""
-    mapChar(at(text, 0), from, to) + mapString(subString(text, 1, len(text)), from, to)
-
-toLower(text: String): String =
-    mapString(text, LOWER_ALPHA, UPPER_ALPHA)
 
 Error: Type = String
 
