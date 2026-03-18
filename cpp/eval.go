@@ -14,14 +14,12 @@ import (
 )
 
 func newLogFile() *os.File {
-	// TODO: random filename?
-	filename := "/tmp/yune-eval-log.cpp"
-	_ = os.Remove(filename)
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.CreateTemp("", "yune-log-*.cpp")
 	if err != nil {
 		log.Println("Failed to open evaluation log file for writing. Error:", err)
 		return nil
 	}
+	log.Printf("Created interpreter log file '%s'.\n", file.Name())
 	return file
 }
 
@@ -111,6 +109,8 @@ func (r *Interpreter) Close() {
 	if err := r.writer.Close(); err != nil {
 		log.Println("Failed to close interpreter write file.")
 	}
+	// NOTE: should this remove the logfile?
+	// it is useful to be able to look at logs after compilation
 	if err := r.logFile.Close(); err != nil {
 		log.Println("Failed to close interpreter log file.")
 	}

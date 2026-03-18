@@ -83,7 +83,7 @@ func loadModule(fileName string, sourceCode string) ast.Module {
 		}
 		log.Fatalf("%d parse errors found. Stopping compilation.", len(errorListener.Errors))
 	}
-	fmt.Printf("Lowering Parse Tree to AST for file '%s'...\n", fileName)
+	log.Printf("Lowering Parse Tree to AST for file '%s'...\n", fileName)
 	parser.FileName = fileName
 	parser.SourceCode = sourceCode
 	return parser.LowerModule(parseTreeModule)
@@ -100,7 +100,7 @@ func runModule(fileName string, sourceCode string) {
 	astModule := loadModule(fileName, sourceCode)
 	astModule = ast.JoinModules(stdAstModule, astModule)
 
-	fmt.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
+	log.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
 	cppModule, errors := astModule.Lower()
 	if len(errors) > 0 {
 		for _, err := range errors {
@@ -117,5 +117,9 @@ func runModuleFromFile(filePath string) {
 }
 
 func main() {
-	runModuleFromFile("test.un")
+	filePath := "test.un"
+	if len(os.Args) > 1 {
+		filePath = os.Args[2]
+	}
+	runModuleFromFile(filePath)
 }
