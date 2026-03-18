@@ -7,7 +7,12 @@ import (
 )
 
 func makeCodeError(errorText string, span Span, message string) string {
-	sourceLine := slices.Collect(strings.Lines(span.Source))[span.Line]
+	var sourceLine string
+	if span.Line <= 0 {
+		sourceLine = "<unknown source code>"
+	} else {
+		sourceLine = slices.Collect(strings.Lines(span.Source))[span.Line-1]
+	}
 	if sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]
 	}

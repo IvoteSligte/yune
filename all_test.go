@@ -22,3 +22,13 @@ main(): () =
     hello "World"
 `)
 }
+
+func TestExpressions(t *testing.T) {
+	runModule("expressions.un", `
+main(): () =
+    leftLeft := stringLiteral("leftLeft")
+    leftRight := functionCall(variable("toString"), variable(captureName))
+    left := binaryExpression("+", leftLeft, leftRight)
+    binary: Expression = binaryExpression("+", left, right)
+`)
+}
