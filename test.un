@@ -74,6 +74,7 @@ ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
 DIGIT: String = "1234567890"
 ALNUM: String = ALPHA + DIGIT
 
+isLower(string: String): Bool = stringContainsOnly(string, LOWER_ALPHA)
 isAlpha(string: String): Bool = stringContainsOnly(string, ALPHA)
 isAlnum(string: String): Bool = stringContainsOnly(string, ALNUM)
 
@@ -82,13 +83,26 @@ isIdentifier(string: String): Bool =
     ;isAlpha(at(string, 0)) -> false
     isAlnum(subString(string, 1, len(string)))
 
+mapChar(char: String, from: String, to: String): String =
+    len(from) ;= len(to) -> panic("mapChar 'from' and 'to' strings must be of equal length.")
+    len(from) == 0 -> char
+    at(from, 0) == char -> at(to, 0)
+    mapChar(char, subString(from, 1, len(from)), subString(to, 1, len(to)))
+
+mapString(text: String, from: String, to: String): String =
+    len(text) == 0 -> ""
+    mapChar(at(text, 0), from, to) + mapString(subString(text, 1, len(text)), from, to)
+
+toLower(text: String): String =
+    mapString(text, LOWER_ALPHA, UPPER_ALPHA)
+
 Error: Type = String
 
 // String interpolation (a.k.a. formatting or f-string) macro.
 fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     // FIXME: why does `func(;x)` error without the parens?
 
-    braces: Union[(Int, Int), ()] = findBraces(text, 0)
+    braces := findBraces(text, 0)
     braces is nothing: () ->
         stringLiteral(text)
     braces is found: (Int, Int)
@@ -98,20 +112,22 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
         println(rightIndex)
         stringLiteral(text)
 
-    captureName: String = subString(text, leftIndex + 1, rightIndex)
+    captureName := subString(text, leftIndex + 1, rightIndex)
     ;isIdentifier(captureName) -> "'" + captureName + "' is not a valid identifier."
-    captureType: Type = getType(captureName)
+    captureType := getType(captureName)
     captureType ;= Bool and captureType ;= Int and captureType ;= String ->
         "Only booleans, integers, and strings can be formatted for now."
 
-    remainderResult: Union[Expression, Error] =
-        fmt(subString(text, rightIndex + 1, len(text)), getType)
+    remainderResult := fmt(subString(text, rightIndex + 1, len(text)), getType)
     
     remainderResult is error: Error -> error
     remainderResult is right: Expression
     // TODO: hygienic capture
-    left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), functionCall(variable("toString"), variable(captureName)))
+    left := binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), functionCall(variable("toString"), variable(captureName)))
     binaryExpression("+", left, right)
+
+tokenize(text: String, yield: Fn(String)): () =
+    panic("TODO")
 
 sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =
     stringLiteral(text)

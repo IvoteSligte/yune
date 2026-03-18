@@ -51,6 +51,7 @@ statement
 
 variableDeclaration
     : target EQUAL statementBody
+    | name COLONEQUAL statementBody
     ;
 
 target

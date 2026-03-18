@@ -351,6 +351,16 @@ func LowerIsStatement(ctx IIsStatementContext) ast.Statement {
 
 func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Statement] {
 	return func(yield func(ast.Statement) bool) {
+		if ctx.Name() != nil {
+			// variable declaration with inferred type
+			yield(&ast.VariableDeclaration{
+				Span:      GetSpan(ctx),
+				Name:      LowerName(ctx.Name()),
+				InferType: true,
+				Body:      LowerStatementBody(ctx.StatementBody()),
+			})
+			return
+		}
 		target := ctx.Target()
 
 		// Regular variable declaration

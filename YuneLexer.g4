@@ -32,6 +32,7 @@ PLUSEQUAL        : '+=';
 MINUSEQUAL       : '-=';
 STAREQUAL        : '*=';
 SLASHEQUAL       : '/=';
+COLONEQUAL       : ':=';
 RARROW           : '->';
 
 IMPORT   : 'import';
