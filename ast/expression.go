@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -111,7 +112,7 @@ type String struct {
 }
 
 func (s *String) String() string {
-	return fmt.Sprintf("%v", s.Value)
+	return fmt.Sprintf("%q", s.Value)
 }
 
 // GetSpan implements Expression.
@@ -134,7 +135,11 @@ type Variable struct {
 }
 
 func (v Variable) String() string {
-	return fmt.Sprintf("%v", v.Name.String)
+	if v.Name.String == "" {
+		return "<empty variable name>"
+	} else {
+		return fmt.Sprintf("%s", v.Name.String)
+	}
 }
 
 // GetSpan implements Expression.
@@ -319,7 +324,6 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		elementType := element.Analyze(t.elementType, anal)
 		t.elementType = NewUnionType(t.elementType, elementType)
 	}
-	fmt.Printf("List = %s: %s\n", t, expected.String())
 	return &ListType{Element: t.elementType}
 }
 
@@ -453,7 +457,9 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 	m.Result = UnmarshalExpression(v)
-	return m.Result.Analyze(expected, anal)
+	fmt.Printf("macro result: %s\n", m.Result)
+	_type := m.Result.Analyze(expected, anal)
+	return _type
 }
 
 // Lower implements Expression.
@@ -765,6 +771,30 @@ func (c *Closure) Lower() cpp.Expression {
 	return lowered
 }
 
+func UnmarshalItem[T any](data *fj.Value, f func(*fj.Value) (T, error), keys ...string) T {
+	value := data.Get(keys...)
+	if value == nil {
+		panic(fmt.Sprintf("Key path '[%s]' does not exist in data: %s", strings.Join(keys, ", "), data))
+	}
+	item, err := f(value)
+	if err != nil {
+		panic(fmt.Sprintf("Item is not of the desired type. Error: %s. Value: %s", err, value))
+	}
+	return item
+}
+
+func UnmarshalString(data *fj.Value, keys ...string) string {
+	return string(UnmarshalItem(data, (*fj.Value).StringBytes, keys...))
+}
+
+func UnmarshalNonEmptyString(data *fj.Value, keys ...string) string {
+	s := UnmarshalString(data, keys...)
+	if s == "" {
+		panic(fmt.Sprintf("Unmarshalled empty string from data: %s", data))
+	}
+	return s
+}
+
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -773,28 +803,28 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "IntegerLiteral":
 		expr = &Integer{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetInt64("value"),
+			Value: UnmarshalItem(v, (*fj.Value).Int64, "value"),
 		}
 	case "FloatLiteral":
 		expr = &Float{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetFloat64("value"),
+			Value: UnmarshalItem(v, (*fj.Value).Float64, "value"),
 		}
 	case "BoolLiteral":
 		expr = &Bool{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: v.GetBool("value"),
+			Value: UnmarshalItem(v, (*fj.Value).Bool, "value"),
 		}
 	case "StringLiteral":
 		expr = &String{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: string(v.GetStringBytes("value")),
+			Value: string(UnmarshalItem(v, (*fj.Value).StringBytes, "value")), // can be empty
 		}
 	case "Variable":
 		expr = &Variable{
 			Name: Name{
 				Span:   fjUnmarshal(v.Get("span"), Span{}),
-				String: string(v.GetStringBytes("value")),
+				String: UnmarshalNonEmptyString(v, "name"),
 			},
 		}
 	case "FunctionCall":
@@ -813,13 +843,13 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "UnaryExpression":
 		expr = &UnaryExpression{
 			Span:       fjUnmarshal(v.Get("span"), Span{}),
-			Op:         UnaryOp(v.GetStringBytes("op")),
+			Op:         UnaryOp(UnmarshalNonEmptyString(v, "op")),
 			Expression: UnmarshalExpression(v.Get("expression")),
 		}
 	case "BinaryExpression":
 		expr = &BinaryExpression{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Op:    BinaryOp(v.GetStringBytes("op")),
+			Op:    BinaryOp(UnmarshalNonEmptyString(v, "op")),
 			Left:  UnmarshalExpression(v.Get("left")),
 			Right: UnmarshalExpression(v.Get("right")),
 		}
@@ -833,7 +863,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 					Span: fjUnmarshal(v.Get("span"), Span{}),
 					Name: Name{
 						Span:   Span{},
-						String: string(v.GetStringBytes("name")),
+						String: UnmarshalNonEmptyString(v, "name"),
 					},
 					Type: UnmarshalType(v.Get("type")),
 				}

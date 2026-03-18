@@ -26,7 +26,7 @@ func (a Analyzer) TopLevel() Analyzer {
 
 func (a Analyzer) PushError(err error) {
 	*a.Errors = append(*a.Errors, err)
-	log.Fatalf("Analyzer error: %s", err) // TODO: only exit when needed
+	log.Panicf("Analyzer error: %s", err) // TODO: only exit when needed
 }
 
 func (a Analyzer) HasErrors() bool {
@@ -39,7 +39,7 @@ func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
 		span := Span{} // TODO: span
 		decl, ok := a.Table.Get(Name{String: name, Span: span})
 		if !ok {
-			a.PushError(MacroRequestedUndefinedType{
+			a.PushError(MacroRequestedUndefinedVariable{
 				// TODO
 				Macro: Variable{Name: Name{Span: Span{}, String: "<unknown>"}},
 				Name:  name,

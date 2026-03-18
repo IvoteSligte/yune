@@ -57,8 +57,6 @@ findBraces(text: String, offset: Int): Union[(Int, Int), ()] =
     findChar(text, offset, "{") is leftIndex: Int ->
         findChar(text, leftIndex + 1, "}") is rightIndex: Int ->
             (leftIndex, rightIndex)
-        println("not right")
-    println("not left")
 
 stringContains(string: String, char: String): Bool =
     len(string) == 0 -> true
@@ -92,12 +90,10 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
 
     braces: Union[(Int, Int), ()] = findBraces(text, 0)
     braces is nothing: () ->
-        println("EMTPY")
         stringLiteral(text)
     braces is found: (Int, Int)
     (leftIndex: Int, rightIndex: Int) = found
     leftIndex + 1 == rightIndex ->
-        println("AYE CAPN")
         println(leftIndex+1)
         println(rightIndex)
         stringLiteral(text)
@@ -113,7 +109,6 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     remainderResult is error: Error -> error
     remainderResult is right: Expression
     left: Expression = binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), variable(braceText))
-    test: Expression = right
     binaryExpression("+", left, right)
 
 sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =
@@ -132,6 +127,5 @@ main(): () =
         It contains several newlines.
         Something fancy it supports is quotes "" and even hashtags#!
 
-    println(findChar("this contains ! somewhere", 0, "!"))
-
-    printlnString fmt#Hello, World! This is a long string: {s}
+    testString: String = "testString"
+    printlnString fmt#Hello, World! This is a long string: {testString}
