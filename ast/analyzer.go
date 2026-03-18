@@ -12,6 +12,7 @@ type Analyzer struct {
 	Errors      *Errors
 	Defined     map[TopLevelDeclaration]struct{}
 	Table       DeclarationTable
+	State       *State
 }
 
 // Returns an analyzer with only the relevant data for a top-level analysis.
@@ -23,6 +24,7 @@ func (a Analyzer) TopLevel() Analyzer {
 		Table: DeclarationTable{
 			topLevelDeclarations: a.Table.topLevelDeclarations,
 		},
+		State: a.State,
 	}
 }
 
@@ -101,7 +103,7 @@ func (a Analyzer) GetType(name Name) TypeValue {
 // and their full definitions after when they have been type checked
 
 func (a Analyzer) Declare(decl TopLevelDeclaration) {
-	err := a.Interpreter.Declare(decl.LowerDeclaration())
+	err := a.Interpreter.Declare(decl.LowerDeclaration(a.State))
 	if err != nil {
 		panic("Failed to declare " + decl.GetName().String)
 	}
@@ -113,7 +115,7 @@ func (a Analyzer) Define(decl TopLevelDeclaration) {
 		panic("Redefinition of declaration " + decl.GetName().String)
 	}
 	a.Defined[decl] = struct{}{}
-	err := a.Interpreter.Declare(decl.LowerDefinition())
+	err := a.Interpreter.Declare(decl.LowerDefinition(a.State))
 	if err != nil {
 		panic("Failed to define declaration " + decl.GetName().String)
 	}

@@ -95,9 +95,9 @@ func (b *BuiltinDeclaration) GetSpan() Span {
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
-func (b *BuiltinDeclaration) LowerDeclaration() string { return "" }
+func (b *BuiltinDeclaration) LowerDeclaration(state *State) string { return "" }
 
 // LowerDefinition implements TopLevelDeclaration.
-func (b *BuiltinDeclaration) LowerDefinition() string { return "" }
+func (b *BuiltinDeclaration) LowerDefinition(state *State) string { return "" }
 
 var _ TopLevelDeclaration = (*BuiltinDeclaration)(nil)

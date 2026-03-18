@@ -290,7 +290,7 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 }
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
-func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
+func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	key, v := fjUnmarshalUnion(data.GetObject())
 	switch key {
 	case "TypeType":
@@ -305,16 +305,16 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		t = &StringType{}
 	case "TupleType":
 		t = &TupleType{
-			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalTypeValue),
+			Elements: util.Map(v.Get("elements").GetArray(), state.UnmarshalTypeValue),
 		}
 	case "ListType":
 		t = &ListType{
-			Element: UnmarshalTypeValue(v.Get("element")),
+			Element: state.UnmarshalTypeValue(v.Get("element")),
 		}
 	case "FnType":
 		t = &FnType{
-			Argument: UnmarshalTypeValue(v.Get("argument")),
-			Return:   UnmarshalTypeValue(v.Get("return")),
+			Argument: state.UnmarshalTypeValue(v.Get("argument")),
+			Return:   state.UnmarshalTypeValue(v.Get("return")),
 		}
 	case "StructType":
 		t = &StructType{
@@ -322,13 +322,13 @@ func UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		}
 	case "UnionType":
 		t = &UnionType{
-			Variants: util.Map(v.Get("variants").GetArray(), UnmarshalTypeValue),
+			Variants: util.Map(v.Get("variants").GetArray(), state.UnmarshalTypeValue),
 		}
 	case "TypeId":
 		id := string(v.GetStringBytes())
-		t = registeredTypeValues[id]
+		t = state.registeredTypeValues[id]
 	case "Box":
-		return UnmarshalTypeValue(v)
+		return state.UnmarshalTypeValue(v)
 	default:
 		panic(fmt.Sprintf("unexpected TypeValue key when unmarshalling: %s", key))
 	}

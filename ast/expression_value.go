@@ -10,7 +10,7 @@ import (
 // TODO: better error handling for JSON-related things
 // It currently always assumes success, which causes nil-pointer dereference errors to appear in unrelated places.
 
-func lowerExpressionValue(data *fj.Value) string {
+func (state *State) lowerExpressionValue(data *fj.Value) string {
 	object := data.GetObject()
 	if object == nil { // primitive (Yune does not produce top-level arrays)
 		integer, err := data.Int64()
@@ -33,7 +33,7 @@ func lowerExpressionValue(data *fj.Value) string {
 	key, v := fjUnmarshalUnion(object)
 	switch key {
 	case "Closure":
-		return lowerClosureValue(v)
+		return state.lowerClosureValue(v)
 	case "Function":
 		// the :: prefix makes sure the function refers to the globally declared one,
 		// not a variable with the same name currently being declared
@@ -43,11 +43,11 @@ func lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + string(v.GetStringBytes())
 	case "Box":
-		return fmt.Sprintf(`box(%s)`, lowerExpressionValue(v))
+		return fmt.Sprintf(`box(%s)`, state.lowerExpressionValue(v))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
-			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, lowerExpressionValue(v))
+			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(v))
 		})
 		return fmt.Sprintf("(ty::%s) {%s}", key, fields)
 	}
@@ -55,18 +55,18 @@ func lowerExpressionValue(data *fj.Value) string {
 
 // Lowers a JSON object representing a closure value, i.e. an instantiated closure.
 // This does not include the name of the type "Closure".
-func lowerClosureValue(v *fj.Value) string {
+func (state *State) lowerClosureValue(v *fj.Value) string {
 	id := string(v.GetStringBytes("id"))
-	closure := registeredClosures[id]
+	closure := state.registeredClosures[id]
 	if closure == nil {
 		panic(fmt.Sprintf("Invalid closure ID: '%s'", id))
 	}
-	lowered := closure.Lower()
+	lowered := closure.Lower(state)
 	captures := ""
 	for _, capture := range v.GetArray("captures") {
 		name := string(capture.GetStringBytes("name"))
-		_type := UnmarshalTypeValue(capture.Get("type")).LowerType()
-		value := lowerExpressionValue(capture.Get("value"))
+		_type := state.UnmarshalTypeValue(capture.Get("type")).LowerType()
+		value := state.lowerExpressionValue(capture.Get("value"))
 		captures += _type + " " + name + " = " + value + ";\n"
 	}
 	parameters := closure.LowerParameters()

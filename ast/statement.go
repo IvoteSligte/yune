@@ -13,7 +13,7 @@ import (
 type Statement interface {
 	Node
 	// Lower the statement, adding the "return" prefix if `isLast` is true.
-	Lower(isLast bool) cpp.Statement
+	Lower(state *State, isLast bool) cpp.Statement
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
 }
 
@@ -54,11 +54,11 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 }
 
 // Lower implements Statement.
-func (d VariableDeclaration) Lower(isLast bool) cpp.Statement {
+func (d VariableDeclaration) Lower(state *State, isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
 		d.Type.Lower(), // TODO: actually register the type too (if a StructType)
 		d.Name.Lower(),
-		cpp.LambdaBlock(d.Body.Lower(), d.hasLocalCaptures),
+		cpp.LambdaBlock(d.Body.Lower(state), d.hasLocalCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
@@ -103,11 +103,11 @@ func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Statement.
-func (a *Assignment) Lower(isLast bool) cpp.Statement {
+func (a *Assignment) Lower(state *State, isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s %s;`,
 		a.Target.Name.String,
 		a.Op,
-		cpp.LambdaBlock(a.Body.Lower(), a.HasCaptures),
+		cpp.LambdaBlock(a.Body.Lower(state), a.HasCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
@@ -161,14 +161,14 @@ func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Statement.
-func (b *BranchStatement) Lower(isLast bool) cpp.Statement {
+func (b *BranchStatement) Lower(state *State, isLast bool) cpp.Statement {
 	if !isLast {
 		panic("Branch statement should always be the last statement in a block.")
 	}
 	lowered := fmt.Sprintf(`if (%s) %s else %s`,
-		b.Condition.Lower(),
-		cpp.Block(b.Then.Lower()),
-		cpp.Block(b.Else.Lower()),
+		b.Condition.Lower(state),
+		cpp.Block(b.Then.Lower(state)),
+		cpp.Block(b.Else.Lower(state)),
 	)
 	return lowered
 }
@@ -221,7 +221,7 @@ func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue
 }
 
 // Lower implements Statement.
-func (b *IsBranchStatement) Lower(isLast bool) cpp.Statement {
+func (b *IsBranchStatement) Lower(state *State, isLast bool) cpp.Statement {
 	if !isLast {
 		panic("Is-statement should always be the last statement in a block.")
 	}
@@ -233,11 +233,11 @@ if (isVariant_<%s>(%s)) {
     auto %s = getVariant_<%s>(%s);
     %s
 } else %s`,
-		name, b.Expression.Lower(),
+		name, b.Expression.Lower(state),
 		isType, name,
 		b.Name.Lower(), isType, name,
-		strings.Join(b.Then.Lower(), "\n"),
-		cpp.Block(b.Else.Lower()),
+		strings.Join(b.Then.Lower(state), "\n"),
+		cpp.Block(b.Else.Lower(state)),
 	)
 }
 
@@ -275,10 +275,10 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	return
 }
 
-func (b *Block) Lower() (statements []cpp.Statement) {
+func (b *Block) Lower(state *State) (statements []cpp.Statement) {
 	for i, stmt := range b.Statements {
 		isLast := i+1 == len(b.Statements)
-		statements = append(statements, stmt.Lower(isLast))
+		statements = append(statements, stmt.Lower(state, isLast))
 	}
 	return
 }
@@ -305,8 +305,8 @@ func (e *ExpressionStatement) GetSpan() Span {
 }
 
 // Lower implements Statement.
-func (e *ExpressionStatement) Lower(isLast bool) cpp.Statement {
-	lowered := e.Expression.Lower()
+func (e *ExpressionStatement) Lower(state *State, isLast bool) cpp.Statement {
+	lowered := e.Expression.Lower(state)
 	// Only the last statement in a block should return.
 	// Even if the expression does not return, C++ type checking
 	// may still fail if it is used as a return statement.

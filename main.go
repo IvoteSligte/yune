@@ -73,9 +73,9 @@ func loadModule(fileName string, sourceCode string) ast.Module {
 
 	// FIXME: does not panic on recoverable error
 	if _parser.HasError() {
-		log.Fatalln("Parse error:", _parser.GetError())
+		log.Fatalf("Parse error in file %s: %s", fileName, _parser.GetError())
 	}
-	fmt.Println("Lowering Parse Tree to AST...")
+	fmt.Printf("Lowering Parse Tree to AST for file '%s'...\n", fileName)
 	parser.FileName = fileName
 	parser.SourceCode = sourceCode
 	return parser.LowerModule(parseTreeModule)
@@ -92,7 +92,7 @@ func runModule(fileName string, sourceCode string) {
 	astModule := loadModule(fileName, sourceCode)
 	astModule = ast.JoinModules(stdAstModule, astModule)
 
-	fmt.Println("Lowering AST to CPP...")
+	fmt.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
 	cppModule, errors := astModule.Lower()
 	if len(errors) > 0 {
 		for _, err := range errors {

@@ -44,6 +44,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		Table: DeclarationTable{
 			topLevelDeclarations: declarations,
 		},
+		State: NewState(),
 	}
 	for _, decl := range declarations {
 		anal.Table.Add(decl)

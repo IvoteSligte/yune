@@ -9,9 +9,11 @@ import (
 type TopLevelDeclaration interface {
 	Declaration
 
+	Analyze(anal Analyzer)
+
 	// Lowers the declaration to a C++ forward declaration.
 	// Assumes type checking has been performed.
-	LowerDeclaration() cpp.Declaration
+	LowerDeclaration(state *State) cpp.Declaration
 
 	// Lowers the declaration to executable C++ code.
 	// Assumes LowerDeclaration has been called.
@@ -19,9 +21,7 @@ type TopLevelDeclaration interface {
 	// NOTE: when the value has been computed, this function should
 	// lower to a more efficient representation instead of forcing
 	// the same code to run.
-	LowerDefinition() cpp.Definition
-
-	Analyze(anal Analyzer)
+	LowerDefinition(state *State) cpp.Definition
 }
 
 // Assumes that the analyzer is in the function's body scope.
@@ -103,7 +103,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
-func (d *FunctionDeclaration) LowerDeclaration() cpp.Declaration {
+func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`struct %s_ {
     %s operator()(%s) const;
@@ -112,12 +112,12 @@ func (d *FunctionDeclaration) LowerDeclaration() cpp.Declaration {
 }
 
 // LowerDefinition implements TopLevelDeclaration.
-func (d *FunctionDeclaration) LowerDefinition() cpp.Definition {
+func (d *FunctionDeclaration) LowerDefinition(state *State) cpp.Definition {
 	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
     return R"({ "Function": "%s" })";
-}`, d.ReturnType.Lower(), d.Name.String, params, cpp.Block(d.Body.Lower()), d.Name.String, d.Name.String)
+}`, d.ReturnType.Lower(), d.Name.String, params, cpp.Block(d.Body.Lower(state)), d.Name.String, d.Name.String)
 }
 
 func (d FunctionDeclaration) GetName() Name {
@@ -196,13 +196,13 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 }
 
 // LowerDeclaration implements TopLevelDeclaration.
-func (d ConstantDeclaration) LowerDeclaration() cpp.Declaration {
+func (d ConstantDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 	return fmt.Sprintf("extern %s %s;", d.Type.Lower(), d.Name.Lower())
 }
 
 // LowerDefinition implements TopLevelDeclaration.
-func (d ConstantDeclaration) LowerDefinition() cpp.Definition {
-	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower(), d.HasCaptures))
+func (d ConstantDeclaration) LowerDefinition(state *State) cpp.Definition {
+	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower(state), d.HasCaptures))
 }
 
 // GetType implements Declaration.

@@ -9,29 +9,11 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
-// Stores declarations that need to be serializable from C++, such as functions.
-// TODO: make this a non-global
-var registeredClosures = map[string]*Closure{}
-var registeredTypeValues = map[string]TypeValue{}
-
-func registerClosure(closure *Closure) string {
-	// NOTE: this requires unique Span for C++-generated Closure definitions
-	id := fmt.Sprintf("closure_%d_%d", closure.Span.Line, closure.Span.Column)
-	registeredClosures[id] = closure
-	return id
-}
-
-func registerTypeValue(typeValue TypeValue) string {
-	id := typeValue.String()
-	registeredTypeValues[id] = typeValue
-	return id
-}
-
 type Expression interface {
 	Node
 	fmt.Stringer
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
-	Lower() cpp.Expression
+	Lower(state *State) cpp.Expression
 }
 
 type Integer struct {
@@ -49,7 +31,7 @@ func (i Integer) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (i Integer) Lower() cpp.Expression {
+func (i Integer) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf("%v", i.Value)
 }
 
@@ -73,7 +55,7 @@ func (f Float) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (f Float) Lower() cpp.Expression {
+func (f Float) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf("%v", f.Value)
 }
 
@@ -97,7 +79,7 @@ func (b Bool) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (b Bool) Lower() cpp.Expression {
+func (b Bool) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf("%v", b.Value)
 }
 
@@ -121,7 +103,7 @@ func (s String) GetSpan() Span {
 }
 
 // Lower implements Expression.
-func (s String) Lower() cpp.Expression {
+func (s String) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(`std::string(%q)`, s.Value)
 }
 
@@ -153,7 +135,7 @@ func (v *Variable) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Expression.
-func (v *Variable) Lower() cpp.Expression {
+func (v *Variable) Lower(state *State) cpp.Expression {
 	return v.Name.Lower()
 }
 
@@ -261,7 +243,7 @@ func (f *FunctionCall) getFunctionName() (string, bool) {
 }
 
 // Lower implements Expression.
-func (f *FunctionCall) Lower() cpp.Expression {
+func (f *FunctionCall) Lower(state *State) cpp.Expression {
 	// match builtin functions that need to be handled differently
 	{
 		name, functionIsVariable := f.getFunctionName()
@@ -269,7 +251,7 @@ func (f *FunctionCall) Lower() cpp.Expression {
 			switch name {
 			case "getTupleElement_":
 				tupleArgument, _ := f.Argument.(*Tuple)
-				tuple := tupleArgument.Elements[0].Lower()
+				tuple := tupleArgument.Elements[0].Lower(state)
 				index := tupleArgument.Elements[1].(*Integer).Value
 				return fmt.Sprintf(`std::get<%d>(%s)`, index, tuple)
 			}
@@ -277,9 +259,9 @@ func (f *FunctionCall) Lower() cpp.Expression {
 	}
 	if f.argumentIsTuple {
 		// calls the function with a tuple of arguments
-		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(), f.Argument.Lower())
+		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(state), f.Argument.Lower(state))
 	}
-	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(), f.Argument.Lower())
+	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(state), f.Argument.Lower(state))
 }
 
 type List struct {
@@ -328,10 +310,12 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Expression.
-func (t *List) Lower() cpp.Expression {
+func (t *List) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(
 		`std::vector<%s>{%s}`,
-		t.elementType.LowerType(), util.JoinFunction(t.Elements, ", ", Expression.Lower),
+		t.elementType.LowerType(), util.JoinFunction(t.Elements, ", ", func(e Expression) cpp.Expression {
+			return e.Lower(state)
+		}),
 	)
 }
 
@@ -388,18 +372,18 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Expression.
-func (t *Tuple) Lower() cpp.Expression {
+func (t *Tuple) Lower(state *State) cpp.Expression {
 	if t.isType {
 		if len(t.Elements) == 0 {
 			return `box((ty::TupleType){})`
 		}
 		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
-			return e.Lower()
+			return e.Lower(state)
 		})
 		return fmt.Sprintf(`box((ty::TupleType){ .elements = {%s} })`, elements)
 	} else {
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", func(e Expression) cpp.Expression {
-			return e.Lower()
+			return e.Lower(state)
 		}))
 	}
 }
@@ -445,7 +429,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	}
 	v := anal.Evaluate(fmt.Sprintf(
 		`(%s)(%q, get_type)`,
-		m.Function.Lower(), m.GetText(),
+		m.Function.Lower(anal.State), m.GetText(),
 	))
 	// v is Union[String, Expression]
 	// First try to unmarshal a String.
@@ -463,8 +447,8 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Expression.
-func (m *Macro) Lower() cpp.Expression {
-	return m.Result.Lower()
+func (m *Macro) Lower(state *State) cpp.Expression {
+	return m.Result.Lower(state)
 }
 
 type MacroLine struct {
@@ -516,13 +500,13 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 // Lower implements Expression.
-func (u *UnaryExpression) Lower() cpp.Expression {
+func (u *UnaryExpression) Lower(state *State) cpp.Expression {
 	// TODO: parens as-needed
 	switch u.Op {
 	case "-":
-		return "-" + u.Expression.Lower()
+		return "-" + u.Expression.Lower(state)
 	case ";":
-		return "!" + u.Expression.Lower()
+		return "!" + u.Expression.Lower(state)
 	default:
 		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
@@ -606,7 +590,7 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 }
 
 // Lower implements Expression.
-func (b *BinaryExpression) Lower() cpp.Expression {
+func (b *BinaryExpression) Lower(state *State) cpp.Expression {
 	var op string
 	switch b.Op {
 	case
@@ -627,7 +611,7 @@ func (b *BinaryExpression) Lower() cpp.Expression {
 	default:
 		panic(fmt.Sprintf("unexpected ast.BinaryOp: %#v", b.Op))
 	}
-	return b.Left.Lower() + " " + op + " " + b.Right.Lower()
+	return b.Left.Lower(state) + " " + op + " " + b.Right.Lower(state)
 }
 
 type BinaryOp string
@@ -675,10 +659,10 @@ func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	panic("unimplemented(compare and analyze fields and check for duplicate field names)")
 }
 
-func (s StructExpression) Lower() cpp.Expression {
+func (s StructExpression) Lower(state *State) cpp.Expression {
 	fields := ""
 	for key, value := range s.Fields {
-		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower())
+		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower(state))
 	}
 	return fmt.Sprintf("(ty::%s){%s\n}", s.Name.String, fields)
 }
@@ -721,8 +705,8 @@ func (c Closure) LowerParameters() string {
 }
 
 // Lower implements Expression.
-func (c *Closure) Lower() cpp.Expression {
-	id := registerClosure(c)
+func (c *Closure) Lower(state *State) cpp.Expression {
+	id := state.registerClosure(c)
 	fields := ""
 	captureArguments := ""
 	captures := ""
@@ -741,7 +725,7 @@ func (c *Closure) Lower() cpp.Expression {
 		captures += fmt.Sprintf(
 			`ty::serialize_capture(%q, %q, %s)`,
 			captureName,
-			registerTypeValue(captureType),
+			state.registerTypeValue(captureType),
 			captureName)
 	}
 	// C++ requires that closures that do not capture anything do not have a default capture symbol
@@ -763,7 +747,7 @@ func (c *Closure) Lower() cpp.Expression {
 		lambdaSymbol,
 		c.ReturnType.Lower(),
 		c.LowerParameters(),
-		cpp.Block(c.Body.Lower()),
+		cpp.Block(c.Body.Lower(state)),
 		captures,
 		id,
 		fields,

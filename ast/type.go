@@ -43,7 +43,7 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 			At:       t.Expression.GetSpan(),
 		})
 	}
-	json := anal.Evaluate(t.Expression.Lower())
-	t.value = UnmarshalTypeValue(json)
+	json := anal.Evaluate(t.Expression.Lower(anal.State))
+	t.value = anal.State.UnmarshalTypeValue(json)
 	return t.value
 }
