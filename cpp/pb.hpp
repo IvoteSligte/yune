@@ -553,11 +553,39 @@ inline struct subString_ {
   }
 } subString;
 
+// isVariant for subset
+template <typename... T, typename... V>
+requires(sizeof...(T) != 1)
+ty::Union<T...> isVariant_(ty::Union<V...> _union) {
+  bool found = (std::holds_alternative<T>(_union.variant) || ...);
+  return found;
+}
+
+// isVariant for element
 template <typename T, typename... V>
 bool isVariant_(ty::Union<V...> _union) {
   return std::holds_alternative<T>(_union.variant);
 }
 
+// getVariant for subset
+template <typename... T, typename... V>
+requires(sizeof...(T) != 1)
+ty::Union<T...> getVariant_(ty::Union<V...> _union) {
+  std::optional<ty::Union<T...>> result;
+  (
+      [&] {
+        if (std::holds_alternative<T>(_union.variant)) {
+          result = std::get<T>(_union.variant);
+        }
+      }(),
+      ...);
+  if (result.has_value()) {
+    return result.value();
+  }
+  panic("getVariant: variant mismatch");
+}
+
+// getVariant for element
 template <typename T, typename... V>
 T getVariant_(ty::Union<V...> _union) {
   if (!std::holds_alternative<T>(_union.variant)) {
