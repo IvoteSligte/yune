@@ -12,3 +12,13 @@ main(): () =
     ()
 `)
 }
+
+func TestFunctions(t *testing.T) {
+	runModule("functions.un", `
+hello(user: String): () =
+    println("Hello, " + user + "!")
+
+main(): () =
+    hello "World"
+`)
+}
