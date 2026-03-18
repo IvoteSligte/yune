@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"yune/ast"
 	"yune/cpp"
 	"yune/parser"
@@ -18,18 +19,6 @@ func readFile(path string) string {
 		log.Fatalf("Failed to open file at '%s'. Error: %s", path, err)
 	}
 	return string(bytes)
-}
-
-func printText(tokenStream *antlr.CommonTokenStream) {
-	println("```")
-	println(tokenStream.GetAllText())
-	println("```")
-}
-
-func printPadding(amount int) {
-	for range amount {
-		fmt.Print(" ")
-	}
 }
 
 func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
@@ -53,10 +42,10 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 		fmt.Print("Token ")
 		fmt.Printf("%d", token.GetLine())
 		fmt.Printf(":%d", token.GetColumn())
-		printPadding((maxLineStrLen - len(strconv.Itoa(token.GetLine()))) +
-			(maxColumnStrLen - len(strconv.Itoa(token.GetColumn()))))
+		fmt.Printf("%s", strings.Repeat(" ", (maxLineStrLen-len(strconv.Itoa(token.GetLine())))+
+			(maxColumnStrLen-len(strconv.Itoa(token.GetColumn())))))
 		fmt.Printf(" (%s) ", symbol)
-		printPadding(maxSymbolLen - len(symbol))
+		fmt.Printf("%s", strings.Repeat(" ", maxSymbolLen-len(symbol)))
 		fmt.Printf("'%s'\n", token.GetText())
 	}
 }
