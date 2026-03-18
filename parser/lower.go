@@ -17,6 +17,11 @@ var FileName string
 var SourceCode string
 
 func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
+	if ctx.GetStart().GetLine() == 40 &&
+		ctx.GetStart().GetColumn() == 33 {
+		// panic("WHAT " + ctx.GetText())
+	}
+
 	return ast.Span{
 		File:    FileName,
 		Source:  SourceCode,

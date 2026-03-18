@@ -40,7 +40,7 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     left := binaryExpression("+", leftLeft, leftRight)
     binaryExpression("+", left, right)
 
-tokenize(text: String, yield: Fn(String)): () =
+tokenize(text: String, yield: Fn(String, ())): () =
     panic("TODO")
 
 sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =

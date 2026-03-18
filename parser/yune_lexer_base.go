@@ -45,6 +45,8 @@ func (l *YuneLexerBase) pushToken(token antlr.Token) {
 	l.queue = append(l.queue, token)
 }
 
+// Consumes a character.
+// l.GetInputStream().Consume() messes up the line count, so use this function instead.
 func (l *YuneLexerBase) Consume() {
 	l.Interpreter.Consume(l.GetInputStream())
 }
@@ -52,11 +54,11 @@ func (l *YuneLexerBase) Consume() {
 func (l *YuneLexerBase) skipLineComment() bool {
 	input := l.GetInputStream()
 	if input.LA(1) == '/' && input.LA(2) == '/' {
-		input.Consume()
-		input.Consume()
+		l.Consume()
+		l.Consume()
 		for {
 			c := input.LA(1)
-			input.Consume()
+			l.Consume()
 			if c == '\n' || c == EOF {
 				return true
 			}
