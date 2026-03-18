@@ -15,7 +15,7 @@ import (
 func readFile(path string) string {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalln("Failed to open test.un. Error:", err)
+		log.Fatalf("Failed to open file at '%s'. Error: %s", path, err)
 	}
 	return string(bytes)
 }
