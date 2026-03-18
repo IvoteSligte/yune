@@ -123,7 +123,9 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     remainderResult is error: Error -> error
     remainderResult is right: Expression
     // TODO: hygienic capture
-    left := binaryExpression("+", stringLiteral(subString(text, 0, leftIndex)), functionCall(variable("toString"), variable(captureName)))
+    leftLeft := stringLiteral(subString(text, 0, leftIndex))
+    leftRight := functionCall(variable("toString"), variable(captureName))
+    left := binaryExpression("+", leftLeft, leftRight)
     binaryExpression("+", left, right)
 
 tokenize(text: String, yield: Fn(String)): () =
