@@ -32,3 +32,42 @@ main(): () =
     binary: Expression = binaryExpression("+", left, right)
 `)
 }
+
+func TestBasic(t *testing.T) {
+	runModule("basic.un", `
+N: Int = 12
+
+fibonacci(n: Int): Int =
+    n == 0 -> 0
+    n == 1 -> 1
+    fibonacci(n - 1) + fibonacci(n - 2)
+
+add(a: Int, b: Int): Int = a + b
+
+something(f: Fn((), Int)): Int = f()
+
+takeTuple(t: (Int, String)): String =
+    "literal"
+
+longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
+    getType("add") // test getType
+    stringLiteral(text)
+
+noArguments(): () = a: Int = 0
+
+main(): () =
+    a: Int = fibonacci(add(N, N))
+    true and false
+    "string galore"
+    noArguments(noArguments())
+    f: Fn((), Int) = ||: Int = 0
+    f()
+
+    s := longString#This is a very long,
+        multi-line string.
+        It contains several newlines.
+        Something fancy it supports is quotes "" and even hashtags#!
+
+    println s
+`)
+}
