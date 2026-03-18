@@ -61,10 +61,6 @@ func Run(module Module) {
 	}
 	defer os.RemoveAll(dir)
 
-	fmt.Println("-- Implementation --")
-	PrintFormatted(module)
-	fmt.Println("-- End Implementation --")
-
 	writeFile(dir, "code.cpp", module+`
 int main() {
     main_();

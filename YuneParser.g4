@@ -3,7 +3,7 @@ parser grammar YuneParser;
 options { tokenVocab = YuneLexer; }
 
 module
-    : topLevelDeclaration* EOF
+    : NEWLINE? topLevelDeclaration* EOF
     ;
 
 topLevelDeclaration
