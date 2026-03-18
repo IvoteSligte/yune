@@ -381,7 +381,7 @@ inline std::string serialize(const Variable &e) {
   return R"({ "Variable": { "name": )" + ty::serialize(e.name) + " } }";
 }
 inline std::string serialize(const FunctionCall &e) {
-  return R"({ "FunctionType": { "function": )" + ty::serialize(e.function) +
+  return R"({ "FunctionCall": { "function": )" + ty::serialize(e.function) +
          R"(, "argument": )" + ty::serialize(e.argument) + " } }";
 }
 inline std::string serialize(const TupleExpression &e) {
@@ -480,7 +480,7 @@ inline struct panic_ {
     std::cerr << "panic: " << message << std::endl;
     exit(1);
   }
-  std::string serialize() const { return R"({ "Function": "stringLiteral" })"; }
+  std::string serialize() const { return R"({ "Function": "panic" })"; }
 } panic;
 
 inline struct stringLiteral_ {
@@ -509,6 +509,15 @@ inline struct binaryExpression_ {
     return R"({ "Function": "binaryExpression" })";
   }
 } binaryExpression;
+
+inline struct functionCall_ {
+  ty::Expression operator()(ty::Expression function, ty::Expression argument) const {
+    return box(ty::FunctionCall{.function = function, .argument = argument});
+  }
+  std::string serialize() const {
+    return R"({ "Function": "functionCall" })";
+  }
+} functionCall;
 
 inline struct printlnString_ {
   std::tuple<> operator()(std::string str) const {

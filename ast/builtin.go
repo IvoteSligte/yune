@@ -31,6 +31,13 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}},
+	{"functionCall", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			ExpressionType,
+			ExpressionType,
+		}},
+		Return: ExpressionType,
+	}},
 	// TODO: other Expression constructors
 	{"panic", &FnType{
 		Argument: &StringType{},
