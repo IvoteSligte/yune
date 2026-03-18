@@ -12,6 +12,7 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
+// TODO: thread-safety?
 var FileName string
 var SourceCode string
 

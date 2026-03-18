@@ -38,8 +38,9 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 		return
 	}
 	anal := Analyzer{
-		Errors:  &errors,
-		Defined: map[TopLevelDeclaration]struct{}{},
+		Interpreter: cpp.NewInterpreter(),
+		Errors:      &errors,
+		Defined:     map[TopLevelDeclaration]struct{}{},
 		Table: DeclarationTable{
 			topLevelDeclarations: declarations,
 		},
@@ -70,6 +71,6 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 			len(declarations),
 		)
 	}
-	lowered = cpp.Repl.Declared // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
+	lowered = anal.Interpreter.Declared // NOTE: this should probably reset the clang-repl process so multiple calls to Lower do not break things
 	return
 }
