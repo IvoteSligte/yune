@@ -41,7 +41,7 @@ type TypeValue interface {
 func IsSubType(sub TypeValue, super TypeValue) bool {
 	superUnion, superIsUnion := super.(*UnionType)
 	if !superIsUnion {
-		return sub.Eq(super)
+		return sub.Eq(super) || sub.Eq(&UnionType{})
 	}
 	subUnion, subIsUnion := sub.(*UnionType)
 	if !subIsUnion {
