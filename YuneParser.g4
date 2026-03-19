@@ -3,7 +3,12 @@ parser grammar YuneParser;
 options { tokenVocab = YuneLexer; }
 
 module
-    : NEWLINE? topLevelDeclaration* EOF
+    : NEWLINE? anImport* topLevelDeclaration* EOF
+    ;
+
+// "import" is an ANTLR keyword
+anImport
+    : IMPORT STRING NEWLINE
     ;
 
 topLevelDeclaration

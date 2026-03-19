@@ -32,6 +32,8 @@ main(): () =
 
 func TestFunctionDeclaration(t *testing.T) {
 	stdout, _ := runModule("functionDeclaration.un", `
+import "std.un"
+
 hello(user: String): () =
     println("Hello, " + user + "!")
 
@@ -44,6 +46,8 @@ main(): () =
 // Tests function call syntax
 func TestFunctionCall(t *testing.T) {
 	stdout, _ := runModule("functionCall.un", `
+import "std.un"
+
 main(): () =
     v := "text"
     println v
@@ -60,6 +64,8 @@ false
 
 func TestPrecedence(t *testing.T) {
 	stdout, _ := runModule("precedence.un", `
+import "std.un"
+
 main(): () =
     println 1 * 2 + 3
     println true and true or false
@@ -72,6 +78,8 @@ true
 
 func TestExpressionCreation(t *testing.T) {
 	runModule("expressionCreation.un", `
+import "std.un"
+
 main(): () =
     leftLeft := stringLiteral("leftLeft")
     leftRight := functionCall(variable("toString"), variable(captureName))
@@ -82,6 +90,8 @@ main(): () =
 
 func TestBasic(t *testing.T) {
 	stdout, _ := runModule("basic.un", `
+import "std.un"
+
 N: Int = 12
 
 fibonacci(n: Int): Int =

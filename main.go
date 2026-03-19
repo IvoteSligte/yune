@@ -86,7 +86,15 @@ func loadModule(fileName string, sourceCode string) ast.Module {
 	log.Printf("Lowering Parse Tree to AST for file '%s'...\n", fileName)
 	parser.FileName = fileName
 	parser.SourceCode = sourceCode
-	return parser.LowerModule(parseTreeModule)
+	module := parser.LowerModule(parseTreeModule)
+
+	// NOTE: maybe move this to ast.Module.Lower?
+	for _, _import := range module.Imports {
+		// TODO: prevent import cycles
+		// TODO: import resolution magic for standard library files?
+		module = ast.JoinModules(module, loadModuleFromFile(_import))
+	}
+	return module
 }
 
 func loadModuleFromFile(filePath string) ast.Module {
@@ -95,12 +103,7 @@ func loadModuleFromFile(filePath string) ast.Module {
 
 func runModule(fileName string, sourceCode string) (stdout, stderr string) {
 	// TODO: embedding
-	// NOTE: std.un is not cached because relowering a module is not possible
-	// due to the fact that lowering is performed during analysis and analysis
-	// is assumed to only be done once.
-	stdAstModule := loadModuleFromFile("std.un")
 	astModule := loadModule(fileName, sourceCode)
-	astModule = ast.JoinModules(stdAstModule, astModule)
 
 	log.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
 	cppModule, errors := astModule.Lower()

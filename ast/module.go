@@ -6,6 +6,7 @@ import (
 )
 
 type Module struct {
+	Imports      []string
 	Declarations []TopLevelDeclaration
 }
 

@@ -190,8 +190,14 @@ func LowerMacro(ctx IMacroContext) ast.Macro {
 	}
 }
 
+func LowerImport(ctx IAnImportContext) string {
+	s := ctx.STRING().GetText()
+	return s[1 : len(s)-1] // strip ""
+}
+
 func LowerModule(ctx IModuleContext) ast.Module {
 	return ast.Module{
+		Imports:      util.Map(ctx.AllAnImport(), LowerImport),
 		Declarations: util.Map(ctx.AllTopLevelDeclaration(), LowerTopLevelDeclaration),
 	}
 }
