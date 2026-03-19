@@ -72,17 +72,21 @@ assignmentOp
     | SLASHEQUAL
     ;
 
+// Expressions that are never ambiguous, so they never need to be wrapped in parentheses.
 primaryExpression
-    : function=primaryExpression argument=primaryExpression
-    | INTEGER
+    : INTEGER
     | FLOAT
     | STRING
     | bool=(TRUE | FALSE)
     | variable
-    | LPAREN expression RPAREN
+    | parenExpression
     | list
-    | tuple
     | macro
+    ;
+
+parenExpression
+    : LPAREN expression RPAREN
+    | tuple
     ;
 
 variable
@@ -113,15 +117,10 @@ closureParameters
     | BAR functionParameter (COMMA functionParameter)* BAR
     ;
 
-unaryExpression
-    : primaryExpression
-    | op=MINUS primaryExpression
-    | op=SEMI primaryExpression
-    ;
-
-// FIXME: precedence is most likely very incorrect
 binaryExpression
-    : unaryExpression
+    : primary=primaryExpression
+    | unaryOp=(MINUS | SEMI) primaryExpression // unary expression
+    | function=primaryExpression argument=parenExpression // function call
     | left=binaryExpression op=(STAR | SLASH) right=binaryExpression
     | left=binaryExpression op=(PLUS | MINUS) right=binaryExpression
     | left=binaryExpression op=(LESS | GREATER) right=binaryExpression
@@ -131,11 +130,17 @@ binaryExpression
     | left=binaryExpression op=OR right=binaryExpression
     ;
 
-expression: binaryExpression;
+// Expressions that may not consume the following newline.
+expression
+    : binaryExpression
+    | function=primaryExpression argument=expression // function call such as `func 5 + 6`
+    ;
 
+// Expressions that consume the following newline.
 closureExpression
     : closure
-    | function=primaryExpression argument=closureExpression
+    | unaryOp=(MINUS | SEMI) closureExpression // unary expression
+    | function=primaryExpression argument=closureExpression // function call
     | left=binaryExpression op=(STAR | SLASH) right=closureExpression
     | left=binaryExpression op=(PLUS | MINUS) right=closureExpression
     | left=binaryExpression op=(LESS | GREATER) right=closureExpression

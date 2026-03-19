@@ -17,11 +17,6 @@ var FileName string
 var SourceCode string
 
 func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
-	if ctx.GetStart().GetLine() == 40 &&
-		ctx.GetStart().GetColumn() == 33 {
-		// panic("WHAT " + ctx.GetText())
-	}
-
 	return ast.Span{
 		File:    FileName,
 		Source:  SourceCode,
@@ -45,15 +40,44 @@ func LowerAssignmentOp(ctx IAssignmentOpContext) ast.AssignmentOp {
 	return ast.AssignmentOp(ctx.GetText())
 }
 
-func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
-	if ctx.UnaryExpression() != nil {
-		return LowerUnaryExpression(ctx.UnaryExpression())
+func LowerParenExpression(ctx IParenExpressionContext) ast.Expression {
+	switch {
+	case ctx.Tuple() != nil:
+		tuple := LowerTuple(ctx.Tuple())
+		return &tuple
+	case ctx.Expression() != nil: // parses expression in parentheses: (expression)
+		return LowerExpression(ctx.Expression())
+	default:
+		panic("unreachable")
 	}
-	return &ast.BinaryExpression{
-		Span:  GetSpan(ctx),
-		Op:    ast.BinaryOp(ctx.GetOp().GetText()),
-		Left:  LowerBinaryExpression(ctx.GetLeft()),
-		Right: LowerBinaryExpression(ctx.GetRight()),
+}
+
+func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
+	switch {
+	case ctx.GetPrimary() != nil:
+		return LowerPrimaryExpression(ctx.GetPrimary())
+	case ctx.GetUnaryOp() != nil:
+		expr := ast.UnaryExpression{
+			Span:       GetSpan(ctx),
+			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
+			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
+		}
+		return &expr
+	case ctx.GetFunction() != nil:
+		return &ast.FunctionCall{
+			Span:     GetSpan(ctx),
+			Function: LowerPrimaryExpression(ctx.GetFunction()),
+			Argument: LowerParenExpression(ctx.GetArgument()),
+		}
+	case ctx.GetLeft() != nil:
+		return &ast.BinaryExpression{
+			Span:  GetSpan(ctx),
+			Op:    ast.BinaryOp(ctx.GetOp().GetText()),
+			Left:  LowerBinaryExpression(ctx.GetLeft()),
+			Right: LowerBinaryExpression(ctx.GetRight()),
+		}
+	default:
+		panic("unreachable")
 	}
 }
 
@@ -108,6 +132,12 @@ func LowerExpression(ctx IExpressionContext) ast.Expression {
 	switch {
 	case ctx.BinaryExpression() != nil:
 		return LowerBinaryExpression(ctx.BinaryExpression())
+	case ctx.GetFunction() != nil:
+		return &ast.FunctionCall{
+			Span:     GetSpan(ctx),
+			Function: LowerPrimaryExpression(ctx.GetFunction()),
+			Argument: LowerExpression(ctx.GetArgument()),
+		}
 	default:
 		panic("unreachable")
 	}
@@ -168,12 +198,6 @@ func LowerModule(ctx IModuleContext) ast.Module {
 
 func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	switch {
-	case ctx.GetFunction() != nil:
-		return &ast.FunctionCall{
-			Span:     GetSpan(ctx),
-			Function: LowerPrimaryExpression(ctx.GetFunction()),
-			Argument: LowerPrimaryExpression(ctx.GetArgument()),
-		}
 	case ctx.Variable() != nil:
 		variable := LowerVariable(ctx.Variable())
 		return &variable
@@ -209,11 +233,8 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 			Span:  GetSpan(ctx),
 			Value: s[1 : len(s)-1], // strip ""
 		}
-	case ctx.Expression() != nil: // parses expression in parentheses: (expression)
-		return LowerExpression(ctx.Expression())
-	case ctx.Tuple() != nil:
-		tuple := LowerTuple(ctx.Tuple())
-		return &tuple
+	case ctx.ParenExpression() != nil:
+		return LowerParenExpression(ctx.ParenExpression())
 	case ctx.Macro() != nil:
 		macro := LowerMacro(ctx.Macro())
 		return &macro
@@ -223,14 +244,31 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 }
 
 func LowerClosureExpression(ctx IClosureExpressionContext) ast.Expression {
-	if ctx.Closure() != nil {
+	switch {
+	case ctx.Closure() != nil:
 		return LowerClosure(ctx.Closure())
-	}
-	return &ast.BinaryExpression{
-		Span:  GetSpan(ctx),
-		Op:    ast.BinaryOp(ctx.GetOp().GetText()),
-		Left:  LowerBinaryExpression(ctx.GetLeft()),
-		Right: LowerClosureExpression(ctx.GetRight()),
+	case ctx.GetUnaryOp() != nil:
+		expr := ast.UnaryExpression{
+			Span:       GetSpan(ctx),
+			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
+			Expression: LowerClosureExpression(ctx.GetArgument()),
+		}
+		return &expr
+	case ctx.GetFunction() != nil:
+		return &ast.FunctionCall{
+			Span:     GetSpan(ctx),
+			Function: LowerPrimaryExpression(ctx.GetFunction()),
+			Argument: LowerClosureExpression(ctx.GetArgument()),
+		}
+	case ctx.GetLeft() != nil:
+		return &ast.BinaryExpression{
+			Span:  GetSpan(ctx),
+			Op:    ast.BinaryOp(ctx.GetOp().GetText()),
+			Left:  LowerBinaryExpression(ctx.GetLeft()),
+			Right: LowerClosureExpression(ctx.GetRight()),
+		}
+	default:
+		panic(fmt.Sprintf("unexpected BinaryExpression: %#v", ctx))
 	}
 }
 
@@ -319,23 +357,6 @@ func LowerType(ctx ITypeContext) ast.Type {
 	return ast.Type{
 		Expression: LowerExpression(ctx.Expression()),
 	}
-}
-
-func LowerUnaryExpression(ctx IUnaryExpressionContext) ast.Expression {
-	switch {
-	case ctx.GetOp() != nil:
-		expr := ast.UnaryExpression{
-			Span:       GetSpan(ctx),
-			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
-			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
-		}
-		return &expr
-	case ctx.PrimaryExpression() != nil:
-		return LowerPrimaryExpression(ctx.PrimaryExpression())
-	default:
-		panic("unreachable")
-	}
-
 }
 
 func LowerIsStatement(ctx IIsStatementContext) ast.Statement {

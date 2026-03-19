@@ -63,6 +63,7 @@ func TestPrecedence(t *testing.T) {
 main(): () =
     println 1 * 2 + 3
     println true and true or false
+    println 1 - 2 // could be incorrectly interpreted as println(1(-2))
 `)
 	assertEq(stdout, `5
 true
