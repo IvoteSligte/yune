@@ -122,9 +122,14 @@ closureParameters
     | BAR functionParameter (COMMA functionParameter)* BAR
     ;
 
+unaryOp
+    : MINUS
+    | SEMI
+    ;
+
 binaryExpression
     : primary=primaryExpression
-    | unaryOp=(MINUS | SEMI) primaryExpression // unary expression
+    | unaryOp primaryExpression // unary expression
     | function=primaryExpression argument=parenExpression // function call
     | left=binaryExpression op=(STAR | SLASH) right=binaryExpression
     | left=binaryExpression op=(PLUS | MINUS) right=binaryExpression
@@ -133,18 +138,25 @@ binaryExpression
     | left=binaryExpression op=(EQEQUAL | NOTEQUAL) right=binaryExpression
     | left=binaryExpression op=AND right=binaryExpression
     | left=binaryExpression op=OR right=binaryExpression
+    | functionCallExpression
+    ;
+
+// Function call such as `func 5 + 6` or `;func true`.
+functionCallExpression
+    : function=primaryExpression argument=expression
+    | unaryOp functionCallExpression
     ;
 
 // Expressions that may not consume the following newline.
 expression
     : binaryExpression
-    | function=primaryExpression argument=expression // function call such as `func 5 + 6`
+    | functionCallExpression
     ;
 
 // Expressions that consume the following newline.
 closureExpression
     : closure
-    | unaryOp=(MINUS | SEMI) closureExpression // unary expression
+    | unaryOp closureExpression // unary expression
     | function=primaryExpression argument=closureExpression // function call
     | left=binaryExpression op=(STAR | SLASH) right=closureExpression
     | left=binaryExpression op=(PLUS | MINUS) right=closureExpression

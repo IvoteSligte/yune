@@ -160,3 +160,11 @@ func FirstError(s ...error) error {
 func TrimSpace(s string) (output string) {
 	return strings.Trim(s, " \t\n")
 }
+
+func Reversed[T any](slice []T) (result []T) {
+	result = make([]T, len(slice))
+	for i, element := range slice {
+		result[len(slice)-1-i] = element
+	}
+	return
+}

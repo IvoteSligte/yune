@@ -52,14 +52,18 @@ func LowerParenExpression(ctx IParenExpressionContext) ast.Expression {
 	}
 }
 
+func LowerUnaryOp(ctx IUnaryOpContext) ast.UnaryOp {
+	return ast.UnaryOp(ctx.GetText())
+}
+
 func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 	switch {
 	case ctx.GetPrimary() != nil:
 		return LowerPrimaryExpression(ctx.GetPrimary())
-	case ctx.GetUnaryOp() != nil:
+	case ctx.UnaryOp() != nil:
 		expr := ast.UnaryExpression{
 			Span:       GetSpan(ctx),
-			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
+			Op:         LowerUnaryOp(ctx.UnaryOp()),
 			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
 		}
 		return &expr
@@ -76,6 +80,8 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 			Left:  LowerBinaryExpression(ctx.GetLeft()),
 			Right: LowerBinaryExpression(ctx.GetRight()),
 		}
+	case ctx.FunctionCallExpression() != nil:
+		return LowerFunctionCallExpression(ctx.FunctionCallExpression())
 	default:
 		panic("unreachable")
 	}
@@ -128,16 +134,31 @@ func LowerConstantDeclaration(ctx IConstantDeclarationContext) ast.ConstantDecla
 	}
 }
 
-func LowerExpression(ctx IExpressionContext) ast.Expression {
+func LowerFunctionCallExpression(ctx IFunctionCallExpressionContext) ast.Expression {
 	switch {
-	case ctx.BinaryExpression() != nil:
-		return LowerBinaryExpression(ctx.BinaryExpression())
+	case ctx.UnaryOp() != nil:
+		return &ast.UnaryExpression{
+			Span:       GetSpan(ctx),
+			Op:         LowerUnaryOp(ctx.UnaryOp()),
+			Expression: LowerFunctionCallExpression(ctx.FunctionCallExpression()),
+		}
 	case ctx.GetFunction() != nil:
 		return &ast.FunctionCall{
 			Span:     GetSpan(ctx),
 			Function: LowerPrimaryExpression(ctx.GetFunction()),
 			Argument: LowerExpression(ctx.GetArgument()),
 		}
+	default:
+		panic("unreachable")
+	}
+}
+
+func LowerExpression(ctx IExpressionContext) ast.Expression {
+	switch {
+	case ctx.BinaryExpression() != nil:
+		return LowerBinaryExpression(ctx.BinaryExpression())
+	case ctx.FunctionCallExpression() != nil:
+		return LowerFunctionCallExpression(ctx.FunctionCallExpression())
 	default:
 		panic("unreachable")
 	}
@@ -253,10 +274,10 @@ func LowerClosureExpression(ctx IClosureExpressionContext) ast.Expression {
 	switch {
 	case ctx.Closure() != nil:
 		return LowerClosure(ctx.Closure())
-	case ctx.GetUnaryOp() != nil:
+	case ctx.UnaryOp() != nil:
 		expr := ast.UnaryExpression{
 			Span:       GetSpan(ctx),
-			Op:         ast.UnaryOp(ctx.GetOp().GetText()),
+			Op:         ast.UnaryOp(ctx.UnaryOp().GetText()),
 			Expression: LowerClosureExpression(ctx.GetArgument()),
 		}
 		return &expr
