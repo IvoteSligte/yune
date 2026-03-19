@@ -58,8 +58,19 @@ false
 `)
 }
 
-func TestExpressions(t *testing.T) {
-	runModule("expressions.un", `
+func TestPrecedence(t *testing.T) {
+	stdout, _ := runModule("precedence.un", `
+main(): () =
+    println 1 * 2 + 3
+    println true and true or false
+`)
+	assertEq(stdout, `5
+true
+`)
+}
+
+func TestExpressionCreation(t *testing.T) {
+	runModule("expressionCreation.un", `
 main(): () =
     leftLeft := stringLiteral("leftLeft")
     leftRight := functionCall(variable("toString"), variable(captureName))
