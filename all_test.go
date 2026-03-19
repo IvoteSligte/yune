@@ -11,11 +11,11 @@ func assert(condition bool) {
 	}
 }
 
-func assertEq[T comparable](left T, right T) {
-	if left != right {
-		panic(fmt.Sprintf(`Assertion failed. left != right.
-    left: %#v
-    right: %#v`, left, right))
+func assertEq[T comparable](found T, expected T) {
+	if found != expected {
+		panic(fmt.Sprintf(`Assertion failed. found != expected.
+    found   : %#v
+    expected: %#v`, found, expected))
 	}
 }
 
@@ -86,6 +86,7 @@ main(): () =
 `)
 	assertEq(stdout, `5
 true
+-1
 `)
 }
 
@@ -95,9 +96,9 @@ import "std.un"
 
 main(): () =
     leftLeft := stringLiteral("leftLeft")
-    leftRight := functionCall(variable("toString"), variable(captureName))
+    leftRight := functionCall(variable("toString"), variable("captureName"))
     left := binaryExpression("+", leftLeft, leftRight)
-    binary: Expression = binaryExpression("+", left, right)
+    binary: Expression = binaryExpression("+", left, variable("right"))
 `)
 }
 
@@ -141,9 +142,10 @@ main(): () =
     println s
 `)
 	assertEq(stdout, `This is a very long,
-        multi-line string.
-        It contains several newlines.
-        Something fancy it supports is quotes "" and even hashtags#!
+multi-line string.
+It contains several newlines.
+Something fancy it supports is quotes "" and even hashtags#!
 
-`) // FIXME: get rid of trailing newlines
+
+`) // FIXME: get rid of (leading and) trailing newlines or whitespace in the macro parsing
 }
