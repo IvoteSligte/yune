@@ -2,6 +2,7 @@ package cpp
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -35,7 +36,7 @@ func PrintFormatted(code string) {
 	}
 }
 
-func createFile(dir string, name string) *os.File {
+func createFile(dir, name string) *os.File {
 	file, err := os.Create(path.Join(dir, name))
 	if err != nil {
 		log.Fatalln("Failed to create file during compilation process. Error:", err)
@@ -43,7 +44,7 @@ func createFile(dir string, name string) *os.File {
 	return file
 }
 
-func writeFile(dir string, name string, contents string) *os.File {
+func writeFile(dir, name, contents string) *os.File {
 	file := createFile(dir, name)
 	_, err := file.WriteString(contents)
 	if err != nil {
@@ -52,7 +53,7 @@ func writeFile(dir string, name string, contents string) *os.File {
 	return file
 }
 
-func Run(module Module) {
+func Run(module Module) (stdout, stderr string) {
 	// NOTE: main function is assumed to exist
 
 	dir, err := os.MkdirTemp("", "yune-build")
@@ -79,12 +80,17 @@ int main() {
 		log.Fatalln("Failed to compile code. Error:", err)
 	}
 	fmt.Println("-- Output --")
+	stdoutWriter := strings.Builder{}
+	stderrWriter := strings.Builder{}
 	cmd = exec.Command(binaryPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = io.MultiWriter(os.Stdout, &stdoutWriter)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderrWriter)
 	err = cmd.Run()
 	if err != nil {
 		log.Fatalln("Failed to run code. Error:", err)
 	}
 	fmt.Println("-- Completed --")
+	stdout = stdoutWriter.String()
+	stderr = stderrWriter.String()
+	return
 }

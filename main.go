@@ -93,7 +93,7 @@ func loadModuleFromFile(filePath string) ast.Module {
 	return loadModule(filePath, readFile(filePath))
 }
 
-func runModule(fileName string, sourceCode string) {
+func runModule(fileName string, sourceCode string) (stdout, stderr string) {
 	// TODO: embedding
 	// NOTE: std.un is not cached because relowering a module is not possible
 	// due to the fact that lowering is performed during analysis and analysis
@@ -111,7 +111,7 @@ func runModule(fileName string, sourceCode string) {
 		log.Fatalln("Errors found, exiting.")
 	}
 	fmt.Println("--- Output ---")
-	cpp.Run(cppModule)
+	return cpp.Run(cppModule)
 }
 
 func runModuleFromFile(filePath string) {

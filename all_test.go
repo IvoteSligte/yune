@@ -1,6 +1,23 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
+
+func assert(condition bool) {
+	if !condition {
+		panic("Assertion failed.")
+	}
+}
+
+func assertEq[T comparable](left T, right T) {
+	if left != right {
+		panic(fmt.Sprintf(`Assertion failed. left != right.
+    left: %#v
+    right: %#v`, left, right))
+	}
+}
 
 func TestPrimitives(t *testing.T) {
 	runModule("primitives.un", `
@@ -13,13 +30,31 @@ main(): () =
 `)
 }
 
-func TestFunctions(t *testing.T) {
-	runModule("functions.un", `
+func TestFunctionDeclaration(t *testing.T) {
+	stdout, _ := runModule("functionDeclaration.un", `
 hello(user: String): () =
     println("Hello, " + user + "!")
 
 main(): () =
     hello "World"
+`)
+	assertEq(stdout, "Hello, World!\n")
+}
+
+// Tests function call syntax
+func TestFunctionCall(t *testing.T) {
+	stdout, _ := runModule("functionCall.un", `
+main(): () =
+    v := "text"
+    println v
+    println(v + v)
+    println v + v
+    println ;true
+`)
+	assertEq(stdout, `text
+texttext
+texttext
+false
 `)
 }
 
@@ -34,7 +69,7 @@ main(): () =
 }
 
 func TestBasic(t *testing.T) {
-	runModule("basic.un", `
+	stdout, _ := runModule("basic.un", `
 N: Int = 12
 
 fibonacci(n: Int): Int =
@@ -70,4 +105,10 @@ main(): () =
 
     println s
 `)
+	assertEq(stdout, `This is a very long,
+        multi-line string.
+        It contains several newlines.
+        Something fancy it supports is quotes "" and even hashtags#!
+
+`) // FIXME: get rid of trailing newlines
 }
