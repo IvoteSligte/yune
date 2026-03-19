@@ -30,6 +30,19 @@ main(): () =
 `)
 }
 
+func TestParsing(t *testing.T) {
+	runModule("parsing.un", `
+
+doNothing(): () = ()
+
+function(argument: Int, another: Fn(Float, Float)): (Int, String) =
+    doNothing()
+    (argument + 5, "a string")
+
+main(): () = ()
+`)
+}
+
 func TestFunctionDeclaration(t *testing.T) {
 	stdout, _ := runModule("functionDeclaration.un", `
 import "std.un"
