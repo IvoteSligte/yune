@@ -2,7 +2,7 @@
 .envrc
 main
 
-# generated (antlr)
+# ANTLR generated
 parser/yune_lexer.go
 parser/yune_parser.go
 parser/YuneLexer.tokens
@@ -12,3 +12,8 @@ parser/YuneParser.interp
 
 # clangd (C++ LSP) generated
 cpp/.cache/
+
+# `go test` generated
+main.test
+cpuprofile.out
+memprofile.out

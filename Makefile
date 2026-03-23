@@ -20,3 +20,10 @@ test: parser
 bench: parser
 	# run only benchmarks
 	go test -bench=. -run=^$
+
+profile: parser
+	go test -bench=CompileStandardLibrary -run=^$$ -cpuprofile=cpuprofile.out -memprofile=memprofile.out
+
+profile-parser: parser
+	go test -bench=ParseStandardLibrary -run=^$$ -cpuprofile=cpuprofile.out -memprofile=memprofile.out
+

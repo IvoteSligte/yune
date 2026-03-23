@@ -20,7 +20,7 @@ func assertEq[T comparable](found T, expected T) {
 }
 
 func TestPrimitives(t *testing.T) {
-	runModule("primitives.un", `
+	parseAndRunModule("primitives.un", `
 main(): () =
     true and false
     "string literal!#%"
@@ -31,7 +31,7 @@ main(): () =
 }
 
 func TestParsing(t *testing.T) {
-	runModule("parsing.un", `
+	parseAndRunModule("parsing.un", `
 
 doNothing(): () = ()
 
@@ -44,7 +44,7 @@ main(): () = ()
 }
 
 func TestFunctionDeclaration(t *testing.T) {
-	stdout, _ := runModule("functionDeclaration.un", `
+	stdout, _ := parseAndRunModule("functionDeclaration.un", `
 import "std.un"
 
 hello(user: String): () =
@@ -58,7 +58,7 @@ main(): () =
 
 // Tests function call syntax
 func TestFunctionCall(t *testing.T) {
-	stdout, _ := runModule("functionCall.un", `
+	stdout, _ := parseAndRunModule("functionCall.un", `
 import "std.un"
 
 main(): () =
@@ -76,7 +76,7 @@ false
 }
 
 func TestPrecedence(t *testing.T) {
-	stdout, _ := runModule("precedence.un", `
+	stdout, _ := parseAndRunModule("precedence.un", `
 import "std.un"
 
 main(): () =
@@ -91,7 +91,7 @@ true
 }
 
 func TestExpressionCreation(t *testing.T) {
-	runModule("expressionCreation.un", `
+	parseAndRunModule("expressionCreation.un", `
 import "std.un"
 
 main(): () =
@@ -103,7 +103,7 @@ main(): () =
 }
 
 func TestBasic(t *testing.T) {
-	stdout, _ := runModule("basic.un", `
+	stdout, _ := parseAndRunModule("basic.un", `
 import "std.un"
 
 N: Int = 12

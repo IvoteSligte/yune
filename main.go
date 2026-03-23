@@ -62,7 +62,7 @@ func printTokens(lexer antlr.Recognizer, tokenStream *antlr.CommonTokenStream) {
 	}
 }
 
-func loadModule(fileName string, sourceCode string) ast.Module {
+func parseModule(fileName string, sourceCode string) ast.Module {
 	inputStream := antlr.NewInputStream(sourceCode)
 	errorListener := ParserErrorListener{}
 	lexer := parser.NewYuneLexer(inputStream)
@@ -92,19 +92,16 @@ func loadModule(fileName string, sourceCode string) ast.Module {
 	for _, _import := range module.Imports {
 		// TODO: prevent import cycles
 		// TODO: import resolution magic for standard library files?
-		module = ast.JoinModules(module, loadModuleFromFile(_import))
+		module = ast.JoinModules(module, parseModuleFromFile(_import))
 	}
 	return module
 }
 
-func loadModuleFromFile(filePath string) ast.Module {
-	return loadModule(filePath, readFile(filePath))
+func parseModuleFromFile(filePath string) ast.Module {
+	return parseModule(filePath, readFile(filePath))
 }
 
-func runModule(fileName string, sourceCode string) (stdout, stderr string) {
-	// TODO: embedding
-	astModule := loadModule(fileName, sourceCode)
-
+func runModule(fileName string, astModule ast.Module) (stdout, stderr string) {
 	log.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
 	cppModule, hasMainFunction, errors := astModule.Lower()
 	if len(errors) > 0 {
@@ -122,8 +119,12 @@ func runModule(fileName string, sourceCode string) (stdout, stderr string) {
 	}
 }
 
+func parseAndRunModule(filePath string, sourceCode string) (stdout, stderr string) {
+	return runModule(filePath, parseModule(filePath, sourceCode))
+}
+
 func runModuleFromFile(filePath string) (stdout, stderr string) {
-	return runModule(filePath, readFile(filePath))
+	return runModule(filePath, parseModuleFromFile(filePath))
 }
 
 func main() {
