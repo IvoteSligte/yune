@@ -64,14 +64,20 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 		expr := ast.UnaryExpression{
 			Span:       GetSpan(ctx),
 			Op:         LowerUnaryOp(ctx.UnaryOp()),
-			Expression: LowerPrimaryExpression(ctx.PrimaryExpression()),
+			Expression: LowerBinaryExpression(ctx.BinaryExpression(0)),
 		}
 		return &expr
-	case ctx.GetFunction() != nil:
+	case ctx.GetFunction() != nil && ctx.GetArgument() != nil:
 		return &ast.FunctionCall{
 			Span:     GetSpan(ctx),
 			Function: LowerPrimaryExpression(ctx.GetFunction()),
-			Argument: LowerParenExpression(ctx.GetArgument()),
+			Argument: LowerExpression(ctx.GetArgument()),
+		}
+	case ctx.GetFunction() != nil && ctx.GetParenArgument() != nil:
+		return &ast.FunctionCall{
+			Span:     GetSpan(ctx),
+			Function: LowerPrimaryExpression(ctx.GetFunction()),
+			Argument: LowerParenExpression(ctx.GetParenArgument()),
 		}
 	case ctx.GetLeft() != nil:
 		return &ast.BinaryExpression{
@@ -80,8 +86,6 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 			Left:  LowerBinaryExpression(ctx.GetLeft()),
 			Right: LowerBinaryExpression(ctx.GetRight()),
 		}
-	case ctx.FunctionCallExpression() != nil:
-		return LowerFunctionCallExpression(ctx.FunctionCallExpression())
 	default:
 		panic("unreachable")
 	}
@@ -134,31 +138,10 @@ func LowerConstantDeclaration(ctx IConstantDeclarationContext) ast.ConstantDecla
 	}
 }
 
-func LowerFunctionCallExpression(ctx IFunctionCallExpressionContext) ast.Expression {
-	switch {
-	case ctx.UnaryOp() != nil:
-		return &ast.UnaryExpression{
-			Span:       GetSpan(ctx),
-			Op:         LowerUnaryOp(ctx.UnaryOp()),
-			Expression: LowerFunctionCallExpression(ctx.FunctionCallExpression()),
-		}
-	case ctx.GetFunction() != nil:
-		return &ast.FunctionCall{
-			Span:     GetSpan(ctx),
-			Function: LowerPrimaryExpression(ctx.GetFunction()),
-			Argument: LowerExpression(ctx.GetArgument()),
-		}
-	default:
-		panic("unreachable")
-	}
-}
-
 func LowerExpression(ctx IExpressionContext) ast.Expression {
 	switch {
 	case ctx.BinaryExpression() != nil:
 		return LowerBinaryExpression(ctx.BinaryExpression())
-	case ctx.FunctionCallExpression() != nil:
-		return LowerFunctionCallExpression(ctx.FunctionCallExpression())
 	default:
 		panic("unreachable")
 	}

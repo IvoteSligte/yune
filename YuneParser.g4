@@ -129,8 +129,8 @@ unaryOp
 
 binaryExpression
     : primary=primaryExpression
-    | unaryOp primaryExpression // unary expression
-    | function=primaryExpression argument=parenExpression // function call
+    | unaryOp binaryExpression // unary expression
+    | function=primaryExpression parenArgument=parenExpression // f(x) has higher precedence than f x
     | left=binaryExpression op=(STAR | SLASH) right=binaryExpression
     | left=binaryExpression op=(PLUS | MINUS) right=binaryExpression
     | left=binaryExpression op=(LESS | GREATER) right=binaryExpression
@@ -138,26 +138,18 @@ binaryExpression
     | left=binaryExpression op=(EQEQUAL | NOTEQUAL) right=binaryExpression
     | left=binaryExpression op=AND right=binaryExpression
     | left=binaryExpression op=OR right=binaryExpression
-    | functionCallExpression
-    ;
-
-// Function call such as `func 5 + 6` or `;func true`.
-functionCallExpression
-    : function=primaryExpression argument=expression
-    | unaryOp functionCallExpression
+    | function=primaryExpression argument=expression
     ;
 
 // Expressions that may not consume the following newline.
 expression
     : binaryExpression
-    | functionCallExpression
     ;
 
 // Expressions that consume the following newline.
 closureExpression
     : closure
     | unaryOp closureExpression // unary expression
-    | function=primaryExpression argument=closureExpression // function call
     | left=binaryExpression op=(STAR | SLASH) right=closureExpression
     | left=binaryExpression op=(PLUS | MINUS) right=closureExpression
     | left=binaryExpression op=(LESS | GREATER) right=closureExpression
@@ -165,6 +157,7 @@ closureExpression
     | left=binaryExpression op=(EQEQUAL | NOTEQUAL) right=closureExpression
     | left=binaryExpression op=AND right=closureExpression
     | left=binaryExpression op=OR right=closureExpression
+    | function=primaryExpression argument=closureExpression
     ;
 
 block

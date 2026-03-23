@@ -27,3 +27,5 @@ profile: parser
 profile-parser: parser
 	go test -bench=ParseStandardLibrary -run=^$$ -cpuprofile=cpuprofile.out -memprofile=memprofile.out
 
+trace: parser
+    go test -bench=CompileStandardLibrary -run=^$$ -trace=trace.out
