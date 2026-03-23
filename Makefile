@@ -17,3 +17,6 @@ run: parser
 test: parser
 	go test .
 
+bench: parser
+	# run only benchmarks
+	go test -bench=. -run=^$

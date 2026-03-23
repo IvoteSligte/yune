@@ -106,7 +106,7 @@ func runModule(fileName string, sourceCode string) (stdout, stderr string) {
 	astModule := loadModule(fileName, sourceCode)
 
 	log.Printf("Lowering AST to CPP for file '%s'...\n", fileName)
-	cppModule, errors := astModule.Lower()
+	cppModule, hasMainFunction, errors := astModule.Lower()
 	if len(errors) > 0 {
 		for _, err := range errors {
 			fmt.Println("Error:", err)
@@ -114,11 +114,16 @@ func runModule(fileName string, sourceCode string) (stdout, stderr string) {
 		log.Fatalln("Errors found, exiting.")
 	}
 	fmt.Println("--- Output ---")
-	return cpp.Run(cppModule)
+	if !hasMainFunction {
+		fmt.Println("Module does not have a `main` function, so there is no output.")
+		return
+	} else {
+		return cpp.Run(cppModule)
+	}
 }
 
-func runModuleFromFile(filePath string) {
-	runModule(filePath, readFile(filePath))
+func runModuleFromFile(filePath string) (stdout, stderr string) {
+	return runModule(filePath, readFile(filePath))
 }
 
 func main() {

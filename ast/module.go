@@ -17,7 +17,7 @@ func JoinModules(modules ...Module) (result Module) {
 	return
 }
 
-func (m Module) Lower() (lowered cpp.Module, errors Errors) {
+func (m Module) Lower() (lowered cpp.Module, hasMainFunction bool, errors Errors) {
 	declarations := map[string]TopLevelDeclaration{}
 
 	// Register builtin declarations
@@ -50,6 +50,7 @@ func (m Module) Lower() (lowered cpp.Module, errors Errors) {
 	for _, decl := range declarations {
 		anal.Table.Add(decl)
 	}
+	_, hasMainFunction = declarations["main"]
 	for _, decl := range declarations {
 		_, evaluated := anal.Defined[decl]
 		if !evaluated {
