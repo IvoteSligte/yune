@@ -6,6 +6,7 @@ import (
 	"math/rand/v2"
 	"slices"
 	"strconv"
+	"strings"
 	"yune/ast"
 	"yune/util"
 
@@ -239,9 +240,14 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 		}
 	case ctx.STRING() != nil:
 		s := ctx.STRING().GetText()
+		s = s[1 : len(s)-1] // strip ""
+		s = strings.ReplaceAll(s, `\n`, "\n")
+		s = strings.ReplaceAll(s, `\t`, "\t")
+		s = strings.ReplaceAll(s, `\f`, "\f")
+		s = strings.ReplaceAll(s, `\\`, "\\")
 		return &ast.String{
 			Span:  GetSpan(ctx),
-			Value: s[1 : len(s)-1], // strip ""
+			Value: s,
 		}
 	case ctx.ParenExpression() != nil:
 		return LowerParenExpression(ctx.ParenExpression())

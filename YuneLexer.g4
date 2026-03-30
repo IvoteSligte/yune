@@ -57,6 +57,6 @@ NEWLINE    : '\r'? '\n';
 COMMENT    : '//' ~[\r\n]*                -> skip;
 WHITESPACE : [ \t\f]+                     -> skip;
 
-STRING     : '"' .*? '"';
+STRING     : '"' (~["\\]|[\\].)* '"';
 
 HASHTAG : '#';

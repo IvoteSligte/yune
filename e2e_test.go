@@ -23,7 +23,7 @@ func TestPrimitives(t *testing.T) {
 	parseAndRunModule("primitives.un", `
 main(): () =
     true and false
-    "string literal!#%"
+    "string literal!#%\n\t\"\\"
     965.102
     59342168
     ()
@@ -75,16 +75,42 @@ false
 `)
 }
 
+func TestPrintln(t *testing.T) {
+	stdout, _ := parseAndRunModule("println.un", `
+import "std.un"
+
+main(): () =
+    println 0
+    println 5
+    println 11
+    println 49329
+    println(-99998)
+    println "a\nstring"
+    println true
+    println ()
+`)
+	assertEq(stdout, `0
+5
+11
+49329
+-99998
+a
+string
+true
+()
+`)
+}
+
 func TestPrecedence(t *testing.T) {
 	stdout, _ := parseAndRunModule("precedence.un", `
 import "std.un"
 
 main(): () =
-    println 1 * 2 + 3
+    println 4 * 2 + 3
     println true and true or false
     println 1 - 2 // could be incorrectly interpreted as println(1(-2))
 `)
-	assertEq(stdout, `5
+	assertEq(stdout, `11
 true
 -1
 `)
