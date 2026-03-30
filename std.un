@@ -9,7 +9,7 @@ pow(n: Int, power: Int): Int =
 LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
 UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
-DIGIT: String = "1234567890"
+DIGIT: String = "0123456789"
 ALNUM: String = ALPHA + DIGIT
 
 boolToString(value: Bool): String =

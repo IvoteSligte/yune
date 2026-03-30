@@ -114,6 +114,16 @@ template <class Return, class... Args> struct Function {
   std::shared_ptr<Concept> self;
 };
 
+// extends std::apply to work for a zero-sized tuple
+template <class F, class Tuple>
+decltype(auto) apply(F&& f, Tuple&& tuple) {
+  if constexpr (std::tuple_size_v<std::remove_reference_t<Tuple>> == 0) {
+    return std::forward<F>(f)();
+  } else {
+    return std::apply(std::forward<F>(f), std::forward<Tuple>(tuple));
+  }
+}
+
 struct Span {
   Span(int line, int column) : line(line), column(column) {}
   int line;

@@ -140,10 +140,10 @@ func (v *Variable) Lower(state *State) cpp.Expression {
 }
 
 type FunctionCall struct {
-	Span            Span
-	Function        Expression
-	Argument        Expression
-	argumentIsTuple bool
+	Span             Span
+	Function         Expression
+	Argument         Expression
+	parameterIsTuple bool
 	// A field for storing data that builtin functions need to transfer
 	// between Analyze and Lower.
 	builtinData any
@@ -229,8 +229,8 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 			At:       f.Argument.GetSpan(),
 		})
 	}
-	_, argumentIsTuple := argumentType.(*TupleType)
-	f.argumentIsTuple = argumentIsTuple
+	_, parameterIsTuple := functionType.Argument.(*TupleType)
+	f.parameterIsTuple = parameterIsTuple
 	return
 }
 
@@ -257,9 +257,9 @@ func (f *FunctionCall) Lower(state *State) cpp.Expression {
 			}
 		}
 	}
-	if f.argumentIsTuple {
+	if f.parameterIsTuple {
 		// calls the function with a tuple of arguments
-		return fmt.Sprintf(`std::apply(%s, %s)`, f.Function.Lower(state), f.Argument.Lower(state))
+		return fmt.Sprintf(`ty::apply(%s, %s)`, f.Function.Lower(state), f.Argument.Lower(state))
 	}
 	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(state), f.Argument.Lower(state))
 }
