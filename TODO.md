@@ -2,7 +2,6 @@
 serialization of Box and List (validity can be checked with `constinit`)
 broken parsing for function calls without parentheses
 cycle detection
-\\, \", \t and \n in string literals
 
 tuple is (x: Int, y: Int) -> doStuff(x, y)
 
