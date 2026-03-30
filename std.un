@@ -1,22 +1,24 @@
 mod(n: Int, m: Int): Int =
     n - ((n / m) * m)
 
+pow(n: Int, power: Int): Int =
+    power < 0 -> pow(n, -power)
+    power == 0 -> 1
+    n * pow(n, power-1)
+
+LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
+UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
+DIGIT: String = "1234567890"
+ALNUM: String = ALPHA + DIGIT
+
 boolToString(value: Bool): String =
     value == true -> "true"
     "false"
 
 intToString(value: Int): String =
     value < 0 -> "-" + intToString(-value)
-    value == 0 -> "0"
-    value == 1 -> "1"
-    value == 2 -> "2"
-    value == 3 -> "3"
-    value == 4 -> "4"
-    value == 5 -> "5"
-    value == 6 -> "6"
-    value == 7 -> "7"
-    value == 8 -> "8"                       
-    value == 9 -> "9"
+    value <= 9 -> at(DIGIT, value)
     intToString(value / 10) + intToString(mod(value, 10))
 
 toString(value: Union[Int, Bool, String, ()]): String =
@@ -27,6 +29,14 @@ toString(value: Union[Int, Bool, String, ()]): String =
 
 println(value: Union[Int, Bool, String, ()]): () =
     printlnString(toString(value)) // FIXME: things break without parens, presumably because of precedence
+
+// Converts a base-10 unsigned integer string to an integer.
+stringToUint(text: String): Union[Int, ()] =
+    found := findChar(DIGIT, 0, at(text, 0))
+    found is digit: Int ->
+        len(text) == 1 -> digit
+        remainder := stringToUint(subString(text, 1, len(text)))
+        remainder is uint: Int -> digit * pow(10, len(text)-1) + uint
 
 findChar(text: String, offset: Int, char: String): Union[Int, ()] =
     offset < len(text) ->
@@ -43,15 +53,10 @@ stringContainsOnly(string: String, charSet: String): Bool =
     ;stringContains(charSet, at(string, 0)) -> false
     stringContainsOnly(subString(string, 1, len(string)), charSet)
 
-LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
-UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-ALPHA: String = LOWER_ALPHA + UPPER_ALPHA
-DIGIT: String = "1234567890"
-ALNUM: String = ALPHA + DIGIT
-
 isLower(string: String): Bool = stringContainsOnly(string, LOWER_ALPHA)
 isAlpha(string: String): Bool = stringContainsOnly(string, ALPHA)
 isAlnum(string: String): Bool = stringContainsOnly(string, ALNUM)
+isDigits(string: String): Bool = stringContainsOnly(string, DIGIT)
 
 mapChar(char: String, from: String, to: String): String =
     len(from) ;= len(to) -> panic("mapChar 'from' and 'to' strings must be of equal length.")

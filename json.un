@@ -1,0 +1,45 @@
+
+Error = String
+
+digitPrefixLength(text: String): Int =
+    ;isDigits(at(text, 0)) -> 0
+    1 + digitPrefixLength(subString(text, 1, len(text)))
+
+parseUint(text: String): Union[(Int, String), ()] =
+    prefixLength := digitPrefixLength(text)
+    prefixLength == 0 -> ()
+    stringToUint(subString(text, 0, prefixLength)) is uint: Int
+    (uint, subString(text, prefixLength, len(text)))
+
+parseInt(text: String): Union[(Int, String), ()] =
+    at(text, 0) == "-" ->
+        result := parseUint(subString(text, 1, len(text)))
+        result is fail: () -> () // TODO: error?
+        result is ok: (Int, Tuple)
+        (uint: Int, remainder: String) = ok
+        (-uint, remainder)
+    parseUint(text)
+
+parseNumber(text: String): Union[(Union[Int, Float], String), ()] =
+    // integer part
+    result := parseInt(text)
+    result is ok: (Int, String) ->
+        (int: Int, remainder: String) = ok
+        // dot
+        at(remainder, 0) ;= "." -> (int, remainder)
+        remainder = subString(remainder, 1, len(remainder))
+        fractionLength := digitPrefixLength(remainder)
+        // fractional part
+        parseUint(remainder) is ok: (Int, String) ->
+            (fraction: Int, remainder: String) = ok
+            float := int + toFloat(fraction) / toFloat(pow(10, fractionLength))
+            (float, remainder)
+        toFloat(int)
+
+Value = ?? // NOTE: recursive type...
+
+parse(text: String): Value =
+    panic("TODO")
+
+json(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
+    

@@ -14,6 +14,10 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &TupleType{Elements: []TypeValue{&TypeType{}, &TypeType{}}},
 		Return:   &TypeType{},
 	}},
+	{"toFloat", &FnType{
+		Argument: &IntType{},
+		Return:   &FloatType{},
+	}},
 	{"Expression", &TypeType{}},
 	{"stringLiteral", &FnType{
 		Argument: &StringType{},

@@ -2,24 +2,25 @@
 
 // headers also used by Yune programs
 #include <algorithm>
+#include <iostream> // std::cout
 #include <set>
-#include <tuple>      // std::tuple, std::apply
-#include <string>     // std::string
-#include <vector>     // std::vector
-#include <iostream>   // std::cout
+#include <string> // std::string
+#include <tuple>  // std::tuple, std::apply
+#include <vector> // std::vector
 
 // headers for this file
+#include <concepts>
+#include <format>
 #include <iomanip>
-#include <sstream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
-#include <concepts>
 #include <variant>
-#include <format>
 
 template <class T> struct Box {
-  Box(T&& value) : ptr(std::make_shared<std::decay_t<T>>(std::forward<T>(value))) {}  
+  Box(T &&value)
+      : ptr(std::make_shared<std::decay_t<T>>(std::forward<T>(value))) {}
   Box(std::shared_ptr<T> ptr) : ptr(ptr) {}
 
   bool operator==(const Box<T> &other) const {
@@ -27,11 +28,10 @@ template <class T> struct Box {
   }
   T &get() const { return *this->ptr.get(); }
 
-  std::shared_ptr<T> ptr;  
+  std::shared_ptr<T> ptr;
 };
 
-template <class T>
-Box<T> box(T&& value) {
+template <class T> Box<T> box(T &&value) {
   return std::make_shared<std::decay_t<T>>(std::forward<T>(value));
 }
 
@@ -61,17 +61,17 @@ template <class... T> struct Union {
 
   // Construct from empty Union.
   // This is never actually called, but required for type checking.
-  Union(const Union<> &) : variant(*(std::variant<T...>*)(nullptr)) {}
+  Union(const Union<> &) : variant(*(std::variant<T...> *)(nullptr)) {}
 
-  bool operator==(const Union<T...>& other) const = default;
-  
+  bool operator==(const Union<T...> &other) const = default;
+
   std::variant<T...> variant;
 };
 
 // Specialization of Union for zero elements.
 // This is not constructable in Yune, but required for certain type signatures.
-template<> struct Union<>{
-  bool operator==(const Union<>& other) const = default;
+template <> struct Union<> {
+  bool operator==(const Union<> &other) const = default;
 };
 
 template <class F, class Return, class... Args>
@@ -121,19 +121,19 @@ struct Span {
 };
 
 struct TypeType {
-  bool operator==(const TypeType& other) const { return true; }
+  bool operator==(const TypeType &other) const { return true; }
 };
-struct IntType  {
-  bool operator==(const IntType& other) const { return true; }
+struct IntType {
+  bool operator==(const IntType &other) const { return true; }
 };
 struct FloatType {
-  bool operator==(const FloatType& other) const { return true; }
+  bool operator==(const FloatType &other) const { return true; }
 };
 struct BoolType {
-  bool operator==(const BoolType& other) const { return true; }
+  bool operator==(const BoolType &other) const { return true; }
 };
 struct StringType {
-  bool operator==(const StringType& other) const { return true; }
+  bool operator==(const StringType &other) const { return true; }
 };
 struct TupleType;
 struct ListType;
@@ -142,12 +142,12 @@ struct StructType;
 struct UnionType;
 
 using Type =
-    Union<TypeType, IntType, FloatType, BoolType, StringType,
-          Box<TupleType>, Box<ListType>, Box<FnType>, Box<StructType>, Box<UnionType>>;
+    Union<TypeType, IntType, FloatType, BoolType, StringType, Box<TupleType>,
+          Box<ListType>, Box<FnType>, Box<StructType>, Box<UnionType>>;
 
 struct TupleType {
   std::vector<Type> elements;
-  bool operator==(const TupleType& other) const = default;
+  bool operator==(const TupleType &other) const = default;
 };
 struct ListType {
   Type element;
@@ -357,7 +357,8 @@ inline std::string serialize(const StructType &t) {
   return R"({ "StructType": { "name": )" + ty::serialize(t.name) + " } }";
 }
 inline std::string serialize(const UnionType &t) {
-  return R"({ "UnionType": { "variants": )" + ty::serialize(t.variants) + " } }";
+  return R"({ "UnionType": { "variants": )" + ty::serialize(t.variants) +
+         " } }";
 }
 
 template <class T>
@@ -465,12 +466,24 @@ inline ty::Type Float = ty::FloatType{};
 inline ty::Type Bool = ty::BoolType{};
 inline ty::Type String = ty::StringType{};
 
-inline ty::Type List(ty::Type element) {
-  return box(ty::ListType{.element = element});
-}
-inline ty::Type Fn(ty::Type argument, ty::Type returnType) {
-  return box(ty::FnType{.argument = argument, .returnType = returnType});
-}
+inline struct List_ {
+  ty::Type operator()(ty::Type element) const {
+    return box(ty::ListType{.element = element});
+  }
+  std::string serialize() const { return R"({ "Function": "List" })"; }
+} List;
+
+inline struct Fn_ {
+  ty::Type operator()(ty::Type argument, ty::Type returnType) const {
+    return box(ty::FnType{.argument = argument, .returnType = returnType});
+  }
+  std::string serialize() const { return R"({ "Function": "Fn" })"; }
+} Fn;
+
+inline struct toFloat_ {
+  float operator()(int n) const { return n; }
+  std::string serialize() const { return R"({ "Function": "toFloat" })"; }
+} toFloat;
 
 inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
 
@@ -487,22 +500,19 @@ inline struct stringLiteral_ {
   ty::Expression operator()(std::string str) const {
     return ty::StringLiteral{.value = str};
   }
-  std::string serialize() const {
-    return R"({ "Function": "stringLiteral" })";
-  }
+  std::string serialize() const { return R"({ "Function": "stringLiteral" })"; }
 } stringLiteral;
 
 inline struct variable_ {
   ty::Expression operator()(std::string name) const {
     return ty::Variable{.name = name};
   }
-  std::string serialize() const {
-    return R"({ "Function": "variable" })";
-  }
+  std::string serialize() const { return R"({ "Function": "variable" })"; }
 } variable;
 
 inline struct binaryExpression_ {
-  ty::Expression operator()(std::string op, ty::Expression left, ty::Expression right) const {
+  ty::Expression operator()(std::string op, ty::Expression left,
+                            ty::Expression right) const {
     return box(ty::BinaryExpression{.op = op, .left = left, .right = right});
   }
   std::string serialize() const {
@@ -511,12 +521,11 @@ inline struct binaryExpression_ {
 } binaryExpression;
 
 inline struct functionCall_ {
-  ty::Expression operator()(ty::Expression function, ty::Expression argument) const {
+  ty::Expression operator()(ty::Expression function,
+                            ty::Expression argument) const {
     return box(ty::FunctionCall{.function = function, .argument = argument});
   }
-  std::string serialize() const {
-    return R"({ "Function": "functionCall" })";
-  }
+  std::string serialize() const { return R"({ "Function": "functionCall" })"; }
 } functionCall;
 
 inline struct printlnString_ {
@@ -524,30 +533,22 @@ inline struct printlnString_ {
     std::cout << str << std::endl;
     return std::make_tuple();
   }
-  std::string serialize() const {
-    return R"({ "Function": "printlnString" })";
-  }
+  std::string serialize() const { return R"({ "Function": "printlnString" })"; }
 } printlnString;
 
 inline struct len_ {
-  int operator()(std::string s) const {
-    return s.length();
-  }
-  std::string serialize() const {
-    return R"({ "Function": "len" })";
-  }
+  int operator()(std::string s) const { return s.length(); }
+  std::string serialize() const { return R"({ "Function": "len" })"; }
 } len;
 
 inline struct at_ {
   std::string operator()(std::string s, int i) const {
     if (i >= s.length()) {
-      panic("at: i > length");      
+      panic("at: i > length");
     }
     return std::string(1, s[i]);
   }
-  std::string serialize() const {
-    return R"({ "Function": "at" })";
-  }
+  std::string serialize() const { return R"({ "Function": "at" })"; }
 } at;
 
 inline struct subString_ {
@@ -557,28 +558,25 @@ inline struct subString_ {
     }
     return s.substr(start, end - start);
   }
-  std::string serialize() const {
-    return R"({ "Function": "subString" })";
-  }
+  std::string serialize() const { return R"({ "Function": "subString" })"; }
 } subString;
 
 // isVariant for subset
 template <typename... T, typename... V>
-requires(sizeof...(T) != 1)
+  requires(sizeof...(T) != 1)
 ty::Union<T...> isVariant_(ty::Union<V...> _union) {
   bool found = (std::holds_alternative<T>(_union.variant) || ...);
   return found;
 }
 
 // isVariant for element
-template <typename T, typename... V>
-bool isVariant_(ty::Union<V...> _union) {
+template <typename T, typename... V> bool isVariant_(ty::Union<V...> _union) {
   return std::holds_alternative<T>(_union.variant);
 }
 
 // getVariant for subset
 template <typename... T, typename... V>
-requires(sizeof...(T) != 1)
+  requires(sizeof...(T) != 1)
 ty::Union<T...> getVariant_(ty::Union<V...> _union) {
   std::optional<ty::Union<T...>> result;
   (
@@ -595,8 +593,7 @@ ty::Union<T...> getVariant_(ty::Union<V...> _union) {
 }
 
 // getVariant for element
-template <typename T, typename... V>
-T getVariant_(ty::Union<V...> _union) {
+template <typename T, typename... V> T getVariant_(ty::Union<V...> _union) {
   if (!std::holds_alternative<T>(_union.variant)) {
     panic("getVariant: variant mismatch");
   }
@@ -622,7 +619,7 @@ inline struct Union_ {
     }
     // Deduplicate types.
     // This is very stupid and inefficient, but it works.
-    std::vector<ty::Type> unique_variants;      
+    std::vector<ty::Type> unique_variants;
     {
       std::set<std::string> unique_strings;
       for (const auto &variant : flat_variants) {
@@ -632,10 +629,8 @@ inline struct Union_ {
           unique_variants.push_back(variant);
         }
       }
-    }    
-    return box(ty::UnionType{ .variants = unique_variants });
+    }
+    return box(ty::UnionType{.variants = unique_variants});
   }
-  std::string serialize() const {
-    return R"({ "Function": "Union" })";
-  }  
+  std::string serialize() const { return R"({ "Function": "Union" })"; }
 } Union;
