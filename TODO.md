@@ -21,3 +21,17 @@ A C++ shared library provides a `dynamic loader` that initialises C++ global var
 The alternative is statically linking the C++ standard library and providing an initialization function.
 
 A better alternative is simply compiling to C and using only static initialization. Except at compile-time, when C++ libraries can freely be used.
+
+Steps to runtime-free glory:
+
+1. only explicit constructors
+2. replace std::get with std::get_if so that exceptions are not thrown
+3. no C++ stdlib collections at global scope
+4. no std::variant because it requires type IDs?
+5. only static initializers:
+   ```C++
+   constinit auto* p_ptr = [] {
+       static constexpr double p = 10.0;
+       return &p;
+   }();
+   ```

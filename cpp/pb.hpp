@@ -644,3 +644,4 @@ inline struct Union_ {
   }
   std::string serialize() const { return R"({ "Function": "Union" })"; }
 } Union;
+
