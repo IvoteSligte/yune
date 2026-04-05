@@ -8,3 +8,16 @@ macro error accountability checking
 tuple is (x: Int, y: Int) -> doStuff(x, y)
 
 remove trailing (unindented) empty lines from macro and the trailing newline that is always there (I think)
+
+
+C++23 has constexpr std::string string literals and some support for constexpr std::variant
+
+C++ runtime provides an allocator, so `new` cannot be used?
+
+---
+
+A C++ shared library provides a `dynamic loader` that initialises C++ global variables and sets up the standard allocator.
+
+The alternative is statically linking the C++ standard library and providing an initialization function.
+
+A better alternative is simply compiling to C and using only static initialization. Except at compile-time, when C++ libraries can freely be used.
