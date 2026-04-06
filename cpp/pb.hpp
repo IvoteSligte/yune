@@ -18,6 +18,7 @@
 #include <utility>
 #include <variant>
 
+// FIXME: this name can clash with user-defined globals
 template <class T> struct Box {
   Box(T &&value)
       : ptr(std::make_shared<std::decay_t<T>>(std::forward<T>(value))) {}
@@ -44,24 +45,18 @@ template <class... T> struct Union {
   // Create from element directly
   template <class U>
     requires is_one_of_v<std::decay_t<U>, T...>
-  Union(U &&element) : variant(std::forward<U>(element)) {}
-
-  // Create from element through boxing
-  template <class U>
-    requires(!is_one_of_v<std::decay_t<U>, T...>) &&
-            is_one_of_v<std::shared_ptr<std::decay_t<U>>, T...>
-  Union(U &&element) : variant(box(std::forward<U>(element))) {}
+  constexpr Union(U &&element) : variant(std::forward<U>(element)) {}
 
   // Create from subset
   template <class... U>
-  Union(const Union<U...> &subset)
+  constexpr Union(const Union<U...> &subset)
       : variant(std::visit(
-            [](auto &&element) -> std::variant<T...> { return element; },
+            [](auto &&element) constexpr -> std::variant<T...> { return element; },
             subset.variant)) {}
 
   // Construct from empty Union.
   // This is never actually called, but required for type checking.
-  Union(const Union<> &) : variant(*(std::variant<T...> *)(nullptr)) {}
+  // constexpr Union(const Union<> &) : variant(*(std::variant<T...> *)(nullptr)) {}
 
   bool operator==(const Union<T...> &other) const = default;
 
@@ -80,6 +75,7 @@ concept FunctionLike = requires(F f, Args... args) {
   { f.serialize() } -> std::convertible_to<std::string>;
 };
 
+// FIXME: this is probably not runtime-free
 // A serializable function class similar to std::function
 template <class Return, class... Args> struct Function {
   struct Concept {

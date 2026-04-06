@@ -24,11 +24,11 @@ A better alternative is simply compiling to C and using only static initializati
 
 Steps to runtime-free glory:
 
-1. only explicit constructors
-2. replace std::get with std::get_if so that exceptions are not thrown
-3. no C++ stdlib collections at global scope
-4. no std::variant because it requires type IDs?
-5. only static initializers:
+[ ] disable exceptions
+[ ] no constructors for global variables that are unions
+[ ] replace std::get with std::get_if so that exceptions are not thrown
+[ ] no std::vector and std::string at global scope
+[ ] only static initializers:
    ```C++
    constinit auto* p_ptr = [] {
        static constexpr double p = 10.0;
