@@ -3,7 +3,7 @@
     "arguments": [
       "/usr/lib64/ccache/clang",
       "-c",
-      "-std=c++20",
+      "-std=c++23",
       "pb.hpp"
     ],
     "directory": "/home/ivo/Documents/yune/cpp",

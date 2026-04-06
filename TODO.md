@@ -1,4 +1,7 @@
 
+NOTE: is clang-repl's final result being properly waited for when there is no `main`?
+
+
 runtime-free serialization of Box and List (validity can be checked with `constinit`)
 broken parsing for function calls without parentheses
 cycle detection
@@ -34,3 +37,5 @@ Steps to runtime-free glory [make sure to describe this in the thesis]:
        return &p;
    }();
    ```
+
+Note that List and String are immutable because they may reference immutable static global data.

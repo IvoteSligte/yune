@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"log"
 	"yune/util"
 
 	fj "github.com/valyala/fastjson"
@@ -26,9 +27,19 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		if err == nil {
 			return fmt.Sprintf("%q", string)
 		}
-	}
-	// TODO: lists
+		array, err := data.Array()
+		if err == nil {
+			return fmt.Sprintf(`{ []() constexpr {
+static constexpr auto array[%d] = {%s};
+return array;
+}() }`, len(array), util.JoinFunc(array, ", ", state.lowerExpressionValue))
 
+			// return fmt.Sprintf(
+			// 	`{%s}`, util.JoinFunc(array, ", ", state.lowerExpressionValue),
+			// )
+		}
+		log.Panicf("Tried to lower non-object JSON variant: %s", data)
+	}
 	key, v := fjUnmarshalUnion(object)
 	switch key {
 	case "Closure":
@@ -42,7 +53,10 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + string(v.GetStringBytes())
 	case "Box":
-		return fmt.Sprintf(`box(%s)`, state.lowerExpressionValue(v))
+		return fmt.Sprintf(`box([]() constexpr {
+    static constexpr auto value = %s;
+    return &value;
+}())`, state.lowerExpressionValue(v))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {

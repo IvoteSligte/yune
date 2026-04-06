@@ -6,6 +6,7 @@
 #include <set>
 #include <string> // std::string
 #include <tuple>  // std::tuple, std::apply
+#include <type_traits>
 #include <vector> // std::vector
 
 // headers for this file
@@ -42,7 +43,7 @@ template <class T> struct Box {
   std::variant<std::shared_ptr<T>, T *> ptr;
 };
 
-template <class T> Box<T> box(T *value) { return Box(value); }
+template <class T> constexpr Box<T> box(T *value) { return Box(value); }
 
 template <class T> Box<T> box(T &&value) {
   return std::make_shared<std::decay_t<T>>(std::forward<T>(value));
@@ -52,10 +53,22 @@ template <class T> Box<T> box(T &&value) {
 template <class T, class... Ts>
 inline constexpr bool is_one_of_v = (std::is_same_v<T, Ts> || ...);
 
+// Checks if T is among the classes Ts
+template <class T, class... Ts>
+inline constexpr bool is_constructible_one_of_v =
+    (std::is_constructible_v<Ts, T> || ...);
+
 template <class... T> struct Union {
   // Create from element directly
   template <class U>
     requires is_one_of_v<std::decay_t<U>, T...>
+  constexpr Union(U &&element) : variant(std::forward<U>(element)) {}
+
+  // Create from element using an intermediate class
+  // Required to create a Union[String] from a const char*, for example
+  template <class U>
+    requires is_constructible_one_of_v<U, T...> &&
+             (!is_one_of_v<std::decay_t<U>, T...>)
   constexpr Union(U &&element) : variant(std::forward<U>(element)) {}
 
   // Create from subset
@@ -79,11 +92,12 @@ template <> struct Union<> {
 template <class T> struct List {
   struct ArrayRef {
     size_t size;
-    T *ptr;
+    const T *ptr;
   };
 
-  constexpr List() = default;
-
+  // Prevent valueless std::variant  
+  List() = delete;
+  
   template <size_t N>
   constexpr List(T array[N]) : value(ArrayRef{.size = N, .ptr = array}) {}
 
@@ -116,7 +130,7 @@ template <class T> struct List {
     return result;
   }
 
-  T *begin() {
+  const T *begin() const {
     if (std::holds_alternative<std::vector<T>>(value)) {
       return std::get<std::vector<T>>(value).data();
     } else {
@@ -124,7 +138,7 @@ template <class T> struct List {
     }
   }
 
-  T *end() {
+  const T *end() const {
     if (std::holds_alternative<std::vector<T>>(value)) {
       auto &vector = std::get<std::vector<T>>(value);
       return vector.data() + vector.size();
@@ -169,10 +183,8 @@ struct String {
   constexpr String(const char *string) : value(string) {}
   constexpr String(std::string string) : value(string) {}
 
-  std::string to_owned() const {
-    return std::string(begin(), end());
-  }
-  
+  std::string to_owned() const { return std::string(begin(), end()); }
+
   size_t length() const {
     if (std::holds_alternative<std::string>(value)) {
       return std::get<std::string>(value).length();
@@ -778,7 +790,7 @@ inline struct Union_ {
       return variants[0];
     }
     // Nested unions are flattened
-    ty::List<ty::Type> flat_variants;
+    ty::List<ty::Type> flat_variants({});
     for (const auto &variant : variants) {
       if (std::holds_alternative<ty::Box<ty::UnionType>>(variant.variant)) {
         for (auto nested_variant :
@@ -791,7 +803,7 @@ inline struct Union_ {
     }
     // Deduplicate types.
     // This is very stupid and inefficient, but it works.
-    ty::List<ty::Type> unique_variants;
+    ty::List<ty::Type> unique_variants({});
     {
       std::set<std::string> unique_strings;
       for (const auto &variant : flat_variants) {

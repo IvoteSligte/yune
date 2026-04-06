@@ -5,6 +5,6 @@
 go
 clang++
 clang-format
-C++20
+C++23
 clang-repl
 

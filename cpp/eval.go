@@ -53,7 +53,7 @@ func NewInterpreter() *Interpreter {
 		log.Fatalln("Failed to start TCP connection with clang-repl. Error:", err)
 	}
 	// Start REPL and setup inputs/outputs
-	cmd := exec.Command("clang-repl", "-Xcc=-std=c++20")
+	cmd := exec.Command("clang-repl", "-Xcc=-std=c++23")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatalln("Failed to get stdin pipe from clang-repl command. Error:", err)
