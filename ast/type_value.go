@@ -137,10 +137,10 @@ func (t *TupleType) Eq(other TypeValue) bool {
 }
 
 func (t TupleType) LowerType() cpp.Type {
-	return "std::tuple<" + util.JoinFunction(t.Elements, ", ", TypeValue.LowerType) + ">"
+	return "std::tuple<" + util.JoinFunc(t.Elements, ", ", TypeValue.LowerType) + ">"
 }
 func (t TupleType) LowerValue() cpp.Value {
-	return "box(ty::TupleType{ .elements = { " + util.JoinFunction(t.Elements, ", ", TypeValue.LowerValue) + " } })"
+	return "box(ty::TupleType{ .elements = { " + util.JoinFunc(t.Elements, ", ", TypeValue.LowerValue) + " } })"
 }
 
 type ListType struct {
@@ -187,7 +187,7 @@ func (f FnType) LowerType() cpp.Type {
 	if len(argumentTuple.Elements) == 0 {
 		return fmt.Sprintf("ty::Function<%s>", _return)
 	}
-	arguments := util.JoinFunction(argumentTuple.Elements, ", ", TypeValue.LowerType)
+	arguments := util.JoinFunc(argumentTuple.Elements, ", ", TypeValue.LowerType)
 	return fmt.Sprintf("ty::Function<%s, %s>", _return, arguments)
 }
 
@@ -238,10 +238,10 @@ func (u *UnionType) Eq(other TypeValue) bool {
 	return true
 }
 func (u UnionType) LowerType() cpp.Type {
-	return "ty::Union<" + util.JoinFunction(u.Variants, ", ", TypeValue.LowerType) + ">"
+	return "ty::Union<" + util.JoinFunc(u.Variants, ", ", TypeValue.LowerType) + ">"
 }
 func (u UnionType) LowerValue() cpp.Type {
-	return "box(ty::TupleType{ .variants = { " + util.JoinFunction(u.Variants, ", ", TypeValue.LowerValue) + " } })"
+	return "box(ty::TupleType{ .variants = { " + util.JoinFunc(u.Variants, ", ", TypeValue.LowerValue) + " } })"
 }
 
 func (u UnionType) HasVariant(variant TypeValue) bool {

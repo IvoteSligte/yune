@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -313,7 +312,7 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 func (t *List) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(
 		`std::vector<%s>{%s}`,
-		t.elementType.LowerType(), util.JoinFunction(t.Elements, ", ", func(e Expression) cpp.Expression {
+		t.elementType.LowerType(), util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
 		}),
 	)
@@ -377,12 +376,12 @@ func (t *Tuple) Lower(state *State) cpp.Expression {
 		if len(t.Elements) == 0 {
 			return `box((ty::TupleType){})`
 		}
-		elements := util.JoinFunction(t.Elements, ", ", func(e Expression) string {
+		elements := util.JoinFunc(t.Elements, ", ", func(e Expression) string {
 			return e.Lower(state)
 		})
 		return fmt.Sprintf(`box((ty::TupleType){ .elements = {%s} })`, elements)
 	} else {
-		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunction(t.Elements, ", ", func(e Expression) cpp.Expression {
+		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
 		}))
 	}
@@ -412,7 +411,7 @@ func (m *Macro) GetSpan() Span {
 }
 
 func (m *Macro) GetText() string {
-	return util.JoinFunction(m.Lines, "\n", func(l MacroLine) string {
+	return util.JoinFunc(m.Lines, "\n", func(l MacroLine) string {
 		return l.Text
 	})
 }
@@ -701,7 +700,7 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 }
 
 func (c Closure) LowerParameters() string {
-	return util.JoinFunction(c.Parameters, ", ", FunctionParameter.Lower)
+	return util.JoinFunc(c.Parameters, ", ", FunctionParameter.Lower)
 }
 
 // Lower implements Expression.
@@ -755,30 +754,6 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 	return lowered
 }
 
-func UnmarshalItem[T any](data *fj.Value, f func(*fj.Value) (T, error), keys ...string) T {
-	value := data.Get(keys...)
-	if value == nil {
-		panic(fmt.Sprintf("Key path '[%s]' does not exist in data: %s", strings.Join(keys, ", "), data))
-	}
-	item, err := f(value)
-	if err != nil {
-		panic(fmt.Sprintf("Item is not of the desired type. Error: %s. Value: %s", err, value))
-	}
-	return item
-}
-
-func UnmarshalString(data *fj.Value, keys ...string) string {
-	return string(UnmarshalItem(data, (*fj.Value).StringBytes, keys...))
-}
-
-func UnmarshalNonEmptyString(data *fj.Value, keys ...string) string {
-	s := UnmarshalString(data, keys...)
-	if s == "" {
-		panic(fmt.Sprintf("Unmarshalled empty string from data: %s", data))
-	}
-	return s
-}
-
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -802,7 +777,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "StringLiteral":
 		expr = &String{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
-			Value: string(UnmarshalItem(v, (*fj.Value).StringBytes, "value")), // can be empty
+			Value: UnmarshalString(v, "value"), // can be empty
 		}
 	case "Variable":
 		expr = &Variable{

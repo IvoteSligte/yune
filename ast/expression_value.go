@@ -70,7 +70,7 @@ func (state *State) lowerClosureValue(v *fj.Value) string {
 		captures += _type + " " + name + " = " + value + ";\n"
 	}
 	parameters := closure.LowerParameters()
-	arguments := util.JoinFunction(closure.Parameters, ", ", func(p FunctionParameter) string {
+	arguments := util.JoinFunc(closure.Parameters, ", ", func(p FunctionParameter) string {
 		return p.Name.String
 	})
 	return fmt.Sprintf(`[](%s){

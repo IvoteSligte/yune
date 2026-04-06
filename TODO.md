@@ -22,11 +22,10 @@ The alternative is statically linking the C++ standard library and providing an 
 
 A better alternative is simply compiling to C and using only static initialization. Except at compile-time, when C++ libraries can freely be used.
 
-Steps to runtime-free glory:
+Steps to runtime-free glory [make sure to describe this in the thesis]:
 
 [x] disable exceptions
-[ ] use evaluated value for runtime globals
-[ ] replace std::get with std::get_if so that exceptions are not thrown
+[x] use evaluated value for runtime globals
 [ ] no std::vector and std::string at global scope
 [ ] only static initializers:
    ```C++

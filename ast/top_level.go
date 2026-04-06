@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"yune/cpp"
 	"yune/util"
+
+	fj "github.com/valyala/fastjson"
 )
 
 type TopLevelDeclaration interface {
@@ -104,7 +106,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 
 // LowerDeclaration implements TopLevelDeclaration.
 func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
-	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
+	params := util.JoinFunc(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`struct %s_ {
     %s operator()(%s) const;
     std::string serialize() const;
@@ -113,7 +115,7 @@ func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 
 // LowerDefinition implements TopLevelDeclaration.
 func (d *FunctionDeclaration) LowerDefinition(state *State) cpp.Definition {
-	params := util.JoinFunction(d.Parameters, ", ", FunctionParameter.Lower)
+	params := util.JoinFunc(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
 std::string %s_::serialize() const {
     return R"({ "Function": "%s" })";
@@ -156,12 +158,12 @@ func (d FunctionParameter) GetDeclaredType() TypeValue {
 }
 
 type ConstantDeclaration struct {
-	Span        Span
-	Name        Name
-	Type        Type
-	Body        Block
-	HasCaptures bool
-	IsBuiltin   bool
+	Span      Span
+	Name      Name
+	Type      Type
+	Body      Block
+	IsBuiltin bool
+	value     *fj.Value
 }
 
 // GetSpan implements TopLevelDeclaration.
@@ -191,7 +193,8 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
-	d.HasCaptures = len(*scope.Table.localCaptures) > 0
+	hasCaptures := len(*scope.Table.localCaptures) > 0
+	d.value = anal.Evaluate(cpp.LambdaBlock(d.Body.Lower(anal.State), hasCaptures))
 	anal.Define(d)
 }
 
@@ -202,7 +205,10 @@ func (d ConstantDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 
 // LowerDefinition implements TopLevelDeclaration.
 func (d ConstantDeclaration) LowerDefinition(state *State) cpp.Definition {
-	return fmt.Sprintf("%s %s = %s;", d.Type.Lower(), d.Name.Lower(), cpp.LambdaBlock(d.Body.Lower(state), d.HasCaptures))
+	return fmt.Sprintf(
+		"%s %s = %s;",
+		d.Type.Lower(), d.Name.Lower(), state.lowerExpressionValue(d.value),
+	)
 }
 
 // GetType implements Declaration.

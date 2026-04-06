@@ -54,7 +54,7 @@ func Prepend[T any](element T, slice []T) []T {
 	return append([]T{element}, slice...)
 }
 
-func JoinFunction[T any](array []T, separator string, function func(T) string) string {
+func JoinFunc[T any](array []T, separator string, function func(T) string) string {
 	return strings.Join(Map(array, function), separator)
 }
 
