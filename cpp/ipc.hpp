@@ -48,8 +48,8 @@ public:
 
   ~CompilerConnection() { ::close(socket); }
 
-  ty::Type get_type(std::string name) {
-    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name);
+  ty::Type get_type(ty::String name) {
+    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name.to_owned());
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
@@ -91,7 +91,7 @@ private:
 } compiler_connection{};
 
 inline struct get_type_ {
-  ty::Type operator()(std::string name) const {
+  ty::Type operator()(ty::String name) const {
     return compiler_connection.get_type(name);
   }
   std::string serialize() const {

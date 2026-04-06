@@ -111,7 +111,7 @@ func (s *StringType) Eq(other TypeValue) bool {
 	return ok
 }
 
-func (StringType) LowerType() cpp.Type   { return "std::string" }
+func (StringType) LowerType() cpp.Type   { return "ty::String" }
 func (StringType) LowerValue() cpp.Value { return "ty::StringType{}" }
 
 type TupleType struct {

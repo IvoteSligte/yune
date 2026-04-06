@@ -103,7 +103,7 @@ func (s String) GetSpan() Span {
 
 // Lower implements Expression.
 func (s String) Lower(state *State) cpp.Expression {
-	return fmt.Sprintf(`std::string(%q)`, s.Value)
+	return fmt.Sprintf(`ty::String(%q)`, s.Value)
 }
 
 // Analyze implements Expression.

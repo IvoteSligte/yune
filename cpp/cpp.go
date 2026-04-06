@@ -21,7 +21,7 @@ func String(s string) string {
 	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, "\n", `\n`)
 	s = strings.ReplaceAll(s, `"`, `\"`)
-	return `std::string("` + s + `")`
+	return `ty::String("` + s + `")`
 }
 
 type Expression = string

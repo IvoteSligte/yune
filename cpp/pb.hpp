@@ -83,12 +83,12 @@ template <class T> struct List {
   };
 
   constexpr List() = default;
-  
+
   template <size_t N>
   constexpr List(T array[N]) : value(ArrayRef{.size = N, .ptr = array}) {}
 
   List(std::initializer_list<T> list) : value(std::vector(list)) {}
-  
+
   List(std::vector<T> value) : value(value) {}
 
   size_t size() const {
@@ -101,7 +101,8 @@ template <class T> struct List {
 
   // Returns a new list, which is the copied contents of this list with the new
   // element appended.
-  // Note that there is no `push_back` function as in `std::vector` because this list may not be owned.
+  // Note that there is no `push_back` function as in `std::vector` because this
+  // list may not be owned.
   List<T> append(T element) const {
     std::vector<T> result;
 
@@ -146,9 +147,7 @@ template <class T> struct List {
     }
   }
 
-  const T& operator[](size_t index) const {
-    return at(index);
-  }
+  const T &operator[](size_t index) const { return at(index); }
 
   bool operator==(const List<T> &other) const {
     if (other.size() != size()) {
@@ -159,7 +158,7 @@ template <class T> struct List {
         return false;
       }
     }
-    return true;    
+    return true;
   }
 
   std::variant<std::vector<T>, ArrayRef> value;
@@ -169,6 +168,18 @@ template <class T> struct List {
 struct String {
   constexpr String(const char *string) : value(string) {}
   constexpr String(std::string string) : value(string) {}
+
+  std::string to_owned() const {
+    return std::string(begin(), end());
+  }
+  
+  size_t length() const {
+    if (std::holds_alternative<std::string>(value)) {
+      return std::get<std::string>(value).length();
+    } else {
+      return std::string(std::get<const char *>(value)).length();
+    }
+  }
 
   String subString(int start, int end) const {
     if (std::holds_alternative<std::string>(value)) {
@@ -194,8 +205,40 @@ struct String {
     return concat;
   }
 
+  bool operator==(const String &other) const {
+    std::string left;
+    if (std::holds_alternative<std::string>(value)) {
+      left = std::get<std::string>(value);
+    } else {
+      left = std::string(std::get<const char *>(value));
+    }
+    if (std::holds_alternative<std::string>(other.value)) {
+      return left == std::get<std::string>(other.value);
+    } else {
+      return left == std::string(std::get<const char *>(other.value));
+    }
+  }
+
+  const char *begin() const {
+    if (std::holds_alternative<std::string>(value)) {
+      return std::get<std::string>(value).data();
+    } else {
+      return std::get<const char *>(value);
+    }
+  }
+
+  const char *end() const { return begin() + length(); }
+
+  // Either a C++ allocated std::string or non-owned C-string.
   std::variant<std::string, const char *> value;
 };
+
+inline std::ostream &operator<<(std::ostream &os, const ty::String &s) {
+  for (const char c : s) {
+    os << c;
+  }
+  return os;
+}
 
 template <class F, class Return, class... Args>
 concept FunctionLike = requires(F f, Args... args) {
@@ -292,7 +335,7 @@ struct FnType {
   bool operator==(const FnType &other) const = default;
 };
 struct StructType {
-  std::string name;
+  String name;
   bool operator==(const StructType &other) const = default;
 };
 struct UnionType {
@@ -306,7 +349,7 @@ template <class T> struct Literal {
 using IntegerLiteral = Literal<int>;
 using FloatLiteral = Literal<float>;
 using BoolLiteral = Literal<bool>;
-using StringLiteral = Literal<std::string>;
+using StringLiteral = Literal<String>;
 struct Variable;
 struct FunctionCall;
 struct TupleExpression;
@@ -319,7 +362,7 @@ using Expression =
           Box<BinaryExpression>>;
 
 struct Variable {
-  std::string name;
+  String name;
 };
 struct FunctionCall {
   Expression function;
@@ -329,11 +372,11 @@ struct TupleExpression {
   ty::List<Expression> elements;
 };
 struct UnaryExpression {
-  std::string op;
+  String op;
   Expression expression;
 };
 struct BinaryExpression {
-  std::string op;
+  String op;
   Expression left;
   Expression right;
 };
@@ -348,12 +391,12 @@ using Statement =
 using Block = ty::List<Statement>;
 
 struct VariableDeclaration {
-  std::string name;
+  String name;
   Block body;
 };
 struct Assignment {
   Variable target;
-  std::string op;
+  String op;
   Block body;
 };
 struct BranchStatement {
@@ -363,11 +406,11 @@ struct BranchStatement {
 };
 
 // Escape string to JSON literal.
-inline std::string serialize(const std::string &s) {
+inline std::string serialize(const String &s) {
   std::ostringstream oss;
   oss << '"';
 
-  for (unsigned char c : s) {
+  for (const char c : s) {
     switch (c) {
     case '"':
       oss << "\\\"";
@@ -622,7 +665,7 @@ inline ty::Type Expression = box(ty::StructType{.name = "Expression"});
 
 inline struct panic_ {
   [[noreturn]]
-  ty::Union<> operator()(std::string message) const {
+  ty::Union<> operator()(ty::String message) const {
     std::cerr << "panic: " << message << std::endl;
     exit(1);
   }
@@ -630,21 +673,21 @@ inline struct panic_ {
 } panic;
 
 inline struct stringLiteral_ {
-  ty::Expression operator()(std::string str) const {
+  ty::Expression operator()(ty::String str) const {
     return ty::StringLiteral{.value = str};
   }
   std::string serialize() const { return R"({ "Function": "stringLiteral" })"; }
 } stringLiteral;
 
 inline struct variable_ {
-  ty::Expression operator()(std::string name) const {
+  ty::Expression operator()(ty::String name) const {
     return ty::Variable{.name = name};
   }
   std::string serialize() const { return R"({ "Function": "variable" })"; }
 } variable;
 
 inline struct binaryExpression_ {
-  ty::Expression operator()(std::string op, ty::Expression left,
+  ty::Expression operator()(ty::String op, ty::Expression left,
                             ty::Expression right) const {
     return box(ty::BinaryExpression{.op = op, .left = left, .right = right});
   }
@@ -662,7 +705,7 @@ inline struct functionCall_ {
 } functionCall;
 
 inline struct printlnString_ {
-  std::tuple<> operator()(std::string str) const {
+  std::tuple<> operator()(ty::String str) const {
     std::cout << str << std::endl;
     return std::make_tuple();
   }
@@ -670,12 +713,12 @@ inline struct printlnString_ {
 } printlnString;
 
 inline struct len_ {
-  int operator()(std::string s) const { return s.length(); }
+  int operator()(ty::String s) const { return s.length(); }
   std::string serialize() const { return R"({ "Function": "len" })"; }
 } len;
 
 inline struct subString_ {
-  std::string operator()(std::string s, int start, int end) const {
+  ty::String operator()(ty::String s, int start, int end) const {
     if (start < 0) {
       panic("subString: start < 0");
     }
@@ -685,7 +728,7 @@ inline struct subString_ {
     if (end < start) {
       panic("subString: end < start");
     }
-    return s.substr(start, end - start);
+    return s.subString(start, end);
   }
   std::string serialize() const { return R"({ "Function": "subString" })"; }
 } subString;
