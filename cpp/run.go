@@ -73,7 +73,7 @@ int main() {
 
 	fmt.Println("-- Clang++ log --")
 	pbIncludes := os.ExpandEnv("-I$PWD/pb")
-	cmd := exec.Command("clang++", "-O1", "-std=gnu++20", implementationPath, "-o", binaryPath, pbIncludes)
+	cmd := exec.Command("clang++", "-O1", "-fno-exceptions", "-std=gnu++20", implementationPath, "-o", binaryPath, pbIncludes)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {

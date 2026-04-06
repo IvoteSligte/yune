@@ -24,8 +24,8 @@ A better alternative is simply compiling to C and using only static initializati
 
 Steps to runtime-free glory:
 
-[ ] disable exceptions
-[ ] no constructors for global variables that are unions
+[x] disable exceptions
+[ ] use evaluated value for runtime globals
 [ ] replace std::get with std::get_if so that exceptions are not thrown
 [ ] no std::vector and std::string at global scope
 [ ] only static initializers:
