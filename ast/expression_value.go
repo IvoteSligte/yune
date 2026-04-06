@@ -8,7 +8,7 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
-func (state *State) lowerExpressionValue(data *fj.Value) string {
+func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string {
 	object := data.GetObject()
 	if object == nil { // primitive (Yune does not produce top-level arrays)
 		integer, err := data.Int64()
@@ -23,20 +23,23 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		if err == nil {
 			return fmt.Sprintf("%t", boolean)
 		}
-		string, err := data.StringBytes()
+		_string, err := data.StringBytes()
 		if err == nil {
-			return fmt.Sprintf("%q", string)
+			return fmt.Sprintf("ty::String(%q)", _string)
 		}
 		array, err := data.Array()
 		if err == nil {
-			return fmt.Sprintf(`{ []() constexpr {
-static constexpr auto array[%d] = {%s};
-return array;
-}() }`, len(array), util.JoinFunc(array, ", ", state.lowerExpressionValue))
-
-			// return fmt.Sprintf(
-			// 	`{%s}`, util.JoinFunc(array, ", ", state.lowerExpressionValue),
-			// )
+			elementType := _type.(*ListType).Element
+			elements := util.JoinFunc(array, ", ", func(v *fj.Value) string {
+				return state.lowerExpressionValue(v, elementType)
+			})
+			return fmt.Sprintf(`%s { []() constexpr {
+    static constexpr %s array[] = {%s};
+    return array;
+}(), %d}`,
+				_type.LowerType(),
+				elementType.LowerType(), elements,
+				len(array))
 		}
 		log.Panicf("Tried to lower non-object JSON variant: %s", data)
 	}
@@ -56,11 +59,13 @@ return array;
 		return fmt.Sprintf(`box([]() constexpr {
     static constexpr auto value = %s;
     return &value;
-}())`, state.lowerExpressionValue(v))
+}())`, state.lowerExpressionValue(v, _type))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
-			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(v))
+			panic("TODO: field type from _type")
+			fieldType := (TypeValue)(nil)
+			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(v, fieldType))
 		})
 		return fmt.Sprintf("(ty::%s) {%s}", key, fields)
 	}
@@ -78,9 +83,9 @@ func (state *State) lowerClosureValue(v *fj.Value) string {
 	captures := ""
 	for _, capture := range v.GetArray("captures") {
 		name := string(capture.GetStringBytes("name"))
-		_type := state.UnmarshalTypeValue(capture.Get("type")).LowerType()
-		value := state.lowerExpressionValue(capture.Get("value"))
-		captures += _type + " " + name + " = " + value + ";\n"
+		_type := state.UnmarshalTypeValue(capture.Get("type"))
+		value := state.lowerExpressionValue(capture.Get("value"), _type)
+		captures += _type.LowerType() + " " + name + " = " + value + ";\n"
 	}
 	parameters := closure.LowerParameters()
 	arguments := util.JoinFunc(closure.Parameters, ", ", func(p FunctionParameter) string {

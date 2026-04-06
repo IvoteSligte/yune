@@ -207,7 +207,7 @@ func (d ConstantDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 func (d ConstantDeclaration) LowerDefinition(state *State) cpp.Definition {
 	return fmt.Sprintf(
 		"constinit %s %s(%s);",
-		d.Type.Lower(), d.Name.Lower(), state.lowerExpressionValue(d.value),
+		d.Type.Lower(), d.Name.Lower(), state.lowerExpressionValue(d.value, d.Type.value),
 	)
 }
 

@@ -95,14 +95,13 @@ template <class T> struct List {
     const T *ptr;
   };
 
-  // Prevent valueless std::variant  
+  // Prevent valueless std::variant
   List() = delete;
-  
-  template <size_t N>
-  constexpr List(T array[N]) : value(ArrayRef{.size = N, .ptr = array}) {}
 
-  List(std::initializer_list<T> list) : value(std::vector(list)) {}
+  constexpr List(const T *array, size_t size)
+      : value(ArrayRef{.size = size, .ptr = array}) {}
 
+  List(std::initializer_list<T> value) : value(std::vector(value)) {}
   List(std::vector<T> value) : value(value) {}
 
   size_t size() const {

@@ -138,6 +138,10 @@ func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, e
 			return
 		}
 		message := fj.MustParse(read)
+		if message.Get("finished") != nil {
+			err = fmt.Errorf("Compiler connection reported 'finished' while waiting for a result. Message: '%s'.", message)
+			return
+		}
 		if result = message.Get("result"); result != nil {
 			return
 		}
@@ -153,6 +157,22 @@ func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, e
 		err = fmt.Errorf("Could not parse evaluation message: '%s'", message)
 		return
 	}
+}
+
+// The interpreter by default only waits for results.
+// This means that Interpreter.Declare may cause an error to be reported by clang-repl,
+// which is then ignored by the interpreter that already closed the connection.
+func (r *Interpreter) WaitForFinish() (err error) {
+	r.Write(`compiler_connection.send_finished();`)
+	read, err := r.reader.ReadString('\n')
+	if err != nil {
+		return
+	}
+	message := fj.MustParse(read)
+	if message.Get("finished") == nil {
+		err = fmt.Errorf("Expected 'finished' message, found: %s", message)
+	}
+	return
 }
 
 // Write text without expecting a response, such as for global declarations.

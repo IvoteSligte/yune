@@ -74,6 +74,10 @@ func (m Module) Lower() (lowered cpp.Module, hasMainFunction bool, errors Errors
 			len(declarations),
 		)
 	}
+	if err := anal.Interpreter.WaitForFinish(); err != nil {
+		errors = append(errors, err)
+		return
+	}
 	lowered = anal.Interpreter.Declared
 	anal.Interpreter.Close()
 	return

@@ -65,6 +65,14 @@ public:
     }
   }
 
+  void send_finished() const {
+    std::string payload = R"({ "finished": {} })""\n";
+    ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
+    if (err == -1) {
+      panic("Failed to send a 'finished' message through the compiler connection.");
+    }
+  }  
+
   void set_type(ty::Type type) {
     type_promise.set(type);
   }
