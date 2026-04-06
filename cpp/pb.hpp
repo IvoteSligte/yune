@@ -18,25 +18,36 @@
 #include <utility>
 #include <variant>
 
-// FIXME: this name can clash with user-defined globals
+namespace ty {
 template <class T> struct Box {
+  constexpr Box(T *ptr) : ptr(ptr) {}
+
   Box(T &&value)
       : ptr(std::make_shared<std::decay_t<T>>(std::forward<T>(value))) {}
-  Box(std::shared_ptr<T> ptr) : ptr(ptr) {}
+
+  Box(std::shared_ptr<T> &&ptr) : ptr(ptr) {}
 
   bool operator==(const Box<T> &other) const {
     return this->get() == other.get(); // compare inner values (not pointers)
   }
-  T &get() const { return *this->ptr.get(); }
 
-  std::shared_ptr<T> ptr;
+  T &get() const {
+    if (std::holds_alternative<T *>(ptr)) {
+      return *std::get<T *>(ptr);
+    } else {
+      return *std::get<std::shared_ptr<T>>(ptr);
+    }
+  }
+
+  std::variant<std::shared_ptr<T>, T *> ptr;
 };
+
+template <class T> Box<T> box(T *value) { return Box(value); }
 
 template <class T> Box<T> box(T &&value) {
   return std::make_shared<std::decay_t<T>>(std::forward<T>(value));
 }
 
-namespace ty {
 // Checks if T is among the classes Ts
 template <class T, class... Ts>
 inline constexpr bool is_one_of_v = (std::is_same_v<T, Ts> || ...);
@@ -50,13 +61,9 @@ template <class... T> struct Union {
   // Create from subset
   template <class... U>
   constexpr Union(const Union<U...> &subset)
-      : variant(std::visit(
-            [](auto &&element) constexpr -> std::variant<T...> { return element; },
-            subset.variant)) {}
-
-  // Construct from empty Union.
-  // This is never actually called, but required for type checking.
-  // constexpr Union(const Union<> &) : variant(*(std::variant<T...> *)(nullptr)) {}
+      : variant(std::visit([](auto &&element) constexpr
+                               -> std::variant<T...> { return element; },
+                           subset.variant)) {}
 
   bool operator==(const Union<T...> &other) const = default;
 
@@ -67,6 +74,127 @@ template <class... T> struct Union {
 // This is not constructable in Yune, but required for certain type signatures.
 template <> struct Union<> {
   bool operator==(const Union<> &other) const = default;
+};
+
+template <class T> struct List {
+  struct ArrayRef {
+    size_t size;
+    T *ptr;
+  };
+
+  constexpr List() = default;
+  
+  template <size_t N>
+  constexpr List(T array[N]) : value(ArrayRef{.size = N, .ptr = array}) {}
+
+  List(std::initializer_list<T> list) : value(std::vector(list)) {}
+  
+  List(std::vector<T> value) : value(value) {}
+
+  size_t size() const {
+    if (std::holds_alternative<std::vector<T>>(value)) {
+      return std::get<std::vector<T>>(value).size();
+    } else {
+      return std::get<ArrayRef>(value).size;
+    }
+  }
+
+  // Returns a new list, which is the copied contents of this list with the new
+  // element appended.
+  // Note that there is no `push_back` function as in `std::vector` because this list may not be owned.
+  List<T> append(T element) const {
+    std::vector<T> result;
+
+    if (std::holds_alternative<std::vector<T>>(value)) {
+      result = std::get<std::vector<T>>(value);
+    } else {
+      auto array = std::get<ArrayRef>(value);
+      result = std::vector<T>(array.ptr, array.ptr + array.size);
+    }
+    result.push_back(element);
+    return result;
+  }
+
+  T *begin() {
+    if (std::holds_alternative<std::vector<T>>(value)) {
+      return std::get<std::vector<T>>(value).data();
+    } else {
+      return std::get<ArrayRef>(value).ptr;
+    }
+  }
+
+  T *end() {
+    if (std::holds_alternative<std::vector<T>>(value)) {
+      auto &vector = std::get<std::vector<T>>(value);
+      return vector.data() + vector.size();
+    } else {
+      auto &array = std::get<ArrayRef>(value);
+      return array.ptr + array.size;
+    }
+  }
+
+  const T &at(size_t index) const {
+    if (std::holds_alternative<std::vector<T>>(value)) {
+      return std::get<std::vector<T>>(value)[index];
+    } else {
+      auto array = std::get<ArrayRef>(value);
+      if (index < 0 || index >= array.size) {
+        std::cerr << "Out-of-bounds ArrayRef access." << std::endl;
+        abort();
+      }
+      return std::get<ArrayRef>(value).ptr[index];
+    }
+  }
+
+  const T& operator[](size_t index) const {
+    return at(index);
+  }
+
+  bool operator==(const List<T> &other) const {
+    if (other.size() != size()) {
+      return false;
+    }
+    for (size_t i = 0; i < size(); i++) {
+      if (at(i) != other.at(i)) {
+        return false;
+      }
+    }
+    return true;    
+  }
+
+  std::variant<std::vector<T>, ArrayRef> value;
+};
+
+// Immutable string datatype.
+struct String {
+  constexpr String(const char *string) : value(string) {}
+  constexpr String(std::string string) : value(string) {}
+
+  String subString(int start, int end) const {
+    if (std::holds_alternative<std::string>(value)) {
+      return std::get<std::string>(value).substr(start, end - start);
+    } else {
+      return std::string(std::get<const char *>(value), start, end - start);
+    }
+  }
+
+  String operator+(const String &other) const {
+    std::string concat;
+
+    if (std::holds_alternative<std::string>(value)) {
+      concat = std::get<std::string>(value);
+    } else {
+      concat = std::string(std::get<const char *>(value));
+    }
+    if (std::holds_alternative<std::string>(other.value)) {
+      concat += std::get<std::string>(other.value);
+    } else {
+      concat += std::get<const char *>(other.value);
+    }
+    return concat;
+  }
+
+  std::variant<std::string, const char *> value;
 };
 
 template <class F, class Return, class... Args>
@@ -111,8 +239,7 @@ template <class Return, class... Args> struct Function {
 };
 
 // extends std::apply to work for a zero-sized tuple
-template <class F, class Tuple>
-decltype(auto) apply(F&& f, Tuple&& tuple) {
+template <class F, class Tuple> decltype(auto) apply(F &&f, Tuple &&tuple) {
   if constexpr (std::tuple_size_v<std::remove_reference_t<Tuple>> == 0) {
     return std::forward<F>(f)();
   } else {
@@ -152,7 +279,7 @@ using Type =
           Box<ListType>, Box<FnType>, Box<StructType>, Box<UnionType>>;
 
 struct TupleType {
-  std::vector<Type> elements;
+  ty::List<Type> elements;
   bool operator==(const TupleType &other) const = default;
 };
 struct ListType {
@@ -169,7 +296,7 @@ struct StructType {
   bool operator==(const StructType &other) const = default;
 };
 struct UnionType {
-  std::vector<Type> variants;
+  ty::List<Type> variants;
   bool operator==(const UnionType &other) const = default;
 };
 
@@ -199,7 +326,7 @@ struct FunctionCall {
   Expression argument;
 };
 struct TupleExpression {
-  std::vector<Expression> elements;
+  ty::List<Expression> elements;
 };
 struct UnaryExpression {
   std::string op;
@@ -218,7 +345,7 @@ struct BranchStatement;
 using Statement =
     Union<Box<VariableDeclaration>, Box<Assignment>, Box<BranchStatement>>;
 
-using Block = std::vector<Statement>;
+using Block = ty::List<Statement>;
 
 struct VariableDeclaration {
   std::string name;
@@ -297,7 +424,7 @@ std::string serialize(const ListType &t);
 std::string serialize(const FnType &t);
 std::string serialize(const StructType &t);
 std::string serialize(const UnionType &t);
-template <class T> std::string serialize(std::vector<T> elements);
+template <class T> std::string serialize(ty::List<T> elements);
 template <class... T> std::string serialize(std::tuple<T...> elements);
 template <class... T> std::string serialize(const Union<T...> &u);
 std::string serialize(const IntegerLiteral &e);
@@ -315,7 +442,7 @@ std::string serialize(const BranchStatement &e);
 // Fallback for classes that have a serialize() method.
 template <class T> std::string serialize(T object);
 
-template <class T> std::string serialize(std::vector<T> elements) {
+template <class T> std::string serialize(List<T> elements) {
   std::ostringstream oss;
   oss << '[';
   for (int i = 0; i < elements.size(); i++) {
@@ -547,18 +674,14 @@ inline struct len_ {
   std::string serialize() const { return R"({ "Function": "len" })"; }
 } len;
 
-inline struct at_ {
-  std::string operator()(std::string s, int i) const {
-    if (i >= s.length()) {
-      panic("at: i > length");
-    }
-    return std::string(1, s[i]);
-  }
-  std::string serialize() const { return R"({ "Function": "at" })"; }
-} at;
-
 inline struct subString_ {
   std::string operator()(std::string s, int start, int end) const {
+    if (start < 0) {
+      panic("subString: start < 0");
+    }
+    if (end > s.length()) {
+      panic("subString: end > len");
+    }
     if (end < start) {
       panic("subString: end < start");
     }
@@ -607,32 +730,32 @@ template <typename T, typename... V> T getVariant_(ty::Union<V...> _union) {
 }
 
 inline struct Union_ {
-  ty::Type operator()(std::vector<ty::Type> variants) const {
+  ty::Type operator()(ty::List<ty::Type> variants) const {
     if (variants.size() == 1) {
       return variants[0];
     }
     // Nested unions are flattened
-    std::vector<ty::Type> flat_variants;
+    ty::List<ty::Type> flat_variants;
     for (const auto &variant : variants) {
-      if (std::holds_alternative<Box<ty::UnionType>>(variant.variant)) {
+      if (std::holds_alternative<ty::Box<ty::UnionType>>(variant.variant)) {
         for (auto nested_variant :
-             std::get<Box<ty::UnionType>>(variant.variant).get().variants) {
-          flat_variants.push_back(nested_variant);
+             std::get<ty::Box<ty::UnionType>>(variant.variant).get().variants) {
+          flat_variants = flat_variants.append(nested_variant);
         }
       } else {
-        flat_variants.push_back(variant);
+        flat_variants = flat_variants.append(variant);
       }
     }
     // Deduplicate types.
     // This is very stupid and inefficient, but it works.
-    std::vector<ty::Type> unique_variants;
+    ty::List<ty::Type> unique_variants;
     {
       std::set<std::string> unique_strings;
       for (const auto &variant : flat_variants) {
         std::string serialized = ty::serialize(variant);
         if (!unique_strings.contains(serialized)) {
           unique_strings.insert(serialized);
-          unique_variants.push_back(variant);
+          unique_variants = unique_variants.append(variant);
         }
       }
     }
@@ -640,4 +763,3 @@ inline struct Union_ {
   }
   std::string serialize() const { return R"({ "Function": "Union" })"; }
 } Union;
-

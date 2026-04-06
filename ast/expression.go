@@ -311,7 +311,7 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 // Lower implements Expression.
 func (t *List) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(
-		`std::vector<%s>{%s}`,
+		`ty::List<%s>{%s}`,
 		t.elementType.LowerType(), util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
 		}),

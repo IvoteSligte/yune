@@ -6,6 +6,9 @@ pow(n: Int, power: Int): Int =
     power == 0 -> 1
     n * pow(n, power-1)
 
+at(s: String, index: Int): String =
+    subString(s, index, index + 1)
+
 LOWER_ALPHA: String = "abcdefghijklmnopqrstuvwxyz"
 UPPER_ALPHA: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHA: String = LOWER_ALPHA + UPPER_ALPHA

@@ -26,7 +26,7 @@ Steps to runtime-free glory [make sure to describe this in the thesis]:
 
 [x] disable exceptions
 [x] use evaluated value for runtime globals
-[ ] no std::vector, std::string, Box at global scope
+[ ] no std::vector, std::string, Box at global scope (TODO: replace std::string with ty::String in runtime code)
 [ ] only static initializers:
    ```C++
    constinit auto* p_ptr = [] {

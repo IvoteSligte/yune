@@ -56,10 +56,6 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   &IntType{},
 	}},
-	{"at", &FnType{
-		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}}},
-		Return:   &StringType{},
-	}},
 	{"subString", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
 		Return:   &StringType{},

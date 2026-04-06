@@ -157,7 +157,7 @@ func (l *ListType) Eq(other TypeValue) bool {
 	return ok && l.Element.Eq(otherList.Element)
 }
 func (l ListType) LowerType() cpp.Type {
-	return "std::vector<" + l.Element.LowerType() + ">"
+	return "ty::List<" + l.Element.LowerType() + ">"
 }
 func (l ListType) LowerValue() cpp.Value {
 	return "box(ty::ListType{ .element = " + l.Element.LowerValue() + " })"
