@@ -67,7 +67,7 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
 			fieldType := (TypeValue)(nil)
 			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(v, fieldType))
 		})
-		return fmt.Sprintf("(ty::%s) {%s}", key, fields)
+		return fmt.Sprintf("ty::%s { %s }", key, fields)
 	}
 }
 

@@ -128,6 +128,22 @@ main(): () =
 `)
 }
 
+func TestStaticInitialization(t *testing.T) {
+	parseAndRunModule("staticInitialization.un", `
+// Tests string serialization
+STRING: String = "string" + "another"
+
+// Tests indirect Union construction
+UNION: Union[String, Int] = "chars"
+
+// Tests serialization of List
+LIST: List(Union[String, Int]) = ["alpha", "beta", "gamma", 50]
+
+// Tests serialization of Box
+EXPRESSION: Expression = binaryExpression("+", stringLiteral("before"), stringLiteral("after"))
+`)
+}
+
 func TestBasic(t *testing.T) {
 	stdout, _ := parseAndRunModule("basic.un", `
 import "std.un"

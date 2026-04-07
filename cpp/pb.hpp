@@ -96,7 +96,7 @@ template <class T> struct List {
   };
 
   // Prevent valueless std::variant
-  List() = delete;
+  constexpr List() : value(ArrayRef{.size = 0, .ptr = nullptr}) {}
 
   constexpr List(const T *array, size_t size)
       : value(ArrayRef{.size = size, .ptr = array}) {}

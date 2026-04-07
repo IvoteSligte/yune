@@ -374,7 +374,7 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 func (t *Tuple) Lower(state *State) cpp.Expression {
 	if t.isType {
 		if len(t.Elements) == 0 {
-			return `box((ty::TupleType){})`
+			return `box((ty::TupleType){ .elements = {} })`
 		}
 		elements := util.JoinFunc(t.Elements, ", ", func(e Expression) string {
 			return e.Lower(state)
