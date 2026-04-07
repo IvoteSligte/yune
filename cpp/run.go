@@ -69,7 +69,7 @@ int main() {
 }`)
 
 	implementationPath := path.Join(dir, "code.cpp")
-	binaryPath := path.Join(dir, "code.bin")
+	binaryPath := "./program"
 
 	fmt.Println("-- Clang++ log --")
 	pbIncludes := os.ExpandEnv("-I$PWD/pb")
