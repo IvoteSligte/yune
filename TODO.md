@@ -21,7 +21,12 @@ C++ runtime provides an allocator, so `new` cannot be used?
 
 only execute globals initialized with pure functions at compile-time
 
-clang++ -shared -fPIC mylib.cpp -o libmylib.so
+compiling as shared library so that C++ is automatically initialized even from C:
+    `clang++ -shared -fPIC mylib.cpp -o libmylib.so`
+
+not sure how to make C++ symbols C-accessible, obviously `extern "C"`, but I am currently using objects for functions so that `serialize()` is attached
+    solution: get rid of objects at runtime?
+    still the issue with namespaces, particularly for functions that take `ty::String`, `ty::List`, and other `ty::*`
 
 ---
 
