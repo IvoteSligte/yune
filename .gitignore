@@ -17,3 +17,4 @@ cpp/.cache/
 main.test
 cpuprofile.out
 memprofile.out
+trace.out

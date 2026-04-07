@@ -53,6 +53,30 @@ func writeFile(dir, name, contents string) *os.File {
 	return file
 }
 
+func CompileLibrary(module Module) {
+	dir, err := os.MkdirTemp("", "yune-build")
+	if err != nil {
+		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
+	}
+	defer os.RemoveAll(dir)
+
+	writeFile(dir, "code.cpp", module)
+
+	implementationPath := path.Join(dir, "code.cpp")
+	libraryPath := "./library.so"
+
+	fmt.Println("-- Clang++ log --")
+	includes := os.ExpandEnv("-I$PWD/cpp")
+	cmd := exec.Command("clang++", "-O1", "-shared", "-fPIC", "-std=c++23", implementationPath, "-o", libraryPath, includes)
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln("Failed to compile code. Error:", err)
+	}
+	fmt.Println("-- Compilation Finished --")
+	return
+}
+
 func Run(module Module) (stdout, stderr string) {
 	// NOTE: main function is assumed to exist
 
@@ -72,8 +96,8 @@ int main() {
 	binaryPath := "./program"
 
 	fmt.Println("-- Clang++ log --")
-	pbIncludes := os.ExpandEnv("-I$PWD/pb")
-	cmd := exec.Command("clang++", "-O1", "-fno-exceptions", "-std=c++23", implementationPath, "-o", binaryPath, pbIncludes)
+	includes := os.ExpandEnv("-I$PWD/cpp")
+	cmd := exec.Command("clang++", "-O1", "-std=c++23", implementationPath, "-o", binaryPath, includes)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {

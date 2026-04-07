@@ -106,15 +106,17 @@ func runModule(fileName string, astModule ast.Module) (stdout, stderr string) {
 	cppModule, hasMainFunction, errors := astModule.Lower()
 	if len(errors) > 0 {
 		for _, err := range errors {
-			fmt.Println("Error:", err)
+			log.Println("Error:", err)
 		}
 		log.Fatalln("Errors found, exiting.")
 	}
 	fmt.Println("--- Output ---")
 	if !hasMainFunction {
-		fmt.Println("Module does not have a `main` function, so there is no output.")
+		log.Println("Module does not have a `main` function. Compiling a shared library.")
+		cpp.CompileLibrary(cppModule)
 		return
 	} else {
+		log.Println("Module has a `main` function. Running.")
 		return cpp.Run(cppModule)
 	}
 }
