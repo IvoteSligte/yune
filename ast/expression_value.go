@@ -61,11 +61,23 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
     return &value;
 }())`, state.lowerExpressionValue(v, _type))
 	default:
+		structType := _type.(*StructType) // FIXME: _type can also be a primitive ...Type
 		fields := ""
-		v.GetObject().Visit(func(keyBytes []byte, v *fj.Value) {
-			panic("TODO: field type from _type")
-			fieldType := (TypeValue)(nil)
-			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(v, fieldType))
+		v.GetObject().Visit(func(keyBytes []byte, fieldValue *fj.Value) {
+			key := string(keyBytes)
+			var fieldType TypeValue
+			for _, field := range structType.Fields {
+				if field.Name == key {
+					fieldType = field.Type
+				}
+			}
+			if fieldType == nil {
+				log.Panicf(
+					"Field %s not found on type %s. JSON: %s. Known fields: %s.",
+					key, structType.Name, v, structType.Fields,
+				)
+			}
+			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(fieldValue, fieldType))
 		})
 		return fmt.Sprintf("ty::%s { %s }", key, fields)
 	}

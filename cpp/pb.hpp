@@ -346,7 +346,14 @@ struct FnType {
   bool operator==(const FnType &other) const = default;
 };
 struct StructType {
+  struct Field {
+    String name;
+    Type type;
+    bool operator==(const Field &other) const = default;
+  };
+
   String name;
+  List<Field> fields;
   bool operator==(const StructType &other) const = default;
 };
 struct UnionType {
@@ -540,8 +547,11 @@ inline std::string serialize(const FnType &t) {
   return R"({ "FnType": { "argument": )" + ty::serialize(t.argument) +
          R"(, "return": )" + ty::serialize(t.returnType) + " } }";
 }
+inline std::string serialize(const StructType::Field &t) {
+  return std::format(R"({{ "name": {}, "type": {} }})", ty::serialize(t.name), ty::serialize(t.type));
+}  
 inline std::string serialize(const StructType &t) {
-  return R"({ "StructType": { "name": )" + ty::serialize(t.name) + " } }";
+  return std::format(R"({{ "StructType": {{ "name": {}, "fields": {} }} }})", ty::serialize(t.name), ty::serialize(t.fields));
 }
 inline std::string serialize(const UnionType &t) {
   return R"({ "UnionType": { "variants": )" + ty::serialize(t.variants) +

@@ -68,3 +68,7 @@ func UnmarshalNonEmptyString(data *fj.Value, keys ...string) string {
 	}
 	return s
 }
+
+func UnmarshalArray(data *fj.Value, keys ...string) []*fj.Value {
+	return UnmarshalItem(data, (*fj.Value).Array, keys...)
+}

@@ -13,12 +13,23 @@ var MainType = &FnType{
 	Return:   &TupleType{},
 }
 
+func literalType(name string, _type TypeValue) TypeValue {
+	return &StructType{
+		Name: name,
+		Fields: []StructTypeField{
+			{Name: "value", Type: _type},
+		},
+	}
+}
+
 // kinds of Expression types
-var IntegerLiteralType = &StructType{Name: "IntegerLiteral"}
-var FloatLiteralType = &StructType{Name: "FloatLiteral"}
-var BoolLiteralType = &StructType{Name: "BoolLiteral"}
-var StringLiteralType = &StructType{Name: "StringLiteral"}
-var ExpressionType = &StructType{Name: "Expression"}
+var IntegerLiteralType = literalType("IntegerLiteral", &IntType{})
+var FloatLiteralType = literalType("FloatLiteral", &FloatType{})
+var BoolLiteralType = literalType("BoolLiteral", &BoolType{})
+var StringLiteralType = literalType("StringLiteral", &StringType{})
+
+// technically not even a StructType, but this works
+var ExpressionType = &StructType{Name: "Expression", Fields: []StructTypeField{}}
 
 var MacroFunctionType = &FnType{
 	// (text String, getType Fn(String, Type))
@@ -195,16 +206,31 @@ func (f FnType) LowerValue() cpp.Value {
 	return "box(ty::FnType{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " })"
 }
 
+type StructTypeField struct {
+	Name string
+	Type TypeValue
+}
+
+func (s StructTypeField) String() string {
+	return fmt.Sprintf(`%s: %s`, s.Name, s.Type)
+}
+
+func (s StructTypeField) LowerValue() cpp.Type {
+	return fmt.Sprintf(`{%s, %s}`, s.Name, s.Type.LowerValue())
+}
+
 type StructType struct {
 	DefaultTypeValue
-	Name string
+	Name   string
+	Fields []StructTypeField
 }
 
 func (s StructType) String() string {
-	return s.Name
+	return fmt.Sprintf(`%s { %s }`, s.Name, util.Join(s.Fields, ", "))
 }
 
 func (s *StructType) Eq(other TypeValue) bool {
+	// NOTE: this does not compare fields as it assumes name uniqueness
 	otherStruct, ok := other.(*StructType)
 	return ok && s.Name == otherStruct.Name
 }
@@ -212,7 +238,10 @@ func (s StructType) LowerType() cpp.Type {
 	return "ty::" + s.Name
 }
 func (s StructType) LowerValue() cpp.Type {
-	return "box(ty::StructType{ .name = " + s.Name + " })"
+	return fmt.Sprintf(
+		`box(ty::StructType{ .name = %s, .fields = { %s }  })`,
+		s.Name, util.JoinFunc(s.Fields, ", ", StructTypeField.LowerValue),
+	)
 }
 
 type UnionType struct {
@@ -305,7 +334,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		t = &StringType{}
 	case "TupleType":
 		t = &TupleType{
-			Elements: util.Map(v.Get("elements").GetArray(), state.UnmarshalTypeValue),
+			Elements: util.Map(UnmarshalArray(v, "elements"), state.UnmarshalTypeValue),
 		}
 	case "ListType":
 		t = &ListType{
@@ -319,6 +348,12 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	case "StructType":
 		t = &StructType{
 			Name: string(v.GetStringBytes("name")),
+			Fields: util.Map(UnmarshalArray(v, "fields"), func(v *fj.Value) StructTypeField {
+				return StructTypeField{
+					Name: UnmarshalNonEmptyString(v, "name"),
+					Type: state.UnmarshalTypeValue(v.Get("type")),
+				}
+			}),
 		}
 	case "UnionType":
 		t = &UnionType{
