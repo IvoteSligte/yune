@@ -19,6 +19,10 @@ C++ runtime provides an allocator, so `new` cannot be used?
 
 ---
 
+Removed `ty::` namespace which was preventing exporting of symbols, instead using the conventional `_t` suffix for types, `_f` for functions, and `_` for other builtins. The underscore is not allowed in a Yune symbol and therefore prevents conflicts.
+
+---
+
 only execute globals initialized with pure functions at compile-time
 
 compiling as shared library so that C++ is automatically initialized even from C:

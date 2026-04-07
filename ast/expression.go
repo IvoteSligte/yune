@@ -103,7 +103,7 @@ func (s String) GetSpan() Span {
 
 // Lower implements Expression.
 func (s String) Lower(state *State) cpp.Expression {
-	return fmt.Sprintf(`ty::String(%q)`, s.Value)
+	return fmt.Sprintf(`String_t(%q)`, s.Value)
 }
 
 // Analyze implements Expression.
@@ -258,7 +258,7 @@ func (f *FunctionCall) Lower(state *State) cpp.Expression {
 	}
 	if f.parameterIsTuple {
 		// calls the function with a tuple of arguments
-		return fmt.Sprintf(`ty::apply(%s, %s)`, f.Function.Lower(state), f.Argument.Lower(state))
+		return fmt.Sprintf(`apply_(%s, %s)`, f.Function.Lower(state), f.Argument.Lower(state))
 	}
 	return fmt.Sprintf(`%s(%s)`, f.Function.Lower(state), f.Argument.Lower(state))
 }
@@ -311,7 +311,7 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 // Lower implements Expression.
 func (t *List) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(
-		`ty::List<%s>{%s}`,
+		`List_t<%s>{%s}`,
 		t.elementType.LowerType(), util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
 		}),
@@ -374,12 +374,12 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 func (t *Tuple) Lower(state *State) cpp.Expression {
 	if t.isType {
 		if len(t.Elements) == 0 {
-			return `box((ty::TupleType){ .elements = {} })`
+			return `box(TupleType_t { .elements = {} })`
 		}
 		elements := util.JoinFunc(t.Elements, ", ", func(e Expression) string {
 			return e.Lower(state)
 		})
-		return fmt.Sprintf(`box((ty::TupleType){ .elements = {%s} })`, elements)
+		return fmt.Sprintf(`box(TupleType_t { .elements = {%s} })`, elements)
 	} else {
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
@@ -663,7 +663,7 @@ func (s StructExpression) Lower(state *State) cpp.Expression {
 	for key, value := range s.Fields {
 		fields += fmt.Sprintf(".%s = %s,\n", key, value.Lower(state))
 	}
-	return fmt.Sprintf("(ty::%s){%s\n}", s.Name.String, fields)
+	return fmt.Sprintf("%s_t {%s\n}", s.Name.String, fields)
 }
 
 type Closure struct {
@@ -722,7 +722,7 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 		// not using newlines because these are automatically escaped by the evaluator
 		// which results in malformed JSON
 		captures += fmt.Sprintf(
-			`ty::serialize_capture(%q, %q, %s)`,
+			`serialize_capture_(%q, %q, %s)`,
 			captureName,
 			state.registerTypeValue(captureType),
 			captureName)
@@ -737,7 +737,7 @@ func (c *Closure) Lower(state *State) cpp.Expression {
     struct {
         %s operator()(%s) const %s
         std::string serialize() const {
-            return ty::serialize_closure(%s, %q);
+            return serialize_closure_(%s, %q);
         }
         %s
     } closure{%s};

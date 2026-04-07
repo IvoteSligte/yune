@@ -25,7 +25,7 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
 		}
 		_string, err := data.StringBytes()
 		if err == nil {
-			return fmt.Sprintf("ty::String(%q)", _string)
+			return fmt.Sprintf("String_t(%q)", _string)
 		}
 		array, err := data.Array()
 		if err == nil {
@@ -79,7 +79,7 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
 			}
 			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(fieldValue, fieldType))
 		})
-		return fmt.Sprintf("ty::%s { %s }", key, fields)
+		return fmt.Sprintf("%s_t { %s }", key, fields)
 	}
 }
 

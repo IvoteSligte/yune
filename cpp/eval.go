@@ -119,7 +119,7 @@ func (r *Interpreter) Close() {
 func (r *Interpreter) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
 	// A thread is created and detached because in order to write the result of a getType query
 	// more code needs to be evaluated by the interpreter, which causes a deadlock with only a single thread.
-	text := "std::thread([]() { compiler_connection.yield(ty::serialize(" + sanitize(expr) + ")); }).detach();\n"
+	text := "std::thread([]() { compiler_connection.yield(toJson_(" + sanitize(expr) + ")); }).detach();\n"
 	r.log(text)
 	_, err = r.writer.Write([]byte(text))
 	if err != nil {

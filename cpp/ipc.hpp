@@ -8,18 +8,18 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-// Alternative to std::promise<ty::Type>, which gives missing symbols errors
+// Alternative to std::promise<Type_t>, which gives missing symbols errors
 // when used with clang-repl.
-struct TypePromise {
+struct TypePromise_ {
   std::binary_semaphore sync{0};
-  std::optional<ty::Type> type;
+  std::optional<Type_t> type;
 
-  ty::Type get() {
+  Type_t get() {
     this->sync.acquire();
     return std::move(*this->type);
   }
 
-  void set(ty::Type type) {
+  void set(Type_t type) {
     this->type = type;
     this->sync.release();
   }
@@ -27,9 +27,9 @@ struct TypePromise {
 
 constexpr int YUNE_COMPILER_PORT = 11555;
 
-inline class CompilerConnection {
+inline class CompilerConnection_ {
 public:
-  CompilerConnection() {
+  CompilerConnection_() {
     socket = ::socket(AF_INET, SOCK_STREAM, 0);
     if (socket == -1) {
       panic("clang-repl: Failed to open compiler connection socket.");
@@ -46,9 +46,9 @@ public:
     std::cout << "clang-repl: Connected to Yune compiler." << std::endl;
   }
 
-  ~CompilerConnection() { ::close(socket); }
+  ~CompilerConnection_() { ::close(socket); }
 
-  ty::Type get_type(ty::String name) {
+  Type_t get_type(String_t name) {
     std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name.to_owned());
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
@@ -73,7 +73,7 @@ public:
     }
   }  
 
-  void set_type(ty::Type type) {
+  void set_type(Type_t type) {
     type_promise.set(type);
   }
 
@@ -95,11 +95,11 @@ private:
   }
 
   int socket{0};
-  TypePromise type_promise;
+  TypePromise_ type_promise;
 } compiler_connection{};
 
 inline struct get_type_ {
-  ty::Type operator()(ty::String name) const {
+  Type_t operator()(String_t name) const {
     return compiler_connection.get_type(name);
   }
   std::string serialize() const {
