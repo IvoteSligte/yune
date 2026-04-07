@@ -19,6 +19,12 @@ C++ runtime provides an allocator, so `new` cannot be used?
 
 ---
 
+only execute globals initialized with pure functions at compile-time
+
+clang++ -shared -fPIC mylib.cpp -o libmylib.so
+
+---
+
 A C++ shared library provides a `dynamic loader` that initialises C++ global variables and sets up the standard allocator.
 
 The alternative is statically linking the C++ standard library and providing an initialization function.
