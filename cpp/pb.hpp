@@ -57,7 +57,8 @@ template <class... T> struct Union_t {
   // Create from element using an intermediate class
   // Required to create a Union[String] from a const char*, for example
   template <class U>
-    requires(std::is_constructible_v<U, T> || ...) && // any T can be constructed from U
+    requires(std::is_constructible_v<U, T> ||
+             ...) && // any T can be constructed from U
             (!(std::is_same_v<std::decay_t<U>, T> || ...)) // U is not one of T
   constexpr Union_t(U &&element) : variant(std::forward<U>(element)) {}
 
@@ -249,7 +250,7 @@ concept FunctionLike_ = requires(F f, Args... args) {
 
 // FIXME: this is probably not runtime-free
 // A serializable function class similar to std::function
-template <class Return, class... Args> struct Function_ {
+template <class Return, class... Args> struct Fn_t {
   struct Concept {
     virtual ~Concept() = default;
     virtual Return operator()(Args &&...args) const = 0;
@@ -267,7 +268,7 @@ template <class Return, class... Args> struct Function_ {
   };
   template <class F>
     requires FunctionLike_<F, Return, Args...>
-  Function_(F function)
+  Fn_t(F function)
       : self(std::make_shared<std::decay_t<Model<F>>>(std::move(function))) {
     static_assert(std::is_class_v<F>,
                   "Function requires callable object, not function pointer");
@@ -318,9 +319,10 @@ struct FnType_t;
 struct StructType_t;
 struct UnionType_t;
 
-using Type_t = Union_t<TypeType_t, IntType_t, FloatType_t, BoolType_t, StringType_t,
-                   Box_t<TupleType_t>, Box_t<ListType_t>, Box_t<FnType_t>,
-                   Box_t<StructType_t>, Box_t<UnionType_t>>;
+using Type_t =
+    Union_t<TypeType_t, IntType_t, FloatType_t, BoolType_t, StringType_t,
+            Box_t<TupleType_t>, Box_t<ListType_t>, Box_t<FnType_t>,
+            Box_t<StructType_t>, Box_t<UnionType_t>>;
 
 struct TupleType_t {
   List_t<Type_t> elements;
@@ -369,8 +371,8 @@ struct BinaryExpression_t;
 
 using Expression_t =
     Union_t<IntegerLiteral_t, FloatLiteral_t, BoolLiteral_t, StringLiteral_t,
-          Variable_t, Box_t<FunctionCall_t>, Box_t<TupleExpression_t>,
-          Box_t<UnaryExpression_t>, Box_t<BinaryExpression_t>>;
+            Variable_t, Box_t<FunctionCall_t>, Box_t<TupleExpression_t>,
+            Box_t<UnaryExpression_t>, Box_t<BinaryExpression_t>>;
 
 struct Variable_t {
   String_t name;
@@ -397,7 +399,7 @@ struct Assignment_t;
 struct BranchStatement_t;
 
 using Statement_t = Union_t<Box_t<VariableDeclaration_t>, Box_t<Assignment_t>,
-                        Box_t<BranchStatement_t>>;
+                            Box_t<BranchStatement_t>>;
 
 using Block_t = List_t<Statement_t>;
 
@@ -467,7 +469,9 @@ inline std::string toJson_(const IntType_t &) { return R"({ "IntType": {} })"; }
 inline std::string toJson_(const FloatType_t &) {
   return R"({ "FloatType": {} })";
 }
-inline std::string toJson_(const BoolType_t &) { return R"({ "BoolType": {} })"; }
+inline std::string toJson_(const BoolType_t &) {
+  return R"({ "BoolType": {} })";
+}
 inline std::string toJson_(const StringType_t &) {
   return R"({ "StringType": {} })";
 }
@@ -494,17 +498,171 @@ std::string toJson_(const BranchStatement_t &e);
 // Fallback for classes that have a toJson_() method.
 template <class T> std::string toJson_(T object);
 
-template <class T> std::string toJson_(List_t<T> elements) {
+// Helper for converting a C++ type to JSON.
+// Cannot simply be a function because partial specialization is required for
+// TypeToJson_<List_t<T>>.
+template <class T> struct TypeValueOf_ {
+  static Type_t value();
+};
+
+template <> struct TypeValueOf_<int> {
+  static Type_t value() { return IntType_t(); }
+};
+
+template <> struct TypeValueOf_<float> {
+  static Type_t value() { return FloatType_t(); }
+};
+
+template <> struct TypeValueOf_<bool> {
+  static Type_t value() { return BoolType_t(); }
+};
+
+template <> struct TypeValueOf_<String_t> {
+  static Type_t value() { return StringType_t(); }
+};
+
+template <> struct TypeValueOf_<Type_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<TypeType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<IntType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<FloatType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<BoolType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<StringType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<TupleType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<ListType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<FnType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<StructType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+template <> struct TypeValueOf_<StructType_t::Field> {
+  static Type_t value() {
+    std::cerr << "Tried to call TypeValueOf_<StructType_t::Field>::value()"
+              << std::endl;
+    abort();
+  } // not sure why the linker wants this
+};
+template <> struct TypeValueOf_<UnionType_t> {
+  static Type_t value() { return TypeType_t(); }
+};
+
+inline Type_t Expression = box(StructType_t{.name = "Expression"});
+inline Type_t Statement = box(StructType_t{.name = "Statement"});
+
+template <> struct TypeValueOf_<IntegerLiteral_t> {
+  static Type_t value() { return Expression; }
+};
+
+template <class T> struct TypeValueOf_<Literal<T>> {
+  static Type_t value() { return Expression; }
+};
+
+template <> struct TypeValueOf_<Variable_t> {
+  static Type_t value() { return Expression; }
+};
+template <> struct TypeValueOf_<FunctionCall_t> {
+  static Type_t value() { return Expression; }
+};
+template <> struct TypeValueOf_<TupleExpression_t> {
+  static Type_t value() { return Expression; }
+};
+template <> struct TypeValueOf_<UnaryExpression_t> {
+  static Type_t value() { return Expression; }
+};
+template <> struct TypeValueOf_<BinaryExpression_t> {
+  static Type_t value() { return Expression; }
+};
+template <> struct TypeValueOf_<VariableDeclaration_t> {
+  static Type_t value() { return Statement; }
+};
+template <> struct TypeValueOf_<Assignment_t> {
+  static Type_t value() { return Statement; }
+};
+template <> struct TypeValueOf_<BranchStatement_t> {
+  static Type_t value() { return Statement; }
+};
+
+template <class... T> struct TypeValueOf_<std::tuple<T...>> {
+  static Type_t value() {
+    return box(TupleType_t{
+        .elements = {typeValueOf_<T>()...},
+    });
+  }
+};
+
+template <class T> struct TypeValueOf_<Box_t<T>> {
+  static Type_t value() { return TypeValueOf_<T>::value(); }
+};
+
+template <class T> struct TypeValueOf_<List_t<T>> {
+  static Type_t value() {
+    return ListType_t{
+        .element = typeValueOf_<T>(),
+    };
+  }
+};
+
+template <class Return, class Arg> struct TypeValueOf_<Fn_t<Return, Arg>> {
+  static Type_t value() {
+    return box(FnType_t{
+        .argument = typeValueOf_<Arg>(),
+        .returnType = typeValueOf_<Return>(),
+    });
+  }
+};
+
+template <class Return, class... Args>
+  requires(sizeof...(Args) != 1)
+struct TypeValueOf_<Fn_t<Return, Args...>> {
+  static Type_t value() {
+    return box(FnType_t{
+        .argument = typeValueOf_<std::tuple<Args...>>(),
+        .returnType = typeValueOf_<Return>(),
+    });
+  }
+};
+
+// NOTE: StructType_t not implemented because there is no way to match all
+// struct types (I think)
+
+template <class... Variants> struct TypeValueOf_<Union_t<Variants...>> {
+  static Type_t value() {
+    return box(UnionType_t{
+        .variants = {TypeValueOf_<Variants>::value()...},
+    });
+  }
+};
+
+template <class T> std::string toJson_(List_t<T> list) {
   std::ostringstream oss;
   oss << '[';
-  for (int i = 0; i < elements.size(); i++) {
-    oss << toJson_(elements[i]);
-    if (i + 1 < elements.size()) {
+  for (int i = 0; i < list.size(); i++) {
+    oss << toJson_(list[i]);
+    if (i + 1 < list.size()) {
       oss << ", ";
     }
   }
   oss << ']';
-  return oss.str();
+  std::string array = oss.str();
+
+  return std::format(R"({{ "List": {}, "generic_": {} }})", array,
+                     toJson_(TypeValueOf_<T>::value()));
 }
 
 template <class... T> std::string toJson_(std::tuple<T...> tuple) {
@@ -548,6 +706,8 @@ inline std::string toJson_(const StructType_t &t) {
 inline std::string toJson_(const UnionType_t &t) {
   return R"({ "UnionType": { "variants": )" + toJson_(t.variants) + " } }";
 }
+
+// -- expressions --
 
 template <class T>
 inline std::string toJson_(const Literal<T> &literal, std::string name) {
@@ -613,7 +773,7 @@ template <class T> std::string toJson_(T object) { return object.toJson_(); }
 
 template <class T>
 inline std::string serialize_capture_(std::string name, std::string typeId,
-                                     T value) {
+                                      T value) {
   return std::format(
       R"({{ "name": "{}", "type": {{ "TypeId": "{}" }}, "value": {} }})", name,
       typeId, toJson_(value));
@@ -667,8 +827,6 @@ inline struct toFloat_f {
   std::string toJson_() const { return R"({ "Function": "toFloat" })"; }
 } toFloat;
 
-inline Type_t Expression = box(StructType_t{.name = "Expression"});
-
 inline struct panic_f {
   [[noreturn]]
   Union_t<> operator()(String_t message) const {
@@ -694,7 +852,7 @@ inline struct variable_f {
 
 inline struct binaryExpression_ {
   Expression_t operator()(String_t op, Expression_t left,
-                           Expression_t right) const {
+                          Expression_t right) const {
     return box(BinaryExpression_t{.op = op, .left = left, .right = right});
   }
   std::string toJson_() const {
@@ -703,8 +861,7 @@ inline struct binaryExpression_ {
 } binaryExpression;
 
 inline struct functionCall_f {
-  Expression_t operator()(Expression_t function,
-                           Expression_t argument) const {
+  Expression_t operator()(Expression_t function, Expression_t argument) const {
     return box(FunctionCall_t{.function = function, .argument = argument});
   }
   std::string toJson_() const { return R"({ "Function": "functionCall" })"; }

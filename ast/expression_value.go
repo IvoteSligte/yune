@@ -8,7 +8,7 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
-func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string {
+func (state *State) lowerExpressionValue(data *fj.Value) string {
 	object := data.GetObject()
 	if object == nil { // primitive (Yune does not produce top-level arrays)
 		integer, err := data.Int64()
@@ -27,24 +27,14 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
 		if err == nil {
 			return fmt.Sprintf("String_t(%q)", _string)
 		}
-		array, err := data.Array()
+		_, err = data.Array()
 		if err == nil {
-			elementType := _type.(*ListType).Element
-			elements := util.JoinFunc(array, ", ", func(v *fj.Value) string {
-				return state.lowerExpressionValue(v, elementType)
-			})
-			return fmt.Sprintf(`%s { []() constexpr {
-    static constexpr %s array[] = {%s};
-    return array;
-}(), %d}`,
-				_type.LowerType(),
-				elementType.LowerType(), elements,
-				len(array))
+			log.Panicf("Found raw JSON array. This should not be possible. JSON: %s", data)
 		}
 		log.Panicf("Tried to lower non-object JSON variant: %s", data)
 	}
-	key, v := fjUnmarshalUnion(object)
-	switch key {
+	typeName, v, generic := fjUnmarshalStruct(object)
+	switch typeName {
 	case "Closure":
 		return state.lowerClosureValue(v)
 	case "Function":
@@ -59,27 +49,20 @@ func (state *State) lowerExpressionValue(data *fj.Value, _type TypeValue) string
 		return fmt.Sprintf(`box([]() constexpr {
     static constexpr auto value = %s;
     return &value;
-}())`, state.lowerExpressionValue(v, _type))
+}())`, state.lowerExpressionValue(v))
+	case "List":
+		if generic == nil {
+			log.Panicf("List JSON found without generic parameter. JSON: %s", object)
+		}
+		elementType := state.UnmarshalTypeValue(generic)
+		elements := util.JoinFunc(UnmarshalArray(v), ", ", state.lowerExpressionValue)
+		return fmt.Sprintf("List_t<%s> { %s }", elementType.LowerType(), elements)
 	default:
-		structType := _type.(*StructType) // FIXME: _type can also be a primitive ...Type
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, fieldValue *fj.Value) {
-			key := string(keyBytes)
-			var fieldType TypeValue
-			for _, field := range structType.Fields {
-				if field.Name == key {
-					fieldType = field.Type
-				}
-			}
-			if fieldType == nil {
-				log.Panicf(
-					"Field %s not found on type %s. JSON: %s. Known fields: %s.",
-					key, structType.Name, v, structType.Fields,
-				)
-			}
-			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(fieldValue, fieldType))
+			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(fieldValue))
 		})
-		return fmt.Sprintf("%s_t { %s }", key, fields)
+		return fmt.Sprintf("%s_t { %s }", typeName, fields)
 	}
 }
 
@@ -96,7 +79,7 @@ func (state *State) lowerClosureValue(v *fj.Value) string {
 	for _, capture := range v.GetArray("captures") {
 		name := string(capture.GetStringBytes("name"))
 		_type := state.UnmarshalTypeValue(capture.Get("type"))
-		value := state.lowerExpressionValue(capture.Get("value"), _type)
+		value := state.lowerExpressionValue(capture.Get("value"))
 		captures += _type.LowerType() + " " + name + " = " + value + ";\n"
 	}
 	parameters := closure.LowerParameters()

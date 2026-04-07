@@ -193,13 +193,13 @@ func (f FnType) LowerType() cpp.Type {
 	_return := f.Return.LowerType()
 	argumentTuple, argumentIsTuple := f.Argument.(*TupleType)
 	if !argumentIsTuple {
-		return fmt.Sprintf("Function_t<%s, %s>", _return, f.Argument.LowerType())
+		return fmt.Sprintf("Fn_t<%s, %s>", _return, f.Argument.LowerType())
 	}
 	if len(argumentTuple.Elements) == 0 {
-		return fmt.Sprintf("Function_t<%s>", _return)
+		return fmt.Sprintf("Fn_t<%s>", _return)
 	}
 	arguments := util.JoinFunc(argumentTuple.Elements, ", ", TypeValue.LowerType)
-	return fmt.Sprintf("Function_t<%s, %s>", _return, arguments)
+	return fmt.Sprintf("Fn_t<%s, %s>", _return, arguments)
 }
 
 func (f FnType) LowerValue() cpp.Value {
@@ -320,7 +320,7 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
-	key, v := fjUnmarshalUnion(data.GetObject())
+	key, v, _ := fjUnmarshalStruct(data.GetObject())
 	switch key {
 	case "TypeType":
 		t = &TypeType{}
@@ -334,7 +334,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		t = &StringType{}
 	case "TupleType":
 		t = &TupleType{
-			Elements: util.Map(UnmarshalArray(v, "elements"), state.UnmarshalTypeValue),
+			Elements: util.Map(UnmarshalList(v, "elements"), state.UnmarshalTypeValue),
 		}
 	case "ListType":
 		t = &ListType{
@@ -347,8 +347,8 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		}
 	case "StructType":
 		t = &StructType{
-			Name: string(v.GetStringBytes("name")),
-			Fields: util.Map(UnmarshalArray(v, "fields"), func(v *fj.Value) StructTypeField {
+			Name: UnmarshalNonEmptyString(v, "name"),
+			Fields: util.Map(UnmarshalList(v, "fields"), func(v *fj.Value) StructTypeField {
 				return StructTypeField{
 					Name: UnmarshalNonEmptyString(v, "name"),
 					Type: state.UnmarshalTypeValue(v.Get("type")),
@@ -360,7 +360,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 			Variants: util.Map(v.Get("variants").GetArray(), state.UnmarshalTypeValue),
 		}
 	case "TypeId":
-		id := string(v.GetStringBytes())
+		id := UnmarshalNonEmptyString(v)
 		t = state.registeredTypeValues[id]
 	case "Box":
 		return state.UnmarshalTypeValue(v)

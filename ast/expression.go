@@ -757,7 +757,7 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
-	key, v := fjUnmarshalUnion(object)
+	key, v, _ := fjUnmarshalStruct(object)
 	switch key {
 	case "IntegerLiteral":
 		expr = &Integer{
