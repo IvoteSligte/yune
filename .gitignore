@@ -18,3 +18,7 @@ main.test
 cpuprofile.out
 memprofile.out
 trace.out
+
+# compiler-generated
+./program
+./library.so

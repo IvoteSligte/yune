@@ -206,7 +206,7 @@ func (d ConstantDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 // LowerDefinition implements TopLevelDeclaration.
 func (d ConstantDeclaration) LowerDefinition(state *State) cpp.Definition {
 	return fmt.Sprintf(
-		"constinit %s %s(%s);",
+		"%s %s(%s);",
 		d.Type.Lower(), d.Name.Lower(), state.lowerExpressionValue(d.value),
 	)
 }

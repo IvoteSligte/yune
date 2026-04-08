@@ -29,7 +29,7 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		}
 		array, err := data.Array()
 		if err == nil {
-			return fmt.Sprintf("List_t { %s }", util.JoinFunc(array, ", ", state.lowerExpressionValue))
+			return fmt.Sprintf("{ %s }", util.JoinFunc(array, ", ", state.lowerExpressionValue))
 		}
 		log.Panicf("Tried to lower non-object JSON variant: %s", data)
 	}
