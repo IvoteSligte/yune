@@ -20,5 +20,5 @@ memprofile.out
 trace.out
 
 # compiler-generated
-./program
-./library.so
+program
+library.so

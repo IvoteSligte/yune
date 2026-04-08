@@ -25,32 +25,12 @@ Removed `ty::` namespace which was preventing exporting of symbols, instead usin
 
 only execute globals initialized with pure functions at compile-time
 
-compiling as shared library so that C++ is automatically initialized even from C:
-    `clang++ -shared -fPIC mylib.cpp -o libmylib.so`
+A C++ shared library provides a `dynamic loader` that initialises C++ global variables and sets up the standard allocator.
+
+compiling as shared library with the C++ standard library linked statically so that C++ is automatically initialized even from C
+    now only requires dynamically linked libc, which is reasonable since Yune interoperates with other languages via the C interface
 
 not sure how to make C++ symbols C-accessible, obviously `extern "C"`, but I am currently using objects for functions so that `serialize()` is attached
     solution: get rid of objects at runtime?
     still the issue with namespaces, particularly for functions that take `ty::String`, `ty::List`, and other `ty::*`
 
----
-
-A C++ shared library provides a `dynamic loader` that initialises C++ global variables and sets up the standard allocator.
-
-The alternative is statically linking the C++ standard library and providing an initialization function.
-
-A better alternative is simply compiling to C and using only static initialization. Except at compile-time, when C++ libraries can freely be used.
-
-Steps to runtime-free glory [make sure to describe this in the thesis]:
-
-[x] disable exceptions
-[x] use evaluated value for runtime globals
-[x] no std::vector, std::string, std::shared_ptr at global scope; implemented with wrappers that allow statics
-[ ] only static initializers:
-   ```C++
-   constinit auto* p_ptr = [] {
-       static constexpr double p = 10.0;
-       return &p;
-   }();
-   ```
-
-Note that List and String are immutable because they may reference immutable static global data.
