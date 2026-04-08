@@ -722,7 +722,7 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 		// not using newlines because these are automatically escaped by the evaluator
 		// which results in malformed JSON
 		captures += fmt.Sprintf(
-			`serialize_capture_(%q, %q, %s)`,
+			`capture_toJson_(%q, %q, %s)`,
 			captureName,
 			state.registerTypeValue(captureType),
 			captureName)
@@ -736,8 +736,8 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 	lowered := fmt.Sprintf(`[%s](){
     struct {
         %s operator()(%s) const %s
-        std::string serialize() const {
-            return serialize_closure_(%s, %q);
+        std::string toJson_() const {
+            return closure_toJson_(%s, %q);
         }
         %s
     } closure{%s};
@@ -757,7 +757,7 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
-	key, v, _ := fjUnmarshalStruct(object)
+	key, v := fjUnmarshalStruct(object)
 	switch key {
 	case "IntegerLiteral":
 		expr = &Integer{

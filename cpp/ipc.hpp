@@ -102,7 +102,7 @@ inline struct get_type_ {
   Type_t operator()(String_t name) const {
     return compiler_connection.get_type(name);
   }
-  std::string serialize() const {
+  std::string toJson_() const {
     std::cerr << "get_type is not serializable as it is compile-time-only." << std::endl;
     exit(1);
   }

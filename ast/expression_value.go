@@ -27,13 +27,13 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		if err == nil {
 			return fmt.Sprintf("String_t(%q)", _string)
 		}
-		_, err = data.Array()
+		array, err := data.Array()
 		if err == nil {
-			log.Panicf("Found raw JSON array. This should not be possible. JSON: %s", data)
+			return fmt.Sprintf("List_t { %s }", util.JoinFunc(array, ", ", state.lowerExpressionValue))
 		}
 		log.Panicf("Tried to lower non-object JSON variant: %s", data)
 	}
-	typeName, v, generic := fjUnmarshalStruct(object)
+	typeName, v := fjUnmarshalStruct(object)
 	switch typeName {
 	case "Closure":
 		return state.lowerClosureValue(v)
@@ -46,17 +46,7 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + string(v.GetStringBytes())
 	case "Box":
-		return fmt.Sprintf(`box([]() constexpr {
-    static constexpr auto value = %s;
-    return &value;
-}())`, state.lowerExpressionValue(v))
-	case "List":
-		if generic == nil {
-			log.Panicf("List JSON found without generic parameter. JSON: %s", object)
-		}
-		elementType := state.UnmarshalTypeValue(generic)
-		elements := util.JoinFunc(UnmarshalArray(v), ", ", state.lowerExpressionValue)
-		return fmt.Sprintf("List_t<%s> { %s }", elementType.LowerType(), elements)
+		return fmt.Sprintf(`box(%s)`, state.lowerExpressionValue(v))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, fieldValue *fj.Value) {

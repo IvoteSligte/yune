@@ -30,23 +30,15 @@ func fjGetFields(object *fj.Object) (fields map[string]*fj.Value) {
 	return fields
 }
 
-func fjUnmarshalStruct(object *fj.Object) (key string, value *fj.Value, generic *fj.Value) {
+func fjUnmarshalStruct(object *fj.Object) (key string, value *fj.Value) {
 	fields := fjGetFields(object)
-	if object.Len() == 2 {
-		var hasGeneric bool
-		generic, hasGeneric = fields["generic_"]
-
-		if !hasGeneric {
-			log.Panicf("Found 2 fields when deserializing JSON as struct, but no 'generic_' parameter. JSON: %s", object)
-		}
-		delete(fields, "generic_")
-	} else if len(fields) != 1 {
-		log.Panicf("Found %d fields when deserializing JSON as struct. Expected 1 and an optional 'generic_' parameter. JSON: %s", object.Len(), object)
+	if len(fields) != 1 {
+		log.Panicf("Found %d fields when deserializing JSON as struct. Expected 1. JSON: %s", object.Len(), object)
 		return
 	}
 	// iterate over single value
 	for key, value := range fields {
-		return key, value, nil
+		return key, value
 	}
 	return
 }
@@ -89,13 +81,4 @@ func UnmarshalNonEmptyString(data *fj.Value, keys ...string) string {
 
 func UnmarshalArray(data *fj.Value, keys ...string) []*fj.Value {
 	return UnmarshalItem(data, (*fj.Value).Array, keys...)
-}
-
-func UnmarshalList(data *fj.Value, keys ...string) []*fj.Value {
-	// ignoring generic because the users of this function ignore it
-	key, value, _ := fjUnmarshalStruct(UnmarshalItem(data, (*fj.Value).Object, keys...))
-	if key != "List" {
-		panic(fmt.Sprintf("Unmarshalled struct that is not a list from data: %s", data))
-	}
-	return UnmarshalArray(value)
 }

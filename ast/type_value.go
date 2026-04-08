@@ -320,7 +320,7 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
-	key, v, _ := fjUnmarshalStruct(data.GetObject())
+	key, v := fjUnmarshalStruct(data.GetObject())
 	switch key {
 	case "TypeType":
 		t = &TypeType{}
@@ -334,7 +334,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		t = &StringType{}
 	case "TupleType":
 		t = &TupleType{
-			Elements: util.Map(UnmarshalList(v, "elements"), state.UnmarshalTypeValue),
+			Elements: util.Map(UnmarshalArray(v, "elements"), state.UnmarshalTypeValue),
 		}
 	case "ListType":
 		t = &ListType{
@@ -348,7 +348,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	case "StructType":
 		t = &StructType{
 			Name: UnmarshalNonEmptyString(v, "name"),
-			Fields: util.Map(UnmarshalList(v, "fields"), func(v *fj.Value) StructTypeField {
+			Fields: util.Map(UnmarshalArray(v, "fields"), func(v *fj.Value) StructTypeField {
 				return StructTypeField{
 					Name: UnmarshalNonEmptyString(v, "name"),
 					Type: state.UnmarshalTypeValue(v.Get("type")),

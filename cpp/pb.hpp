@@ -660,9 +660,7 @@ template <class T> std::string toJson_(List_t<T> list) {
   }
   oss << ']';
   std::string array = oss.str();
-
-  return std::format(R"({{ "List": {}, "generic_": {} }})", array,
-                     toJson_(TypeValueOf_<T>::value()));
+  return array;  
 }
 
 template <class... T> std::string toJson_(std::tuple<T...> tuple) {
@@ -772,14 +770,14 @@ template <class... T> inline std::string toJson_(const Union_t<T...> &u) {
 template <class T> std::string toJson_(T object) { return object.toJson_(); }
 
 template <class T>
-inline std::string serialize_capture_(std::string name, std::string typeId,
+inline std::string capture_toJson_(std::string name, std::string typeId,
                                       T value) {
   return std::format(
       R"({{ "name": "{}", "type": {{ "TypeId": "{}" }}, "value": {} }})", name,
       typeId, toJson_(value));
 }
 
-inline std::string serialize_closure_(std::string captures, std::string id) {
+inline std::string closure_toJson_(std::string captures, std::string id) {
   return std::format(R"({{ "Closure": {{ "captures": [{}], "id": "{}" }} }})",
                      captures, id);
 }
@@ -958,9 +956,9 @@ inline struct Union_f {
     {
       std::set<std::string> unique_strings;
       for (const auto &variant : flat_variants) {
-        std::string serialized = ::toJson_(variant);
-        if (!unique_strings.contains(serialized)) {
-          unique_strings.insert(serialized);
+        std::string json = ::toJson_(variant);
+        if (!unique_strings.contains(json)) {
+          unique_strings.insert(json);
           unique_variants = unique_variants.append(variant);
         }
       }

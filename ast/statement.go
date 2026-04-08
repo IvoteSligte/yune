@@ -326,7 +326,7 @@ func UnmarshalBlock(data *fj.Value) (block Block) {
 
 func UnmarshalStatement(data *fj.Value) (stmt Statement) {
 	object := data.GetObject()
-	key, v, _ := fjUnmarshalStruct(object)
+	key, v := fjUnmarshalStruct(object)
 	switch key {
 	case "VariableDeclaration":
 		stmt = &VariableDeclaration{

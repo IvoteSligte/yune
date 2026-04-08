@@ -109,7 +109,7 @@ func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 	params := util.JoinFunc(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`struct %s_ {
     %s operator()(%s) const;
-    std::string serialize() const;
+    std::string toJson_() const;
 } %s;`, d.Name.String, d.ReturnType.Lower(), params, d.Name.Lower())
 }
 
@@ -117,7 +117,7 @@ func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 func (d *FunctionDeclaration) LowerDefinition(state *State) cpp.Definition {
 	params := util.JoinFunc(d.Parameters, ", ", FunctionParameter.Lower)
 	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
-std::string %s_::serialize() const {
+std::string %s_::toJson_() const {
     return R"({ "Function": "%s" })";
 }`, d.ReturnType.Lower(), d.Name.String, params, cpp.Block(d.Body.Lower(state)), d.Name.String, d.Name.String)
 }
