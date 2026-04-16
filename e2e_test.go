@@ -34,6 +34,7 @@ func TestImpureConstant(t *testing.T) {
 	parseAndRunModule("impureConstant.un", `
 T: () = printlnString("impure! begone!")
 `)
+	panic("unimplemented: check error result of compilation for ImpureGlobalVariable")
 }
 
 func TestParsing(t *testing.T) {

@@ -47,6 +47,9 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		return "::" + string(v.GetStringBytes())
 	case "Box":
 		return fmt.Sprintf(`box(%s)`, state.lowerExpressionValue(v))
+	case "Tuple":
+		elements := UnmarshalArray(v, "elements")
+		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(elements, ", ", state.lowerExpressionValue))
 	default:
 		fields := ""
 		v.GetObject().Visit(func(keyBytes []byte, fieldValue *fj.Value) {
