@@ -187,12 +187,12 @@ func (f *FunctionCall) GetFlags() (flags Flags) {
 	functionFlags := f.Function.GetFlags()
 	argumentFlags := f.Argument.GetFlags()
 	if functionFlags&IMPURE_FUNCTION != 0 {
-		flags &= IMPURE
+		flags |= IMPURE
 	}
 	// If the argument is an IMPURE_FUNCTION it may or may not be evaluated.
 	// To prevent complex control flow analysis, assume it is called.
 	if argumentFlags&IMPURE_FUNCTION != 0 || argumentFlags&IMPURE != 0 {
-		flags &= IMPURE
+		flags |= IMPURE
 	}
 	return
 }
