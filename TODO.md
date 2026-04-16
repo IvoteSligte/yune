@@ -4,6 +4,7 @@ broken parsing for function calls without parentheses
 cycle detection
 HYGIENE
 macro error accountability checking
+spans in macro-generated code
 
 tuple is (x: Int, y: Int) -> doStuff(x, y)
 

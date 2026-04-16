@@ -39,18 +39,6 @@ func (a Analyzer) HasErrors() bool {
 
 // Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
 func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
-	// TEMP, speeds up compilation by a lot by preventing a C++ roundtrip
-	// , but assumes these are not redefined as variables
-	switch lowered {
-	case "String":
-		fj.MustParse(`{"StringType":{}}`)
-	case "Int":
-		fj.MustParse(`{"IntType":{}}`)
-	case "Float":
-		fj.MustParse(`{"FloatType":{}}`)
-	case "Bool":
-		fj.MustParse(`{"BoolType":{}}`)
-	}
 	getType := func(name string) cpp.Type {
 		span := Span{} // TODO: span
 		decl, ok := a.Table.Get(Name{String: name, Span: span})
