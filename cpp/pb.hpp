@@ -848,6 +848,16 @@ inline struct variable_f {
   std::string toJson_() const { return R"({ "Function": "variable" })"; }
 } variable;
 
+
+inline struct unaryExpression_ {
+  Expression_t operator()(String_t op, Expression_t expression) const {
+    return box(UnaryExpression_t{.op = op, .expression = expression});
+  }
+  std::string toJson_() const {
+    return R"({ "Function": "unaryExpression" })";
+  }
+} unaryExpression;
+
 inline struct binaryExpression_ {
   Expression_t operator()(String_t op, Expression_t left,
                           Expression_t right) const {

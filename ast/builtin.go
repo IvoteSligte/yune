@@ -27,6 +27,13 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &StringType{},
 		Return:   ExpressionType,
 	}, 0},
+	{"unaryExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			&StringType{},
+			ExpressionType,
+		}},
+		Return: ExpressionType,
+	}, 0},
 	{"binaryExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
 			&StringType{},
