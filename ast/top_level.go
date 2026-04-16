@@ -49,6 +49,7 @@ func analyzeFunctionBody(anal Analyzer, returnType TypeValue, body Block) {
 			At:       body.Statements[len(body.Statements)-1].GetSpan(),
 		})
 	}
+	return
 }
 
 func getFunctionType(parameters []FunctionParameter, returnType Type) TypeValue {
@@ -80,6 +81,10 @@ type FunctionDeclaration struct {
 
 func (d *FunctionDeclaration) GetSpan() Span {
 	return d.Name.GetSpan()
+}
+
+func (d *FunctionDeclaration) GetFlags() Flags {
+	return d.Body.GetFlags()
 }
 
 // TypeCheckBody implements Declaration.
@@ -143,6 +148,10 @@ func (d *FunctionParameter) Analyze(anal Analyzer) {
 	d.Type.Analyze(anal)
 }
 
+func (d *FunctionParameter) GetFlags() Flags {
+	return 0
+}
+
 func (d FunctionParameter) Lower() cpp.FunctionParameter {
 	return d.Type.Lower() + " " + d.Name.Lower()
 }
@@ -193,9 +202,18 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
+	if d.Body.GetFlags()&IMPURE != 0 {
+		anal.PushError(ImpureGlobalVariable{
+			Name: d.Name,
+		})
+	}
 	hasCaptures := len(*scope.Table.localCaptures) > 0
 	d.value = anal.Evaluate(cpp.LambdaBlock(d.Body.Lower(anal.State), hasCaptures))
 	anal.Define(d)
+}
+
+func (d *ConstantDeclaration) GetFlags() Flags {
+	return d.Body.GetFlags()
 }
 
 // LowerDeclaration implements TopLevelDeclaration.

@@ -15,6 +15,7 @@ type Statement interface {
 	// Lower the statement, adding the "return" prefix if `isLast` is true.
 	Lower(state *State, isLast bool) cpp.Statement
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
+	GetFlags() Flags
 }
 
 type VariableDeclaration struct {
@@ -32,7 +33,7 @@ func (d *VariableDeclaration) TypeCheckBody(deps DeclarationTable) (errors Error
 }
 
 // InferType implements Statement.
-func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	var declType TypeValue
 	if !d.InferType {
 		declType = d.Type.Analyze(anal)
@@ -53,6 +54,10 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) TypeVal
 	return &TupleType{}
 }
 
+func (d VariableDeclaration) GetFlags() Flags {
+	return d.Body.GetFlags()
+}
+
 // Lower implements Statement.
 func (d VariableDeclaration) Lower(state *State, isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s = %s;`,
@@ -70,11 +75,11 @@ func (d VariableDeclaration) GetName() Name {
 	return d.Name
 }
 
-func (d VariableDeclaration) GetType() TypeValue {
+func (d VariableDeclaration) GetType() (_type TypeValue) {
 	return &TupleType{}
 }
 
-func (d VariableDeclaration) GetDeclaredType() TypeValue {
+func (d VariableDeclaration) GetDeclaredType() (_type TypeValue) {
 	return d.Type.Get()
 }
 
@@ -87,7 +92,7 @@ type Assignment struct {
 }
 
 // Analyze implements Statement.
-func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	targetType := a.Target.Analyze(nil, anal)
 	scope := anal.NewScope()
 	bodyType := a.Body.Analyze(targetType, scope)
@@ -100,6 +105,10 @@ func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	}
 	a.HasCaptures = len(*scope.Table.localCaptures) > 0
 	return &TupleType{}
+}
+
+func (a *Assignment) GetFlags() Flags {
+	return a.Body.GetFlags()
 }
 
 // Lower implements Statement.
@@ -115,7 +124,7 @@ func (a *Assignment) Lower(state *State, isLast bool) cpp.Statement {
 	return lowered
 }
 
-func (a Assignment) GetType() TypeValue {
+func (a Assignment) GetType() (_type TypeValue) {
 	return &TupleType{}
 }
 
@@ -140,7 +149,7 @@ type BranchStatement struct {
 }
 
 // Analyze implements Statement.
-func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	if len(b.Then.Statements) == 0 {
 		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
 	}
@@ -158,6 +167,10 @@ func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 	return NewUnionType(thenType, elseType)
+}
+
+func (b *BranchStatement) GetFlags() (flags Flags) {
+	return b.Condition.GetFlags() | b.Then.GetFlags() | b.Else.GetFlags()
 }
 
 // Lower implements Statement.
@@ -185,7 +198,7 @@ type IsBranchStatement struct {
 }
 
 // GetDeclaredType implements Declaration.
-func (b *IsBranchStatement) GetDeclaredType() TypeValue {
+func (b *IsBranchStatement) GetDeclaredType() (_type TypeValue) {
 	return b.Type.Get()
 }
 
@@ -194,8 +207,12 @@ func (b *IsBranchStatement) GetName() Name {
 	return b.Name
 }
 
+func (b *IsBranchStatement) GetFlags() Flags {
+	return b.Expression.GetFlags() | b.Then.GetFlags() | b.Else.GetFlags()
+}
+
 // Analyze implements Statement.
-func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	if len(b.Then.Statements) == 0 {
 		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
 	}
@@ -275,6 +292,19 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	return
 }
 
+func (b *Block) GetFlags() (flags Flags) {
+	for _, stmt := range b.Statements {
+		stmtFlags := stmt.GetFlags()
+		if stmtFlags&IMPURE != 0 {
+			flags |= IMPURE
+		}
+	}
+	if b.Statements[len(b.Statements)-1].GetFlags()&IMPURE_FUNCTION != 0 {
+		flags |= IMPURE_FUNCTION
+	}
+	return
+}
+
 func (b *Block) Lower(state *State) (statements []cpp.Statement) {
 	for i, stmt := range b.Statements {
 		isLast := i+1 == len(b.Statements)
@@ -291,12 +321,16 @@ type ExpressionStatement struct {
 }
 
 // Analyze implements Statement.
-func (e *ExpressionStatement) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	_type := e.Expression.Analyze(expected, anal)
+func (e *ExpressionStatement) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
+	_type = e.Expression.Analyze(expected, anal)
 	// An empty union cannot be instantiated and is therefore
 	// used as marker for functions that do not return.
 	e.noReturn = _type.Eq(&UnionType{})
-	return _type
+	return
+}
+
+func (e *ExpressionStatement) GetFlags() Flags {
+	return e.Expression.GetFlags()
 }
 
 // GetSpan implements Statement.

@@ -30,6 +30,12 @@ main(): () =
 `)
 }
 
+func TestImpureConstant(t *testing.T) {
+	parseAndRunModule("impureConstant.un", `
+T: () = printlnString("impure! begone!")
+`)
+}
+
 func TestParsing(t *testing.T) {
 	parseAndRunModule("parsing.un", `
 

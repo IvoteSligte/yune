@@ -75,7 +75,7 @@ func (a Analyzer) NewScope() Analyzer {
 	return a
 }
 
-func (a Analyzer) GetType(name Name) TypeValue {
+func (a Analyzer) GetType(name Name) (TypeValue, Flags) {
 	decl, ok := a.Table.Get(name)
 	if !ok {
 		a.PushError(UndefinedVariable{
@@ -96,7 +96,7 @@ func (a Analyzer) GetType(name Name) TypeValue {
 	if _type == nil {
 		panic("Declaration.GetDeclaredType() returned nil on local declaration '" + name.String + "'")
 	}
-	return _type
+	return _type, decl.GetFlags()
 }
 
 // NOTE: probably want top-level declarations to declare their prototypes as soon as those are known,

@@ -266,3 +266,14 @@ func (e MacroOutputError) Error() string {
 		e.Macro.Name.String, e.Macro.Name.Span, e.Message,
 	)
 }
+
+type ImpureGlobalVariable struct {
+	Name Name
+}
+
+func (e ImpureGlobalVariable) Error() string {
+	return fmt.Sprintf(
+		`Global variable '%s' at %s initializer has side-effects.`,
+		e.Name.String, e.Name.Span,
+	)
+}

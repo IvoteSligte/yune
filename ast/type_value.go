@@ -178,6 +178,7 @@ type FnType struct {
 	DefaultTypeValue
 	Argument TypeValue
 	Return   TypeValue
+	isPure   bool
 }
 
 func (f FnType) String() string {

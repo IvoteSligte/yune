@@ -63,6 +63,7 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 type Declaration interface {
 	Node
 	GetName() Name
+	GetFlags() Flags
 
 	// Returns the type of this declaration.
 	GetDeclaredType() TypeValue

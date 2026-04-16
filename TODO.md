@@ -1,8 +1,5 @@
 
-NOTE: is clang-repl's final result being properly waited for when there is no `main`?
 
-
-runtime-free serialization of Box and List (validity can be checked with `constinit`)
 broken parsing for function calls without parentheses
 cycle detection
 HYGIENE
@@ -19,7 +16,7 @@ C++ runtime provides an allocator, so `new` cannot be used?
 
 ---
 
-Removed `ty::` namespace which was preventing exporting of symbols, instead using the conventional `_t` suffix for types, `_f` for functions, and `_` for other builtins. The underscore is not allowed in a Yune symbol and therefore prevents conflicts.
+Removed `ty::` namespace which was preventing exporting of symbols, instead using the conventional `_t` suffix for types, `_f` for functions, and `_` for other builtins. The underscore is only allowed in all-uppercase Yune symbols and therefore prevents conflicts.
 
 ---
 

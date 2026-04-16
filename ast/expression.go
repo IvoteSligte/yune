@@ -8,10 +8,18 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
+type Flags uint
+
+const (
+	IMPURE Flags = 1 << iota
+	IMPURE_FUNCTION
+)
+
 type Expression interface {
 	Node
 	fmt.Stringer
 	Analyze(expected TypeValue, anal Analyzer) TypeValue
+	GetFlags() Flags
 	Lower(state *State) cpp.Expression
 }
 
@@ -39,6 +47,8 @@ func (i Integer) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return &IntType{}
 }
 
+func (Integer) GetFlags() Flags { return 0 }
+
 type Float struct {
 	Span  Span
 	Value float64
@@ -62,6 +72,7 @@ func (f Float) Lower(state *State) cpp.Expression {
 func (f Float) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return &FloatType{}
 }
+func (Float) GetFlags() Flags { return 0 }
 
 type Bool struct {
 	Span  Span
@@ -86,6 +97,7 @@ func (b Bool) Lower(state *State) cpp.Expression {
 func (b Bool) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return &BoolType{}
 }
+func (Bool) GetFlags() Flags { return 0 }
 
 type String struct {
 	Span  Span
@@ -111,8 +123,11 @@ func (s String) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return &StringType{}
 }
 
+func (String) GetFlags() Flags { return 0 }
+
 type Variable struct {
-	Name Name
+	Name  Name
+	flags Flags
 }
 
 func (v Variable) String() string {
@@ -130,7 +145,13 @@ func (v *Variable) GetSpan() Span {
 
 // Analyze implements Expression.
 func (v *Variable) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return anal.GetType(v.Name)
+	_type, flags := anal.GetType(v.Name)
+	v.flags = flags
+	return _type
+}
+
+func (v *Variable) GetFlags() Flags {
+	return v.flags
 }
 
 // Lower implements Expression.
@@ -160,6 +181,20 @@ func (f FunctionCall) String() string {
 // GetSpan implements Expression.
 func (f *FunctionCall) GetSpan() Span {
 	return f.Span
+}
+
+func (f *FunctionCall) GetFlags() (flags Flags) {
+	functionFlags := f.Function.GetFlags()
+	argumentFlags := f.Argument.GetFlags()
+	if functionFlags&IMPURE_FUNCTION != 0 {
+		flags &= IMPURE
+	}
+	// If the argument is an IMPURE_FUNCTION it may or may not be evaluated.
+	// To prevent complex control flow analysis, assume it is called.
+	if argumentFlags&IMPURE_FUNCTION != 0 || argumentFlags&IMPURE != 0 {
+		flags &= IMPURE
+	}
+	return
 }
 
 func checkIsTuple(t TypeValue, at Span, anal Analyzer) (tupleType *TupleType) {
@@ -294,7 +329,7 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		if expectsList {
 			return expectedListType
 		}
-		return &ListType{Element: nil} // TODO: what should the element type be?
+		return &ListType{Element: nil} // cannot determine element type
 	}
 	if expectsList {
 		t.elementType = expectedListType.Element
@@ -306,6 +341,13 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		t.elementType = NewUnionType(t.elementType, elementType)
 	}
 	return &ListType{Element: t.elementType}
+}
+
+func (t *List) GetFlags() (flags Flags) {
+	for _, element := range t.Elements {
+		flags |= element.GetFlags() & IMPURE
+	}
+	return
 }
 
 // Lower implements Expression.
@@ -368,6 +410,13 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		return &TypeType{}
 	}
 	return _type
+}
+
+func (t *Tuple) GetFlags() (flags Flags) {
+	for _, element := range t.Elements {
+		flags |= element.GetFlags() & IMPURE
+	}
+	return
 }
 
 // Lower implements Expression.
@@ -445,6 +494,10 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	return _type
 }
 
+func (m *Macro) GetFlags() (flags Flags) {
+	return m.Result.GetFlags()
+}
+
 // Lower implements Expression.
 func (m *Macro) Lower(state *State) cpp.Expression {
 	return m.Result.Lower(state)
@@ -496,6 +549,10 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		panic(fmt.Sprintf("unexpected ast.UnaryOp: %#v", u.Op))
 	}
 	return expressionType
+}
+
+func (u *UnaryExpression) GetFlags() (flags Flags) {
+	return u.Expression.GetFlags()
 }
 
 // Lower implements Expression.
@@ -588,6 +645,10 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 	}
 }
 
+func (b *BinaryExpression) GetFlags() (flags Flags) {
+	return b.Left.GetFlags() | b.Right.GetFlags()
+}
+
 // Lower implements Expression.
 func (b *BinaryExpression) Lower(state *State) cpp.Expression {
 	var op string
@@ -646,7 +707,7 @@ func (s *StructExpression) GetSpan() Span {
 }
 
 func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	maybeStructType := anal.GetType(s.Name)
+	maybeStructType, _ := anal.GetType(s.Name)
 	structType, isStructType := maybeStructType.(*StructType)
 	if !isStructType {
 		anal.PushError(NotAStruct{
@@ -655,7 +716,15 @@ func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 
-	panic("unimplemented(compare and analyze fields and check for duplicate field names)")
+	// compare and analyze fields and check for duplicate field names
+	panic("unimplemented")
+}
+
+func (s *StructExpression) GetFlags() (flags Flags) {
+	for _, expression := range s.Fields {
+		flags |= expression.GetFlags()
+	}
+	return
 }
 
 func (s StructExpression) Lower(state *State) cpp.Expression {
@@ -697,6 +766,14 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		c.captures[capture.name.String] = capture.declaration.GetDeclaredType()
 	}
 	return getFunctionType(c.Parameters, c.ReturnType)
+}
+
+func (c *Closure) GetFlags() (flags Flags) {
+	bodyFlags := c.Body.GetFlags()
+	if bodyFlags&IMPURE != 0 {
+		flags |= IMPURE_FUNCTION
+	}
+	return
 }
 
 func (c Closure) LowerParameters() string {
