@@ -28,8 +28,13 @@ var FloatLiteralType = literalType("FloatLiteral", &FloatType{})
 var BoolLiteralType = literalType("BoolLiteral", &BoolType{})
 var StringLiteralType = literalType("StringLiteral", &StringType{})
 
-// technically not even a StructType, but this works
+// technically not even StructTypes, but this works because Expression
+// is an opaque type with inaccessible variants
 var ExpressionType = &StructType{Name: "Expression", Fields: []StructTypeField{}}
+var StatementType = &StructType{Name: "Statement", Fields: []StructTypeField{}}
+
+var ParameterType = &StructType{Name: "FunctionParameter", Fields: []StructTypeField{}}
+var BlockType = &ListType{Element: StatementType}
 
 var MacroFunctionType = &FnType{
 	// (text String, getType Fn(String, Type))

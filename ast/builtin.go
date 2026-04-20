@@ -46,7 +46,6 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}, 0},
-	// {"paramDeclaration", &FnType{Argument: &TupleType }}
 	// {"closureExpression", &FnType{
 	// 	Argument: &TupleType{Elements: []TypeValue{
 	// 		&ListType{Element},
@@ -61,7 +60,24 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	}, 0},
 	{"listExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
 	{"tupleExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
-	// TODO: other Expression constructors
+	{"functionParameter", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}},
+		Return:   StatementType,
+	}, 0},
+	// TODO: tuple-pattern-matching variableDeclaration
+	{"variableDeclaration", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType, BlockType}},
+		Return:   StatementType,
+	}, 0},
+	{"assignStatement", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, BlockType}},
+		Return:   StatementType,
+	}, 0},
+	{"branchStatement", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{ExpressionType, BlockType, BlockType}},
+		Return:   StatementType,
+	}, 0}, // TODO: actually implement the statements
+	{"expressionStatement", &FnType{Argument: ExpressionType, Return: StatementType}, 0},
 	{"panic", &FnType{
 		Argument: &StringType{},
 		// empty union type is non-constructable and Union(Union(), T, U) == Union(T, U)
