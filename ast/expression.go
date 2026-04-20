@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 	"yune/cpp"
 	"yune/util"
 
@@ -836,38 +837,43 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
 	key, v := fjUnmarshalStruct(object)
 	switch key {
-	case "IntegerLiteral":
+	case "IntegerExpression":
 		expr = &Integer{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
 			Value: UnmarshalItem(v, (*fj.Value).Int64, "value"),
 		}
-	case "FloatLiteral":
+	case "FloatExpression":
 		expr = &Float{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
 			Value: UnmarshalItem(v, (*fj.Value).Float64, "value"),
 		}
-	case "BoolLiteral":
+	case "BoolExpression":
 		expr = &Bool{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
 			Value: UnmarshalItem(v, (*fj.Value).Bool, "value"),
 		}
-	case "StringLiteral":
+	case "StringExpression":
 		expr = &String{
 			Span:  fjUnmarshal(v.Get("span"), Span{}),
 			Value: UnmarshalString(v, "value"), // can be empty
 		}
-	case "Variable":
+	case "VariableExpression":
 		expr = &Variable{
 			Name: Name{
 				Span:   fjUnmarshal(v.Get("span"), Span{}),
 				String: UnmarshalNonEmptyString(v, "name"),
 			},
 		}
-	case "FunctionCall":
+	case "FunctionCallExpression":
 		expr = &FunctionCall{
 			Span:     fjUnmarshal(v.Get("span"), Span{}),
 			Function: UnmarshalExpression(v.Get("function")),
 			Argument: UnmarshalExpression(v.Get("argument")),
+		}
+	case "ListExpression":
+		expr = &List{
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
+			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
 		}
 	case "TupleExpression":
 		expr = &Tuple{
@@ -875,7 +881,13 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
 		}
 	case "Macro":
-		panic("Macros are not supported for serialization right now.")
+		expr = &Macro{
+			Span:     fjUnmarshal(v.Get("span"), Span{}),
+			Function: Variable{Name: Name{String: UnmarshalNonEmptyString(v, "macro"), Span: Span{}}},
+			Lines: util.Map(strings.Split(UnmarshalString(v, "text"), "\n"), func(s string) MacroLine {
+				return MacroLine{Span: Span{}, Text: s}
+			}),
+		}
 	case "UnaryExpression":
 		expr = &UnaryExpression{
 			Span:       fjUnmarshal(v.Get("span"), Span{}),
@@ -890,7 +902,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Right: UnmarshalExpression(v.Get("right")),
 		}
 	case "StructExpression":
-		panic("TODO: unmarshal StructExpression")
+		panic("unimplemented")
 	case "ClosureExpression":
 		expr = &Closure{
 			Span: fjUnmarshal(v.Get("span"), Span{}),

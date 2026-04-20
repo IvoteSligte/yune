@@ -19,14 +19,11 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Return:   &FloatType{},
 	}, 0},
 	{"Expression", &TypeType{}, 0},
-	{"stringLiteral", &FnType{
-		Argument: &StringType{},
-		Return:   ExpressionType,
-	}, 0},
-	{"variable", &FnType{
-		Argument: &StringType{},
-		Return:   ExpressionType,
-	}, 0},
+	{"integerExpression", &FnType{Argument: &IntType{}, Return: ExpressionType}, 0},
+	{"floatExpression", &FnType{Argument: &FloatType{}, Return: ExpressionType}, 0},
+	{"boolExpression", &FnType{Argument: &BoolType{}, Return: ExpressionType}, 0},
+	{"stringExpression", &FnType{Argument: &StringType{}, Return: ExpressionType}, 0},
+	{"variableExpression", &FnType{Argument: &StringType{}, Return: ExpressionType}, 0},
 	{"unaryExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
 			&StringType{},
@@ -42,19 +39,34 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}, 0},
-	{"functionCall", &FnType{
+	{"functionCallExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
 			ExpressionType,
 			ExpressionType,
 		}},
 		Return: ExpressionType,
 	}, 0},
+	// {"paramDeclaration", &FnType{Argument: &TupleType }}
+	// {"closureExpression", &FnType{
+	// 	Argument: &TupleType{Elements: []TypeValue{
+	// 		&ListType{Element},
+	// 	}},
+	// 	Return: ExpressionType}, 0},
+	{"macroExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			&StringType{}, // macro name
+			&StringType{}, // macro text
+		}},
+		Return: ExpressionType,
+	}, 0},
+	{"listExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
+	{"tupleExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
 	// TODO: other Expression constructors
 	{"panic", &FnType{
 		Argument: &StringType{},
 		// empty union type is non-constructable and Union(Union(), T, U) == Union(T, U)
 		Return: &UnionType{},
-	}, IMPURE_FUNCTION},
+	}, 0},
 	{"printlnString", &FnType{
 		Argument: &StringType{},
 		Return:   &TupleType{},

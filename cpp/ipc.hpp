@@ -49,7 +49,7 @@ public:
   ~CompilerConnection_() { ::close(socket); }
 
   Type_t get_type(String_t name) {
-    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name.to_owned());
+    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");

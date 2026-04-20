@@ -3,7 +3,6 @@
 // headers also used by Yune programs
 #include <algorithm>
 #include <iostream> // std::cout
-#include <set>
 #include <string> // std::string
 #include <tuple>  // std::tuple, std::apply
 #include <type_traits>
@@ -80,167 +79,9 @@ template <> struct Union_t<> {
   bool operator==(const Union_t<> &other) const = default;
 };
 
-template <class T> struct List_t {
-  struct ArrayRef {
-    size_t size;
-    const T *ptr;
-  };
+template <class T> using List_t = std::vector<T>;
 
-  // Prevent valueless std::variant
-  constexpr List_t() : value(ArrayRef{.size = 0, .ptr = nullptr}) {}
-
-  constexpr List_t(const T *array, size_t size)
-      : value(ArrayRef{.size = size, .ptr = array}) {}
-
-  List_t(std::initializer_list<T> value) : value(std::vector(value)) {}
-  List_t(std::vector<T> value) : value(value) {}
-
-  size_t size() const {
-    if (std::holds_alternative<std::vector<T>>(value)) {
-      return std::get<std::vector<T>>(value).size();
-    } else {
-      return std::get<ArrayRef>(value).size;
-    }
-  }
-
-  // Returns a new list, which is the copied contents of this list with the new
-  // element appended.
-  // Note that there is no `push_back` function as in `std::vector` because this
-  // list may not be owned.
-  List_t<T> append(T element) const {
-    std::vector<T> result;
-
-    if (std::holds_alternative<std::vector<T>>(value)) {
-      result = std::get<std::vector<T>>(value);
-    } else {
-      auto array = std::get<ArrayRef>(value);
-      result = std::vector<T>(array.ptr, array.ptr + array.size);
-    }
-    result.push_back(element);
-    return result;
-  }
-
-  const T *begin() const {
-    if (std::holds_alternative<std::vector<T>>(value)) {
-      return std::get<std::vector<T>>(value).data();
-    } else {
-      return std::get<ArrayRef>(value).ptr;
-    }
-  }
-
-  const T *end() const {
-    if (std::holds_alternative<std::vector<T>>(value)) {
-      auto &vector = std::get<std::vector<T>>(value);
-      return vector.data() + vector.size();
-    } else {
-      auto &array = std::get<ArrayRef>(value);
-      return array.ptr + array.size;
-    }
-  }
-
-  const T &at(size_t index) const {
-    if (std::holds_alternative<std::vector<T>>(value)) {
-      return std::get<std::vector<T>>(value)[index];
-    } else {
-      auto array = std::get<ArrayRef>(value);
-      if (index < 0 || index >= array.size) {
-        std::cerr << "Out-of-bounds ArrayRef access." << std::endl;
-        abort();
-      }
-      return std::get<ArrayRef>(value).ptr[index];
-    }
-  }
-
-  const T &operator[](size_t index) const { return at(index); }
-
-  bool operator==(const List_t<T> &other) const {
-    if (other.size() != size()) {
-      return false;
-    }
-    for (size_t i = 0; i < size(); i++) {
-      if (at(i) != other.at(i)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  std::variant<std::vector<T>, ArrayRef> value;
-};
-
-// Immutable string datatype.
-struct String_t {
-  constexpr String_t(const char *string) : value(string) {}
-  constexpr String_t(std::string string) : value(string) {}
-
-  std::string to_owned() const { return std::string(begin(), end()); }
-
-  size_t length() const {
-    if (std::holds_alternative<std::string>(value)) {
-      return std::get<std::string>(value).length();
-    } else {
-      return std::string(std::get<const char *>(value)).length();
-    }
-  }
-
-  String_t subString(int start, int end) const {
-    if (std::holds_alternative<std::string>(value)) {
-      return std::get<std::string>(value).substr(start, end - start);
-    } else {
-      return std::string(std::get<const char *>(value), start, end - start);
-    }
-  }
-
-  String_t operator+(const String_t &other) const {
-    std::string concat;
-
-    if (std::holds_alternative<std::string>(value)) {
-      concat = std::get<std::string>(value);
-    } else {
-      concat = std::string(std::get<const char *>(value));
-    }
-    if (std::holds_alternative<std::string>(other.value)) {
-      concat += std::get<std::string>(other.value);
-    } else {
-      concat += std::get<const char *>(other.value);
-    }
-    return concat;
-  }
-
-  bool operator==(const String_t &other) const {
-    std::string left;
-    if (std::holds_alternative<std::string>(value)) {
-      left = std::get<std::string>(value);
-    } else {
-      left = std::string(std::get<const char *>(value));
-    }
-    if (std::holds_alternative<std::string>(other.value)) {
-      return left == std::get<std::string>(other.value);
-    } else {
-      return left == std::string(std::get<const char *>(other.value));
-    }
-  }
-
-  const char *begin() const {
-    if (std::holds_alternative<std::string>(value)) {
-      return std::get<std::string>(value).data();
-    } else {
-      return std::get<const char *>(value);
-    }
-  }
-
-  const char *end() const { return begin() + length(); }
-
-  // Either a C++ allocated std::string or non-owned C-string.
-  std::variant<std::string, const char *> value;
-};
-
-inline std::ostream &operator<<(std::ostream &os, const String_t &s) {
-  for (const char c : s) {
-    os << c;
-  }
-  return os;
-}
+using String_t = std::string;
 
 template <class F, class Return, class... Args>
 concept FunctionLike_ = requires(F f, Args... args) {
@@ -353,36 +194,41 @@ struct UnionType_t {
   bool operator==(const UnionType_t &other) const = default;
 };
 
-namespace { // hidden
-template <class T> struct Literal {
-  T value;
+struct IntegerExpression_t {
+  int value;
 };
-} // namespace
-
-using IntegerLiteral_t = Literal<int>;
-using FloatLiteral_t = Literal<float>;
-using BoolLiteral_t = Literal<bool>;
-using StringLiteral_t = Literal<String_t>;
-struct Variable_t;
-struct FunctionCall_t;
-struct TupleExpression_t;
-struct UnaryExpression_t;
-struct BinaryExpression_t;
-
-using Expression_t =
-    Union_t<IntegerLiteral_t, FloatLiteral_t, BoolLiteral_t, StringLiteral_t,
-            Variable_t, Box_t<FunctionCall_t>, Box_t<TupleExpression_t>,
-            Box_t<UnaryExpression_t>, Box_t<BinaryExpression_t>>;
-
-struct Variable_t {
+struct FloatExpression_t {
+  float value;
+};
+struct BoolExpression_t {
+  bool value;
+};
+struct StringExpression_t {
+  String_t value;
+};
+struct VariableExpression_t {
   String_t name;
 };
+struct FunctionCall_t;
+struct UnaryExpression_t;
+struct BinaryExpression_t;
+struct ListExpression_t;
+struct TupleExpression_t;
+struct MacroExpression_t {
+  String_t macro;
+  String_t text;
+};
+
+using Expression_t =
+    Union_t<IntegerExpression_t, FloatExpression_t, BoolExpression_t,
+            StringExpression_t, VariableExpression_t, Box_t<FunctionCall_t>,
+            Box_t<ListExpression_t>, Box_t<TupleExpression_t>,
+            Box_t<MacroExpression_t>, Box_t<UnaryExpression_t>,
+            Box_t<BinaryExpression_t>>;
+
 struct FunctionCall_t {
   Expression_t function;
   Expression_t argument;
-};
-struct TupleExpression_t {
-  List_t<Expression_t> elements;
 };
 struct UnaryExpression_t {
   String_t op;
@@ -392,6 +238,12 @@ struct BinaryExpression_t {
   String_t op;
   Expression_t left;
   Expression_t right;
+};
+struct ListExpression_t {
+  List_t<Expression_t> elements;
+};
+struct TupleExpression_t {
+  List_t<Expression_t> elements;
 };
 
 struct VariableDeclaration_t;
@@ -408,7 +260,7 @@ struct VariableDeclaration_t {
   Block_t body;
 };
 struct Assignment_t {
-  Variable_t target;
+  VariableExpression_t target;
   String_t op;
   Block_t body;
 };
@@ -480,174 +332,25 @@ std::string toJson_(const ListType_t &t);
 std::string toJson_(const FnType_t &t);
 std::string toJson_(const StructType_t &t);
 std::string toJson_(const UnionType_t &t);
-template <class T> std::string toJson_(List_t<T> elements);
-template <class... T> std::string toJson_(std::tuple<T...> elements);
-template <class... T> std::string toJson_(const Union_t<T...> &u);
-std::string toJson_(const IntegerLiteral_t &e);
-std::string toJson_(const FloatLiteral_t &e);
-std::string toJson_(const BoolLiteral_t &e);
-std::string toJson_(const StringLiteral_t &e);
-std::string toJson_(const Variable_t &e);
+template <class T> std::string toJson_(List_t<T> list);
+template <class... T> std::string toJson_(std::tuple<T...> tuple);
+template <class... T> std::string toJson_(const Union_t<T...> &_union);
+std::string toJson_(const IntegerExpression_t &e);
+std::string toJson_(const FloatExpression_t &e);
+std::string toJson_(const BoolExpression_t &e);
+std::string toJson_(const StringExpression_t &e);
+std::string toJson_(const VariableExpression_t &e);
 std::string toJson_(const FunctionCall_t &e);
-std::string toJson_(const TupleExpression_t &e);
 std::string toJson_(const UnaryExpression_t &e);
 std::string toJson_(const BinaryExpression_t &e);
+std::string toJson_(const MacroExpression_t &e);
+std::string toJson_(const ListExpression_t &e);
+std::string toJson_(const TupleExpression_t &e);
 std::string toJson_(const VariableDeclaration_t &e);
 std::string toJson_(const Assignment_t &e);
 std::string toJson_(const BranchStatement_t &e);
 // Fallback for classes that have a toJson_() method.
 template <class T> std::string toJson_(T object);
-
-// Helper for converting a C++ type to JSON.
-// Cannot simply be a function because partial specialization is required for
-// TypeToJson_<List_t<T>>.
-template <class T> struct TypeValueOf_ {
-  static Type_t value();
-};
-
-template <> struct TypeValueOf_<int> {
-  static Type_t value() { return IntType_t(); }
-};
-
-template <> struct TypeValueOf_<float> {
-  static Type_t value() { return FloatType_t(); }
-};
-
-template <> struct TypeValueOf_<bool> {
-  static Type_t value() { return BoolType_t(); }
-};
-
-template <> struct TypeValueOf_<String_t> {
-  static Type_t value() { return StringType_t(); }
-};
-
-template <> struct TypeValueOf_<Type_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<TypeType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<IntType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<FloatType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<BoolType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<StringType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<TupleType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<ListType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<FnType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<StructType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-template <> struct TypeValueOf_<StructType_t::Field> {
-  static Type_t value() {
-    std::cerr << "Tried to call TypeValueOf_<StructType_t::Field>::value()"
-              << std::endl;
-    abort();
-  } // not sure why the linker wants this
-};
-template <> struct TypeValueOf_<UnionType_t> {
-  static Type_t value() { return TypeType_t(); }
-};
-
-inline Type_t Expression = box(StructType_t{.name = "Expression"});
-inline Type_t Statement = box(StructType_t{.name = "Statement"});
-
-template <> struct TypeValueOf_<IntegerLiteral_t> {
-  static Type_t value() { return Expression; }
-};
-
-template <class T> struct TypeValueOf_<Literal<T>> {
-  static Type_t value() { return Expression; }
-};
-
-template <> struct TypeValueOf_<Variable_t> {
-  static Type_t value() { return Expression; }
-};
-template <> struct TypeValueOf_<FunctionCall_t> {
-  static Type_t value() { return Expression; }
-};
-template <> struct TypeValueOf_<TupleExpression_t> {
-  static Type_t value() { return Expression; }
-};
-template <> struct TypeValueOf_<UnaryExpression_t> {
-  static Type_t value() { return Expression; }
-};
-template <> struct TypeValueOf_<BinaryExpression_t> {
-  static Type_t value() { return Expression; }
-};
-template <> struct TypeValueOf_<VariableDeclaration_t> {
-  static Type_t value() { return Statement; }
-};
-template <> struct TypeValueOf_<Assignment_t> {
-  static Type_t value() { return Statement; }
-};
-template <> struct TypeValueOf_<BranchStatement_t> {
-  static Type_t value() { return Statement; }
-};
-
-template <class... T> struct TypeValueOf_<std::tuple<T...>> {
-  static Type_t value() {
-    return box(TupleType_t{
-        .elements = {typeValueOf_<T>()...},
-    });
-  }
-};
-
-template <class T> struct TypeValueOf_<Box_t<T>> {
-  static Type_t value() { return TypeValueOf_<T>::value(); }
-};
-
-template <class T> struct TypeValueOf_<List_t<T>> {
-  static Type_t value() {
-    return ListType_t{
-        .element = typeValueOf_<T>(),
-    };
-  }
-};
-
-template <class Return, class Arg> struct TypeValueOf_<Fn_t<Return, Arg>> {
-  static Type_t value() {
-    return box(FnType_t{
-        .argument = typeValueOf_<Arg>(),
-        .returnType = typeValueOf_<Return>(),
-    });
-  }
-};
-
-template <class Return, class... Args>
-  requires(sizeof...(Args) != 1)
-struct TypeValueOf_<Fn_t<Return, Args...>> {
-  static Type_t value() {
-    return box(FnType_t{
-        .argument = typeValueOf_<std::tuple<Args...>>(),
-        .returnType = typeValueOf_<Return>(),
-    });
-  }
-};
-
-// NOTE: StructType_t not implemented because there is no way to match all
-// struct types (I think)
-
-template <class... Variants> struct TypeValueOf_<Union_t<Variants...>> {
-  static Type_t value() {
-    return box(UnionType_t{
-        .variants = {TypeValueOf_<Variants>::value()...},
-    });
-  }
-};
 
 template <class T> std::string toJson_(List_t<T> list) {
   std::ostringstream oss;
@@ -660,7 +363,7 @@ template <class T> std::string toJson_(List_t<T> list) {
   }
   oss << ']';
   std::string array = oss.str();
-  return array;  
+  return array;
 }
 
 template <class... T> std::string toJson_(std::tuple<T...> tuple) {
@@ -707,33 +410,24 @@ inline std::string toJson_(const UnionType_t &t) {
 
 // -- expressions --
 
-template <class T>
-inline std::string toJson_(const Literal<T> &literal, std::string name) {
-  return R"({ ")" + name + R"(": { "value": )" + toJson_(literal.value) +
-         " } }";
+inline std::string toJson_(const IntegerExpression_t &e) {
+  return R"({ "IntegerExpression": { "value": )" + toJson_(e.value) + " } }";
 }
-inline std::string toJson_(const IntegerLiteral_t &e) {
-  return toJson_(e, "IntegerLiteral");
+inline std::string toJson_(const FloatExpression_t &e) {
+  return R"({ "FloatExpression": { "value": )" + toJson_(e.value) + " } }";
 }
-inline std::string toJson_(const FloatLiteral_t &e) {
-  return toJson_(e, "FloatLiteral");
+inline std::string toJson_(const BoolExpression_t &e) {
+  return R"({ "BoolExpression": { "value": )" + toJson_(e.value) + " } }";
 }
-inline std::string toJson_(const BoolLiteral_t &e) {
-  return toJson_(e, "BoolLiteral");
+inline std::string toJson_(const StringExpression_t &e) {
+  return R"({ "StringExpression": { "value": )" + toJson_(e.value) + " } }";
 }
-inline std::string toJson_(const StringLiteral_t &e) {
-  return toJson_(e, "StringLiteral");
-}
-inline std::string toJson_(const Variable_t &e) {
-  return R"({ "Variable": { "name": )" + toJson_(e.name) + " } }";
+inline std::string toJson_(const VariableExpression_t &e) {
+  return R"({ "VariableExpression": { "name": )" + toJson_(e.name) + " } }";
 }
 inline std::string toJson_(const FunctionCall_t &e) {
-  return R"({ "FunctionCall": { "function": )" + toJson_(e.function) +
+  return R"({ "FunctionCallExpression": { "function": )" + toJson_(e.function) +
          R"(, "argument": )" + toJson_(e.argument) + " } }";
-}
-inline std::string toJson_(const TupleExpression_t &e) {
-  return R"({ "TupleExpression": { "elements": )" + toJson_(e.elements) +
-         " } }";
 }
 inline std::string toJson_(const UnaryExpression_t &e) {
   return R"({ "UnaryExpression": { "op": )" + toJson_(e.op) +
@@ -743,7 +437,17 @@ inline std::string toJson_(const BinaryExpression_t &e) {
   return R"({ "BinaryExpression": { "op": )" + toJson_(e.op) + R"(, "left": )" +
          toJson_(e.left) + R"(, "right": )" + toJson_(e.right) + " } }";
 }
-
+inline std::string toJson_(const ListExpression_t &e) {
+  return R"({ "ListExpression": { "elements": )" + toJson_(e.elements) +
+         " } }";
+}
+inline std::string toJson_(const TupleExpression_t &e) {
+  return R"({ "TupleExpression": { "elements": )" + toJson_(e.elements) +
+         " } }";
+}
+inline std::string toJson_(const MacroExpression_t &e) {
+  return std::format(R"({{ "MacroExpression": {{ "macro": {}, "text": {} }} }})", toJson_(e.macro), toJson_(e.text));
+}
 inline std::string toJson_(const VariableDeclaration_t &e) {
   return R"({ "VariableDeclaration": { "name": )" + toJson_(e.name) +
          R"(, "body": )" + toJson_(e.body) + " } }";
@@ -771,7 +475,7 @@ template <class T> std::string toJson_(T object) { return object.toJson_(); }
 
 template <class T>
 inline std::string capture_toJson_(std::string name, std::string typeId,
-                                      T value) {
+                                   T value) {
   return std::format(
       R"({{ "name": "{}", "type": {{ "TypeId": "{}" }}, "value": {} }})", name,
       typeId, toJson_(value));
@@ -834,28 +538,52 @@ inline struct panic_f {
   std::string toJson_() const { return R"({ "Function": "panic" })"; }
 } panic;
 
-inline struct stringLiteral_f {
-  Expression_t operator()(String_t str) const {
-    return StringLiteral_t{.value = str};
+inline struct integerExpression_f {
+  Expression_t operator()(int value) const {
+    return IntegerExpression_t{.value = value};
   }
-  std::string toJson_() const { return R"({ "Function": "stringLiteral" })"; }
-} stringLiteral;
+  std::string toJson_() const {
+    return R"({ "Function": "integerExpression" })";
+  }
+} integerExpression;
 
-inline struct variable_f {
+inline struct floatExpression_f {
+  Expression_t operator()(float value) const {
+    return FloatExpression_t{.value = value};
+  }
+  std::string toJson_() const { return R"({ "Function": "floatExpression" })"; }
+} floatExpression;
+
+inline struct boolExpression_f {
+  Expression_t operator()(bool value) const {
+    return BoolExpression_t{.value = value};
+  }
+  std::string toJson_() const { return R"({ "Function": "boolExpression" })"; }
+} boolExpression;
+
+inline struct stringExpression_f {
+  Expression_t operator()(String_t value) const {
+    return StringExpression_t{.value = value};
+  }
+  std::string toJson_() const {
+    return R"({ "Function": "stringExpression" })";
+  }
+} stringExpression;
+
+inline struct variableExpression_f {
   Expression_t operator()(String_t name) const {
-    return Variable_t{.name = name};
+    return VariableExpression_t{.name = name};
   }
-  std::string toJson_() const { return R"({ "Function": "variable" })"; }
-} variable;
-
+  std::string toJson_() const {
+    return R"({ "Function": "variableExpression" })";
+  }
+} variableExpression;
 
 inline struct unaryExpression_ {
   Expression_t operator()(String_t op, Expression_t expression) const {
     return box(UnaryExpression_t{.op = op, .expression = expression});
   }
-  std::string toJson_() const {
-    return R"({ "Function": "unaryExpression" })";
-  }
+  std::string toJson_() const { return R"({ "Function": "unaryExpression" })"; }
 } unaryExpression;
 
 inline struct binaryExpression_ {
@@ -868,12 +596,35 @@ inline struct binaryExpression_ {
   }
 } binaryExpression;
 
-inline struct functionCall_f {
+inline struct functionCallExpression_f {
   Expression_t operator()(Expression_t function, Expression_t argument) const {
     return box(FunctionCall_t{.function = function, .argument = argument});
   }
-  std::string toJson_() const { return R"({ "Function": "functionCall" })"; }
-} functionCall;
+  std::string toJson_() const {
+    return R"({ "Function": "functionCallExpression" })";
+  }
+} functionCallExpression;
+
+inline struct macroExpression_f {
+  Expression_t operator()(String_t macro, String_t text) const {
+    return box(MacroExpression_t{.macro = macro, .text = text});
+  }
+  std::string toJson_() const { return R"({ "Function": "macroExpression" })"; }
+} macroExpression;
+
+inline struct listExpression_f {
+  Expression_t operator()(List_t<Expression_t> elements) const {
+    return box(ListExpression_t{.elements = elements});
+  }
+  std::string toJson_() const { return R"({ "Function": "listExpression" })"; }
+} listExpression;
+
+inline struct tupleExpression_f {
+  Expression_t operator()(List_t<Expression_t> elements) const {
+    return box(TupleExpression_t{.elements = elements});
+  }
+  std::string toJson_() const { return R"({ "Function": "tupleExpression" })"; }
+} tupleExpression;
 
 inline struct printlnString_f {
   std::tuple<> operator()(String_t str) const {
@@ -899,7 +650,7 @@ inline struct subString_f {
     if (end < start) {
       panic("subString: end < start");
     }
-    return s.subString(start, end);
+    return s.substr(start, end - start);
   }
   std::string toJson_() const { return R"({ "Function": "subString" })"; }
 } subString;
@@ -954,24 +705,21 @@ inline struct Union_f {
       if (std::holds_alternative<Box_t<UnionType_t>>(variant.variant)) {
         for (auto nested_variant :
              std::get<Box_t<UnionType_t>>(variant.variant).get().variants) {
-          flat_variants = flat_variants.append(nested_variant);
+          flat_variants.push_back(nested_variant);
         }
       } else {
-        flat_variants = flat_variants.append(variant);
+        flat_variants.push_back(variant);
       }
     }
     // Deduplicate types.
-    // This is very stupid and inefficient, but it works.
     List_t<Type_t> unique_variants({});
-    {
-      std::set<std::string> unique_strings;
-      for (const auto &variant : flat_variants) {
-        std::string json = ::toJson_(variant);
-        if (!unique_strings.contains(json)) {
-          unique_strings.insert(json);
-          unique_variants = unique_variants.append(variant);
-        }
+  outer:
+    for (const auto &variant : flat_variants) {
+      for (const auto &unique_variant : unique_variants) {
+        if (unique_variant == variant)
+          goto outer;
       }
+      unique_variants.push_back(variant);
     }
     return box(UnionType_t{.variants = unique_variants});
   }
