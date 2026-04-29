@@ -41,7 +41,7 @@ template <class T> struct Box_t {
   std::variant<std::shared_ptr<T>, T *> ptr;
 };
 
-template <class T> constexpr Box_t<T> box(T *value) { return Box_t(value); }
+template <class T> constexpr Box_t<T> box_f(T *value) { return Box_t(value); }
 
 template <class T> Box_t<T> box_f(T &&value) {
   return std::make_shared<std::decay_t<T>>(std::forward<T>(value));

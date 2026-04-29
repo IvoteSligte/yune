@@ -156,7 +156,7 @@ func (t TupleType) LowerType() cpp.Type {
 	return "std::tuple<" + util.JoinFunc(t.Elements, ", ", TypeValue.LowerType) + ">"
 }
 func (t TupleType) LowerValue() cpp.Value {
-	return "box(TupleType_t{ .elements = { " + util.JoinFunc(t.Elements, ", ", TypeValue.LowerValue) + " } })"
+	return "box_f(TupleType_t{ .elements = { " + util.JoinFunc(t.Elements, ", ", TypeValue.LowerValue) + " } })"
 }
 
 type ListType struct {
@@ -176,7 +176,7 @@ func (l ListType) LowerType() cpp.Type {
 	return "List_t<" + l.Element.LowerType() + ">"
 }
 func (l ListType) LowerValue() cpp.Value {
-	return "box(ListType_t{ .element = " + l.Element.LowerValue() + " })"
+	return "box_f(ListType_t{ .element = " + l.Element.LowerValue() + " })"
 }
 
 type FnType struct {
@@ -209,7 +209,7 @@ func (f FnType) LowerType() cpp.Type {
 }
 
 func (f FnType) LowerValue() cpp.Value {
-	return "box(FnType_t{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " })"
+	return "box_f(FnType_t{ .argument = " + f.Argument.LowerValue() + ", .returnType = " + f.Return.LowerValue() + " })"
 }
 
 type StructTypeField struct {
@@ -245,7 +245,7 @@ func (s StructType) LowerType() cpp.Type {
 }
 func (s StructType) LowerValue() cpp.Type {
 	return fmt.Sprintf(
-		`box(StructType_t{ .name = %s, .fields = { %s }  })`,
+		`box_f(StructType_t{ .name = %s, .fields = { %s }  })`,
 		s.Name, util.JoinFunc(s.Fields, ", ", StructTypeField.LowerValue),
 	)
 }
@@ -276,7 +276,7 @@ func (u UnionType) LowerType() cpp.Type {
 	return "Union_t<" + util.JoinFunc(u.Variants, ", ", TypeValue.LowerType) + ">"
 }
 func (u UnionType) LowerValue() cpp.Type {
-	return "box(TupleType_t{ .variants = { " + util.JoinFunc(u.Variants, ", ", TypeValue.LowerValue) + " } })"
+	return "box_f(TupleType_t{ .variants = { " + util.JoinFunc(u.Variants, ", ", TypeValue.LowerValue) + " } })"
 }
 
 func (u UnionType) HasVariant(variant TypeValue) bool {

@@ -46,7 +46,7 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + string(v.GetStringBytes())
 	case "Box":
-		return fmt.Sprintf(`box(%s)`, state.lowerExpressionValue(v))
+		return fmt.Sprintf(`box_f(%s)`, state.lowerExpressionValue(v))
 	case "Tuple":
 		elements := UnmarshalArray(v, "elements")
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(elements, ", ", state.lowerExpressionValue))

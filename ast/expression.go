@@ -424,12 +424,12 @@ func (t *Tuple) GetFlags() (flags Flags) {
 func (t *Tuple) Lower(state *State) cpp.Expression {
 	if t.isType {
 		if len(t.Elements) == 0 {
-			return `box(TupleType_t { .elements = {} })`
+			return `box_f(TupleType_t { .elements = {} })`
 		}
 		elements := util.JoinFunc(t.Elements, ", ", func(e Expression) string {
 			return e.Lower(state)
 		})
-		return fmt.Sprintf(`box(TupleType_t { .elements = {%s} })`, elements)
+		return fmt.Sprintf(`box_f(TupleType_t { .elements = {%s} })`, elements)
 	} else {
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)

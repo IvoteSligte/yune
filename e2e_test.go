@@ -128,8 +128,8 @@ func TestExpressionCreation(t *testing.T) {
 import "std.un"
 
 main(): () =
-    leftLeft := stringLiteral("leftLeft")
-    leftRight := functionCall(variable("toString"), variable("captureName"))
+    leftLeft := stringExpression("leftLeft")
+    leftRight := functionCallExpression(variableExpression("toString"), variableExpression("captureName"))
     left := binaryExpression("+", leftLeft, leftRight)
     binary: Expression = binaryExpression("+", left, variable("right"))
 `)
@@ -147,7 +147,7 @@ UNION: Union[String, Int] = "chars"
 LIST: List(Union[String, Int]) = ["alpha", "beta", "gamma", 50]
 
 // Tests serialization of Box
-EXPRESSION: Expression = binaryExpression("+", stringLiteral("before"), stringLiteral("after"))
+EXPRESSION: Expression = binaryExpression("+", stringExpression("before"), stringExpression("after"))
 `)
 }
 
@@ -171,7 +171,7 @@ takeTuple(t: (Int, String)): String =
 
 longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
     getType("add") // test getType
-    stringLiteral(text)
+    stringExpression(text)
 
 noArguments(): () = a: Int = 0
 
@@ -196,5 +196,5 @@ It contains several newlines.
 Something fancy it supports is quotes "" and even hashtags#!
 
 
-`) // FIXME: get rid of (leading and) trailing newlines or whitespace in the macro parsing
+`) // TODO: get rid of (leading and) trailing newlines or whitespace in the macro parsing
 }
