@@ -63,12 +63,12 @@ func CompileLibrary(module Module) {
 	writeFile(dir, "code.cpp", module)
 
 	implementationPath := path.Join(dir, "code.cpp")
-	libraryPath := "./library.so"
+	libraryPath := "./library.o"
 
 	fmt.Println("-- Clang++ log --")
 	includes := os.ExpandEnv("-I$PWD/cpp")
-	// Creates a C++23 shared library
-	cmd := exec.Command("clang++", "-O1", "-fPIC", "-shared", "-static-libstdc++", "-static-libgcc", "-std=c++23", implementationPath, "-o", libraryPath, includes)
+	// Creates a C++23 object file
+	cmd := exec.Command("clang++", "-O1", "-std=c++23", implementationPath, "-o", libraryPath, includes)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
