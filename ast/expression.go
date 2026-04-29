@@ -232,6 +232,9 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 			_ = tupleArgumentType.Elements[1].(*IntType)
 			index := f.Argument.(*Tuple).Elements[1].(*Integer)
 			return firstElementTupleType.Elements[index.Value]
+		case "inject":
+			f.Argument.Analyze(nil, anal)
+			return ExpressionType
 		default:
 		}
 	}

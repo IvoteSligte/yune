@@ -209,7 +209,7 @@ struct StringExpression_t {
 struct VariableExpression_t {
   String_t name;
 };
-struct FunctionCall_t;
+struct FunctionCallExpression_t;
 struct UnaryExpression_t;
 struct BinaryExpression_t;
 struct ListExpression_t;
@@ -218,15 +218,19 @@ struct MacroExpression_t {
   String_t macro;
   String_t text;
 };
+struct SerializedExpression_t {
+  String_t json;
+};
 
 using Expression_t =
     Union_t<IntegerExpression_t, FloatExpression_t, BoolExpression_t,
-            StringExpression_t, VariableExpression_t, Box_t<FunctionCall_t>,
-            Box_t<ListExpression_t>, Box_t<TupleExpression_t>,
-            Box_t<MacroExpression_t>, Box_t<UnaryExpression_t>,
-            Box_t<BinaryExpression_t>>;
+            StringExpression_t, VariableExpression_t,
+            Box_t<FunctionCallExpression_t>, Box_t<ListExpression_t>,
+            Box_t<TupleExpression_t>, Box_t<MacroExpression_t>,
+            Box_t<UnaryExpression_t>, Box_t<BinaryExpression_t>,
+            SerializedExpression_t>;
 
-struct FunctionCall_t {
+struct FunctionCallExpression_t {
   Expression_t function;
   Expression_t argument;
 };
@@ -254,8 +258,9 @@ struct ExpressionStatement_t {
   Expression_t expression;
 };
 
-using Statement_t = Union_t<Box_t<VariableDeclaration_t>, Box_t<AssignStatement_t>,
-                            Box_t<BranchStatement_t>, Box_t<IsBranchStatement_t>, ExpressionStatement_t>;
+using Statement_t = Union_t<Box_t<VariableDeclaration_t>,
+                            Box_t<AssignStatement_t>, Box_t<BranchStatement_t>,
+                            Box_t<IsBranchStatement_t>, ExpressionStatement_t>;
 
 using Block_t = List_t<Statement_t>;
 
@@ -352,12 +357,13 @@ std::string toJson_(const FloatExpression_t &e);
 std::string toJson_(const BoolExpression_t &e);
 std::string toJson_(const StringExpression_t &e);
 std::string toJson_(const VariableExpression_t &e);
-std::string toJson_(const FunctionCall_t &e);
+std::string toJson_(const FunctionCallExpression_t &e);
 std::string toJson_(const UnaryExpression_t &e);
 std::string toJson_(const BinaryExpression_t &e);
 std::string toJson_(const MacroExpression_t &e);
 std::string toJson_(const ListExpression_t &e);
 std::string toJson_(const TupleExpression_t &e);
+inline std::string toJson_(const SerializedExpression_t &e) { return e.json; }
 std::string toJson_(const VariableDeclaration_t &e);
 std::string toJson_(const AssignStatement_t &e);
 std::string toJson_(const BranchStatement_t &e);
@@ -438,7 +444,7 @@ inline std::string toJson_(const StringExpression_t &e) {
 inline std::string toJson_(const VariableExpression_t &e) {
   return R"({ "VariableExpression": { "name": )" + toJson_(e.name) + " } }";
 }
-inline std::string toJson_(const FunctionCall_t &e) {
+inline std::string toJson_(const FunctionCallExpression_t &e) {
   return R"({ "FunctionCallExpression": { "function": )" + toJson_(e.function) +
          R"(, "argument": )" + toJson_(e.argument) + " } }";
 }
@@ -463,11 +469,14 @@ inline std::string toJson_(const MacroExpression_t &e) {
       toJson_(e.macro), toJson_(e.text));
 }
 inline std::string toJson_(const VariableDeclaration_t &e) {
-  return std::format(R"({{ "VariableDeclaration": {{ "name": {}, "type": {}, "body": {} }} }})", toJson_(e.name), toJson_(e.type), toJson_(e.body));
+  return std::format(
+      R"({{ "VariableDeclaration": {{ "name": {}, "type": {}, "body": {} }} }})",
+      toJson_(e.name), toJson_(e.type), toJson_(e.body));
 }
 inline std::string toJson_(const AssignStatement_t &e) {
-  return R"({ "AssignStatement": { "target": )" + toJson_(e.target) + R"(, "op": )" +
-         toJson_(e.op) + R"(, "body": )" + toJson_(e.body) + " } }";
+  return R"({ "AssignStatement": { "target": )" + toJson_(e.target) +
+         R"(, "op": )" + toJson_(e.op) + R"(, "body": )" + toJson_(e.body) +
+         " } }";
 }
 inline std::string toJson_(const BranchStatement_t &e) {
   return R"({ "BranchStatement": { "condition": )" + toJson_(e.condition) +
@@ -475,10 +484,14 @@ inline std::string toJson_(const BranchStatement_t &e) {
          toJson_(e.elseBlock) + " } }";
 }
 inline std::string toJson_(const IsBranchStatement_t &e) {
-  return std::format(R"({{ "IsBranchStatement": {{ "expression": {}, "name": {}, "type": {}, "then": {}, "else": {} }} }})", toJson_(e.expression), toJson_(e.name), toJson_(e.type), toJson_(e.thenBlock), toJson_(e.elseBlock));
+  return std::format(
+      R"({{ "IsBranchStatement": {{ "expression": {}, "name": {}, "type": {}, "then": {}, "else": {} }} }})",
+      toJson_(e.expression), toJson_(e.name), toJson_(e.type),
+      toJson_(e.thenBlock), toJson_(e.elseBlock));
 }
 inline std::string toJson_(const ExpressionStatement_t &e) {
-  return std::format(R"({{ "ExpressionStatement": {{ "expression": {} }} }})", toJson_(e.expression));
+  return std::format(R"({{ "ExpressionStatement": {{ "expression": {} }} }})",
+                     toJson_(e.expression));
 }
 
 template <class T> std::string toJson_(Box_t<T> box) {
@@ -616,7 +629,8 @@ inline struct binaryExpression_ {
 
 inline struct functionCallExpression_f {
   Expression_t operator()(Expression_t function, Expression_t argument) const {
-    return box_f(FunctionCall_t{.function = function, .argument = argument});
+    return box_f(
+        FunctionCallExpression_t{.function = function, .argument = argument});
   }
   std::string toJson_() const {
     return R"({ "Function": "functionCallExpression" })";
@@ -645,10 +659,15 @@ inline struct tupleExpression_f {
 } tupleExpression;
 
 inline struct variableDeclaration_f {
-  Statement_t operator()(String_t name, Union_t<Expression_t, std::tuple<>> type, Block_t body) const {
-    return box_f(VariableDeclaration_t{.name = name, .type = type, .body = body});
+  Statement_t operator()(String_t name,
+                         Union_t<Expression_t, std::tuple<>> type,
+                         Block_t body) const {
+    return box_f(
+        VariableDeclaration_t{.name = name, .type = type, .body = body});
   }
-  std::string toJson_() const { return R"({ "Function": "variableDeclaration" })"; }
+  std::string toJson_() const {
+    return R"({ "Function": "variableDeclaration" })";
+  }
 } variableDeclaration;
 
 inline struct printlnString_f {
@@ -750,3 +769,7 @@ inline struct Union_f {
   }
   std::string toJson_() const { return R"({ "Function": "Union" })"; }
 } Union;
+
+template <class T> Expression_t inject(T value) {
+  return SerializedExpression_t{.json = toJson_f(value)};
+}

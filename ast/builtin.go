@@ -105,6 +105,8 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &ListType{Element: &TypeType{}},
 		Return:   &TypeType{},
 	}, 0},
+	// actual signature is `inject(Any): Expression`, but this cannot be expressed in Yune
+	{"inject", &FnType{Argument: &TupleType{}, Return: ExpressionType}, 0},
 }
 
 // A declaration that is written in `pb.hpp`.
