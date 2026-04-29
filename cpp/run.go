@@ -68,7 +68,7 @@ func CompileLibrary(module Module) {
 	fmt.Println("-- Clang++ log --")
 	includes := os.ExpandEnv("-I$PWD/cpp")
 	// Creates a C++23 object file
-	cmd := exec.Command("clang++", "-O1", "-std=c++23", implementationPath, "-o", libraryPath, includes)
+	cmd := exec.Command("clang++", "-O1", "-c", "-std=c++23", implementationPath, "-o", libraryPath, includes)
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
