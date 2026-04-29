@@ -54,3 +54,7 @@ FIXME: comments don't work
 	// Then lastly the variables describe global variables and functions used at evaluation time.
 	Dependencies() (macros []*Macro, queries []Query, variables []Name)
 
+
+// ALTERNATE C++ static compilation:
+➜  cpp-test g++ -c cpp.cpp
+➜  cpp-test gcc main.c cpp.o -lstdc++ -o main

@@ -38,6 +38,9 @@ func (n Name) Lower() string {
 	// so it is renamed and a wrapper is generated
 	case "main":
 		return "main_"
+	// namespace std is used in pb.hpp, so it conflicts with globals with the same name
+	case "std":
+		return "std_"
 	// C++ keywords
 	case "alignas",
 		"alignof",

@@ -371,7 +371,7 @@ func UnmarshalStatement(data *fj.Value) (stmt Statement) {
 			},
 			Body: UnmarshalBlock(v),
 		}
-	case "Assignment":
+	case "AssignStatement":
 		stmt = &Assignment{
 			Span:   fjUnmarshal(v.Get("span"), Span{}),
 			Target: *UnmarshalExpression(v.Get("target")).(*Variable),
@@ -385,8 +385,21 @@ func UnmarshalStatement(data *fj.Value) (stmt Statement) {
 			Then:      UnmarshalBlock(v.Get("then")),
 			Else:      UnmarshalBlock(v.Get("else")),
 		}
+	case "IsBranchStatement":
+		stmt = &IsBranchStatement{
+			Span:       fjUnmarshal(v.Get("span"), Span{}),
+			Expression: UnmarshalExpression(v.Get("expression")),
+			Name:       Name{String: UnmarshalNonEmptyString(v.Get("name")), Span: Span{}},
+			Type:       Type{Expression: UnmarshalExpression(v.Get("type"))},
+			Then:       UnmarshalBlock(v.Get("then")),
+			Else:       UnmarshalBlock(v.Get("else")),
+		}
+	case "ExpressionStatement":
+		stmt = &ExpressionStatement{
+			Expression: UnmarshalExpression(v.Get("expression")),
+		}
 	default:
-		stmt = &ExpressionStatement{Expression: UnmarshalExpression(data)}
+		panic(fmt.Sprintf("unexpected statement key when unmarshalling: %s", key))
 	}
 	return
 }

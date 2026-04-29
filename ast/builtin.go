@@ -76,7 +76,13 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	{"branchStatement", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{ExpressionType, BlockType, BlockType}},
 		Return:   StatementType,
-	}, 0}, // TODO: actually implement the statements
+	}, 0},
+	{"isBranchStatement", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			ExpressionType, &StringType{}, ExpressionType, BlockType, BlockType,
+		}},
+		Return: StatementType,
+	}, 0},
 	{"expressionStatement", &FnType{Argument: ExpressionType, Return: StatementType}, 0},
 	{"panic", &FnType{
 		Argument: &StringType{},
