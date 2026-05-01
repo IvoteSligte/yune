@@ -82,6 +82,7 @@ primaryExpression
     : INTEGER
     | FLOAT
     | STRING
+    | RAW_STRING
     | bool=(TRUE | FALSE)
     | variable
     | parenExpression

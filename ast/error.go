@@ -277,3 +277,11 @@ func (e ImpureGlobalVariable) Error() string {
 		e.Name.String, e.Name.Span,
 	)
 }
+
+type CannotDetermineRawType struct {
+	Span Span
+}
+
+func (e CannotDetermineRawType) Error() string {
+	return fmt.Sprintf(`Cannot determine type of raw expression at %s`, e.Span)
+}

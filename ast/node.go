@@ -150,4 +150,13 @@ type Node interface {
 	GetSpan() Span
 }
 
+type RawString struct {
+	Span   Span
+	string string
+}
+
+func NewRawString(span Span, string string) *RawString {
+	return &RawString{span, string}
+}
+
 type Errors = []error

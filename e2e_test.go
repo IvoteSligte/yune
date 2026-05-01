@@ -151,6 +151,10 @@ EXPRESSION: Expression = binaryExpression("+", stringExpression("before"), strin
 `)
 }
 
+func TestRawCpp(t *testing.T) {
+	_, _ = parseAndRunModule("rawCpp.un", "T: Type = `Int`")
+}
+
 func TestBasic(t *testing.T) {
 	stdout, _ := parseAndRunModule("basic.un", `
 import "std.un"

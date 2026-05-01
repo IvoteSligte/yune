@@ -59,4 +59,6 @@ WHITESPACE : [ \t\f]+                     -> skip;
 
 STRING     : '"' (~["\\]|[\\].)* '"';
 
+RAW_STRING : '`' .*? '`';
+
 HASHTAG : '#';

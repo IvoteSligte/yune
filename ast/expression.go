@@ -835,6 +835,29 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 	return lowered
 }
 
+func (r *RawString) GetSpan() Span {
+	return r.Span
+}
+
+func (r *RawString) String() string {
+	return fmt.Sprintf("`%s`", r.string)
+}
+
+func (r *RawString) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	if expected == nil {
+		anal.PushError(CannotDetermineRawType{Span: r.Span})
+	}
+	return expected
+}
+
+func (r *RawString) GetFlags() Flags {
+	return 0 // assuming no side-effects
+}
+
+func (r *RawString) Lower(state *State) cpp.Expression {
+	return r.string
+}
+
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -943,3 +966,4 @@ var _ Expression = &UnaryExpression{}
 var _ Expression = &BinaryExpression{}
 var _ Expression = &StructExpression{}
 var _ Expression = &Closure{}
+var _ Expression = &RawString{}

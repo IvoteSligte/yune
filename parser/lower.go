@@ -254,6 +254,9 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.Macro() != nil:
 		macro := LowerMacro(ctx.Macro())
 		return &macro
+	case ctx.RAW_STRING() != nil:
+		text := ctx.RAW_STRING().GetText()
+		return ast.NewRawString(GetSpan(ctx), text[1:len(text)-1])
 	default:
 		panic("unreachable")
 	}

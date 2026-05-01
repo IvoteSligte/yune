@@ -70,7 +70,7 @@ func parseModule(fileName string, sourceCode string) ast.Module {
 	lexer.AddErrorListener(&errorListener)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
-	// printTokens(lexer, tokenStream)
+	printTokens(lexer, tokenStream)
 
 	_parser := parser.NewYuneParser(tokenStream)
 	_parser.RemoveErrorListeners()
