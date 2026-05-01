@@ -37,15 +37,11 @@ parseNumber(text: String): Union[(Union[Int, Float], String), ()] =
             (float, remainder)
         toFloat(int)
 
-JsonValue: Type = Union[Int, Float, String, Bool, JsonList, JsonObject, ()]
-JsonList: Type = List(JsonValueId)
-JsonObject: Type = List((String, JsonValueId))
+RawJsonValueType: Type = `box_f(StructType_t{.name = \"JsonValue\"})`
+JsonValue: Type = Union[Int, Float, String, Bool, List(RawJsonValueType), JsonObject, ()]
+JsonObject: Type = List((String, RawJsonValueType))
 
-// wrapper around json storing flattened nodes to prevent recursion
-JsonValueId: Type = Int
-Json: Type = (JsonValue, List(JsonValue))
-
-parse(text: String): Json =
+parse(text: String): JsonValue =
     panic("TODO")
 
 json(text: String, getType: Fn(String, Type)): Union[Expression, Error] =

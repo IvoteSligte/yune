@@ -945,7 +945,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			ReturnType: UnmarshalType(v.Get("returnType")),
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
-	case "Box": // boxing is irrelevant when unmarshalling
+	case "Box": // boxing is irrelevant when unmarshalling expressions
 		expr = UnmarshalExpression(v)
 	default:
 		panic(fmt.Sprintf("unexpected expression key when unmarshalling: %s", key))
