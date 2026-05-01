@@ -1,4 +1,5 @@
 
+
 Error = String
 
 digitPrefixLength(text: String): Int =
@@ -36,10 +37,16 @@ parseNumber(text: String): Union[(Union[Int, Float], String), ()] =
             (float, remainder)
         toFloat(int)
 
-Value = ?? // NOTE: recursive type...
+JsonValue: Type = Union[Int, Float, String, Bool, JsonList, JsonObject, ()]
+JsonList: Type = List(JsonValueId)
+JsonObject: Type = List((String, JsonValueId))
 
-parse(text: String): Value =
+// wrapper around json storing flattened nodes to prevent recursion
+JsonValueId: Type = Int
+Json: Type = (JsonValue, List(JsonValue))
+
+parse(text: String): Json =
     panic("TODO")
 
 json(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
-    
+
