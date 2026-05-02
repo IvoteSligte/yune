@@ -1,5 +1,3 @@
-
-
 broken parsing for function calls without parentheses
 cycle detection
 HYGIENE
@@ -32,3 +30,6 @@ not sure how to make C++ symbols C-accessible, obviously `extern "C"`, but I am 
     solution: get rid of objects at runtime?
     still the issue with namespaces, particularly for functions that take `ty::String`, `ty::List`, and other `ty::*`
 
+
+
+    

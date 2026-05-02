@@ -41,7 +41,7 @@ func (d *VariableDeclaration) Analyze(expected TypeValue, anal Analyzer) (_type 
 	scope := anal.NewScope()
 	bodyType := d.Body.Analyze(d.Type.Get(), scope)
 	if !d.InferType && !IsSubType(bodyType, declType) {
-		anal.PushError(VariableTypeMismatch{
+		anal.ReportError(VariableTypeMismatch{
 			Expected: declType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
@@ -97,7 +97,7 @@ func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue
 	scope := anal.NewScope()
 	bodyType := a.Body.Analyze(targetType, scope)
 	if !IsSubType(bodyType, targetType) {
-		anal.PushError(AssignmentTypeMismatch{
+		anal.ReportError(AssignmentTypeMismatch{
 			Expected: targetType,
 			Found:    bodyType,
 			At:       a.Body.GetSpan(),
@@ -161,7 +161,7 @@ func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type Type
 	elseType := b.Else.Analyze(expected, anal.NewScope())
 
 	if !conditionType.Eq(&BoolType{}) {
-		anal.PushError(InvalidConditionType{
+		anal.ReportError(InvalidConditionType{
 			Found: conditionType,
 			At:    b.Condition.GetSpan(),
 		})
@@ -223,7 +223,7 @@ func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type Ty
 	expressionType := b.Expression.Analyze(isType, anal)
 
 	if !IsSubType(isType, expressionType) {
-		anal.PushError(ImpossibleIsExpression{
+		anal.ReportError(ImpossibleIsExpression{
 			SuperType: expressionType,
 			SubType:   isType,
 			At:        b.Expression.GetSpan(),
@@ -282,7 +282,7 @@ func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 		if isDeclaration {
 			err := anal.Table.Add(decl)
 			if err != nil {
-				anal.PushError(err)
+				anal.ReportError(err)
 			}
 		}
 	}

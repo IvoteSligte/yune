@@ -201,14 +201,14 @@ func (f *FunctionCall) GetFlags() (flags Flags) {
 func checkIsTuple(t TypeValue, at Span, anal Analyzer) (tupleType *TupleType) {
 	tupleType, argumentIsTuple := t.(*TupleType)
 	if !argumentIsTuple {
-		anal.PushError(ExpectedTuple{Found: t, At: at})
+		anal.ReportError(ExpectedTuple{Found: t, At: at})
 	}
 	return
 }
 
 func checkTupleTypeArity(tupleType *TupleType, expected int, at Span, anal Analyzer) {
 	if len(tupleType.Elements) != expected {
-		anal.PushError(ArityMismatch{
+		anal.ReportError(ArityMismatch{
 			Expected: expected,
 			Found:    len(tupleType.Elements),
 			At:       at,
@@ -249,7 +249,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 	maybeFunctionType := f.Function.Analyze(nil, anal)
 	functionType, isFunction := maybeFunctionType.(*FnType)
 	if !isFunction {
-		anal.PushError(NotAFunction{
+		anal.ReportError(NotAFunction{
 			Found: maybeFunctionType,
 			At:    f.Function.GetSpan(),
 		})
@@ -261,7 +261,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 	}
 	argumentType := f.Argument.Analyze(expectedArgumentType, anal)
 	if !IsSubType(argumentType, expectedArgumentType) {
-		anal.PushError(UnexpectedType{
+		anal.ReportError(UnexpectedType{
 			Expected: expectedArgumentType,
 			Found:    argumentType,
 			At:       f.Argument.GetSpan(),
@@ -393,7 +393,7 @@ func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	_type := &TupleType{}
 
 	if isTuple && len(expectedTupleType.Elements) != len(t.Elements) {
-		anal.PushError(ArityMismatch{
+		anal.ReportError(ArityMismatch{
 			Expected: len(expectedTupleType.Elements),
 			Found:    len(t.Elements),
 			At:       t.GetSpan(),
@@ -473,7 +473,7 @@ func (m *Macro) GetText() string {
 func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	functionType := m.Function.Analyze(MacroFunctionType, anal)
 	if !functionType.Eq(MacroFunctionType) {
-		anal.PushError(UnexpectedType{
+		anal.ReportError(UnexpectedType{
 			Expected: MacroFunctionType,
 			Found:    functionType,
 			At:       m.Function.GetSpan(),
@@ -487,13 +487,13 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	// First try to unmarshal a String.
 	errorBytes := v.GetStringBytes()
 	if errorBytes != nil {
-		anal.PushError(MacroOutputError{
+		anal.ReportError(MacroOutputError{
 			Macro:   m.Function,
 			Message: string(errorBytes),
 		})
 	}
 	m.Result = UnmarshalExpression(v)
-	fmt.Printf("macro result: %s\n", m.Result)
+	anal.MacroStack = append(anal.MacroStack, m)
 	_type := m.Result.Analyze(expected, anal)
 	return _type
 }
@@ -534,7 +534,7 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	case "-":
 		expressionType = u.Expression.Analyze(nil, anal)
 		if !expressionType.Eq(&IntType{}) && expressionType.Eq(&FloatType{}) {
-			anal.PushError(InvalidUnaryExpressionType{
+			anal.ReportError(InvalidUnaryExpressionType{
 				Op:   u.Op,
 				Type: expressionType,
 				At:   u.Span,
@@ -543,7 +543,7 @@ func (u *UnaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	case ";":
 		expressionType = u.Expression.Analyze(&BoolType{}, anal)
 		if !expressionType.Eq(&BoolType{}) {
-			anal.PushError(InvalidUnaryExpressionType{
+			anal.ReportError(InvalidUnaryExpressionType{
 				Op:   u.Op,
 				Type: expressionType,
 				At:   u.Span,
@@ -596,7 +596,7 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 	leftType := b.Left.Analyze(nil, anal)
 	rightType := b.Right.Analyze(nil, anal)
 	if !leftType.Eq(rightType) {
-		anal.PushError(InvalidBinaryExpressionTypes{
+		anal.ReportError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
 			Right: rightType,
@@ -604,7 +604,7 @@ func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue 
 		})
 	}
 	emitErr := func() {
-		anal.PushError(InvalidBinaryExpressionTypes{
+		anal.ReportError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
 			Left:  leftType,
 			Right: rightType,
@@ -714,7 +714,7 @@ func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	maybeStructType, _ := anal.GetType(s.Name)
 	structType, isStructType := maybeStructType.(*StructType)
 	if !isStructType {
-		anal.PushError(NotAStruct{
+		anal.ReportError(NotAStruct{
 			Found: structType,
 			At:    s.Name.Span,
 		})
@@ -845,7 +845,7 @@ func (r *RawString) String() string {
 
 func (r *RawString) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	if expected == nil {
-		anal.PushError(CannotDetermineRawType{Span: r.Span})
+		anal.ReportError(CannotDetermineRawType{Span: r.Span})
 	}
 	return expected
 }

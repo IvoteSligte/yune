@@ -37,7 +37,7 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
 	if !expressionType.Eq(&TypeType{}) {
-		anal.PushError(UnexpectedType{
+		anal.ReportError(UnexpectedType{
 			Expected: &TypeType{},
 			Found:    t.value,
 			At:       t.Expression.GetSpan(),

@@ -32,7 +32,7 @@ func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, return
 	for i := range parameters {
 		param := &parameters[i]
 		if err := anal.Table.Add(param); err != nil {
-			anal.PushError(err)
+			anal.ReportError(err)
 		}
 		param.Analyze(anal)
 	}
@@ -43,7 +43,7 @@ func analyzeFunctionHeader(anal Analyzer, parameters []FunctionParameter, return
 func analyzeFunctionBody(anal Analyzer, returnType TypeValue, body Block) {
 	bodyType := body.Analyze(returnType, anal)
 	if !IsSubType(bodyType, returnType) {
-		anal.PushError(ReturnTypeMismatch{
+		anal.ReportError(ReturnTypeMismatch{
 			Expected: returnType,
 			Found:    bodyType,
 			At:       body.Statements[len(body.Statements)-1].GetSpan(),
@@ -101,7 +101,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 	analyzeFunctionBody(anal, d.ReturnType.Get(), d.Body)
 	declaredType := d.GetDeclaredType()
 	if d.GetName().String == "main" && !declaredType.Eq(MainType) {
-		anal.PushError(InvalidMainSignature{
+		anal.ReportError(InvalidMainSignature{
 			Found: d.GetDeclaredType(),
 			At:    d.Name.GetSpan(),
 		})
@@ -196,14 +196,14 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 	bodyType := d.Body.Analyze(declaredType, scope)
 
 	if !IsSubType(bodyType, declaredType) {
-		anal.PushError(ConstantTypeMismatch{
+		anal.ReportError(ConstantTypeMismatch{
 			Expected: declaredType,
 			Found:    bodyType,
 			At:       d.Body.Statements[len(d.Body.Statements)-1].GetSpan(),
 		})
 	}
 	if d.Body.GetFlags()&IMPURE != 0 {
-		anal.PushError(ImpureGlobalVariable{
+		anal.ReportError(ImpureGlobalVariable{
 			Name: d.Name,
 		})
 	}

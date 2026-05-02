@@ -1,8 +1,10 @@
 package ast
 
 import (
+	"fmt"
 	"log"
 	"yune/cpp"
+	"yune/util"
 
 	fj "github.com/valyala/fastjson"
 )
@@ -13,6 +15,7 @@ type Analyzer struct {
 	Defined     map[TopLevelDeclaration]struct{}
 	Table       DeclarationTable
 	State       *State
+	MacroStack  []*Macro
 }
 
 // Returns an analyzer with only the relevant data for a top-level analysis.
@@ -28,9 +31,20 @@ func (a Analyzer) TopLevel() Analyzer {
 	}
 }
 
-func (a Analyzer) PushError(err error) {
+func (a Analyzer) ReportError(err error) {
 	*a.Errors = append(*a.Errors, err)
-	log.Panicf("Analyzer error: %s", err) // TODO: only exit when needed
+	if len(a.MacroStack) > 0 {
+		log.Panicf(
+			"Analyzer error caused by macro at %s: %s\n Macro traceback:\n%s",
+			a.MacroStack[0].Span,
+			err,
+			util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
+				return fmt.Sprintf("\t%s", m)
+			}),
+		)
+	} else {
+		log.Panicf("Analyzer error: %s", err)
+	}
 }
 
 func (a Analyzer) HasErrors() bool {
@@ -43,7 +57,7 @@ func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
 		span := Span{} // TODO: span
 		decl, ok := a.Table.Get(Name{String: name, Span: span})
 		if !ok {
-			a.PushError(MacroRequestedUndefinedVariable{
+			a.ReportError(MacroRequestedUndefinedVariable{
 				// TODO
 				Macro: Variable{Name: Name{Span: Span{}, String: "<unknown>"}},
 				Name:  name,
@@ -66,7 +80,7 @@ func (a Analyzer) NewScope() Analyzer {
 func (a Analyzer) GetType(name Name) (TypeValue, Flags) {
 	decl, ok := a.Table.Get(name)
 	if !ok {
-		a.PushError(UndefinedVariable{
+		a.ReportError(UndefinedVariable{
 			Span:   name.Span,
 			String: name.String,
 		})
