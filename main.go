@@ -70,7 +70,7 @@ func parseModule(fileName string, sourceCode string) ast.Module {
 	lexer.AddErrorListener(&errorListener)
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 
-	printTokens(lexer, tokenStream)
+	// printTokens(lexer, tokenStream)
 
 	_parser := parser.NewYuneParser(tokenStream)
 	_parser.RemoveErrorListeners()
@@ -112,7 +112,7 @@ func runModule(fileName string, astModule ast.Module) (stdout, stderr string) {
 	}
 	fmt.Println("--- Output ---")
 	if !hasMainFunction {
-		log.Println("Module does not have a `main` function. Compiling a shared library.")
+		log.Println("Module does not have a `main` function. Compiling a library.")
 		cpp.CompileLibrary(cppModule)
 		return
 	} else {

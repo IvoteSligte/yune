@@ -15,7 +15,7 @@ run: parser
 	go run .
 
 test: parser
-	go test .
+	go test
 
 bench: parser
 	# run only benchmarks

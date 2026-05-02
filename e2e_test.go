@@ -31,10 +31,24 @@ main(): () =
 }
 
 func TestImpureConstant(t *testing.T) {
-	parseAndRunModule("impureConstant.un", `
+	panicked := false
+	// defer runs at function exit, so we wrap this in another function to
+	// not accidentally recover from the later panic
+	func() {
+
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Recovered from panic:", r)
+			}
+			panicked = true
+		}()
+		parseAndRunModule("impureConstant.un", `
 T: () = printlnString("impure! begone!")
 `)
-	panic("unimplemented: check error result of compilation for ImpureGlobalVariable")
+	}()
+	if !panicked {
+		panic("Impure constant not detected.")
+	}
 }
 
 func TestParsing(t *testing.T) {
@@ -131,7 +145,7 @@ main(): () =
     leftLeft := stringExpression("leftLeft")
     leftRight := functionCallExpression(variableExpression("toString"), variableExpression("captureName"))
     left := binaryExpression("+", leftLeft, leftRight)
-    binary: Expression = binaryExpression("+", left, variable("right"))
+    binary: Expression = binaryExpression("+", left, variableExpression("right"))
 `)
 }
 

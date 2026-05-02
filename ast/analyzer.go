@@ -33,6 +33,7 @@ func (a Analyzer) TopLevel() Analyzer {
 
 func (a Analyzer) ReportError(err error) {
 	*a.Errors = append(*a.Errors, err)
+	a.Interpreter.Close()
 	if len(a.MacroStack) > 0 {
 		log.Panicf(
 			"Analyzer error caused by macro at %s: %s\n Macro traceback:\n%s",

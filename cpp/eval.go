@@ -66,6 +66,8 @@ func NewInterpreter() *Interpreter {
 	r := &Interpreter{
 		writer:   stdin,
 		reader:   nil, // set later
+		command:  cmd,
+		listener: listener,
 		logFile:  newLogFile(),
 		Declared: "",
 	}
@@ -94,6 +96,8 @@ func sanitize(s string) string {
 type Interpreter struct {
 	writer   io.WriteCloser
 	reader   *bufio.Reader
+	command  *exec.Cmd
+	listener net.Listener
 	logFile  *os.File
 	Declared string
 }
@@ -112,7 +116,16 @@ func (r *Interpreter) Close() {
 	// NOTE: should this remove the logfile?
 	// it is useful to be able to look at logs after compilation
 	if err := r.logFile.Close(); err != nil {
-		log.Println("Failed to close interpreter log file.")
+		log.Println("Failed to close interpreter log file. Error:", err)
+	}
+	if err := r.listener.Close(); err != nil {
+		log.Println("Failed to close connection to C++. Error:", err)
+	}
+	log.Println("Waiting for clang-repl to exit...")
+	if err := r.command.Wait(); err != nil {
+		log.Println("Failed to wait for clang-repl to exit. Error:", err)
+	} else {
+		log.Println("Clang-repl successfully exited.")
 	}
 }
 
