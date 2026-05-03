@@ -52,7 +52,7 @@ template <class... T> struct Union_t {
   template <class U>
     requires(std::is_same_v<std::decay_t<U>, T> || ...) // U is one of T
   constexpr Union_t(U &&element) : variant(std::forward<U>(element)) {}
-  
+
   // Create from element using an intermediate class
   // Required to create a Union[String] from a const char*, for example
   template <class U>
@@ -159,11 +159,12 @@ struct ListType_t;
 struct FnType_t;
 struct StructType_t;
 struct UnionType_t;
+struct NamedTypeReference_t;
 
-using Type_t =
-    Union_t<TypeType_t, IntType_t, FloatType_t, BoolType_t, StringType_t,
-            Box_t<TupleType_t>, Box_t<ListType_t>, Box_t<FnType_t>,
-            Box_t<StructType_t>, Box_t<UnionType_t>>;
+using Type_t = Union_t<TypeType_t, IntType_t, FloatType_t, BoolType_t,
+                       StringType_t, Box_t<TupleType_t>, Box_t<ListType_t>,
+                       Box_t<FnType_t>, Box_t<StructType_t>, Box_t<UnionType_t>,
+                       Box_t<NamedTypeReference_t>>;
 
 struct TupleType_t {
   List_t<Type_t> elements;
@@ -192,6 +193,10 @@ struct StructType_t {
 struct UnionType_t {
   List_t<Type_t> variants;
   bool operator==(const UnionType_t &other) const = default;
+};
+struct NamedTypeReference_t {
+  String_t name;
+  bool operator==(const NamedTypeReference_t &other) const = default;
 };
 
 struct IntegerExpression_t {
@@ -349,6 +354,7 @@ std::string toJson_(const ListType_t &t);
 std::string toJson_(const FnType_t &t);
 std::string toJson_(const StructType_t &t);
 std::string toJson_(const UnionType_t &t);
+std::string toJson_(const NamedTypeReference_t &t);
 template <class T> std::string toJson_(List_t<T> list);
 template <class... T> std::string toJson_(std::tuple<T...> tuple);
 template <class... T> std::string toJson_(const Union_t<T...> &_union);
@@ -425,6 +431,10 @@ inline std::string toJson_(const StructType_t &t) {
 }
 inline std::string toJson_(const UnionType_t &t) {
   return R"({ "UnionType": { "variants": )" + toJson_(t.variants) + " } }";
+}
+inline std::string toJson_(const NamedTypeReference_t &t) {
+  return std::format(R"({{ "NamedTypeReference": {{ "name": {} }} }})",
+                     toJson_(t.name));
 }
 
 // -- expressions --
@@ -529,6 +539,7 @@ static_assert(std::equality_comparable<ListType_t>);
 static_assert(std::equality_comparable<FnType_t>);
 static_assert(std::equality_comparable<StructType_t>);
 static_assert(std::equality_comparable<UnionType_t>);
+static_assert(std::equality_comparable<NamedTypeReference_t>);
 static_assert(std::equality_comparable<TupleType_t>);
 static_assert(std::equality_comparable<Type_t>);
 static_assert(std::equality_comparable<Box_t<Type_t>>);
@@ -769,6 +780,39 @@ inline struct Union_f {
   }
   std::string toJson_() const { return R"({ "Function": "Union" })"; }
 } Union;
+
+#ifndef RUNTIME
+// defined in ipc.h, which is only accessible at compile-time
+void registerNamedType_cf(String_t name, Type_t value);
+void checkNamedType_cf(String_t name);
+#endif
+
+inline struct RegisterNamedType_f {
+  Type_t operator()(String_t name, Type_t value) const {
+#ifdef RUNTIME
+    panic("Cannot call RegisterNamedType at runtime.");
+#else
+    registerNamedType_cf(name, value);
+#endif
+    std::cout << "FINISHED\n" << std::endl;
+    return value;
+  }
+  std::string toJson_() const {
+    return R"({ "Function": "RegisterNamedType" })";
+  }
+} RegisterNamedType;
+
+inline struct ReferenceNamedType_f {
+  Type_t operator()(String_t name) const {
+#ifdef RUNTIME
+    panic("Cannot call ReferenceNamedType at runtime.");
+#endif
+    return box_f(NamedTypeReference_t{.name = name});
+  }
+  std::string toJson_() const {
+    return R"({ "Function": "ReferenceNamedType" })";
+  }
+} ReferenceNamedType;
 
 template <class T> Expression_t inject(T value) {
   return SerializedExpression_t{.json = toJson_f(value)};

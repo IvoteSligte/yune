@@ -60,7 +60,7 @@ func CompileLibrary(module Module) {
 	}
 	defer os.RemoveAll(dir)
 
-	writeFile(dir, "code.cpp", module)
+	writeFile(dir, "code.cpp", "#define RUNTIME\n"+module)
 
 	implementationPath := path.Join(dir, "code.cpp")
 	libraryPath := "./library.o"
@@ -87,7 +87,7 @@ func Run(module Module) (stdout, stderr string) {
 	}
 	defer os.RemoveAll(dir)
 
-	writeFile(dir, "code.cpp", module+`
+	writeFile(dir, "code.cpp", "#define RUNTIME\n"+module+`
 int main() {
     main_();
     return 0;

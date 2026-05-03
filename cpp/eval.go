@@ -71,14 +71,12 @@ func NewInterpreter() *Interpreter {
 		logFile:  newLogFile(),
 		Declared: "",
 	}
-	if err = r.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`)); err != nil {
-		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
-	}
-	if err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/ipc.hpp"`) + "\n"); err != nil {
-		log.Fatalln("Failed to declare IPC header through clang-repl. Error:", err)
-	}
-	if err = r.Write("#include <thread>\n"); err != nil {
-		log.Fatalln("Failed to declare Yune evaluator-specific C++ includes. Error:", err)
+	compileTimeIncludes := os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"
+#include "$PWD/cpp/ipc.hpp"
+#include <thread>
+`)
+	if err = r.Declare(compileTimeIncludes); err != nil {
+		log.Fatalln("Failed to declare compile-time #includes through clang-repl. Error:", err)
 	}
 	// have ipc.hpp connect
 	conn, err := listener.Accept()
@@ -129,7 +127,11 @@ func (r *Interpreter) Close() {
 	}
 }
 
-func (r *Interpreter) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
+type getType = func(string) Type
+type registerNamedType = func(string, *fj.Value)
+type checkNamedType = func(string)
+
+func (r *Interpreter) Evaluate(expr Expression, getType getType, registerNamedType registerNamedType, checkNamedType checkNamedType) (output *fj.Value, err error) {
 	// A thread is created and detached because in order to write the result of a getType query
 	// more code needs to be evaluated by the interpreter, which causes a deadlock with only a single thread.
 	text := "std::thread([]() { compiler_connection.yield(toJson_(" + sanitize(expr) + ")); }).detach();\n"
@@ -138,18 +140,19 @@ func (r *Interpreter) Evaluate(expr Expression, getType func(string) Type) (outp
 	if err != nil {
 		return
 	}
-	output, err = r.readResult(getType)
+	output, err = r.readResult(getType, registerNamedType, checkNamedType)
 	log.Printf("clang-repl evaluated '%s' to '%s'\n", expr, output)
 	return
 }
 
-func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, err error) {
+func (r *Interpreter) readResult(getType getType, registerNamedType registerNamedType, checkNamedType checkNamedType) (result *fj.Value, err error) {
 	for {
 		var read string
 		read, err = r.reader.ReadString('\n')
 		if err != nil {
 			return
 		}
+		log.Printf("clang-repl message: %s", read)
 		message := fj.MustParse(read)
 		if message.Get("finished") != nil {
 			err = fmt.Errorf("Compiler connection reported 'finished' while waiting for a result. Message: '%s'.", message)
@@ -161,10 +164,22 @@ func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, e
 		if nameBytes := message.GetStringBytes("getType"); nameBytes != nil {
 			name := string(nameBytes)
 			// set the type and signal that it has been set
-			if err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", getType(name))); err != nil {
+			_type := getType(name)
+			if err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", _type)); err != nil {
 				err = fmt.Errorf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err)
 				return
 			}
+			continue
+		}
+		if requestJson := message.Get("registerNamedType"); requestJson != nil {
+			name := string(requestJson.GetStringBytes("name"))
+			value := requestJson.Get("value")
+			registerNamedType(name, value)
+			continue
+		}
+		if requestJson := message.Get("checkNamedType"); requestJson != nil {
+			name := string(requestJson.GetStringBytes("name"))
+			checkNamedType(name)
 			continue
 		}
 		err = fmt.Errorf("Could not parse evaluation message: '%s'", message)

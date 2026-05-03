@@ -1,0 +1,6 @@
+
+R: Type = RegisterNamedType("R", List(ReferenceNamedType("R")))
+
+main(): () =
+    r: R = [[], [[]]]
+

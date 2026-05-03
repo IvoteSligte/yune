@@ -285,3 +285,19 @@ type CannotDetermineRawType struct {
 func (e CannotDetermineRawType) Error() string {
 	return fmt.Sprintf(`Cannot determine type of raw expression at %s`, e.Span)
 }
+
+type DuplicateNamedType struct {
+	Name string
+}
+
+func (e DuplicateNamedType) Error() string {
+	return fmt.Sprintf("Named type `%s` registered twice.", e.Name)
+}
+
+type UndefinedNamedType struct {
+	Name string
+}
+
+func (e UndefinedNamedType) Error() string {
+	return fmt.Sprintf("Named type `%s` is undefined.", e.Name)
+}

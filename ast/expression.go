@@ -329,11 +329,15 @@ func (t *List) GetSpan() Span {
 func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	expectedListType, expectsList := expected.(*ListType)
 
+	// if !expectsList {
+	// 	expectedNamedType, expectsNamed := expected.(*NamedType)
+	// } // FIXME:
+
 	if len(t.Elements) == 0 {
 		if expectsList {
 			return expectedListType
 		}
-		return &ListType{Element: nil} // cannot determine element type
+		return &ListType{Element: &UnionType{}}
 	}
 	if expectsList {
 		t.elementType = expectedListType.Element
@@ -480,7 +484,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 	v := anal.Evaluate(fmt.Sprintf(
-		`(%s)(%q, get_type)`,
+		`(%s)(%q, getType_cf)`,
 		m.Function.Lower(anal.State), m.GetText(),
 	))
 	// v is Union[String, Expression]

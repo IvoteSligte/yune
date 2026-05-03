@@ -242,8 +242,5 @@ func (d ConstantDeclaration) GetDeclarationType() Type {
 	return d.Type
 }
 
-// TODO: when types and type aliases can be created, make sure that
-// values are cached and aliases are properly resolved.
-
 var _ TopLevelDeclaration = &FunctionDeclaration{}
 var _ TopLevelDeclaration = &ConstantDeclaration{}

@@ -44,7 +44,7 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// // assume func is declared in global scope
 		// std::Function<int, bool> func = func;   // func refers to the variable being declared
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
-		return "::" + string(v.GetStringBytes())
+		return "::" + UnmarshalNonEmptyString(v)
 	case "Box":
 		return fmt.Sprintf(`box_f(%s)`, state.lowerExpressionValue(v))
 	case "Tuple":

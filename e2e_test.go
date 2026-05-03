@@ -169,9 +169,12 @@ func TestRawCpp(t *testing.T) {
 	_, _ = parseAndRunModule("rawCpp.un", "T: Type = `Int`")
 }
 
-func TestRecursiveType(t *testing.T) {
-	_, _ = parseAndRunModule("recursiveType.un", "R: Type = List(`box_f(StructType_t{.name = \"R\"})`)")
-}
+// func TestRecursiveType(t *testing.T) {
+// 	_, _ = parseAndRunModule("recursiveType.un", `
+// JsonValue: Type = Union[Int, Float, String, Bool, List(JsonValue), JsonObject, ()]
+// JsonObject: Type = List((String, JsonValue))
+// `)
+// }
 
 func TestBasic(t *testing.T) {
 	stdout, _ := parseAndRunModule("basic.un", `

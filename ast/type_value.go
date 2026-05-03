@@ -8,6 +8,9 @@ import (
 	fj "github.com/valyala/fastjson"
 )
 
+// modifiable
+var namedTypeRegistry = map[string]TypeValue{}
+
 var MainType = &FnType{
 	Argument: &TupleType{},
 	Return:   &TupleType{},
@@ -66,6 +69,18 @@ func IsSubType(sub TypeValue, super TypeValue) bool {
 	return subUnion.IsSubUnion(superUnion)
 }
 
+func EqNamedType(left TypeValue, right TypeValue) bool {
+	named, ok := left.(*NamedTypeReference)
+	if ok {
+		return named.Eq(right)
+	}
+	named, ok = right.(*NamedTypeReference)
+	if ok {
+		return named.Eq(left)
+	}
+	return false
+}
+
 type DefaultTypeValue struct{}
 
 func (DefaultTypeValue) typeValue() {}
@@ -76,7 +91,7 @@ func (TypeType) String() string { return "Type" }
 
 func (t *TypeType) Eq(other TypeValue) bool {
 	_, ok := other.(*TypeType)
-	return ok
+	return ok || EqNamedType(t, other)
 }
 
 func (TypeType) LowerType() cpp.Type   { return "Type_t" }
@@ -88,7 +103,7 @@ func (IntType) String() string { return "Int" }
 
 func (i *IntType) Eq(other TypeValue) bool {
 	_, ok := other.(*IntType)
-	return ok
+	return ok || EqNamedType(i, other)
 }
 
 func (IntType) LowerType() cpp.Type   { return "int" }
@@ -100,7 +115,7 @@ func (FloatType) String() string { return "Float" }
 
 func (f *FloatType) Eq(other TypeValue) bool {
 	_, ok := other.(*FloatType)
-	return ok
+	return ok || EqNamedType(f, other)
 }
 
 func (FloatType) LowerType() cpp.Type   { return "float" }
@@ -112,7 +127,7 @@ func (BoolType) String() string { return "Bool" }
 
 func (b *BoolType) Eq(other TypeValue) bool {
 	_, ok := other.(*BoolType)
-	return ok
+	return ok || EqNamedType(b, other)
 }
 
 func (BoolType) LowerType() cpp.Type   { return "bool" }
@@ -124,7 +139,7 @@ func (StringType) String() string { return "String" }
 
 func (s *StringType) Eq(other TypeValue) bool {
 	_, ok := other.(*StringType)
-	return ok
+	return ok || EqNamedType(s, other)
 }
 
 func (StringType) LowerType() cpp.Type   { return "String_t" }
@@ -141,7 +156,10 @@ func (t TupleType) String() string {
 
 func (t *TupleType) Eq(other TypeValue) bool {
 	otherTuple, ok := other.(*TupleType)
-	if !ok || len(t.Elements) != len(otherTuple.Elements) {
+	if !ok {
+		return EqNamedType(t, other)
+	}
+	if len(t.Elements) != len(otherTuple.Elements) {
 		return false
 	}
 	for i, element := range t.Elements {
@@ -170,7 +188,7 @@ func (l ListType) String() string {
 
 func (l *ListType) Eq(other TypeValue) bool {
 	otherList, ok := other.(*ListType)
-	return ok && l.Element.Eq(otherList.Element)
+	return ok && l.Element.Eq(otherList.Element) || EqNamedType(l, other)
 }
 func (l ListType) LowerType() cpp.Type {
 	return "List_t<" + l.Element.LowerType() + ">"
@@ -192,7 +210,7 @@ func (f FnType) String() string {
 
 func (f *FnType) Eq(other TypeValue) bool {
 	otherFn, ok := other.(*FnType)
-	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
+	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return) || EqNamedType(f, other)
 }
 
 func (f FnType) LowerType() cpp.Type {
@@ -238,7 +256,7 @@ func (s StructType) String() string {
 func (s *StructType) Eq(other TypeValue) bool {
 	// NOTE: this does not compare fields as it assumes name uniqueness
 	otherStruct, ok := other.(*StructType)
-	return ok && s.Name == otherStruct.Name
+	return ok && s.Name == otherStruct.Name || EqNamedType(s, other)
 }
 func (s StructType) LowerType() cpp.Type {
 	return s.Name + "_t"
@@ -261,7 +279,10 @@ func (u UnionType) String() string {
 
 func (u *UnionType) Eq(other TypeValue) bool {
 	otherUnion, ok := other.(*UnionType)
-	if !ok || len(u.Variants) != len(otherUnion.Variants) {
+	if !ok {
+		return EqNamedType(u, other)
+	}
+	if len(u.Variants) != len(otherUnion.Variants) {
 		return false
 	}
 	// unions are unordered
@@ -313,6 +334,7 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 	uniqueVariants := []TypeValue{}
 	for _, variant := range flatVariants {
 		if !util.Any(uniqueVariants, func(other TypeValue) bool {
+			fmt.Printf("%#v, %#v\n", variant, other)
 			return other.Eq(variant)
 		}) {
 			uniqueVariants = append(uniqueVariants, variant)
@@ -323,6 +345,37 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 	}
 	return &UnionType{Variants: uniqueVariants}
 }
+
+type NamedTypeReference struct {
+	Name Name
+}
+
+// Eq implements TypeValue.
+func (n *NamedTypeReference) Eq(other TypeValue) bool {
+	otherNamedRef, ok := other.(*NamedTypeReference)
+	if ok {
+		return n.Name.String == otherNamedRef.Name.String
+	}
+	return namedTypeRegistry[n.Name.String].Eq(other)
+}
+
+// LowerType implements TypeValue.
+func (n *NamedTypeReference) LowerType() string {
+	return n.Name.String + "_t"
+}
+
+// LowerValue implements TypeValue.
+func (n *NamedTypeReference) LowerValue() string {
+	return n.Name.String
+}
+
+// String implements TypeValue.
+func (n *NamedTypeReference) String() string {
+	return n.Name.String
+}
+
+// typeValue implements TypeValue.
+func (n *NamedTypeReference) typeValue() {}
 
 // Tries to unmarshal a TypeValue, returning nil if the union key does not match an Expression.
 func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
@@ -363,7 +416,14 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		}
 	case "UnionType":
 		t = &UnionType{
-			Variants: util.Map(v.Get("variants").GetArray(), state.UnmarshalTypeValue),
+			Variants: util.Map(UnmarshalArray(v, "variants"), state.UnmarshalTypeValue),
+		}
+	case "NamedTypeReference":
+		t = &NamedTypeReference{
+			Name: Name{
+				Span:   fjUnmarshal(v.Get("span"), Span{}),
+				String: UnmarshalNonEmptyString(v, "name"),
+			},
 		}
 	case "TypeId":
 		id := UnmarshalNonEmptyString(v)
@@ -386,3 +446,4 @@ var _ TypeValue = (*ListType)(nil)
 var _ TypeValue = (*FnType)(nil)
 var _ TypeValue = (*StructType)(nil)
 var _ TypeValue = (*UnionType)(nil)
+var _ TypeValue = (*NamedTypeReference)(nil)

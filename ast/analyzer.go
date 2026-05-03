@@ -52,6 +52,22 @@ func (a Analyzer) HasErrors() bool {
 	return len(*a.Errors) > 0
 }
 
+func (a Analyzer) registerNamedType(name string, value *fj.Value) {
+	_, exists := namedTypeRegistry[name]
+	if exists {
+		a.ReportError(DuplicateNamedType{Name: name})
+	}
+	typeValue := a.State.UnmarshalTypeValue(value)
+	namedTypeRegistry[name] = typeValue
+}
+
+func (a Analyzer) checkNamedType(name string) {
+	_, exists := namedTypeRegistry[name]
+	if !exists {
+		a.ReportError(UndefinedNamedType{Name: name})
+	}
+}
+
 // Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
 func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
 	getType := func(name string) cpp.Type {
@@ -66,7 +82,7 @@ func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
 		}
 		return decl.GetDeclaredType().LowerValue()
 	}
-	json, err := a.Interpreter.Evaluate(lowered, getType)
+	json, err := a.Interpreter.Evaluate(lowered, getType, a.registerNamedType, a.checkNamedType)
 	if err != nil {
 		panic("Failed to evaluate lowered expression. Error: " + err.Error())
 	}

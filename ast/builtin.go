@@ -105,6 +105,14 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Argument: &ListType{Element: &TypeType{}},
 		Return:   &TypeType{},
 	}, 0},
+	{"RegisterNamedType", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &TypeType{}}},
+		Return:   &TypeType{},
+	}, 0},
+	{"ReferenceNamedType", &FnType{
+		Argument: &StringType{},
+		Return:   &TypeType{},
+	}, 0},
 	// actual signature is `inject(Any): Expression`, but this cannot be expressed in Yune
 	{"inject", &FnType{Argument: &TupleType{}, Return: ExpressionType}, 0},
 }
