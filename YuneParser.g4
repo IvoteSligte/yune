@@ -14,6 +14,7 @@ anImport
 topLevelDeclaration
     : functionDeclaration
     | constantDeclaration
+    | RAW_STRING
     ;
 
 name

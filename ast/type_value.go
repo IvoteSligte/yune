@@ -334,7 +334,6 @@ func NewUnionType(variants ...TypeValue) TypeValue {
 	uniqueVariants := []TypeValue{}
 	for _, variant := range flatVariants {
 		if !util.Any(uniqueVariants, func(other TypeValue) bool {
-			fmt.Printf("%#v, %#v\n", variant, other)
 			return other.Eq(variant)
 		}) {
 			uniqueVariants = append(uniqueVariants, variant)
