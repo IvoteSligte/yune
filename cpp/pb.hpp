@@ -794,7 +794,6 @@ inline struct RegisterNamedType_f {
 #else
     registerNamedType_cf(name, value);
 #endif
-    std::cout << "FINISHED\n" << std::endl;
     return value;
   }
   std::string toJson_() const {

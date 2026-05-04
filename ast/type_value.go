@@ -69,16 +69,12 @@ func IsSubType(sub TypeValue, super TypeValue) bool {
 	return subUnion.IsSubUnion(superUnion)
 }
 
-func EqNamedType(left TypeValue, right TypeValue) bool {
-	named, ok := left.(*NamedTypeReference)
+func ResolveNamedType(t TypeValue) TypeValue {
+	named, ok := t.(*NamedTypeReference)
 	if ok {
-		return named.Eq(right)
+		return ResolveNamedType(namedTypeRegistry[named.Name.String])
 	}
-	named, ok = right.(*NamedTypeReference)
-	if ok {
-		return named.Eq(left)
-	}
-	return false
+	return t
 }
 
 type DefaultTypeValue struct{}
@@ -90,8 +86,9 @@ type TypeType struct{ DefaultTypeValue }
 func (TypeType) String() string { return "Type" }
 
 func (t *TypeType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	_, ok := other.(*TypeType)
-	return ok || EqNamedType(t, other)
+	return ok
 }
 
 func (TypeType) LowerType() cpp.Type   { return "Type_t" }
@@ -102,8 +99,9 @@ type IntType struct{ DefaultTypeValue }
 func (IntType) String() string { return "Int" }
 
 func (i *IntType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	_, ok := other.(*IntType)
-	return ok || EqNamedType(i, other)
+	return ok
 }
 
 func (IntType) LowerType() cpp.Type   { return "int" }
@@ -114,8 +112,9 @@ type FloatType struct{ DefaultTypeValue }
 func (FloatType) String() string { return "Float" }
 
 func (f *FloatType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	_, ok := other.(*FloatType)
-	return ok || EqNamedType(f, other)
+	return ok
 }
 
 func (FloatType) LowerType() cpp.Type   { return "float" }
@@ -126,8 +125,9 @@ type BoolType struct{ DefaultTypeValue }
 func (BoolType) String() string { return "Bool" }
 
 func (b *BoolType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	_, ok := other.(*BoolType)
-	return ok || EqNamedType(b, other)
+	return ok
 }
 
 func (BoolType) LowerType() cpp.Type   { return "bool" }
@@ -138,8 +138,9 @@ type StringType struct{ DefaultTypeValue }
 func (StringType) String() string { return "String" }
 
 func (s *StringType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	_, ok := other.(*StringType)
-	return ok || EqNamedType(s, other)
+	return ok
 }
 
 func (StringType) LowerType() cpp.Type   { return "String_t" }
@@ -155,11 +156,9 @@ func (t TupleType) String() string {
 }
 
 func (t *TupleType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	otherTuple, ok := other.(*TupleType)
-	if !ok {
-		return EqNamedType(t, other)
-	}
-	if len(t.Elements) != len(otherTuple.Elements) {
+	if !ok || len(t.Elements) != len(otherTuple.Elements) {
 		return false
 	}
 	for i, element := range t.Elements {
@@ -187,8 +186,9 @@ func (l ListType) String() string {
 }
 
 func (l *ListType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	otherList, ok := other.(*ListType)
-	return ok && l.Element.Eq(otherList.Element) || EqNamedType(l, other)
+	return ok && l.Element.Eq(otherList.Element)
 }
 func (l ListType) LowerType() cpp.Type {
 	return "List_t<" + l.Element.LowerType() + ">"
@@ -209,8 +209,9 @@ func (f FnType) String() string {
 }
 
 func (f *FnType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	otherFn, ok := other.(*FnType)
-	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return) || EqNamedType(f, other)
+	return ok && f.Argument.Eq(otherFn.Argument) && f.Return.Eq(otherFn.Return)
 }
 
 func (f FnType) LowerType() cpp.Type {
@@ -254,9 +255,10 @@ func (s StructType) String() string {
 }
 
 func (s *StructType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	// NOTE: this does not compare fields as it assumes name uniqueness
 	otherStruct, ok := other.(*StructType)
-	return ok && s.Name == otherStruct.Name || EqNamedType(s, other)
+	return ok && s.Name == otherStruct.Name
 }
 func (s StructType) LowerType() cpp.Type {
 	return s.Name + "_t"
@@ -278,11 +280,9 @@ func (u UnionType) String() string {
 }
 
 func (u *UnionType) Eq(other TypeValue) bool {
+	other = ResolveNamedType(other)
 	otherUnion, ok := other.(*UnionType)
-	if !ok {
-		return EqNamedType(u, other)
-	}
-	if len(u.Variants) != len(otherUnion.Variants) {
+	if !ok || len(u.Variants) != len(otherUnion.Variants) {
 		return false
 	}
 	// unions are unordered

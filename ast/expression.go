@@ -224,12 +224,12 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 		switch name {
 		// getTupleElement_(<any tuple type>, index Int): <element type at index>
 		case "getTupleElement_":
-			argumentType := f.Argument.Analyze(nil, anal)
+			argumentType := ResolveNamedType(f.Argument.Analyze(nil, anal))
 			tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
 			checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
 			firstElementTupleType := checkIsTuple(tupleArgumentType.Elements[0], f.Argument.GetSpan(), anal)
 			// the second argument should always be an integer, since the compiler constructs this FunctionCall
-			_ = tupleArgumentType.Elements[1].(*IntType)
+			_ = ResolveNamedType(tupleArgumentType.Elements[1]).(*IntType)
 			index := f.Argument.(*Tuple).Elements[1].(*Integer)
 			return firstElementTupleType.Elements[index.Value]
 		case "inject":
@@ -246,7 +246,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 	if returnType = f.AnalyzeBuiltins(anal); returnType != nil {
 		return
 	}
-	maybeFunctionType := f.Function.Analyze(nil, anal)
+	maybeFunctionType := ResolveNamedType(f.Function.Analyze(nil, anal))
 	functionType, isFunction := maybeFunctionType.(*FnType)
 	if !isFunction {
 		anal.ReportError(NotAFunction{
@@ -267,7 +267,7 @@ func (f *FunctionCall) Analyze(expected TypeValue, anal Analyzer) (returnType Ty
 			At:       f.Argument.GetSpan(),
 		})
 	}
-	_, parameterIsTuple := functionType.Argument.(*TupleType)
+	_, parameterIsTuple := ResolveNamedType(functionType.Argument).(*TupleType)
 	f.parameterIsTuple = parameterIsTuple
 	return
 }
@@ -327,16 +327,15 @@ func (t *List) GetSpan() Span {
 
 // Analyze implements Expression.
 func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	expected = ResolveNamedType(expected)
 	expectedListType, expectsList := expected.(*ListType)
-
-	// if !expectsList {
-	// 	expectedNamedType, expectsNamed := expected.(*NamedType)
-	// } // FIXME:
 
 	if len(t.Elements) == 0 {
 		if expectsList {
+			t.elementType = expectedListType.Element
 			return expectedListType
 		}
+		t.elementType = &UnionType{}
 		return &ListType{Element: &UnionType{}}
 	}
 	if expectsList {
@@ -362,7 +361,8 @@ func (t *List) GetFlags() (flags Flags) {
 func (t *List) Lower(state *State) cpp.Expression {
 	return fmt.Sprintf(
 		`List_t<%s>{%s}`,
-		t.elementType.LowerType(), util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
+		t.elementType.LowerType(),
+		util.JoinFunc(t.Elements, ", ", func(e Expression) cpp.Expression {
 			return e.Lower(state)
 		}),
 	)
@@ -393,6 +393,7 @@ func (t *Tuple) GetSpan() Span {
 
 // Analyze implements Expression.
 func (t *Tuple) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	expected = ResolveNamedType(expected)
 	expectedTupleType, isTuple := expected.(*TupleType)
 	_type := &TupleType{}
 
@@ -597,8 +598,8 @@ func (b *BinaryExpression) GetSpan() Span {
 // Analyze implements Expression.
 func (b *BinaryExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	// TODO: the expected type (used by Analyze) for Left and Right differs depending on the operator
-	leftType := b.Left.Analyze(nil, anal)
-	rightType := b.Right.Analyze(nil, anal)
+	leftType := ResolveNamedType(b.Left.Analyze(nil, anal))
+	rightType := ResolveNamedType(b.Right.Analyze(nil, anal))
 	if !leftType.Eq(rightType) {
 		anal.ReportError(InvalidBinaryExpressionTypes{
 			Op:    b.Op,
@@ -715,8 +716,9 @@ func (s *StructExpression) GetSpan() Span {
 }
 
 func (s StructExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	expected = ResolveNamedType(expected)
 	maybeStructType, _ := anal.GetType(s.Name)
-	structType, isStructType := maybeStructType.(*StructType)
+	structType, isStructType := ResolveNamedType(maybeStructType).(*StructType)
 	if !isStructType {
 		anal.ReportError(NotAStruct{
 			Found: structType,
