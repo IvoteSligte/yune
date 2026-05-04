@@ -37,11 +37,16 @@ parseNumber(text: String): Union[(Union[Int, Float], String), ()] =
             (float, remainder)
         toFloat(int)
 
-RawJsonValueType: Type = `box_f(StructType_t{.name = \"JsonValue\"})`
-JsonValue: Type = Union[Int, Float, String, Bool, List(RawJsonValueType), JsonObject, ()]
-JsonObject: Type = List((String, RawJsonValueType))
+// Recursive types cannot be expressed in Yune due to the limitations of C++'s type system.
+// So we use indices into an array that is passed along with the data.
+JsonValueIndex: Type = Int
+JsonValue: Type = Union[Int, Float, String, Bool, List(JsonValueIndex), JsonObject, ()]
+JsonObject: Type = List((String, JsonValueIndex))
 
-parse(text: String): JsonValue =
+// (head, children)
+Json: Type = (JsonValue, List(JsonValue))
+
+parse(text: String): Json =
     panic("TODO")
 
 json(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
