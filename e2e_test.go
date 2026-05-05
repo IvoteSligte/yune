@@ -186,6 +186,26 @@ func TestRawCppExpression(t *testing.T) {
 	_, _ = parseAndRunModule("rawCppExpression.un", "T: Type = `Int`")
 }
 
+func TestClosureExpression(t *testing.T) {
+	stdout, _ := parseAndRunModule("closureExpression.un", `
+Error: Type = String
+square(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
+    type := getType(text)
+    type ;= Int ->
+        "Referenced variable must be an integer"
+    parameters: List((String, Expression)) = []
+    statements: List(Statement) = [expressionStatement(binaryExpression("*", variableExpression(text), variableExpression(text)))]
+    closureExpression(parameters, inject(Int), statements)
+
+main(): () =
+    n: Int = 10
+    squareClosure := square#n
+    squareClosure() == 100 -> printlnString("correct")
+    printlnString("incorrect")
+`)
+	assertEq(stdout, "correct\n")
+}
+
 func TestBasic(t *testing.T) {
 	stdout, _ := parseAndRunModule("basic.un", `
 import "std.un"

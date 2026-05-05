@@ -72,7 +72,6 @@ func getFunctionType(parameters []FunctionParameter, returnType Type) TypeValue 
 }
 
 type FunctionDeclaration struct {
-	Span       Span
 	Name       Name
 	Parameters []FunctionParameter
 	ReturnType Type
@@ -136,9 +135,12 @@ func (d FunctionDeclaration) GetDeclaredType() TypeValue {
 }
 
 type FunctionParameter struct {
-	Span
 	Name Name
 	Type Type
+}
+
+func (d *FunctionParameter) GetSpan() Span {
+	return d.Name.GetSpan()
 }
 
 func (d *FunctionParameter) Analyze(anal Analyzer) {
@@ -167,7 +169,6 @@ func (d FunctionParameter) GetDeclaredType() TypeValue {
 }
 
 type ConstantDeclaration struct {
-	Span      Span
 	Name      Name
 	Type      Type
 	Body      Block

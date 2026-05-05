@@ -35,9 +35,9 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 	}
 	typeName, v := fjUnmarshalStruct(object)
 	switch typeName {
-	case "Closure":
+	case "Closure_":
 		return state.lowerClosureValue(v)
-	case "Function":
+	case "Function_":
 		// the :: prefix makes sure the function refers to the globally declared one,
 		// not a variable with the same name currently being declared
 		//
@@ -45,9 +45,9 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = func;   // func refers to the variable being declared
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + UnmarshalNonEmptyString(v)
-	case "Box":
+	case "Box_":
 		return fmt.Sprintf(`box_f(%s)`, state.lowerExpressionValue(v))
-	case "Tuple":
+	case "Tuple_":
 		elements := UnmarshalArray(v, "elements")
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(elements, ", ", state.lowerExpressionValue))
 	default:

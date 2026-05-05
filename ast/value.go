@@ -82,3 +82,11 @@ func UnmarshalNonEmptyString(data *fj.Value, keys ...string) string {
 func UnmarshalArray(data *fj.Value, keys ...string) []*fj.Value {
 	return UnmarshalItem(data, (*fj.Value).Array, keys...)
 }
+
+func UnmarshalTuple(data *fj.Value) []*fj.Value {
+	key, v := fjUnmarshalStruct(data.GetObject())
+	if key != "Tuple" {
+		log.Panicf("Expected Tuple, but found JSON variant: %s", data)
+	}
+	return UnmarshalArray(v, "elements")
+}

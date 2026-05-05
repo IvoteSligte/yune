@@ -214,6 +214,7 @@ struct UnaryExpression_t;
 struct BinaryExpression_t;
 struct ListExpression_t;
 struct TupleExpression_t;
+struct ClosureExpression_t;
 struct MacroExpression_t {
   String_t macro;
   String_t text;
@@ -226,9 +227,9 @@ using Expression_t =
     Union_t<IntegerExpression_t, FloatExpression_t, BoolExpression_t,
             StringExpression_t, VariableExpression_t,
             Box_t<FunctionCallExpression_t>, Box_t<ListExpression_t>,
-            Box_t<TupleExpression_t>, Box_t<MacroExpression_t>,
-            Box_t<UnaryExpression_t>, Box_t<BinaryExpression_t>,
-            SerializedExpression_t>;
+            Box_t<TupleExpression_t>, Box_t<ClosureExpression_t>,
+            Box_t<MacroExpression_t>, Box_t<UnaryExpression_t>,
+            Box_t<BinaryExpression_t>, SerializedExpression_t>;
 
 struct FunctionCallExpression_t {
   Expression_t function;
@@ -285,6 +286,12 @@ struct IsBranchStatement_t {
   Expression_t type;
   Block_t thenBlock;
   Block_t elseBlock;
+};
+
+struct ClosureExpression_t {
+  List_t<std::tuple<String_t, Expression_t>> parameters;
+  Expression_t returnType;
+  Block_t body;
 };
 
 // Escape string to JSON literal.
@@ -363,6 +370,7 @@ std::string toJson_(const BinaryExpression_t &e);
 std::string toJson_(const MacroExpression_t &e);
 std::string toJson_(const ListExpression_t &e);
 std::string toJson_(const TupleExpression_t &e);
+std::string toJson_(const ClosureExpression_t &e);
 inline std::string toJson_(const SerializedExpression_t &e) { return e.json; }
 std::string toJson_(const VariableDeclaration_t &e);
 std::string toJson_(const AssignStatement_t &e);
@@ -387,7 +395,7 @@ template <class T> std::string toJson_(List_t<T> list) {
 
 template <class... T> std::string toJson_(std::tuple<T...> tuple) {
   std::ostringstream oss;
-  oss << R"({ "Tuple": { "elements": [)";
+  oss << R"({ "Tuple_": { "elements": [)";
   int i = 0;
   std::apply(
       [&](auto &&...elements) {
@@ -462,6 +470,11 @@ inline std::string toJson_(const ListExpression_t &e) {
 inline std::string toJson_(const TupleExpression_t &e) {
   return R"({ "TupleExpression": { "elements": )" + toJson_(e.elements) +
          " } }";
+}
+inline std::string toJson_(const ClosureExpression_t &e) {
+  return std::format(
+      R"({{ "ClosureExpression": {{ "parameters": {}, "returnType": {}, "body": {} }} }})",
+      toJson_(e.parameters), toJson_(e.returnType), toJson_(e.body));
 }
 inline std::string toJson_(const MacroExpression_t &e) {
   return std::format(
@@ -540,24 +553,25 @@ inline Type_t Bool = BoolType_t{};
 inline Type_t String = StringType_t{};
 
 inline Type_t Expression = box_f(StructType_t{.name = "Expression"});
+inline Type_t Statement = box_f(StructType_t{.name = "Statement"});
 
 inline struct List_f {
   Type_t operator()(Type_t element) const {
     return box_f(ListType_t{.element = element});
   }
-  std::string toJson_() const { return R"({ "Function": "List" })"; }
+  std::string toJson_() const { return R"({ "Function_": "List" })"; }
 } List;
 
 inline struct Fn_f {
   Type_t operator()(Type_t argument, Type_t returnType) const {
     return box_f(FnType_t{.argument = argument, .returnType = returnType});
   }
-  std::string toJson_() const { return R"({ "Function": "Fn" })"; }
+  std::string toJson_() const { return R"({ "Function_": "Fn" })"; }
 } Fn;
 
 inline struct toFloat_f {
   float operator()(int n) const { return n; }
-  std::string toJson_() const { return R"({ "Function": "toFloat" })"; }
+  std::string toJson_() const { return R"({ "Function_": "toFloat" })"; }
 } toFloat;
 
 inline struct panic_f {
@@ -566,7 +580,7 @@ inline struct panic_f {
     std::cerr << "panic: " << message << std::endl;
     exit(1);
   }
-  std::string toJson_() const { return R"({ "Function": "panic" })"; }
+  std::string toJson_() const { return R"({ "Function_": "panic" })"; }
 } panic;
 
 inline struct integerExpression_f {
@@ -574,7 +588,7 @@ inline struct integerExpression_f {
     return IntegerExpression_t{.value = value};
   }
   std::string toJson_() const {
-    return R"({ "Function": "integerExpression" })";
+    return R"({ "Function_": "integerExpression" })";
   }
 } integerExpression;
 
@@ -582,14 +596,14 @@ inline struct floatExpression_f {
   Expression_t operator()(float value) const {
     return FloatExpression_t{.value = value};
   }
-  std::string toJson_() const { return R"({ "Function": "floatExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "floatExpression" })"; }
 } floatExpression;
 
 inline struct boolExpression_f {
   Expression_t operator()(bool value) const {
     return BoolExpression_t{.value = value};
   }
-  std::string toJson_() const { return R"({ "Function": "boolExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "boolExpression" })"; }
 } boolExpression;
 
 inline struct stringExpression_f {
@@ -597,7 +611,7 @@ inline struct stringExpression_f {
     return StringExpression_t{.value = value};
   }
   std::string toJson_() const {
-    return R"({ "Function": "stringExpression" })";
+    return R"({ "Function_": "stringExpression" })";
   }
 } stringExpression;
 
@@ -606,7 +620,7 @@ inline struct variableExpression_f {
     return VariableExpression_t{.name = name};
   }
   std::string toJson_() const {
-    return R"({ "Function": "variableExpression" })";
+    return R"({ "Function_": "variableExpression" })";
   }
 } variableExpression;
 
@@ -617,7 +631,7 @@ inline struct unaryExpression_ {
     }
     return box_f(UnaryExpression_t{.op = op, .expression = expression});
   }
-  std::string toJson_() const { return R"({ "Function": "unaryExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "unaryExpression" })"; }
 } unaryExpression;
 
 inline struct binaryExpression_ {
@@ -630,7 +644,7 @@ inline struct binaryExpression_ {
     return box_f(BinaryExpression_t{.op = op, .left = left, .right = right});
   }
   std::string toJson_() const {
-    return R"({ "Function": "binaryExpression" })";
+    return R"({ "Function_": "binaryExpression" })";
   }
 } binaryExpression;
 
@@ -640,29 +654,49 @@ inline struct functionCallExpression_f {
         FunctionCallExpression_t{.function = function, .argument = argument});
   }
   std::string toJson_() const {
-    return R"({ "Function": "functionCallExpression" })";
+    return R"({ "Function_": "functionCallExpression" })";
   }
 } functionCallExpression;
+
+inline struct expressionStatement_f {
+  Statement_t operator()(Expression_t expression) const {
+    return ExpressionStatement_t{.expression = expression};
+  }
+  std::string toJson_() const {
+    return R"({ "Function_": "expressionStatementExpression" })";
+  }
+} expressionStatement;
+
+inline struct closureExpression_f {
+  Expression_t operator()(List_t<std::tuple<String_t, Expression_t>> parameters,
+                          Expression_t returnType, Block_t body) const {
+    return box_f(ClosureExpression_t{
+        .parameters = parameters, .returnType = returnType, .body = body});
+  }
+  std::string toJson_() const {
+    return R"({ "Function_": "closureExpression" })";
+  }
+} closureExpression;
 
 inline struct macroExpression_f {
   Expression_t operator()(String_t macro, String_t text) const {
     return box_f(MacroExpression_t{.macro = macro, .text = text});
   }
-  std::string toJson_() const { return R"({ "Function": "macroExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "macroExpression" })"; }
 } macroExpression;
 
 inline struct listExpression_f {
   Expression_t operator()(List_t<Expression_t> elements) const {
     return box_f(ListExpression_t{.elements = elements});
   }
-  std::string toJson_() const { return R"({ "Function": "listExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "listExpression" })"; }
 } listExpression;
 
 inline struct tupleExpression_f {
   Expression_t operator()(List_t<Expression_t> elements) const {
     return box_f(TupleExpression_t{.elements = elements});
   }
-  std::string toJson_() const { return R"({ "Function": "tupleExpression" })"; }
+  std::string toJson_() const { return R"({ "Function_": "tupleExpression" })"; }
 } tupleExpression;
 
 inline struct variableDeclaration_f {
@@ -673,7 +707,7 @@ inline struct variableDeclaration_f {
         VariableDeclaration_t{.name = name, .type = type, .body = body});
   }
   std::string toJson_() const {
-    return R"({ "Function": "variableDeclaration" })";
+    return R"({ "Function_": "variableDeclaration" })";
   }
 } variableDeclaration;
 
@@ -682,12 +716,12 @@ inline struct printlnString_f {
     std::cout << str << std::endl;
     return std::make_tuple();
   }
-  std::string toJson_() const { return R"({ "Function": "printlnString" })"; }
+  std::string toJson_() const { return R"({ "Function_": "printlnString" })"; }
 } printlnString;
 
 inline struct len_f {
   int operator()(String_t s) const { return s.length(); }
-  std::string toJson_() const { return R"({ "Function": "len" })"; }
+  std::string toJson_() const { return R"({ "Function_": "len" })"; }
 } len;
 
 inline struct subString_f {
@@ -703,7 +737,7 @@ inline struct subString_f {
     }
     return s.substr(start, end - start);
   }
-  std::string toJson_() const { return R"({ "Function": "subString" })"; }
+  std::string toJson_() const { return R"({ "Function_": "subString" })"; }
 } subString;
 
 // isVariant for subset
@@ -774,9 +808,9 @@ inline struct Union_f {
     }
     return box_f(UnionType_t{.variants = unique_variants});
   }
-  std::string toJson_() const { return R"({ "Function": "Union" })"; }
+  std::string toJson_() const { return R"({ "Function_": "Union" })"; }
 } Union;
 
 template <class T> Expression_t inject(T value) {
-  return SerializedExpression_t{.json = toJson_f(value)};
+  return SerializedExpression_t{.json = toJson_(value)};
 }

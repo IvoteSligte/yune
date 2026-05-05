@@ -111,18 +111,16 @@ func LowerBranchStatement(ctx IBranchStatementContext) ast.Statement {
 			Condition: LowerExpression(ctx.Expression()),
 			Then:      LowerStatementBody(ctx.StatementBody()),
 			Else: ast.Block{
-				Span:       GetSpan(ctx.Block()),
 				Statements: LowerStatements(ctx.Block().AllStatement()),
 			},
 		}
 	case ctx.IsExpression() != nil:
 		thenBlock := LowerStatementBody(ctx.StatementBody())
 		elseBlock := ast.Block{
-			Span:       GetSpan(ctx.Block()),
 			Statements: LowerStatements(ctx.Block().AllStatement()),
 		}
 		if len(elseBlock.Statements) == 0 {
-			panic(fmt.Sprintf("Empty else-block of is-expression at %s", elseBlock.Span))
+			panic(fmt.Sprintf("Empty else-block of is-expression at %s", elseBlock.GetSpan()))
 		}
 		return LowerIsExpression(ctx.IsExpression(), thenBlock, elseBlock)
 	default:
@@ -132,7 +130,6 @@ func LowerBranchStatement(ctx IBranchStatementContext) ast.Statement {
 
 func LowerConstantDeclaration(ctx IConstantDeclarationContext) ast.ConstantDeclaration {
 	return ast.ConstantDeclaration{
-		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
 		Type: LowerType(ctx.Type_()),
 		Body: LowerStatementBody(ctx.StatementBody()),
@@ -150,7 +147,6 @@ func LowerExpression(ctx IExpressionContext) ast.Expression {
 
 func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDeclaration {
 	return ast.FunctionDeclaration{
-		Span:       GetSpan(ctx),
 		Name:       LowerName(ctx.Name()),
 		Parameters: util.Map(ctx.FunctionParameters().AllFunctionParameter(), LowerFunctionParameter),
 		ReturnType: LowerType(ctx.Type_()),
@@ -160,7 +156,6 @@ func LowerFunctionDeclaration(ctx IFunctionDeclarationContext) ast.FunctionDecla
 
 func LowerFunctionParameter(ctx IFunctionParameterContext) ast.FunctionParameter {
 	return ast.FunctionParameter{
-		Span: GetSpan(ctx),
 		Name: LowerName(ctx.Name()),
 		Type: LowerType(ctx.Type_()),
 	}
@@ -339,14 +334,12 @@ func LowerStatements(statements []IStatementContext) []ast.Statement {
 
 func LowerStatementBody(ctx IStatementBodyContext) ast.Block {
 	return ast.Block{
-		Span:       GetSpan(ctx),
 		Statements: LowerStatements(ctx.AllStatement()),
 	}
 }
 
 func LowerBlock(ctx IBlockContext) ast.Block {
 	return ast.Block{
-		Span:       GetSpan(ctx),
 		Statements: LowerStatements(ctx.AllStatement()),
 	}
 }
@@ -388,7 +381,6 @@ func LowerIsStatement(ctx IIsStatementContext) ast.Statement {
 	span := GetSpan(ctx)
 	thenBlock := LowerBlock(ctx.Block())
 	elseBlock := ast.Block{
-		Span: span,
 		Statements: []ast.Statement{
 			&ast.ExpressionStatement{Expression: &ast.FunctionCall{
 				Span: span,
@@ -467,7 +459,6 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 				Name:      LowerName(name),
 				InferType: true,
 				Body: ast.Block{
-					Span: tupleSpan,
 					Statements: []ast.Statement{
 						&ast.ExpressionStatement{
 							Expression: &ast.FunctionCall{

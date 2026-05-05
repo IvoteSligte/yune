@@ -19,6 +19,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Return:   &FloatType{},
 	}, 0},
 	{"Expression", &TypeType{}, 0},
+	{"Statement", &TypeType{}, 0},
 	{"integerExpression", &FnType{Argument: &IntType{}, Return: ExpressionType}, 0},
 	{"floatExpression", &FnType{Argument: &FloatType{}, Return: ExpressionType}, 0},
 	{"boolExpression", &FnType{Argument: &BoolType{}, Return: ExpressionType}, 0},
@@ -46,16 +47,22 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}, 0},
-	// TODO:
-	// {"closureExpression", &FnType{
-	// 	Argument: &TupleType{Elements: []TypeValue{
-	// 		&ListType{Element},
-	// 	}},
-	// 	Return: ExpressionType}, 0},
+	{"closureExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			// parameters: List((String, Expression))
+			&ListType{Element: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}}},
+			// returnType: Expression
+			ExpressionType,
+			// statements: List(Statement)
+			&ListType{Element: StatementType},
+		}},
+		Return: ExpressionType}, 0},
 	{"macroExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
-			&StringType{}, // macro name
-			&StringType{}, // macro text
+			// name: String
+			&StringType{},
+			// text: String
+			&StringType{},
 		}},
 		Return: ExpressionType,
 	}, 0},

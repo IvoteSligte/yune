@@ -232,7 +232,7 @@ type StructType struct {
 }
 
 func (s StructType) String() string {
-	return fmt.Sprintf(`%s { %s }`, s.Name, util.Join(s.Fields, ", "))
+	return fmt.Sprintf(`%s`, s.Name)
 }
 
 func (s *StructType) Eq(other TypeValue) bool {

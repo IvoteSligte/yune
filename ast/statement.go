@@ -151,10 +151,10 @@ type BranchStatement struct {
 // Analyze implements Statement.
 func (b *BranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	if len(b.Then.Statements) == 0 {
-		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
+		panic(fmt.Sprintf("Empty then-block at %s", b.Then.GetSpan()))
 	}
 	if len(b.Else.Statements) == 0 {
-		panic(fmt.Sprintf("Empty else-block at %s", b.Else.Span))
+		panic(fmt.Sprintf("Empty else-block at %s", b.Else.GetSpan()))
 	}
 	conditionType := b.Condition.Analyze(&BoolType{}, anal)
 	thenType := b.Then.Analyze(expected, anal.NewScope())
@@ -214,10 +214,10 @@ func (b *IsBranchStatement) GetFlags() Flags {
 // Analyze implements Statement.
 func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
 	if len(b.Then.Statements) == 0 {
-		panic(fmt.Sprintf("Empty then-block at %s", b.Then.Span))
+		panic(fmt.Sprintf("Empty then-block at %s", b.Then.GetSpan()))
 	}
 	if len(b.Else.Statements) == 0 {
-		panic(fmt.Sprintf("Empty else-block at %s", b.Else.Span))
+		panic(fmt.Sprintf("Empty else-block at %s", b.Else.GetSpan()))
 	}
 	isType := b.Type.Analyze(anal)
 	expressionType := b.Expression.Analyze(isType, anal)
@@ -259,18 +259,14 @@ if (isVariant_<%s>(%s)) {
 }
 
 type Block struct {
-	Span       Span
 	Statements []Statement
 }
 
-func (b Block) GetSpan() Span {
-	return b.Span
+func (b *Block) GetSpan() Span {
+	return b.Statements[0].GetSpan()
 }
 
 func (b *Block) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
-	if len(b.Statements) == 0 {
-		panic(fmt.Sprintf("Empty block at %s", b.Span))
-	}
 	for i := range b.Statements {
 		// Only the last statement has a known expected type, the rest should use the default.
 		expected := expected
@@ -313,8 +309,6 @@ func (b *Block) Lower(state *State) (statements []cpp.Statement) {
 	return
 }
 
-var _ Node = &Block{}
-
 type ExpressionStatement struct {
 	Expression Expression
 	noReturn   bool
@@ -353,7 +347,6 @@ func (e *ExpressionStatement) Lower(state *State, isLast bool) cpp.Statement {
 
 func UnmarshalBlock(data *fj.Value) (block Block) {
 	return Block{
-		Span:       Span{},
 		Statements: util.Map(data.GetArray(), UnmarshalStatement),
 	}
 }

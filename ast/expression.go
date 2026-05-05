@@ -932,19 +932,20 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "StructExpression":
 		panic("unimplemented")
 	case "ClosureExpression":
+		fmt.Printf("ClosureExpression found! %s\n", v)
 		expr = &Closure{
 			Span: fjUnmarshal(v.Get("span"), Span{}),
 			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
+				elements := UnmarshalTuple(v)
 				return FunctionParameter{
-					Span: fjUnmarshal(v.Get("span"), Span{}),
 					Name: Name{
 						Span:   Span{},
-						String: UnmarshalNonEmptyString(v, "name"),
+						String: UnmarshalNonEmptyString(elements[0]),
 					},
-					Type: UnmarshalType(v.Get("type")),
+					Type: Type{Expression: UnmarshalExpression(elements[1])},
 				}
 			}),
-			ReturnType: UnmarshalType(v.Get("returnType")),
+			ReturnType: Type{Expression: UnmarshalExpression(v.Get("returnType"))},
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
 	case "Box": // boxing is irrelevant when unmarshalling expressions
