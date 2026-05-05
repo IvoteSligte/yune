@@ -150,6 +150,7 @@ func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, e
 		if err != nil {
 			return
 		}
+		log.Printf("clang-repl message: %s", read)
 		message := fj.MustParse(read)
 		if message.Get("finished") != nil {
 			err = fmt.Errorf("Compiler connection reported 'finished' while waiting for a result. Message: '%s'.", message)

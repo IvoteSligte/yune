@@ -1,12 +1,12 @@
 #pragma once
 
 #include "pb.hpp"
+#include <arpa/inet.h>
+#include <iostream>
 #include <semaphore>
 #include <string>
-#include <iostream>
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 // Alternative to std::promise<Type_t>, which gives missing symbols errors
 // when used with clang-repl.
@@ -49,16 +49,20 @@ public:
   ~CompilerConnection_() { ::close(socket); }
 
   Type_t get_type(String_t name) {
-    std::string payload = std::format(R"({{ "getType": "{}" }})""\n", name);
+    std::string payload = std::format(R"({{ "getType": "{}" }})"
+                                      "\n",
+                                      name);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a type query through the compiler connection.");
     }
     return type_promise.get();
   }
-  
+
   void yield(std::string result) const {
-    std::string payload = std::format(R"({{ "result": {} }})""\n", result);
+    std::string payload = std::format(R"({{ "result": {} }})"
+                                      "\n",
+                                      result);
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
       panic("Failed to send a result through the compiler connection.");
@@ -66,16 +70,16 @@ public:
   }
 
   void send_finished() const {
-    std::string payload = R"({ "finished": {} })""\n";
+    std::string payload = R"({ "finished": {} })"
+                          "\n";
     ssize_t err = ::send(socket, payload.c_str(), payload.size(), 0);
     if (err == -1) {
-      panic("Failed to send a 'finished' message through the compiler connection.");
+      panic("Failed to send a 'finished' message through the compiler "
+            "connection.");
     }
-  }  
-
-  void set_type(Type_t type) {
-    type_promise.set(type);
   }
+
+  void set_type(Type_t type) { type_promise.set(type); }
 
 private:
   std::string read_line() const {
@@ -98,13 +102,13 @@ private:
   TypePromise_ type_promise;
 } compiler_connection{};
 
-inline struct get_type_ {
+inline struct getType_cf {
   Type_t operator()(String_t name) const {
     return compiler_connection.get_type(name);
   }
   std::string toJson_() const {
-    std::cerr << "get_type is not serializable as it is compile-time-only." << std::endl;
+    std::cerr << "getType_c is not serializable as it is compile-time-only."
+              << std::endl;
     exit(1);
   }
-} get_type;
-
+} getType_c;

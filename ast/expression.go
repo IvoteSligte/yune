@@ -482,7 +482,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 		})
 	}
 	v := anal.Evaluate(fmt.Sprintf(
-		`(%s)(%q, get_type)`,
+		`(%s)(%q, getType_c)`,
 		m.Function.Lower(anal.State), m.GetText(),
 	))
 	// v is Union[String, Expression]

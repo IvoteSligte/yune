@@ -52,7 +52,7 @@ template <class... T> struct Union_t {
   template <class U>
     requires(std::is_same_v<std::decay_t<U>, T> || ...) // U is one of T
   constexpr Union_t(U &&element) : variant(std::forward<U>(element)) {}
-  
+
   // Create from element using an intermediate class
   // Required to create a Union[String] from a const char*, for example
   template <class U>
