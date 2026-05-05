@@ -331,9 +331,11 @@ func (t *List) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 
 	if len(t.Elements) == 0 {
 		if expectsList {
+			t.elementType = expectedListType.Element
 			return expectedListType
 		}
-		return &ListType{Element: nil} // cannot determine element type
+		t.elementType = &UnionType{}
+		return &ListType{Element: &UnionType{}} // cannot determine element type
 	}
 	if expectsList {
 		t.elementType = expectedListType.Element
