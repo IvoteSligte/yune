@@ -46,6 +46,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}, 0},
+	// TODO:
 	// {"closureExpression", &FnType{
 	// 	Argument: &TupleType{Elements: []TypeValue{
 	// 		&ListType{Element},

@@ -1,0 +1,8 @@
+
+Error: Type = String
+
+invalid(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
+    binaryExpression("+", stringExpression("left"), integerExpression(10))
+
+main(): () =
+    invalid#[ignored]

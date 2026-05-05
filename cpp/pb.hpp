@@ -612,6 +612,9 @@ inline struct variableExpression_f {
 
 inline struct unaryExpression_ {
   Expression_t operator()(String_t op, Expression_t expression) const {
+    if (op != ";" && op != "-") {
+      panic(std::format("Invalid unary operator: '{}'", op));
+    }
     return box_f(UnaryExpression_t{.op = op, .expression = expression});
   }
   std::string toJson_() const { return R"({ "Function": "unaryExpression" })"; }
@@ -620,6 +623,10 @@ inline struct unaryExpression_ {
 inline struct binaryExpression_ {
   Expression_t operator()(String_t op, Expression_t left,
                           Expression_t right) const {
+    if (op != "+" && op != "-" && op != "*" && op != "/" && op != "<" &&
+        op != ">") {
+      panic(std::format("Invalid binary operator: '{}'", op));
+    }
     return box_f(BinaryExpression_t{.op = op, .left = left, .right = right});
   }
   std::string toJson_() const {
