@@ -201,7 +201,13 @@ func LowerImport(ctx IAnImportContext) string {
 }
 
 func LowerModule(ctx IModuleContext) ast.Module {
+	var rawOutput string
+	if ctx.RAW_STRING() != nil {
+		rawOutput = ctx.RAW_STRING().GetText()
+		rawOutput = rawOutput[1 : len(rawOutput)-1]
+	}
 	return ast.Module{
+		RawOutput:    rawOutput,
 		Imports:      util.Map(ctx.AllAnImport(), LowerImport),
 		Declarations: util.Map(ctx.AllTopLevelDeclaration(), LowerTopLevelDeclaration),
 	}

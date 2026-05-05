@@ -6,6 +6,7 @@ import (
 )
 
 type Module struct {
+	RawOutput    string
 	Imports      []string
 	Declarations []TopLevelDeclaration
 }
@@ -46,6 +47,9 @@ func (m Module) Lower() (lowered cpp.Module, hasMainFunction bool, errors Errors
 			topLevelDeclarations: declarations,
 		},
 		State: NewState(),
+	}
+	if err := anal.Interpreter.Write(m.RawOutput); err != nil {
+		log.Panicf("Failed to emit raw C++ output. Error: %s\n", err)
 	}
 	for _, decl := range declarations {
 		anal.Table.Add(decl)

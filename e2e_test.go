@@ -165,8 +165,25 @@ EXPRESSION: Expression = binaryExpression("+", stringExpression("before"), strin
 `)
 }
 
-func TestRawCpp(t *testing.T) {
-	_, _ = parseAndRunModule("rawCpp.un", "T: Type = `Int`")
+func TestRawCppTopLevel(t *testing.T) {
+	code := `
+` + "`" + `
+#import <string>
+std::string str{"Hello, World!"};
+` + "`" + `
+
+STRING: String = ` + "`str`" + `
+
+main(): () =
+    printlnString(STRING)
+`
+	fmt.Println(code)
+	stdout, _ := parseAndRunModule("rawCppTopLevel.un", code)
+	assertEq(stdout, "Hello, World!\n")
+}
+
+func TestRawCppExpression(t *testing.T) {
+	_, _ = parseAndRunModule("rawCppExpression.un", "T: Type = `Int`")
 }
 
 func TestBasic(t *testing.T) {
