@@ -191,7 +191,18 @@ struct StructType_t {
 };
 struct UnionType_t {
   List_t<Type_t> variants;
-  bool operator==(const UnionType_t &other) const = default;
+  bool operator==(const UnionType_t &other) const {
+    if (variants.size() != other.variants.size()) {
+      return false;
+    }
+    for (const auto &variant : variants) {
+      if (std::find(other.variants.begin(), other.variants.end(), variant) ==
+          other.variants.end()) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 struct IntegerExpression_t {
@@ -371,7 +382,9 @@ std::string toJson_(const MacroExpression_t &e);
 std::string toJson_(const ListExpression_t &e);
 std::string toJson_(const TupleExpression_t &e);
 std::string toJson_(const ClosureExpression_t &e);
-inline std::string toJson_(const ValueExpression_t &e) { return std::format(R"({{ "ValueExpression": {} }})", e.json); }
+inline std::string toJson_(const ValueExpression_t &e) {
+  return std::format(R"({{ "ValueExpression": {} }})", e.json);
+}
 std::string toJson_(const VariableDeclaration_t &e);
 std::string toJson_(const AssignStatement_t &e);
 std::string toJson_(const BranchStatement_t &e);
