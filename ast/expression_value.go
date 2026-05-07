@@ -2,42 +2,17 @@ package ast
 
 import (
 	"fmt"
-	"log"
 	"yune/util"
 
 	fj "github.com/valyala/fastjson"
 )
 
-func (state *State) lowerExpressionValue(data *fj.Value) string {
-	object := data.GetObject()
-	if object == nil { // primitive (Yune does not produce top-level arrays)
-		integer, err := data.Int64()
-		if err == nil {
-			return fmt.Sprintf("%v", integer)
-		}
-		float, err := data.Float64()
-		if err == nil {
-			return fmt.Sprintf("%v", float)
-		}
-		boolean, err := data.Bool()
-		if err == nil {
-			return fmt.Sprintf("%t", boolean)
-		}
-		_string, err := data.StringBytes()
-		if err == nil {
-			return fmt.Sprintf("String_t(%q)", _string)
-		}
-		array, err := data.Array()
-		if err == nil {
-			return fmt.Sprintf("{ %s }", util.JoinFunc(array, ", ", state.lowerExpressionValue))
-		}
-		log.Panicf("Tried to lower non-object JSON variant: %s", data)
-	}
+func (state *State) lowerObject(object *fj.Object) string {
 	typeName, v := fjUnmarshalStruct(object)
 	switch typeName {
-	case "Closure_":
+	case "Closure":
 		return state.lowerClosureValue(v)
-	case "Function_":
+	case "Function":
 		// the :: prefix makes sure the function refers to the globally declared one,
 		// not a variable with the same name currently being declared
 		//
@@ -45,9 +20,9 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 		// std::Function<int, bool> func = func;   // func refers to the variable being declared
 		// std::Function<int, bool> func = ::func; // func refers to the correct definition
 		return "::" + UnmarshalNonEmptyString(v)
-	case "Box_":
+	case "Box":
 		return fmt.Sprintf(`box_f(%s)`, state.lowerExpressionValue(v))
-	case "Tuple_":
+	case "Tuple":
 		elements := UnmarshalArray(v, "elements")
 		return fmt.Sprintf(`std::make_tuple(%s)`, util.JoinFunc(elements, ", ", state.lowerExpressionValue))
 	default:
@@ -56,6 +31,21 @@ func (state *State) lowerExpressionValue(data *fj.Value) string {
 			fields += fmt.Sprintf("\n    .%s = %s,", keyBytes, state.lowerExpressionValue(fieldValue))
 		})
 		return fmt.Sprintf("%s_t { %s }", typeName, fields)
+	}
+}
+
+func (state *State) lowerExpressionValue(data *fj.Value) string {
+	switch data.Type() {
+	case fj.TypeArray:
+		return fmt.Sprintf(`{ %s }`, util.JoinFunc(data.GetArray(), ", ", state.lowerExpressionValue))
+	case fj.TypeString:
+		return fmt.Sprintf("String_t(%q)", data.GetStringBytes())
+	case fj.TypeObject:
+		return state.lowerObject(data.GetObject())
+	case fj.TypeNumber, fj.TypeTrue, fj.TypeFalse:
+		return data.String()
+	default:
+		panic(fmt.Sprintf("unexpected fj.Type: %s", data.Type()))
 	}
 }
 

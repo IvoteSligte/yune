@@ -860,6 +860,36 @@ func (r *RawString) Lower(state *State) cpp.Expression {
 	return r.string
 }
 
+type ValueExpression struct {
+	Span  Span
+	value *fj.Value
+}
+
+// Analyze implements Expression.
+func (v *ValueExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	return anal.State.getValueType(v.value)
+}
+
+// GetFlags implements Expression.
+func (v *ValueExpression) GetFlags() Flags {
+	return 0
+}
+
+// GetSpan implements Expression.
+func (v *ValueExpression) GetSpan() Span {
+	return v.Span
+}
+
+// Lower implements Expression.
+func (v *ValueExpression) Lower(state *State) string {
+	return state.lowerExpressionValue(v.value)
+}
+
+// String implements Expression.
+func (v *ValueExpression) String() string {
+	panic("unimplemented")
+}
+
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
 func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	object := data.GetObject()
@@ -908,7 +938,7 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			Span:     fjUnmarshal(v.Get("span"), Span{}),
 			Elements: util.Map(v.Get("elements").GetArray(), UnmarshalExpression),
 		}
-	case "Macro":
+	case "MacroExpression":
 		expr = &Macro{
 			Span:     fjUnmarshal(v.Get("span"), Span{}),
 			Function: Variable{Name: Name{String: UnmarshalNonEmptyString(v, "macro"), Span: Span{}}},
@@ -932,7 +962,6 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 	case "StructExpression":
 		panic("unimplemented")
 	case "ClosureExpression":
-		fmt.Printf("ClosureExpression found! %s\n", v)
 		expr = &Closure{
 			Span: fjUnmarshal(v.Get("span"), Span{}),
 			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
@@ -948,6 +977,8 @@ func UnmarshalExpression(data *fj.Value) (expr Expression) {
 			ReturnType: Type{Expression: UnmarshalExpression(v.Get("returnType"))},
 			Body:       UnmarshalBlock(v.Get("body")),
 		}
+	case "ValueExpression":
+		expr = &ValueExpression{value: v}
 	case "Box": // boxing is irrelevant when unmarshalling expressions
 		expr = UnmarshalExpression(v)
 	default:
@@ -970,3 +1001,4 @@ var _ Expression = &BinaryExpression{}
 var _ Expression = &StructExpression{}
 var _ Expression = &Closure{}
 var _ Expression = &RawString{}
+var _ Expression = &ValueExpression{}

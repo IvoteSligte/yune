@@ -96,6 +96,7 @@ func (d *FunctionDeclaration) Analyze(anal Analyzer) {
 		panic("Duplicate declaration error in new scope: " + err.Error())
 	}
 	analyzeFunctionHeader(anal, d.Parameters, &d.ReturnType)
+	anal.State.registerFunction(d.Name.String, d.GetDeclaredType())
 	anal.Declare(d)
 	analyzeFunctionBody(anal, d.ReturnType.Get(), d.Body)
 	declaredType := d.GetDeclaredType()

@@ -376,6 +376,52 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	return
 }
 
+func (state *State) getObjectValueType(object *fj.Object) TypeValue {
+	key, v := fjUnmarshalStruct(object)
+	switch key {
+	case "TypeType", "IntType", "FloatType", "BoolType",
+		"StringType", "TupleType", "ListType", "FnType",
+		"StructType", "UnionType", "TypeId":
+		return &TypeType{}
+	case "Tuple":
+		elementTypes := util.Map(v.GetArray(), state.getValueType)
+		return &TupleType{Elements: elementTypes}
+	case "IntegerExpression", "FloatExpression", "BoolExpression", "StringExpression",
+		"VariableExpression", "FunctionCallExpression", "ListExpression", "TupleExpression",
+		"MacroExpression", "UnaryExpression", "BinaryExpression", "StructExpression", "ClosureExpression":
+		return ExpressionType
+	case "Function":
+		return state.registeredFunctions[string(v.GetStringBytes())]
+	case "Box":
+		return state.getValueType(v)
+	default:
+		return &StructType{Name: key}
+	}
+}
+
+func (state *State) getValueType(data *fj.Value) TypeValue {
+	switch data.Type() {
+	case fj.TypeTrue, fj.TypeFalse:
+		return &BoolType{}
+	case fj.TypeArray:
+		elementTypes := util.Map(data.GetArray(), state.getValueType)
+		return &ListType{Element: NewUnionType(elementTypes...)}
+	case fj.TypeNumber:
+		_, err := data.Int64()
+		if err == nil {
+			return &IntType{}
+		} else {
+			return &FloatType{}
+		}
+	case fj.TypeObject:
+		return state.getObjectValueType(data.GetObject())
+	case fj.TypeString:
+		return &StringType{}
+	default:
+		panic(fmt.Sprintf("unexpected fastjson.Type: %s", data.Type()))
+	}
+}
+
 var _ TypeValue = (*TypeType)(nil)
 var _ TypeValue = (*IntType)(nil)
 var _ TypeValue = (*FloatType)(nil)
