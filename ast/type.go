@@ -23,9 +23,9 @@ func (t Type) Lower() cpp.Type {
 	return t.value.LowerType()
 }
 
-func UnmarshalType(data *fj.Value) Type {
+func UnmarshalType(data *fj.Value, at Span) Type {
 	return Type{
-		Expression: UnmarshalExpression(data),
+		Expression: UnmarshalExpression(data, at),
 	}
 }
 

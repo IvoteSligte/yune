@@ -90,3 +90,12 @@ func UnmarshalTuple(data *fj.Value) []*fj.Value {
 	}
 	return UnmarshalArray(v, "elements")
 }
+
+func UnmarshalSpan(data *fj.Value, relativeTo Span) Span {
+	span := fjUnmarshal(data, Span{})
+	output := relativeTo
+	output.Line += span.Line
+	output.Column += span.Column // FIXME: column is incorrect for multi-line macros
+	output.Length = span.Length
+	return output
+}

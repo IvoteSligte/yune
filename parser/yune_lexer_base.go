@@ -37,7 +37,7 @@ func (l *YuneLexerBase) makeCommonToken(ttype int, text string) antlr.Token {
 		index-len(text),
 		index,
 		l.GetLine(),
-		l.GetCharPositionInLine())
+		l.GetCharPositionInLine()-len(text))
 	return t
 }
 

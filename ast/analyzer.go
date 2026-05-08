@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"yune/cpp"
 	"yune/util"
 
@@ -34,18 +34,21 @@ func (a Analyzer) TopLevel() Analyzer {
 func (a Analyzer) ReportError(err error) {
 	*a.Errors = append(*a.Errors, err)
 	a.Interpreter.Close()
+	var message string
 	if len(a.MacroStack) > 0 {
-		log.Panicf(
-			"Analyzer error caused by macro at %s: %s\n Macro traceback:\n%s",
+		fmt.Printf("DEBUG: %#v\n", a.MacroStack[0])
+		message = fmt.Sprintf(
+			"Analyzer error caused by macro at %s: %s\n Macro traceback:\n%s\n",
 			a.MacroStack[0].Span,
-			err,
-			util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
-				return fmt.Sprintf("\t%s", m)
+			err, util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
+				return fmt.Sprintf("  %s | %s", m.Span, m)
 			}),
 		)
 	} else {
-		log.Panicf("Analyzer error: %s", err)
+		message = fmt.Sprintf("Analyzer error: %s\n", err)
 	}
+	fmt.Fprintf(os.Stderr, message)
+	os.Exit(1)
 }
 
 func (a Analyzer) HasErrors() bool {

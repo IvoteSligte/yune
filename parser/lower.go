@@ -19,12 +19,11 @@ var SourceCode string
 
 func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 	return ast.Span{
-		File:    FileName,
-		Source:  SourceCode,
-		Line:    ctx.GetStart().GetLine(),
-		Column:  ctx.GetStart().GetColumn(),
-		Length:  len(ctx.GetText()),
-		Content: ctx.GetText(),
+		File:   FileName,
+		Source: SourceCode,
+		Line:   ctx.GetStart().GetLine(),
+		Column: ctx.GetStart().GetColumn(),
+		Length: len(ctx.GetText()),
 	}
 }
 
@@ -181,8 +180,11 @@ func LowerMacro(ctx IMacroContext) ast.Macro {
 		Lines: util.Map(ctx.AllMACROLINE(), func(macroLine antlr.TerminalNode) ast.MacroLine {
 			return ast.MacroLine{
 				Span: ast.Span{
-					Line:   macroLine.GetSymbol().GetStart(),
+					File:   FileName,
+					Source: SourceCode,
+					Line:   macroLine.GetSymbol().GetLine(),
 					Column: macroLine.GetSymbol().GetColumn(),
+					Length: len(macroLine.GetText()),
 				},
 				Text: macroLine.GetText(),
 			}

@@ -345,51 +345,53 @@ func (e *ExpressionStatement) Lower(state *State, isLast bool) cpp.Statement {
 	}
 }
 
-func UnmarshalBlock(data *fj.Value) (block Block) {
+func UnmarshalBlock(data *fj.Value, at Span) (block Block) {
 	return Block{
-		Statements: util.Map(data.GetArray(), UnmarshalStatement),
+		Statements: util.Map(data.GetArray(), func(v *fj.Value) Statement {
+			return UnmarshalStatement(v, at)
+		}),
 	}
 }
 
-func UnmarshalStatement(data *fj.Value) (stmt Statement) {
+func UnmarshalStatement(data *fj.Value, at Span) (stmt Statement) {
 	object := data.GetObject()
 	key, v := fjUnmarshalStruct(object)
 	switch key {
 	case "VariableDeclaration":
 		stmt = &VariableDeclaration{
-			Span: fjUnmarshal(v.Get("span"), Span{}),
+			Span: UnmarshalSpan(v.Get("span"), at),
 			Name: Name{
 				Span:   Span{},
 				String: string(v.GetStringBytes("name")),
 			},
-			Body: UnmarshalBlock(v),
+			Body: UnmarshalBlock(v, at),
 		}
 	case "AssignStatement":
 		stmt = &Assignment{
-			Span:   fjUnmarshal(v.Get("span"), Span{}),
-			Target: *UnmarshalExpression(v.Get("target")).(*Variable),
+			Span:   UnmarshalSpan(v.Get("span"), at),
+			Target: *UnmarshalExpression(v.Get("target"), at).(*Variable),
 			Op:     AssignmentOp(v.GetStringBytes("op")),
-			Body:   UnmarshalBlock(v),
+			Body:   UnmarshalBlock(v, at),
 		}
 	case "BranchStatement":
 		stmt = &BranchStatement{
-			Span:      fjUnmarshal(v.Get("span"), Span{}),
-			Condition: UnmarshalExpression(v.Get("condition")),
-			Then:      UnmarshalBlock(v.Get("then")),
-			Else:      UnmarshalBlock(v.Get("else")),
+			Span:      UnmarshalSpan(v.Get("span"), at),
+			Condition: UnmarshalExpression(v.Get("condition"), at),
+			Then:      UnmarshalBlock(v.Get("then"), at),
+			Else:      UnmarshalBlock(v.Get("else"), at),
 		}
 	case "IsBranchStatement":
 		stmt = &IsBranchStatement{
-			Span:       fjUnmarshal(v.Get("span"), Span{}),
-			Expression: UnmarshalExpression(v.Get("expression")),
+			Span:       UnmarshalSpan(v.Get("span"), at),
+			Expression: UnmarshalExpression(v.Get("expression"), at),
 			Name:       Name{String: UnmarshalNonEmptyString(v.Get("name")), Span: Span{}},
-			Type:       Type{Expression: UnmarshalExpression(v.Get("type"))},
-			Then:       UnmarshalBlock(v.Get("then")),
-			Else:       UnmarshalBlock(v.Get("else")),
+			Type:       UnmarshalType(v.Get("type"), at),
+			Then:       UnmarshalBlock(v.Get("then"), at),
+			Else:       UnmarshalBlock(v.Get("else"), at),
 		}
 	case "ExpressionStatement":
 		stmt = &ExpressionStatement{
-			Expression: UnmarshalExpression(v.Get("expression")),
+			Expression: UnmarshalExpression(v.Get("expression"), at),
 		}
 	default:
 		panic(fmt.Sprintf("unexpected statement key when unmarshalling: %s", key))

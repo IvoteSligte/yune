@@ -8,10 +8,11 @@ import (
 
 func makeCodeError(errorText string, span Span, message string) string {
 	var sourceLine string
-	if span.Line <= 0 {
+	lines := slices.Collect(strings.Lines(span.Source))
+	if span.Line <= 0 || span.Line > len(lines) {
 		sourceLine = "<unknown source code>"
 	} else {
-		sourceLine = slices.Collect(strings.Lines(span.Source))[span.Line-1]
+		sourceLine = lines[span.Line-1]
 	}
 	if sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]
@@ -21,13 +22,11 @@ func makeCodeError(errorText string, span Span, message string) string {
 	underline := strings.Repeat("~", max(span.Length, 1))
 	return fmt.Sprintf(`
 %s
-'%s'
 ---> %s line %d column %d
 %s |
 %d |  %s
 %s |  %s%s %s`,
 		errorText,
-		span.Content,
 		span.File, span.Line, span.Column,
 		leftPad,
 		span.Line, sourceLine,
