@@ -34,6 +34,10 @@ func makeCodeError(errorText string, span Span, message string) string {
 	)
 }
 
+type CodeError struct {
+	message string
+}
+
 type DuplicateDeclaration struct {
 	First  Declaration
 	Second Declaration

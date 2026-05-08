@@ -92,7 +92,7 @@ func UnmarshalTuple(data *fj.Value) []*fj.Value {
 }
 
 func UnmarshalSpan(data *fj.Value, relativeTo Span) Span {
-	span := fjUnmarshal(data, Span{})
+	span := fjUnmarshal(data.Get("span"), Span{})
 	output := relativeTo
 	output.Line += span.Line
 	output.Column += span.Column // FIXME: column is incorrect for multi-line macros

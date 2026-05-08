@@ -2,12 +2,15 @@ package ast
 
 import (
 	"fmt"
-	"os"
 	"yune/cpp"
 	"yune/util"
 
 	fj "github.com/valyala/fastjson"
 )
+
+type AnalyzerError struct {
+	Message string
+}
 
 type Analyzer struct {
 	Interpreter *cpp.Interpreter
@@ -34,21 +37,20 @@ func (a Analyzer) TopLevel() Analyzer {
 func (a Analyzer) ReportError(err error) {
 	*a.Errors = append(*a.Errors, err)
 	a.Interpreter.Close()
-	var message string
+	message := err.Error()
 	if len(a.MacroStack) > 0 {
-		fmt.Printf("DEBUG: %#v\n", a.MacroStack[0])
 		message = fmt.Sprintf(
-			"Analyzer error caused by macro at %s: %s\n Macro traceback:\n%s\n",
+			"There is a bug in macro `%s`.\nError-less invocation at %s produced invalid code. Error: %s\n Macro traceback:\n%s\n",
+			a.MacroStack[0].Function.Name.String,
 			a.MacroStack[0].Span,
 			err, util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
 				return fmt.Sprintf("  %s | %s", m.Span, m)
 			}),
 		)
-	} else {
-		message = fmt.Sprintf("Analyzer error: %s\n", err)
 	}
-	fmt.Fprintf(os.Stderr, message)
-	os.Exit(1)
+	// Panic with the error message.
+	// Can be caught due to the AnalyzerError wrapper, so it functions as an exception.
+	panic(AnalyzerError{message})
 }
 
 func (a Analyzer) HasErrors() bool {

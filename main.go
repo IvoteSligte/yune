@@ -134,5 +134,14 @@ func main() {
 	if len(os.Args) > 1 {
 		filePath = os.Args[2]
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			if err, ok := err.(ast.AnalyzerError); ok {
+				fmt.Fprintf(os.Stderr, "Analyzer error: %s\n", err.Message)
+			} else {
+				panic(err)
+			}
+		}
+	}()
 	runModuleFromFile(filePath)
 }

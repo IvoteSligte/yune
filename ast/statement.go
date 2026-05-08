@@ -359,7 +359,7 @@ func UnmarshalStatement(data *fj.Value, at Span) (stmt Statement) {
 	switch key {
 	case "VariableDeclaration":
 		stmt = &VariableDeclaration{
-			Span: UnmarshalSpan(v.Get("span"), at),
+			Span: UnmarshalSpan(v, at),
 			Name: Name{
 				Span:   Span{},
 				String: string(v.GetStringBytes("name")),
@@ -368,21 +368,21 @@ func UnmarshalStatement(data *fj.Value, at Span) (stmt Statement) {
 		}
 	case "AssignStatement":
 		stmt = &Assignment{
-			Span:   UnmarshalSpan(v.Get("span"), at),
+			Span:   UnmarshalSpan(v, at),
 			Target: *UnmarshalExpression(v.Get("target"), at).(*Variable),
 			Op:     AssignmentOp(v.GetStringBytes("op")),
 			Body:   UnmarshalBlock(v, at),
 		}
 	case "BranchStatement":
 		stmt = &BranchStatement{
-			Span:      UnmarshalSpan(v.Get("span"), at),
+			Span:      UnmarshalSpan(v, at),
 			Condition: UnmarshalExpression(v.Get("condition"), at),
 			Then:      UnmarshalBlock(v.Get("then"), at),
 			Else:      UnmarshalBlock(v.Get("else"), at),
 		}
 	case "IsBranchStatement":
 		stmt = &IsBranchStatement{
-			Span:       UnmarshalSpan(v.Get("span"), at),
+			Span:       UnmarshalSpan(v, at),
 			Expression: UnmarshalExpression(v.Get("expression"), at),
 			Name:       Name{String: UnmarshalNonEmptyString(v.Get("name")), Span: Span{}},
 			Type:       UnmarshalType(v.Get("type"), at),
