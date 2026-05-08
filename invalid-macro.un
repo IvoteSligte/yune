@@ -2,7 +2,7 @@
 Error: Type = String
 
 invalid(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
-    binaryExpression("+", stringExpression("left"), integerExpression(10))
+    binaryExpression(0, "+", stringExpression(0, "left"), integerExpression(0, 10))
 
 main(): () =
     invalid#[ignored]

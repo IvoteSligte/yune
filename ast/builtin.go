@@ -20,13 +20,14 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	}, 0},
 	{"Expression", &TypeType{}, 0},
 	{"Statement", &TypeType{}, 0},
-	{"integerExpression", &FnType{Argument: &IntType{}, Return: ExpressionType}, 0},
-	{"floatExpression", &FnType{Argument: &FloatType{}, Return: ExpressionType}, 0},
-	{"boolExpression", &FnType{Argument: &BoolType{}, Return: ExpressionType}, 0},
-	{"stringExpression", &FnType{Argument: &StringType{}, Return: ExpressionType}, 0},
-	{"variableExpression", &FnType{Argument: &StringType{}, Return: ExpressionType}, 0},
+	{"integerExpression", &FnType{Argument: &TupleType{Elements: []TypeValue{&IntType{}, &IntType{}}}, Return: ExpressionType}, 0},
+	{"floatExpression", &FnType{Argument: &TupleType{Elements: []TypeValue{&IntType{}, &FloatType{}}}, Return: ExpressionType}, 0},
+	{"boolExpression", &FnType{Argument: &TupleType{Elements: []TypeValue{&IntType{}, &BoolType{}}}, Return: ExpressionType}, 0},
+	{"stringExpression", &FnType{Argument: &TupleType{Elements: []TypeValue{&IntType{}, &StringType{}}}, Return: ExpressionType}, 0},
+	{"variableExpression", &FnType{Argument: &TupleType{Elements: []TypeValue{&IntType{}, &StringType{}}}, Return: ExpressionType}, 0},
 	{"unaryExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
 			&StringType{},
 			ExpressionType,
 		}},
@@ -34,6 +35,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	}, 0},
 	{"binaryExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
 			&StringType{},
 			ExpressionType,
 			ExpressionType,
@@ -42,6 +44,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	}, 0},
 	{"functionCallExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
 			ExpressionType,
 			ExpressionType,
 		}},
@@ -49,6 +52,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	}, 0},
 	{"closureExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
 			// parameters: List((String, Expression))
 			&ListType{Element: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}}},
 			// returnType: Expression
@@ -59,6 +63,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Return: ExpressionType}, 0},
 	{"macroExpression", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
 			// name: String
 			&StringType{},
 			// text: String
@@ -66,11 +71,18 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		}},
 		Return: ExpressionType,
 	}, 0},
-	{"listExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
-	{"tupleExpression", &FnType{Argument: &ListType{Element: ExpressionType}, Return: ExpressionType}, 0},
-	{"functionParameter", &FnType{
-		Argument: &TupleType{Elements: []TypeValue{&StringType{}, ExpressionType}},
-		Return:   StatementType,
+	{"listExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
+			&ListType{Element: ExpressionType},
+		}},
+		Return: ExpressionType,
+	}, 0},
+	{"tupleExpression", &FnType{
+		Argument: &TupleType{Elements: []TypeValue{
+			&IntType{},
+			&ListType{Element: ExpressionType}}},
+		Return: ExpressionType,
 	}, 0},
 	// TODO: tuple-pattern-matching variableDeclaration
 	{"variableDeclaration", &FnType{

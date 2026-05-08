@@ -16,13 +16,13 @@ Error: Type = String
 fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     braces := findBraces(text, 0)
     braces is nothing: () ->
-        stringExpression(text)
+        stringExpression(0, text)
     braces is found: (Int, Int)
     (leftIndex: Int, rightIndex: Int) = found
     leftIndex + 1 == rightIndex ->
         println(leftIndex+1)
         println(rightIndex)
-        stringExpression(text)
+        stringExpression(0, text)
 
     captureName := subString(text, leftIndex + 1, rightIndex)
     ;isIdentifier(captureName) -> "'" + captureName + "' is not a valid identifier."
@@ -35,16 +35,16 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     remainderResult is error: Error -> error
     remainderResult is right: Expression
     // TODO: hygienic capture
-    leftLeft := stringExpression(subString(text, 0, leftIndex))
-    leftRight := functionCallExpression(variableExpression("toString"), variableExpression(captureName))
-    left := binaryExpression("+", leftLeft, leftRight)
-    binaryExpression("+", left, right)
+    leftLeft := stringExpression(0, subString(text, 0, leftIndex))
+    leftRight := functionCallExpression(0, variableExpression(0, "toString"), variableExpression(0, captureName))
+    left := binaryExpression(0, "+", leftLeft, leftRight)
+    binaryExpression(0, "+", left, right)
 
 tokenize(text: String, yield: Fn(String, ())): () =
     panic("TODO")
 
 sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =
-    stringExpression(text)
+    stringExpression(0, text)
 
 main(): () =
     N := 999

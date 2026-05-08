@@ -142,10 +142,10 @@ func TestExpressionCreation(t *testing.T) {
 import "std.un"
 
 main(): () =
-    leftLeft := stringExpression("leftLeft")
-    leftRight := functionCallExpression(variableExpression("toString"), variableExpression("captureName"))
-    left := binaryExpression("+", leftLeft, leftRight)
-    binary: Expression = binaryExpression("+", left, variableExpression("right"))
+    leftLeft := stringExpression(0, "leftLeft")
+    leftRight := functionCallExpression(0, variableExpression(0, "toString"), variableExpression(0, "captureName"))
+    left := binaryExpression(0, "+", leftLeft, leftRight)
+    binary: Expression = binaryExpression(0, "+", left, variableExpression(0, "right"))
 `)
 }
 
@@ -161,7 +161,7 @@ UNION: Union[String, Int] = "chars"
 LIST: List(Union[String, Int]) = ["alpha", "beta", "gamma", 50]
 
 // Tests serialization of Box
-EXPRESSION: Expression = binaryExpression("+", stringExpression("before"), stringExpression("after"))
+EXPRESSION: Expression = binaryExpression(0, "+", stringExpression(0, "before"), stringExpression(0, "after"))
 `)
 }
 
@@ -194,8 +194,8 @@ square(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
     type ;= Int ->
         "Referenced variable must be an integer"
     parameters: List((String, Expression)) = []
-    statements: List(Statement) = [expressionStatement(binaryExpression("*", variableExpression(text), variableExpression(text)))]
-    closureExpression(parameters, inject(Int), statements)
+    statements: List(Statement) = [expressionStatement(binaryExpression(0, "*", variableExpression(0, text), variableExpression(0, text)))]
+    closureExpression(0, parameters, inject(Int), statements)
 
 main(): () =
     n: Int = 10
@@ -226,7 +226,7 @@ takeTuple(t: (Int, String)): String =
 
 longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
     getType("add") // test getType
-    stringExpression(text)
+    stringExpression(0, text)
 
 noArguments(): () = a: Int = 0
 
