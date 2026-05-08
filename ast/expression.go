@@ -497,7 +497,7 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 			Message: string(errorBytes),
 		})
 	}
-	m.Result = UnmarshalExpression(v, m.Lines[0].Span)
+	m.Result = UnmarshalExpression(v, m)
 	anal.MacroStack = append(anal.MacroStack, m)
 	_type := m.Result.Analyze(expected, anal)
 	return _type
@@ -894,60 +894,60 @@ func (v *ValueExpression) String() string {
 }
 
 // Tries to unmarshal an Expression, panicking if the union key does not match an Expression.
-func UnmarshalExpression(data *fj.Value, at Span) (expr Expression) {
+func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 	object := data.GetObject()
 	key, v := fjUnmarshalStruct(object)
 	switch key {
 	case "IntegerExpression":
 		expr = &Integer{
-			Span:  UnmarshalSpan(v.Get("span"), at),
+			Span:  UnmarshalSpan(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Int64, "value"),
 		}
 	case "FloatExpression":
 		expr = &Float{
-			Span:  UnmarshalSpan(v.Get("span"), at),
+			Span:  UnmarshalSpan(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Float64, "value"),
 		}
 	case "BoolExpression":
 		expr = &Bool{
-			Span:  UnmarshalSpan(v.Get("span"), at),
+			Span:  UnmarshalSpan(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Bool, "value"),
 		}
 	case "StringExpression":
 		expr = &String{
-			Span:  UnmarshalSpan(v.Get("span"), at),
+			Span:  UnmarshalSpan(v, in),
 			Value: UnmarshalString(v, "value"), // can be empty
 		}
 	case "VariableExpression":
 		expr = &Variable{
 			Name: Name{
-				Span:   UnmarshalSpan(v.Get("span"), at),
+				Span:   UnmarshalSpan(v, in),
 				String: UnmarshalNonEmptyString(v, "name"),
 			},
 		}
 	case "FunctionCallExpression":
 		expr = &FunctionCall{
-			Span:     UnmarshalSpan(v.Get("span"), at),
-			Function: UnmarshalExpression(v.Get("function"), at),
-			Argument: UnmarshalExpression(v.Get("argument"), at),
+			Span:     UnmarshalSpan(v, in),
+			Function: UnmarshalExpression(v.Get("function"), in),
+			Argument: UnmarshalExpression(v.Get("argument"), in),
 		}
 	case "ListExpression":
 		expr = &List{
-			Span: UnmarshalSpan(v.Get("span"), at),
+			Span: UnmarshalSpan(v, in),
 			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
-				return UnmarshalExpression(v, at)
+				return UnmarshalExpression(v, in)
 			}),
 		}
 	case "TupleExpression":
 		expr = &Tuple{
-			Span: UnmarshalSpan(v.Get("span"), at),
+			Span: UnmarshalSpan(v, in),
 			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
-				return UnmarshalExpression(v, at)
+				return UnmarshalExpression(v, in)
 			}),
 		}
 	case "MacroExpression":
 		expr = &Macro{
-			Span:     UnmarshalSpan(v.Get("span"), at),
+			Span:     UnmarshalSpan(v, in),
 			Function: Variable{Name: Name{String: UnmarshalNonEmptyString(v, "macro"), Span: Span{}}},
 			Lines: util.Map(strings.Split(UnmarshalString(v, "text"), "\n"), func(s string) MacroLine {
 				return MacroLine{Span: Span{}, Text: s} // TODO: set span
@@ -955,22 +955,22 @@ func UnmarshalExpression(data *fj.Value, at Span) (expr Expression) {
 		}
 	case "UnaryExpression":
 		expr = &UnaryExpression{
-			Span:       UnmarshalSpan(v.Get("span"), at),
+			Span:       UnmarshalSpan(v, in),
 			Op:         UnaryOp(UnmarshalNonEmptyString(v, "op")),
-			Expression: UnmarshalExpression(v.Get("expression"), at),
+			Expression: UnmarshalExpression(v.Get("expression"), in),
 		}
 	case "BinaryExpression":
 		expr = &BinaryExpression{
-			Span:  UnmarshalSpan(v.Get("span"), at),
+			Span:  UnmarshalSpan(v, in),
 			Op:    BinaryOp(UnmarshalNonEmptyString(v, "op")),
-			Left:  UnmarshalExpression(v.Get("left"), at),
-			Right: UnmarshalExpression(v.Get("right"), at),
+			Left:  UnmarshalExpression(v.Get("left"), in),
+			Right: UnmarshalExpression(v.Get("right"), in),
 		}
 	case "StructExpression":
 		panic("unimplemented")
 	case "ClosureExpression":
 		expr = &Closure{
-			Span: UnmarshalSpan(v.Get("span"), at),
+			Span: UnmarshalSpan(v, in),
 			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
 				elements := UnmarshalTuple(v)
 				return FunctionParameter{
@@ -978,16 +978,16 @@ func UnmarshalExpression(data *fj.Value, at Span) (expr Expression) {
 						Span:   Span{},
 						String: UnmarshalNonEmptyString(elements[0]),
 					},
-					Type: UnmarshalType(elements[1], at),
+					Type: UnmarshalType(elements[1], in),
 				}
 			}),
-			ReturnType: UnmarshalType(v.Get("returnType"), at),
-			Body:       UnmarshalBlock(v.Get("body"), at),
+			ReturnType: UnmarshalType(v.Get("returnType"), in),
+			Body:       UnmarshalBlock(v.Get("body"), in),
 		}
 	case "ValueExpression":
-		expr = &ValueExpression{value: v}
+		expr = &ValueExpression{Span: UnmarshalSpan(v, in), value: v.Get("value")}
 	case "Box": // boxing is irrelevant when unmarshalling expressions
-		expr = UnmarshalExpression(v, at)
+		expr = UnmarshalExpression(v, in)
 	default:
 		panic(fmt.Sprintf("unexpected expression key when unmarshalling: %s", key))
 	}

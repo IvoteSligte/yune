@@ -29,7 +29,6 @@ func GetSpan(ctx antlr.ParserRuleContext) ast.Span {
 
 func LowerAssignment(ctx IAssignmentContext) ast.Assignment {
 	return ast.Assignment{
-		Span:   GetSpan(ctx),
 		Target: LowerVariable(ctx.Variable()),
 		Op:     LowerAssignmentOp(ctx.AssignmentOp()),
 		Body:   LowerStatementBody(ctx.StatementBody()),
@@ -93,7 +92,6 @@ func LowerBinaryExpression(ctx IBinaryExpressionContext) ast.Expression {
 
 func LowerIsExpression(ctx IIsExpressionContext, thenBlock ast.Block, elseBlock ast.Block) ast.Statement {
 	return &ast.IsBranchStatement{
-		Span:       GetSpan(ctx),
 		Expression: LowerExpression(ctx.Expression()),
 		Name:       LowerName(ctx.Name()),
 		Type:       LowerType(ctx.Type_()),
@@ -106,7 +104,6 @@ func LowerBranchStatement(ctx IBranchStatementContext) ast.Statement {
 	switch {
 	case ctx.Expression() != nil:
 		return &ast.BranchStatement{
-			Span:      GetSpan(ctx),
 			Condition: LowerExpression(ctx.Expression()),
 			Then:      LowerStatementBody(ctx.StatementBody()),
 			Else: ast.Block{
@@ -407,7 +404,6 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 		if ctx.Name() != nil {
 			// variable declaration with inferred type
 			yield(&ast.VariableDeclaration{
-				Span:      GetSpan(ctx),
 				Name:      LowerName(ctx.Name()),
 				InferType: true,
 				Body:      LowerStatementBody(ctx.StatementBody()),
@@ -419,7 +415,6 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 		// Regular variable declaration
 		if len(target.AllName()) == 1 {
 			yield(&ast.VariableDeclaration{
-				Span: GetSpan(ctx),
 				Name: LowerName(target.Name(0)),
 				Type: LowerType(target.Type_(0)),
 				Body: LowerStatementBody(ctx.StatementBody()),
@@ -447,7 +442,6 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 			},
 		}
 		if !yield(&ast.VariableDeclaration{
-			Span: tupleSpan,
 			Name: tupleName,
 			Type: tupleType,
 			Body: LowerStatementBody(ctx.StatementBody()),
@@ -457,7 +451,6 @@ func LowerVariableDeclaration(ctx IVariableDeclarationContext) iter.Seq[ast.Stat
 		for i, name := range target.AllName() {
 			span := GetSpan(name)
 			if !yield(&ast.VariableDeclaration{
-				Span:      span,
 				Name:      LowerName(name),
 				InferType: true,
 				Body: ast.Block{

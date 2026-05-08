@@ -1,23 +1,12 @@
 package ast
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
 	fj "github.com/valyala/fastjson"
 )
-
-func fjUnmarshal[T any](v *fj.Value, dest T) T {
-	if v == nil {
-		return dest
-	}
-	if err := json.Unmarshal(v.MarshalTo(nil), &dest); err != nil {
-		log.Panicf("Failed to unmarshal JSON: '%s'", err)
-	}
-	return dest
-}
 
 func fjGetFields(object *fj.Object) (fields map[string]*fj.Value) {
 	fields = map[string]*fj.Value{}
@@ -91,11 +80,33 @@ func UnmarshalTuple(data *fj.Value) []*fj.Value {
 	return UnmarshalArray(v, "elements")
 }
 
-func UnmarshalSpan(data *fj.Value, relativeTo Span) Span {
-	span := fjUnmarshal(data.Get("span"), Span{})
-	output := relativeTo
-	output.Line += span.Line
-	output.Column += span.Column // FIXME: column is incorrect for multi-line macros
-	output.Length = span.Length
-	return output
+func UnmarshalSpan(data *fj.Value, in *Macro) Span {
+	v := data.Get("location")
+	if v == nil {
+		log.Panicf("JSON does not have the expected 'location' field. JSON: %s\n", data)
+	}
+	location, err := v.Int()
+	if err != nil {
+		log.Panicf("Failed to extract location from JSON. Error: `%s`. JSON: %s\n", err, data)
+	}
+	macroText := in.GetText()
+	if location >= len(macroText) {
+		return in.Lines[0].Span
+	}
+	// within the macro
+	lineNumber := strings.Count(macroText[:location], "\n")
+	lineStart := strings.LastIndex(macroText[:location], "\n")
+	column := location - lineStart
+
+	// in the whole file
+	column = in.Lines[lineNumber].Span.Column + column
+	lineNumber = in.Span.Line + lineNumber
+
+	return Span{
+		File:   in.Span.File,
+		Source: in.Span.Source,
+		Line:   lineNumber,
+		Column: column,
+		Length: 0,
+	}
 }

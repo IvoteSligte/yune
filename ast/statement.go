@@ -19,12 +19,15 @@ type Statement interface {
 }
 
 type VariableDeclaration struct {
-	Span
 	Name             Name
 	InferType        bool
 	Type             Type
 	Body             Block
 	hasLocalCaptures bool
+}
+
+func (d *VariableDeclaration) GetSpan() Span {
+	return d.Name.Span
 }
 
 // TypeCheckBody implements Declaration.
@@ -84,11 +87,14 @@ func (d VariableDeclaration) GetDeclaredType() (_type TypeValue) {
 }
 
 type Assignment struct {
-	Span
 	Target      Variable
 	Op          AssignmentOp
 	Body        Block
 	HasCaptures bool
+}
+
+func (a *Assignment) GetSpan() Span {
+	return a.Target.GetSpan()
 }
 
 // Analyze implements Statement.
@@ -141,11 +147,14 @@ const (
 // Always the last statement in a list, since the remaining
 // statements in a block are is in its .Else field.
 type BranchStatement struct {
-	Span
 	Type      TypeValue
 	Condition Expression
 	Then      Block
 	Else      Block
+}
+
+func (b *BranchStatement) GetSpan() Span {
+	return b.Condition.GetSpan()
 }
 
 // Analyze implements Statement.
@@ -189,12 +198,15 @@ func (b *BranchStatement) Lower(state *State, isLast bool) cpp.Statement {
 // Always the last statement in a list, since the remaining
 // statements in a block are is in its .Else field.
 type IsBranchStatement struct {
-	Span
 	Expression Expression
 	Name       Name
 	Type       Type
 	Then       Block
 	Else       Block
+}
+
+func (b *IsBranchStatement) GetSpan() Span {
+	return b.Expression.GetSpan()
 }
 
 // GetDeclaredType implements Declaration.
@@ -345,53 +357,49 @@ func (e *ExpressionStatement) Lower(state *State, isLast bool) cpp.Statement {
 	}
 }
 
-func UnmarshalBlock(data *fj.Value, at Span) (block Block) {
+func UnmarshalBlock(data *fj.Value, in *Macro) (block Block) {
 	return Block{
 		Statements: util.Map(data.GetArray(), func(v *fj.Value) Statement {
-			return UnmarshalStatement(v, at)
+			return UnmarshalStatement(v, in)
 		}),
 	}
 }
 
-func UnmarshalStatement(data *fj.Value, at Span) (stmt Statement) {
+func UnmarshalStatement(data *fj.Value, in *Macro) (stmt Statement) {
 	object := data.GetObject()
 	key, v := fjUnmarshalStruct(object)
 	switch key {
 	case "VariableDeclaration":
 		stmt = &VariableDeclaration{
-			Span: UnmarshalSpan(v, at),
 			Name: Name{
 				Span:   Span{},
 				String: string(v.GetStringBytes("name")),
 			},
-			Body: UnmarshalBlock(v, at),
+			Body: UnmarshalBlock(v, in),
 		}
 	case "AssignStatement":
 		stmt = &Assignment{
-			Span:   UnmarshalSpan(v, at),
-			Target: *UnmarshalExpression(v.Get("target"), at).(*Variable),
+			Target: *UnmarshalExpression(v.Get("target"), in).(*Variable),
 			Op:     AssignmentOp(v.GetStringBytes("op")),
-			Body:   UnmarshalBlock(v, at),
+			Body:   UnmarshalBlock(v, in),
 		}
 	case "BranchStatement":
 		stmt = &BranchStatement{
-			Span:      UnmarshalSpan(v, at),
-			Condition: UnmarshalExpression(v.Get("condition"), at),
-			Then:      UnmarshalBlock(v.Get("then"), at),
-			Else:      UnmarshalBlock(v.Get("else"), at),
+			Condition: UnmarshalExpression(v.Get("condition"), in),
+			Then:      UnmarshalBlock(v.Get("then"), in),
+			Else:      UnmarshalBlock(v.Get("else"), in),
 		}
 	case "IsBranchStatement":
 		stmt = &IsBranchStatement{
-			Span:       UnmarshalSpan(v, at),
-			Expression: UnmarshalExpression(v.Get("expression"), at),
+			Expression: UnmarshalExpression(v.Get("expression"), in),
 			Name:       Name{String: UnmarshalNonEmptyString(v.Get("name")), Span: Span{}},
-			Type:       UnmarshalType(v.Get("type"), at),
-			Then:       UnmarshalBlock(v.Get("then"), at),
-			Else:       UnmarshalBlock(v.Get("else"), at),
+			Type:       UnmarshalType(v.Get("type"), in),
+			Then:       UnmarshalBlock(v.Get("then"), in),
+			Else:       UnmarshalBlock(v.Get("else"), in),
 		}
 	case "ExpressionStatement":
 		stmt = &ExpressionStatement{
-			Expression: UnmarshalExpression(v.Get("expression"), at),
+			Expression: UnmarshalExpression(v.Get("expression"), in),
 		}
 	default:
 		panic(fmt.Sprintf("unexpected statement key when unmarshalling: %s", key))

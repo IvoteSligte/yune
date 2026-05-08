@@ -133,12 +133,6 @@ template <class F, class Tuple> decltype(auto) apply_(F &&f, Tuple &&tuple) {
   }
 }
 
-struct Span_t {
-  Span_t(int line, int column) : line(line), column(column) {}
-  int line;
-  int column;
-};
-
 struct TypeType_t {
   bool operator==(const TypeType_t &other) const { return true; }
 };
@@ -206,18 +200,23 @@ struct UnionType_t {
 };
 
 struct IntegerExpression_t {
+  int location;
   int value;
 };
 struct FloatExpression_t {
+  int location;
   float value;
 };
 struct BoolExpression_t {
+  int location;
   bool value;
 };
 struct StringExpression_t {
+  int location;
   String_t value;
 };
 struct VariableExpression_t {
+  int location;
   String_t name;
 };
 struct FunctionCallExpression_t;
@@ -227,10 +226,12 @@ struct ListExpression_t;
 struct TupleExpression_t;
 struct ClosureExpression_t;
 struct MacroExpression_t {
+  int location;
   String_t macro;
   String_t text;
 };
 struct ValueExpression_t {
+  int location;
   String_t json;
 };
 
@@ -243,22 +244,27 @@ using Expression_t =
             Box_t<BinaryExpression_t>, ValueExpression_t>;
 
 struct FunctionCallExpression_t {
+  int location;
   Expression_t function;
   Expression_t argument;
 };
 struct UnaryExpression_t {
+  int location;
   String_t op;
   Expression_t expression;
 };
 struct BinaryExpression_t {
+  int location;
   String_t op;
   Expression_t left;
   Expression_t right;
 };
 struct ListExpression_t {
+  int location;
   List_t<Expression_t> elements;
 };
 struct TupleExpression_t {
+  int location;
   List_t<Expression_t> elements;
 };
 
@@ -300,6 +306,7 @@ struct IsBranchStatement_t {
 };
 
 struct ClosureExpression_t {
+  int location;
   List_t<std::tuple<String_t, Expression_t>> parameters;
   Expression_t returnType;
   Block_t body;
@@ -383,7 +390,9 @@ std::string toJson_(const ListExpression_t &e);
 std::string toJson_(const TupleExpression_t &e);
 std::string toJson_(const ClosureExpression_t &e);
 inline std::string toJson_(const ValueExpression_t &e) {
-  return std::format(R"({{ "ValueExpression": {} }})", e.json);
+  return std::format(
+      R"({{ "ValueExpression": {{ "location": {}, "value": {} }} }})",
+      toJson_(e.location), e.json);
 }
 std::string toJson_(const VariableDeclaration_t &e);
 std::string toJson_(const AssignStatement_t &e);
@@ -451,48 +460,65 @@ inline std::string toJson_(const UnionType_t &t) {
 // -- expressions --
 
 inline std::string toJson_(const IntegerExpression_t &e) {
-  return R"({ "IntegerExpression": { "value": )" + toJson_(e.value) + " } }";
+  return std::format(
+      R"({{ "IntegerExpression": {{ "location": {}, "value": {} }} }})",
+      toJson_(e.location), toJson_(e.value));
 }
 inline std::string toJson_(const FloatExpression_t &e) {
-  return R"({ "FloatExpression": { "value": )" + toJson_(e.value) + " } }";
+  return std::format(
+      R"({{ "FloatExpression": {{ "location": {}, "value": {} }} }})",
+      toJson_(e.location), toJson_(e.value));
 }
 inline std::string toJson_(const BoolExpression_t &e) {
-  return R"({ "BoolExpression": { "value": )" + toJson_(e.value) + " } }";
+  return std::format(
+      R"({{ "BoolExpression": {{ "location": {}, "value": {} }} }})",
+      toJson_(e.location), toJson_(e.value));
 }
 inline std::string toJson_(const StringExpression_t &e) {
-  return R"({ "StringExpression": { "value": )" + toJson_(e.value) + " } }";
+  return std::format(
+      R"({{ "StringExpression": {{ "location": {}, "value": {} }} }})",
+      toJson_(e.location), toJson_(e.value));
 }
 inline std::string toJson_(const VariableExpression_t &e) {
-  return R"({ "VariableExpression": { "name": )" + toJson_(e.name) + " } }";
+  return std::format(
+      R"({{ "VariableExpression": {{ "location": {}, "name": {} }} }})",
+      toJson_(e.location), toJson_(e.name));
 }
 inline std::string toJson_(const FunctionCallExpression_t &e) {
-  return R"({ "FunctionCallExpression": { "function": )" + toJson_(e.function) +
-         R"(, "argument": )" + toJson_(e.argument) + " } }";
+  return std::format(
+      R"({{ "FunctionCallExpression": {{ "location": {}, "function": {}, "argument": {} }} }})",
+      toJson_(e.location), toJson_(e.function), toJson_(e.argument));
 }
 inline std::string toJson_(const UnaryExpression_t &e) {
-  return R"({ "UnaryExpression": { "op": )" + toJson_(e.op) +
-         R"(, "expression": )" + toJson_(e.expression) + " } }";
+  return std::format(
+      R"({{ "UnaryExpression": {{ "location": {}, "op": {}, "expression": {} }} }})",
+      toJson_(e.location), toJson_(e.op), toJson_(e.expression));
 }
 inline std::string toJson_(const BinaryExpression_t &e) {
-  return R"({ "BinaryExpression": { "op": )" + toJson_(e.op) + R"(, "left": )" +
-         toJson_(e.left) + R"(, "right": )" + toJson_(e.right) + " } }";
+  return std::format(
+      R"({{ "BinaryExpression": {{ "location": {}, "op": {}, "left": {}, "right": {} }} }})",
+      toJson_(e.location), toJson_(e.op), toJson_(e.left), toJson_(e.right));
 }
 inline std::string toJson_(const ListExpression_t &e) {
-  return R"({ "ListExpression": { "elements": )" + toJson_(e.elements) + " } }";
+  return std::format(
+      R"({{ "ListExpression": {{ "location": {}, "elements": {} }} }})",
+      toJson_(e.location), toJson_(e.elements));
 }
 inline std::string toJson_(const TupleExpression_t &e) {
-  return R"({ "TupleExpression": { "elements": )" + toJson_(e.elements) +
-         " } }";
+  return std::format(
+      R"({{ "TupleExpression": {{ "location": {}, "elements": {} }} }})",
+      toJson_(e.location), toJson_(e.elements));
 }
 inline std::string toJson_(const ClosureExpression_t &e) {
   return std::format(
-      R"({{ "ClosureExpression": {{ "parameters": {}, "returnType": {}, "body": {} }} }})",
-      toJson_(e.parameters), toJson_(e.returnType), toJson_(e.body));
+      R"({{ "ClosureExpression": {{ "location": {}, "parameters": {}, "returnType": {}, "body": {} }} }})",
+      toJson_(e.location), toJson_(e.parameters), toJson_(e.returnType),
+      toJson_(e.body));
 }
 inline std::string toJson_(const MacroExpression_t &e) {
   return std::format(
-      R"({{ "MacroExpression": {{ "macro": {}, "text": {} }} }})",
-      toJson_(e.macro), toJson_(e.text));
+      R"({{ "MacroExpression": {{ "location": {}, "macro": {}, "text": {} }} }})",
+      toJson_(e.location), toJson_(e.macro), toJson_(e.text));
 }
 inline std::string toJson_(const VariableDeclaration_t &e) {
   return std::format(
