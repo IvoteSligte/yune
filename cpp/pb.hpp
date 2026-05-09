@@ -760,7 +760,16 @@ inline struct printlnString_f {
 } printlnString;
 
 inline struct len_f {
-  int operator()(String_t s) const { return s.length(); }
+  template <class T = int> int operator()(Union_t<String_t, List_t<T>> u) const {
+    if (std::holds_alternative<String_t>(u)) {
+      String_t s = std::get<String_t>(u);
+      return s.length();
+    } else {
+      auto l = std::get<List_t<T>>(u);
+      return l.length();
+    }
+  }
+
   std::string toJson_() const { return R"({ "Function": "len" })"; }
 } len;
 

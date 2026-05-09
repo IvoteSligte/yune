@@ -1,53 +1,250 @@
 
 
-Error = String
+Offset: Type = Int
 
-digitPrefixLength(text: String): Int =
-    ;isDigits(at(text, 0)) -> 0
-    1 + digitPrefixLength(subString(text, 1, len(text)))
+Ok: Type = (ValueIndex, Buffer, Offset)
+NoMatch: Type = ()
+Error: Type = (String, Offset, ())
+Fail: Type = Union[NoMatch, Error]
+Result: Type = Union[Ok, Fail]
 
-parseUint(text: String): Union[(Int, String), ()] =
-    prefixLength := digitPrefixLength(text)
-    prefixLength == 0 -> ()
-    stringToUint(subString(text, 0, prefixLength)) is uint: Int
-    (uint, subString(text, prefixLength, len(text)))
+Number: Type = Union[Int, Float]
+Null = ()
+// Recursive types cannot be expressed in Yune, so we use indices
+// into an array that is passed along with the data.
+ValueIndex: Type = Int
+Value: Type = Union[Int, Float, String, Bool, List(ValueIndex), Object, Null]
+Field: Type = (String, ValueIndex)
+Object: Type = List(Field)
 
-parseInt(text: String): Union[(Int, String), ()] =
-    at(text, 0) == "-" ->
-        result := parseUint(subString(text, 1, len(text)))
-        result is fail: () -> () // TODO: error?
-        result is ok: (Int, Tuple)
-        (uint: Int, remainder: String) = ok
-        (-uint, remainder)
-    parseUint(text)
+// First element is the root
+Json: Type = List(Value)
 
-parseNumber(text: String): Union[(Union[Int, Float], String), ()] =
+Buffer: Type = List(Value)
+
+text: String = "<default>"
+
+return(value: Value, buffer: Buffer, offset: Offset): (ValueIndex, Buffer, Offset) =
+    (len(buffer), append(buffer, value), offset)
+
+skipSpace(offset: Offset): Offset =
+    isSpace(peek(offset)) -> skipSpace(offset+1)
+    offset
+
+peek(offset: Offset): String =
+    at(text, offset)
+
+err(message: String, offset: Offset): Error = (message, offset, ())
+
+digitSeq(offset: Offset): String =
+    ;isDigits(peek(offset)) -> ""
+    peek(offset) + digitSeq(offset+1)
+
+alphaSeq(offset: Offset): String =
+    ;isAlpha(peek(offset)) -> ""
+    peek(offset) + alphaSeq(offset+1)
+
+parseUint(offset: Offset): Union[(Int, Offset), NoMatch] =
+    length := digitPrefixLength(offset)
+    length == 0 -> ()
+    stringToUint(subString(text, offset, offset+length)) is uint: Int
+    (uint, skipSpace(offset+length))
+
+parseInt(offset: Offset): Union[(Int, Offset), Fail] =
+    peek(offset) == "-" ->
+        result := parseUint(offset+1)
+        result is fail: () -> err("Failed to parse negative number", offset)
+        result is ok: Ok(Int)
+        (uint: Int, offset2: Offset) := ok
+        (-uint, skipSpace(offset2))
+    parseUint(offset)
+
+parseNumber(offset: Offset, buffer: Buffer): Result =
     // integer part
-    result := parseInt(text)
-    result is ok: (Int, String) ->
-        (int: Int, remainder: String) = ok
-        // dot
-        at(remainder, 0) ;= "." -> (int, remainder)
-        remainder = subString(remainder, 1, len(remainder))
-        fractionLength := digitPrefixLength(remainder)
-        // fractional part
-        parseUint(remainder) is ok: (Int, String) ->
-            (fraction: Int, remainder: String) = ok
-            float := int + toFloat(fraction) / toFloat(pow(10, fractionLength))
-            (float, remainder)
-        toFloat(int)
+    result := parseInt(offset)
+    result is fail: Fail -> fail
+    result is ok: Ok(Int)
+    (int: Int, offset2: Offset) := ok
+    offset = offset2
+    // dot
+    peek(offset) ;= "." -> (int, offset)
+    fractionLength := digitPrefixLength(offset+1)
+    // fractional part
+    parseUint(remainder) is ok: (Int, String) ->
+    (fraction: Int, offset3: String) := ok
+    float := int + toFloat(fraction) / toFloat(pow(10, fractionLength))
+    return(float, buffer, offset3)
 
-// Recursive types cannot be expressed in Yune due to the limitations of C++'s type system.
-// So we use indices into an array that is passed along with the data.
-JsonValueIndex: Type = Int
-JsonValue: Type = Union[Int, Float, String, Bool, List(JsonValueIndex), JsonObject, ()]
-JsonObject: Type = List((String, JsonValueIndex))
+parseBool(offset: Offset, buffer: Buffer): Result =
+    alpha := alphaSeq(offset)
+    alpha == "true" -> return(true, buffer, offset+4)
+    alpha == "false" -> return(false, buffer, offset+5)
+    ()
 
-// (head, children)
-Json: Type = (JsonValue, List(JsonValue))
-
-parse(text: String): Json =
+parseIdent(offset: Offset): Result =
     panic("TODO")
 
-json(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
+checkEOF(offset: Offset, expected: String): Union[Error, ()] =
+    offset >= len(text) -> err("Expected '" + expected + "', but found EOF", offset)
+
+parseStringSuffix(offset: Offset): Union[(String, Offset), Fail] =
+    checkEOF(offset, "\"") is error: Error -> error
+    char := peek(offset)
+    char == "\"" -> ("", offset+1)
+    char == "\\" ->
+        char =
+            escaped := peek(offset+1)
+            escaped == "n" -> "\n"
+            escaped == "r" -> "\r"
+            escaped == "t" -> "\t"
+            escaped
+        offset += 1
+    result := parseStringSuffix(offset+1)
+    result is ok: Ok(String)
+    (suffix: String, offset2: Offset) := ok
+    offset = offset2
+    (char + suffix, offset)
+
+parseString(offset: Offset): Result(String) =
+    peek(offset) ;= "\"" -> ()
+    parseStringSuffix(offset+1)
+
+parseField(offset: Offset, buffer: Buffer): Union[(Field, Buffer, Offset), Fail] =
+    keyResult := parseString(offset)
+    keyResult is fail: Fail -> fail
+    keyResult is ok: Ok(String)
+    (key: String, offset2: Offset) = ok
+    offset = skipSpace(offset2)
+    
+    peek(offset) ;= ":" -> err("Expected ':'", offset)
+    offset += 1
+
+    valueResult := parse(offset, buffer)
+    valueResult is fail: Fail -> fail
+    valueresult is ok: Ok
+    (value: ValueIndex, buffer2: Buffer, offset3: Offset) := ok
+    buffer = buffer2
+    offset = skipSpace(offset3)
+
+    ((key, value), buffer, offset)
+
+parseFields(offset: Offset, buffer: Buffer): Result =
+    result := parseField(offset, buffer)
+    result is fail: Fail -> fail
+    result is ok: Ok((ValueIndex, List(Value)))
+    (data: (ValueIndex, List(Value)), offset2: Offset) := ok
+    (firstElement: ValueIndex, buffer2: List(Value)) := data
+    offset = skipSpace(offset2)
+    buffer = buffer2
+
+    peek(offset) == "," ->
+        result := parseFields(offset+1)
+        result is fail: Fail -> fail
+        result is ok: Ok((List(ValueIndex), Buffer))
+        (data: (List(ValueIndex), List(Value)), offset2: Offset) := ok
+        (tailElements: List(ValueIndex), buffer2: List(Value)) := data
+        offset = skipSpace(offset2)
+        buffer = buffer2
+        
+        // TODO: builtin + as concat for lists
+        (([firstElement] + tailElements, buffer), offset)
+
+    (([firstElement], buffer), offset)
+
+parseObject(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
+    peek(offset) ;= "{" -> ()
+
+    result := parseFields(offset, valueList)
+    result is fail: Fail -> fail
+    result is ok: Ok((List(Field), Buffer))
+    (data: (List(Field), Buffer), offset2: Offset) := ok
+    (fields: List(Field), buffer2: Buffer) := data
+    offset = skipSpace(offset2)
+    buffer = buffer2
+    object := fields
+
+    peek(offset) ;= "}" -> err("Expected '}'", offset)
+
+    (len(buffer), append(buffer, object))
+
+parseElements(offset: Offset, buffer: Buffer): Result((List(ValueIndex)), Buffer) =
+    result := parse(offset, buffer)
+    result is fail: Fail -> fail
+    result is ok: Ok((ValueIndex, List(Value)))
+    (data: (ValueIndex, List(Value)), offset2: Offset) := ok
+    (firstElement: ValueIndex, buffer2: List(Value)) := data
+    offset = skipSpace(offset2)
+    buffer = buffer2
+
+    offset = skipSpace(offset)
+    peek(offset) == "," ->
+        result := parseElements(offset+1)
+        result is fail: Fail -> fail
+        result is ok: Ok((List(ValueIndex), Buffer))
+        (data: (List(ValueIndex), List(Value)), offset2: Offset) := ok
+        (tailElements: List(ValueIndex), buffer2: List(Value)) := data
+        offset = skipSpace(offset2)
+        buffer = buffer2
+        
+        // TODO: builtin + as concat for lists
+        (([firstElement] + tailElements, buffer), offset)
+
+    (([firstElement], buffer), offset)
+
+parseList(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
+    peek(offset) ;= "[" -> ()
+    
+    result := parseElements(offset, buffer)
+    result is fail: Fail -> fail
+    result is ok: Ok((List(ValueIndex), Buffer))
+    (data: (List(ValueIndex), Buffer), offset2: Offset) := ok
+    (fields: List(ValueIndex), buffer2: Buffer) := data
+    offset = skipSpace(offset2)
+    buffer = buffer2
+    list := elements
+    
+    peek(offset) ;= "]" -> err("Expected ']'", offset)
+    
+    (len(buffer), append(buffer, list))
+
+parse(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
+    offset = skipSpace(offset)
+    
+    result: Ok(Value) = ()
+    result = parseNumber(offset)
+    result is ok: Ok(Number) ->
+        (number: Number, offset: Offset) := ok
+        ((len(buffer), append(buffer, number)), offset)
+    result is error: Error -> error
+    
+    result = parseString(offset)
+    result is ok: Ok(Number) ->
+        (number: Number, offset: Offset) := ok
+        ((len(buffer), append(buffer, number)), offset)
+    result is error: Error -> error
+
+    result = parseBool(offset)
+    result is ok: Ok(Number) ->
+        (number: Number, offset: Offset) := ok
+        ((len(buffer), append(buffer, number)), offset)
+    result is error: Error -> error    
+    
+    result = parseIdent(offset)
+    result is ok: Ok(Number) ->
+        (number: Number, offset: Offset) := ok
+        ((len(buffer), append(buffer, number)), offset)
+    result is error: Error -> error    
+
+    result = parseObject(offset)
+    result is ok: Ok((ValueIndex, Buffer)) -> ok
+    result is error: Error -> error
+    
+    result = parseList(offset)
+    result is ok: Ok((ValueIndex, Buffer)) -> ok
+    result is error: Error -> error
+    
+    // TODO
+
+json(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
+    text = macroText
 

@@ -232,9 +232,40 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 			_ = tupleArgumentType.Elements[1].(*IntType)
 			index := f.Argument.(*Tuple).Elements[1].(*Integer)
 			return firstElementTupleType.Elements[index.Value]
+		// inject(<any type>): Expression
 		case "inject":
 			f.Argument.Analyze(nil, anal)
 			return ExpressionType
+		// len(Union[String, List(<any type>)]): Int
+		case "len":
+			argumentType := f.Argument.Analyze(nil, anal)
+			_, isListType := argumentType.(*ListType)
+			if !argumentType.Eq(&StringType{}) && !isListType {
+				anal.ReportError(UnexpectedLenArgument{
+					Found: argumentType,
+					At:    f.Argument.GetSpan(),
+				})
+			}
+			return &IntType{}
+		// append(List(<any type>)): List(<same element type as argument>)
+		case "append":
+			argumentType := f.Argument.Analyze(nil, anal)
+			_, isListType := argumentType.(*ListType)
+			if !isListType {
+				anal.ReportError(ExpectedList{
+					Found: argumentType,
+					At:    f.Argument.GetSpan(),
+				})
+			}
+			return argumentType
+		// get(List(<any type>), Int): <same element type as argument>
+		case "get":
+			argumentType := f.Argument.Analyze(nil, anal)
+			tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+			checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
+			firstElementListType := TODO
+			// TODO: check that second element is integer
+			return element_type
 		default:
 		}
 	}

@@ -127,6 +127,26 @@ func (e UnexpectedType) Error() string {
 	return makeCodeError(text, e.At, "")
 }
 
+type UnexpectedLenArgument struct {
+	Found TypeValue
+	At    Span
+}
+
+func (e UnexpectedLenArgument) Error() string {
+	text := fmt.Sprintf("Expected list or string, but found type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
+}
+
+type ExpectedList struct {
+	Found TypeValue
+	At    Span
+}
+
+func (e ExpectedList) Error() string {
+	text := fmt.Sprintf("Expected list, but found type '%s'.", e.Found)
+	return makeCodeError(text, e.At, "")
+}
+
 type ExpectedTuple struct {
 	Found TypeValue
 	At    Span

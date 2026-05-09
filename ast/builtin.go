@@ -114,12 +114,22 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		Return:   &TupleType{},
 	}, IMPURE_FUNCTION},
 	{"len", &FnType{
+		// also works for lists, but this cannot be expressed in Yune
 		Argument: &StringType{},
 		Return:   &IntType{},
 	}, 0},
+	// appends an element to a list of any type
+	{"append", &FnType{Argument: &UnionType{}, Return: &UnionType{}}, 0},
 	{"subString", &FnType{
 		Argument: &TupleType{Elements: []TypeValue{&StringType{}, &IntType{}, &IntType{}}},
 		Return:   &StringType{},
+	}, 0},
+	// extracts an element from a list
+	{"get", &FnType{
+		// (list: List(<any type>), index: Int)
+		Argument: &UnionType{},
+		// <element type>
+		Return: &UnionType{},
 	}, 0},
 	{"Union", &FnType{
 		Argument: &ListType{Element: &TypeType{}},
