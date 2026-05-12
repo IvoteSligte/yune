@@ -40,7 +40,7 @@ func (a Analyzer) ReportError(err error) {
 	message := err.Error()
 	if len(a.MacroStack) > 0 {
 		message = fmt.Sprintf(
-			"There is a bug in macro `%s`.\nError-less invocation at %s produced invalid code. Error: %s\nMacro traceback:\n%s\n",
+			"There is a bug in macro `%s`.\nError-less invocation at %s produced invalid code. Error: %s\nMacro trace:\n%s\n",
 			a.MacroStack[0].Function.Name.String,
 			a.MacroStack[0].Span,
 			err, util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
