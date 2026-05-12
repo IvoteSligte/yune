@@ -23,12 +23,10 @@ func makeCodeError(errorText string, span Span, message string) string {
 	return fmt.Sprintf(`
 %s
 ---> %s line %d column %d
-%s |
 %d |  %s
 %s |  %s%s %s`,
 		errorText,
 		span.File, span.Line, span.Column,
-		leftPad,
 		span.Line, sourceLine,
 		leftPad, midPad, underline, message,
 	)

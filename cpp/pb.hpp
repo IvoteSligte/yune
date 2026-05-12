@@ -773,6 +773,17 @@ inline struct len_f {
   std::string toJson_() const { return R"({ "Function": "len" })"; }
 } len;
 
+inline struct get_f {
+  template <class T = int> int operator()(List_t<T> l, int index) const {
+    if (index < 0 || index >= l.size()) {
+      panic("get: list index out of bounds");
+    }
+    return l[index];
+  }
+
+  std::string toJson_() const { return R"({ "Function": "get" })"; }
+} get;
+
 inline struct subString_f {
   String_t operator()(String_t s, int start, int end) const {
     if (start < 0) {

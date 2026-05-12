@@ -40,11 +40,12 @@ func (a Analyzer) ReportError(err error) {
 	message := err.Error()
 	if len(a.MacroStack) > 0 {
 		message = fmt.Sprintf(
-			"There is a bug in macro `%s`.\nError-less invocation at %s produced invalid code. Error: %s\n Macro traceback:\n%s\n",
+			"There is a bug in macro `%s`.\nError-less invocation at %s produced invalid code. Error: %s\nMacro traceback:\n%s\n",
 			a.MacroStack[0].Function.Name.String,
 			a.MacroStack[0].Span,
 			err, util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
-				return fmt.Sprintf("  %s | %s", m.Span, m)
+				macroDeclaration, _ := a.Table.Get(m.Function.Name)
+				return fmt.Sprintf("  `%s` defined in file `%s` at %s", m.Function.Name.String, macroDeclaration.GetSpan().File, macroDeclaration.GetSpan())
 			}),
 		)
 	}

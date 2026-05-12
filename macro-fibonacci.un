@@ -1,0 +1,9 @@
+import "std.un"
+
+Error: Type = String
+
+reverse(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
+    len(text) <= 1 -> stringExpression(0, text)
+    macroExpression(1, "reverse", )
+
+
