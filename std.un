@@ -76,3 +76,5 @@ mapString(text: String, from: String, to: String): String =
 toLower(text: String): String =
     mapString(text, LOWER_ALPHA, UPPER_ALPHA)
 
+toUpper(text: String): String =
+    mapString(text, LOWER_ALPHA, UPPER_ALPHA)

@@ -1,0 +1,103 @@
+
+import "std.un"
+
+Error: Type = String
+
+text: String = "<default>"
+offset: Int = 0
+
+Offset: Type = Int
+TokenKind: Type = String
+
+// (start, kind, content)
+Token: Type = (Offset, TokenKind, String)
+
+Invalid: Type = ((), ())
+INVALID: Invalid = ((), ())
+
+Eof: Type = ()
+EOF: Eof = ()
+
+skipSpace(): () =
+    char := at(text, offset)
+    isSpace(char) ->
+        offset += 1
+        skipSpace()
+
+isSym(char: String): Bool =
+    stringContainsOnly(char, "=<>(),*$")
+
+nextSym(): Token =
+    char := at(text, offset)
+    offset += 1
+    (offset-1, char, char)
+
+nextAlnum(start: Offset): Token =
+    (offset >= len(text)) or isSpace(at(text, offset)) ->
+        content := toUpper(subString(text, start, offset))
+        kind := "IDENT"
+        () =
+            content == "SELECT" -> kind = "SELECT"
+            content == "FROM" -> kind = "FROM"
+            content == "WHERE" -> kind = "WHERE"
+        (start, kind, content)
+    offset += 1
+    nextAlnum(start)
+
+next(): Union[Token, Invalid, Eof] =
+    offset >= len(text) -> EOF
+    char := at(text, offset)
+    skipSpace()
+    isAlnum(char) -> nextAlnum(offset)
+    isSym(char) -> nextSym()
+    INVALID
+
+tokenizeAll(list: List(Token)): Union[List(Token), Invalid] =
+    result := next()
+    result is eof: Eof -> list
+    result is invalid: Invalid -> invalid
+    result is token: Token
+    append(list, token)
+
+handle(result: Union[Token, Invalid, Eof]): Union[Token, Error] =
+    result is invalid: Invalid ->
+        char := at(text, offset)
+        "Invalid character: " + char // TODO: span in error
+    result is eof: Eof -> "Unexpected EOF"
+    result is token: Token
+    token
+
+tokens: List(Token) = []
+index: Int = 0
+
+nextToken(): Token = get(tokens, index)
+
+parseSelect(): Union[Error, ()] =
+    // TODO: check remaining tokens
+
+    (start0: Offset, kind0: TokenKind, content0: String) = get(tokens, index)
+    kind0 ;= "SELECT" -> "Expected SELECT"
+    index += 1
+
+    (start1: Offset, kind1: TokenKind, content1: String) = get(tokens, index)
+    kind1 == "*" -> parseWhere()
+
+parseWhere(): Union[Error, ()] =
+    // TODO
+
+// Tokenizes and validates SQL expressions of the form:
+//
+// "SELECT" ("*" | IDENT ("," IDENT)*)
+// "FROM" IDENT
+// ("WHERE" IDENT ("=" | ">" | "<") ("(" recurse ")" | "$" IDENT | NUMBER))?
+sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
+    text = macroText
+    offset = 0
+
+    result := tokenizeAll([])
+    result is invalid: Invalid ->
+        char := at(text, offset)
+        "Invalid character: " + char // TODO: span in error
+    result is tokens: List(Token)
+
+    parseSelect(tokens)
