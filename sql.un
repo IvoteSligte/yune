@@ -72,18 +72,63 @@ index: Int = 0
 
 nextToken(): Token = get(tokens, index)
 
-parseSelect(): Union[Error, ()] =
+Result: Type = Union[Error, ()]
+
+peekKind(): TokenKind =
+    index >= len(tokens) -> "EOF"
+    (offset: Offset, kind: TokenKind, content: String) = get(tokens, index)
+    kind
+
+consume(): () = index += 1
+
+take(kind: TokenKind): Bool =
+    isKind := peekKind() == kind
+    () = isKind() -> consume()
+    isKind
+
+expected(expected: String): String =
+    "Expected " + expected
+
+parseSelect(): Result =
     // TODO: check remaining tokens
 
-    (start0: Offset, kind0: TokenKind, content0: String) = get(tokens, index)
-    kind0 ;= "SELECT" -> "Expected SELECT"
-    index += 1
+    take("SELECT") -> 
+        take("*") ->
+            parseFrom()
+        take("IDENT") ->
+            parseSelectFields()
+            parseFrom()
+        expected("'*' or IDENT")
+    expected("SELECT")
 
-    (start1: Offset, kind1: TokenKind, content1: String) = get(tokens, index)
-    kind1 == "*" -> parseWhere()
+parseSelectFields(): () =
+    // This looks somewhat like a parsing DSL despite being regular Yune syntax.
+    take(",") -> take("IDENT") -> parseSelectFields()
 
-parseWhere(): Union[Error, ()] =
-    // TODO
+parseFrom(): Result =
+    take("FROM") ->
+        take("IDENT") -> 
+            parseWhere()
+        expected("IDENT")
+    expected("FROM")
+
+parseWhere(): Result =
+    take("WHERE") ->
+        take("IDENT") ->
+            take("=") or take(">") or take("<") ->
+                take("(") ->
+                    result := parseSelect()
+                    result is error: Error -> error
+                    result is ok: ()
+                    take(")") -> ()
+                    expected(")")
+                take("$") ->
+                    take("IDENT") -> ()
+                    expected("IDENT")
+                take("NUMBER") -> ()
+                expected("'(' or '$' or NUMBER")
+            expected("'=' or '>' or '<'")
+        expected("IDENT")
 
 // Tokenizes and validates SQL expressions of the form:
 //
@@ -100,4 +145,15 @@ sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
         "Invalid character: " + char // TODO: span in error
     result is tokens: List(Token)
 
-    parseSelect(tokens)
+    result := parseSelect(tokens)
+    result is error: Error -> error
+    result is ok: ()
+    index < len(tokens) -> expected("EOF")
+    inject(tokens)
+
+main(): () =
+    grade  := 9
+    result := sql#
+        SELECT first_name, last_name, grade
+        FROM students
+        WHERE grade > $grade        
