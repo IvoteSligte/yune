@@ -37,7 +37,7 @@ func (state *State) lowerObject(object *fj.Object) string {
 func (state *State) lowerExpressionValue(data *fj.Value) string {
 	switch data.Type() {
 	case fj.TypeArray:
-		return fmt.Sprintf(`{ %s }`, util.JoinFunc(data.GetArray(), ", ", state.lowerExpressionValue))
+		return fmt.Sprintf(`{ %s }`, util.JoinFunc(UnmarshalArray(data), ", ", state.lowerExpressionValue))
 	case fj.TypeString:
 		return fmt.Sprintf("String_t(%q)", data.GetStringBytes())
 	case fj.TypeObject:
@@ -59,7 +59,7 @@ func (state *State) lowerClosureValue(v *fj.Value) string {
 	}
 	lowered := closure.Lower(state)
 	captures := ""
-	for _, capture := range v.GetArray("captures") {
+	for _, capture := range UnmarshalArray(v, "captures") {
 		name := string(capture.GetStringBytes("name"))
 		_type := state.UnmarshalTypeValue(capture.Get("type"))
 		value := state.lowerExpressionValue(capture.Get("value"))

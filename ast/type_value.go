@@ -366,7 +366,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 		}
 	case "UnionType":
 		t = &UnionType{
-			Variants: util.Map(v.Get("variants").GetArray(), state.UnmarshalTypeValue),
+			Variants: util.Map(UnmarshalArray(v, "variants"), state.UnmarshalTypeValue),
 		}
 	case "TypeId":
 		id := UnmarshalNonEmptyString(v)
@@ -387,7 +387,7 @@ func (state *State) getObjectValueType(object *fj.Object) TypeValue {
 		"StructType", "UnionType", "TypeId":
 		return &TypeType{}
 	case "Tuple":
-		elementTypes := util.Map(v.GetArray(), state.getValueType)
+		elementTypes := util.Map(UnmarshalArray(v, "elements"), state.getValueType)
 		return &TupleType{Elements: elementTypes}
 	case "IntegerExpression", "FloatExpression", "BoolExpression", "StringExpression",
 		"VariableExpression", "FunctionCallExpression", "ListExpression", "TupleExpression",
@@ -407,7 +407,7 @@ func (state *State) getValueType(data *fj.Value) TypeValue {
 	case fj.TypeTrue, fj.TypeFalse:
 		return &BoolType{}
 	case fj.TypeArray:
-		elementTypes := util.Map(data.GetArray(), state.getValueType)
+		elementTypes := util.Map(UnmarshalArray(data), state.getValueType)
 		return &ListType{Element: NewUnionType(elementTypes...)}
 	case fj.TypeNumber:
 		_, err := data.Int64()

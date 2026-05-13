@@ -37,11 +37,12 @@ isIdentChar(char: String): Bool =
 
 nextIdent(start: Offset): Token =
     (offset >= len(text)) or ;isIdentChar(at(text, offset)) ->
-        content := toUpper(subString(text, start, offset))
+        content := subString(text, start, offset)
+        cmp := toUpper(content)
         kind :=
-            content == "SELECT" -> "SELECT"
-            content == "FROM" -> "FROM"
-            content == "WHERE" -> "WHERE"
+            cmp == "SELECT" -> "SELECT"
+            cmp == "FROM" -> "FROM"
+            cmp == "WHERE" -> "WHERE"
             "IDENT"
         (start, kind, content)
     offset += 1
@@ -166,3 +167,5 @@ main(): () =
         SELECT first_name, last_name, grade
         FROM students
         WHERE grade > $grade
+
+// TODO: NUMBER, check if variable $variable is defined

@@ -997,14 +997,14 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 	case "ListExpression":
 		expr = &List{
 			Span: UnmarshalLocation(v, in),
-			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
+			Elements: util.Map(UnmarshalArray(v, "elements"), func(v *fj.Value) Expression {
 				return UnmarshalExpression(v, in)
 			}),
 		}
 	case "TupleExpression":
 		expr = &Tuple{
 			Span: UnmarshalLocation(v, in),
-			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
+			Elements: util.Map(UnmarshalArray(v, "elements"), func(v *fj.Value) Expression {
 				return UnmarshalExpression(v, in)
 			}),
 		}
@@ -1034,7 +1034,7 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 	case "ClosureExpression":
 		expr = &Closure{
 			Span: UnmarshalLocation(v, in),
-			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
+			Parameters: util.Map(UnmarshalArray(v, "parameters"), func(v *fj.Value) FunctionParameter {
 				elements := UnmarshalTuple(v)
 				return FunctionParameter{
 					Name: Name{
