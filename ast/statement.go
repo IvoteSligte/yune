@@ -63,10 +63,11 @@ func (d VariableDeclaration) GetFlags() Flags {
 
 // Lower implements Statement.
 func (d VariableDeclaration) Lower(state *State, isLast bool) cpp.Statement {
+	_type := d.Type.Lower() // TODO: actually register the type too (if a StructType)
 	lowered := fmt.Sprintf(`%s %s = %s;`,
-		d.Type.Lower(), // TODO: actually register the type too (if a StructType)
+		_type,
 		d.Name.Lower(),
-		cpp.LambdaBlock(d.Body.Lower(state), d.hasLocalCaptures),
+		cpp.LambdaBlock(d.Body.Lower(state), _type, d.hasLocalCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"
@@ -91,6 +92,7 @@ type Assignment struct {
 	Op          AssignmentOp
 	Body        Block
 	HasCaptures bool
+	targetType  TypeValue
 }
 
 func (a *Assignment) GetSpan() Span {
@@ -98,13 +100,13 @@ func (a *Assignment) GetSpan() Span {
 }
 
 // Analyze implements Statement.
-func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) (_type TypeValue) {
-	targetType := a.Target.Analyze(nil, anal)
+func (a *Assignment) Analyze(expected TypeValue, anal Analyzer) TypeValue {
+	a.targetType = a.Target.Analyze(nil, anal)
 	scope := anal.NewScope()
-	bodyType := a.Body.Analyze(targetType, scope)
-	if !IsSubType(bodyType, targetType) {
+	bodyType := a.Body.Analyze(a.targetType, scope)
+	if !IsSubType(bodyType, a.targetType) {
 		anal.ReportError(AssignmentTypeMismatch{
-			Expected: targetType,
+			Expected: a.targetType,
 			Found:    bodyType,
 			At:       a.Body.GetSpan(),
 		})
@@ -122,7 +124,7 @@ func (a *Assignment) Lower(state *State, isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s %s;`,
 		a.Target.Name.String,
 		a.Op,
-		cpp.LambdaBlock(a.Body.Lower(state), a.HasCaptures),
+		cpp.LambdaBlock(a.Body.Lower(state), a.targetType.LowerType(), a.HasCaptures),
 	)
 	if isLast {
 		lowered += "\nreturn std::make_tuple();"

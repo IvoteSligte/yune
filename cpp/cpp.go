@@ -9,12 +9,12 @@ type Type = string
 
 // A code block in the form of a Lambda function that is immediately invoked.
 // This is a way to allow code blocks to be used where expressions can be used.
-func LambdaBlock(b []Statement, hasLocalCaptures bool) string {
+func LambdaBlock(block []Statement, _type Type, hasLocalCaptures bool) string {
 	captureSymbol := ""
 	if hasLocalCaptures {
 		captureSymbol = "="
 	}
-	return "[" + captureSymbol + "](){" + strings.Join(b, "") + "}()"
+	return "[" + captureSymbol + "]() -> " + _type + " {" + strings.Join(block, "") + "}()"
 }
 
 func String(s string) string {

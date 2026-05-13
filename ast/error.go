@@ -7,9 +7,12 @@ import (
 )
 
 func makeCodeError(errorText string, span Span, message string) string {
-	var sourceLine string
 	lines := slices.Collect(strings.Lines(span.Source))
 	span.Line = max(0, min(span.Line, len(lines)-1))
+	sourceLine := ""
+	if len(lines) > 0 {
+		sourceLine = lines[span.Line]
+	}
 	if len(sourceLine) > 0 && sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]
 	}

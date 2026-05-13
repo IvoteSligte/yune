@@ -161,6 +161,8 @@ sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
     index < len(tokens) -> expected("EOF")
     inject(tokens)
 
+// TODO: NUMBER, check if variable $variable is defined
+
 main(): () =
     grade  := 9
     result := sql#
@@ -168,4 +170,4 @@ main(): () =
         FROM students
         WHERE grade > $grade
 
-// TODO: NUMBER, check if variable $variable is defined
+    printTokens(result, 0)

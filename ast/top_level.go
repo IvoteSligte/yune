@@ -210,7 +210,7 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 		})
 	}
 	hasCaptures := len(*scope.Table.localCaptures) > 0
-	d.value = anal.Evaluate(cpp.LambdaBlock(d.Body.Lower(anal.State), hasCaptures), nil)
+	d.value = anal.Evaluate(cpp.LambdaBlock(d.Body.Lower(anal.State), declaredType.LowerType(), hasCaptures), nil)
 	anal.Define(d)
 }
 
