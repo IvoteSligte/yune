@@ -25,16 +25,18 @@ skipSpace(): () =
         skipSpace()
 
 isSym(char: String): Bool =
-    stringContainsOnly(char, "=<>(),*$")
+    stringContains("=<>(),*$", char)
 
 nextSym(): Token =
     char := at(text, offset)
     offset += 1
     (offset-1, char, char)
 
-nextAlnum(start: Offset): Token =
-    println(toString(offset) + " " + toString(len(text)))
-    (offset >= len(text)) or isSpace(at(text, offset)) ->
+isIdentChar(char: String): Bool =
+    isAlnum(char) or (char == "_")
+
+nextIdent(start: Offset): Token =
+    (offset >= len(text)) or ;isIdentChar(at(text, offset)) ->
         content := toUpper(subString(text, start, offset))
         kind :=
             content == "SELECT" -> "SELECT"
@@ -43,13 +45,13 @@ nextAlnum(start: Offset): Token =
             "IDENT"
         (start, kind, content)
     offset += 1
-    nextAlnum(start)
+    nextIdent(start)
 
 next(): Union[Token, Invalid, Eof] =
     skipSpace()
     offset >= len(text) -> EOF
     char := at(text, offset)
-    isAlnum(char) -> nextAlnum(offset)
+    isIdentChar(char) -> nextIdent(offset)
     isSym(char) -> nextSym()
     INVALID
 
@@ -58,7 +60,13 @@ tokenizeAll(list: List(Token)): Union[List(Token), Invalid] =
     result is eof: Eof -> list
     result is invalid: Invalid -> invalid
     result is token: Token
-    append(list, token)
+    tokenizeAll(append(list, token))
+
+printTokens(list: List(Token), i: Int): () =
+    i >= len(list) -> ()
+    (offset: Offset, kind: TokenKind, content: String) = get(list, i)
+    println(kind + " " + "`" + content + "`")
+    printTokens(list, i+1)
 
 tokens: List(Token) = []
 index: Int = 0
@@ -75,16 +83,18 @@ consume(): () = index += 1
 take(kind: TokenKind): Bool =
     isKind := peekKind() == kind
     () =
-        isKind -> consume()
+        isKind ->
+            consume()
     isKind
 
 expected(e: String): Error =
     index >= len(tokens) -> (len(text), "Expected " + e + " but found EOF")
-    (offset: Offset, kind: TokenKind, content: String) = get(tokens, index)
-    (offset, "Expected " + e + " but found " + peekKind())
+    (tokenOffset: Offset, kind: TokenKind, content: String) = get(tokens, index)
+    (tokenOffset, "Expected " + e + " but found " + peekKind())
 
 parseSelect(): Result =
-    take("SELECT") -> 
+    println("::: parseSelect")
+    take("SELECT") ->
         take("*") ->
             parseFrom()
         take("IDENT") ->
@@ -98,6 +108,7 @@ parseSelectFields(): () =
     take(",") -> take("IDENT") -> parseSelectFields()
 
 parseFrom(): Result =
+    println("::: parseFrom")
     take("FROM") ->
         take("IDENT") -> 
             parseWhere()
@@ -105,6 +116,7 @@ parseFrom(): Result =
     expected("FROM")
 
 parseWhere(): Result =
+    println("::: parseWhere")
     take("WHERE") ->
         take("IDENT") ->
             take("=") or take(">") or take("<") ->
@@ -138,6 +150,9 @@ sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
     result is lexedTokens: List(Token)
     tokens = lexedTokens
     index = 0
+
+    printTokens(tokens, 0)
+    println("num tokens: " + intToString(len(tokens)))
 
     result := parseSelect()
     result is error: Error -> error

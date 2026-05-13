@@ -48,12 +48,14 @@ findChar(text: String, offset: Int, char: String): Union[Int, ()] =
         findChar(text, offset + 1, char)
 
 stringContains(string: String, char: String): Bool =
-    len(string) == 0 -> true
+    len(string) == 0 -> false
+    len(string) == 1 -> at(string, 0) == char
     at(string, 0) == char -> true
     stringContains(subString(string, 1, len(string)), char)
 
 stringContainsOnly(string: String, charSet: String): Bool =
     len(string) == 0 -> true
+    len(string) == 1 -> stringContains(charSet, at(string, 0))
     ;stringContains(charSet, at(string, 0)) -> false
     stringContainsOnly(subString(string, 1, len(string)), charSet)
 
