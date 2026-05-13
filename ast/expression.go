@@ -249,39 +249,53 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 			})
 		}
 		return &IntType{}
-	// append(List(<any type>)): List(<same element type as argument>)
+	// append(List(<element type>), <element type>): List(<element type>)
 	case "append":
 		argumentType := f.Argument.Analyze(nil, anal)
-		_, isListType := argumentType.(*ListType)
-		if !isListType {
+		tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+		checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
+		firstArgumentType := tupleArgumentType.Elements[0]
+		firstArgumentListType, firstArgumentIsList := firstArgumentType.(*ListType)
+		if !firstArgumentIsList {
 			anal.ReportError(ExpectedList{
 				Found: argumentType,
 				At:    f.Argument.GetSpan(),
 			})
 		}
-		return argumentType
+		listElementType := firstArgumentListType.Element
+		secondArgumentType := tupleArgumentType.Elements[1]
+		if !listElementType.Eq(secondArgumentType) {
+			anal.ReportError(UnexpectedType{
+				Expected: listElementType,
+				Found:    secondArgumentType,
+				At:       f.Argument.(*Tuple).Elements[1].GetSpan(),
+			})
+		}
+		f.parameterIsTuple = true
+		return firstArgumentListType
 	// get(List(<any type>), Int): <same element type as argument>
 	case "get":
 		argumentType := f.Argument.Analyze(nil, anal)
 		tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
 		checkTupleTypeArity(tupleArgumentType, 2, f.Argument.GetSpan(), anal)
-		firstElementType := tupleArgumentType.Elements[0]
-		firstElementListType, firstElementIsList := firstElementType.(*ListType)
-		if !firstElementIsList {
+		firstArgumentType := tupleArgumentType.Elements[0]
+		firstArgumentListType, firstArgumentIsList := firstArgumentType.(*ListType)
+		if !firstArgumentIsList {
 			anal.ReportError(ExpectedList{
-				Found: firstElementType,
+				Found: firstArgumentType,
 				At:    f.Argument.(*Tuple).Elements[0].GetSpan(),
 			})
 		}
-		secondElementType := tupleArgumentType.Elements[1]
-		if !secondElementType.Eq(&IntType{}) {
+		secondArgumentType := tupleArgumentType.Elements[1]
+		if !secondArgumentType.Eq(&IntType{}) {
 			anal.ReportError(UnexpectedType{
 				Expected: &IntType{},
-				Found:    secondElementType,
+				Found:    secondArgumentType,
 				At:       f.Argument.(*Tuple).Elements[1].GetSpan(),
 			})
 		}
-		return firstElementListType.Element
+		f.parameterIsTuple = true
+		return firstArgumentListType.Element
 	default:
 		return nil
 	}

@@ -19,8 +19,8 @@ Eof: Type = ()
 EOF: Eof = ()
 
 skipSpace(): () =
-    char := at(text, offset)
-    isSpace(char) ->
+    offset >= len(text) -> ()
+    isSpace(at(text, offset)) ->
         offset += 1
         skipSpace()
 
@@ -33,21 +33,22 @@ nextSym(): Token =
     (offset-1, char, char)
 
 nextAlnum(start: Offset): Token =
+    println(toString(offset) + " " + toString(len(text)))
     (offset >= len(text)) or isSpace(at(text, offset)) ->
         content := toUpper(subString(text, start, offset))
-        kind := "IDENT"
-        () =
-            content == "SELECT" -> kind = "SELECT"
-            content == "FROM" -> kind = "FROM"
-            content == "WHERE" -> kind = "WHERE"
+        kind :=
+            content == "SELECT" -> "SELECT"
+            content == "FROM" -> "FROM"
+            content == "WHERE" -> "WHERE"
+            "IDENT"
         (start, kind, content)
     offset += 1
     nextAlnum(start)
 
 next(): Union[Token, Invalid, Eof] =
+    skipSpace()
     offset >= len(text) -> EOF
     char := at(text, offset)
-    skipSpace()
     isAlnum(char) -> nextAlnum(offset)
     isSym(char) -> nextSym()
     INVALID
@@ -70,8 +71,6 @@ handle(result: Union[Token, Invalid, Eof]): Union[Token, Error] =
 tokens: List(Token) = []
 index: Int = 0
 
-nextToken(): Token = get(tokens, index)
-
 Result: Type = Union[Error, ()]
 
 peekKind(): TokenKind =
@@ -83,15 +82,14 @@ consume(): () = index += 1
 
 take(kind: TokenKind): Bool =
     isKind := peekKind() == kind
-    () = isKind() -> consume()
+    () =
+        isKind -> consume()
     isKind
 
-expected(expected: String): String =
-    "Expected " + expected
+expected(e: String): String =
+    "Expected " + e + " but found " + peekKind()
 
 parseSelect(): Result =
-    // TODO: check remaining tokens
-
     take("SELECT") -> 
         take("*") ->
             parseFrom()
@@ -143,9 +141,11 @@ sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
     result is invalid: Invalid ->
         char := at(text, offset)
         "Invalid character: " + char // TODO: span in error
-    result is tokens: List(Token)
+    result is lexedTokens: List(Token)
+    tokens = lexedTokens
+    index = 0
 
-    result := parseSelect(tokens)
+    result := parseSelect()
     result is error: Error -> error
     result is ok: ()
     index < len(tokens) -> expected("EOF")

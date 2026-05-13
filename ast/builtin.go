@@ -127,7 +127,7 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 	// extracts an element from a list
 	{"get", &FnType{
 		// (list: List(<any type>), index: Int)
-		Argument: &UnionType{},
+		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &IntType{}}},
 		// <element type>
 		Return: &UnionType{},
 	}, 0},

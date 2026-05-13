@@ -664,11 +664,13 @@ inline struct variableExpression_f {
 } variableExpression;
 
 inline struct unaryExpression_ {
-  Expression_t operator()(int location, String_t op, Expression_t expression) const {
+  Expression_t operator()(int location, String_t op,
+                          Expression_t expression) const {
     if (op != ";" && op != "-") {
       panic(std::format("Invalid unary operator: '{}'", op));
     }
-    return box_f(UnaryExpression_t{.location = location, .op = op, .expression = expression});
+    return box_f(UnaryExpression_t{
+        .location = location, .op = op, .expression = expression});
   }
   std::string toJson_() const { return R"({ "Function": "unaryExpression" })"; }
 } unaryExpression;
@@ -680,7 +682,8 @@ inline struct binaryExpression_ {
         op != ">") {
       panic(std::format("Invalid binary operator: '{}'", op));
     }
-    return box_f(BinaryExpression_t{.location = location, .op = op, .left = left, .right = right});
+    return box_f(BinaryExpression_t{
+        .location = location, .op = op, .left = left, .right = right});
   }
   std::string toJson_() const {
     return R"({ "Function": "binaryExpression" })";
@@ -688,9 +691,10 @@ inline struct binaryExpression_ {
 } binaryExpression;
 
 inline struct functionCallExpression_f {
-  Expression_t operator()(int location, Expression_t function, Expression_t argument) const {
-    return box_f(
-                 FunctionCallExpression_t{.location = location, .function = function, .argument = argument});
+  Expression_t operator()(int location, Expression_t function,
+                          Expression_t argument) const {
+    return box_f(FunctionCallExpression_t{
+        .location = location, .function = function, .argument = argument});
   }
   std::string toJson_() const {
     return R"({ "Function": "functionCallExpression" })";
@@ -707,11 +711,13 @@ inline struct expressionStatement_f {
 } expressionStatement;
 
 inline struct closureExpression_f {
-  Expression_t operator()(int location, List_t<std::tuple<String_t, Expression_t>> parameters,
+  Expression_t operator()(int location,
+                          List_t<std::tuple<String_t, Expression_t>> parameters,
                           Expression_t returnType, Block_t body) const {
-    return box_f(ClosureExpression_t{
-.location = location,         
-        .parameters = parameters, .returnType = returnType, .body = body});
+    return box_f(ClosureExpression_t{.location = location,
+                                     .parameters = parameters,
+                                     .returnType = returnType,
+                                     .body = body});
   }
   std::string toJson_() const {
     return R"({ "Function": "closureExpression" })";
@@ -720,7 +726,8 @@ inline struct closureExpression_f {
 
 inline struct macroExpression_f {
   Expression_t operator()(int location, String_t macro, String_t text) const {
-    return box_f(MacroExpression_t{.location = location, .macro = macro, .text = text});
+    return box_f(
+        MacroExpression_t{.location = location, .macro = macro, .text = text});
   }
   std::string toJson_() const { return R"({ "Function": "macroExpression" })"; }
 } macroExpression;
@@ -760,7 +767,8 @@ inline struct printlnString_f {
 } printlnString;
 
 inline struct len_f {
-  template <class T = int> int operator()(Union_t<String_t, List_t<T>> u) const {
+  template <class T = int>
+  int operator()(Union_t<String_t, List_t<T>> u) const {
     if (std::holds_alternative<String_t>(u)) {
       String_t s = std::get<String_t>(u);
       return s.length();
@@ -769,31 +777,44 @@ inline struct len_f {
       return l.length();
     }
   }
+  template <class T = int> int operator()(List_t<T> l) const {
+    return l.size();
+  }
+  int operator()(String_t s) const { return s.length(); }
 
   std::string toJson_() const { return R"({ "Function": "len" })"; }
 } len;
 
 inline struct get_f {
-  template <class T = int> int operator()(List_t<T> l, int index) const {
-    if (index < 0 || index >= l.size()) {
+  template <class T = int> T operator()(List_t<T> list, int index) const {
+    if (index < 0 || index >= list.size()) {
       panic("get: list index out of bounds");
     }
-    return l[index];
+    return list[index];
   }
 
   std::string toJson_() const { return R"({ "Function": "get" })"; }
 } get;
 
+inline struct append_f {
+  template <class T = int>
+  List_t<T> operator()(List_t<T> list, T element) const {
+    list.push_back(element);
+    return list;    
+  }
+  std::string toJson_() const { return R"({ "Function": "append" })"; }
+} append;
+
 inline struct subString_f {
   String_t operator()(String_t s, int start, int end) const {
     if (start < 0) {
-      panic("subString: start < 0");
+      panic(std::format("subString: start ({}) < 0", start));
     }
     if (end > s.length()) {
-      panic("subString: end > len");
+      panic(std::format("subString: end ({}) > len ({})", end, s.length()));
     }
     if (end < start) {
-      panic("subString: end < start");
+      panic(std::format("subString: end ({}) < start ({})", end, start));
     }
     return s.substr(start, end - start);
   }

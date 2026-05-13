@@ -138,7 +138,8 @@ func (n Name) Lower() string {
 		"wchar_t",
 		"while",
 		"xor",
-		"xor_eq":
+		"xor_eq",
+		"EOF":
 		return n.String + "_"
 	default:
 		return n.String
