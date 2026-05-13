@@ -111,7 +111,12 @@ tuple
     ;
 
 macro
-    : variable HASHTAG (MACROLINE NEWLINE)* MACROLINE
+    : variable HASHTAG (macroLine NEWLINE)* macroLine
+    ;
+
+macroLine
+    : EMPTYMACROLINE
+    | MACROLINE
     ;
 
 closure

@@ -95,6 +95,7 @@ func UnmarshalSpan(data *fj.Value, in *Macro) Span {
 	}
 	macroText := in.GetText()
 	location = max(0, min(location, len(macroText)-1))
+
 	// within the macro
 	lineNumber := strings.Count(macroText[:location], "\n")
 	lineStart := strings.LastIndex(macroText[:location], "\n")

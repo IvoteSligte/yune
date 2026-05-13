@@ -170,20 +170,36 @@ func LowerVariable(ctx IVariableContext) ast.Variable {
 	}
 }
 
+func LowerMacroLine(ctx IMacroLineContext) (line int, column int, text string) {
+	if ctx.EMPTYMACROLINE() != nil {
+		macroLine := ctx.EMPTYMACROLINE()
+		line = macroLine.GetSymbol().GetLine()
+		column = macroLine.GetSymbol().GetColumn()
+		return
+	} else {
+		macroLine := ctx.MACROLINE()
+		line = macroLine.GetSymbol().GetLine()
+		column = macroLine.GetSymbol().GetColumn()
+		text = macroLine.GetText()
+		return
+	}
+}
+
 func LowerMacro(ctx IMacroContext) ast.Macro {
 	return ast.Macro{
 		Span:     GetSpan(ctx),
 		Function: LowerVariable(ctx.Variable()),
-		Lines: util.Map(ctx.AllMACROLINE(), func(macroLine antlr.TerminalNode) ast.MacroLine {
+		Lines: util.Map(ctx.AllMacroLine(), func(lineCtx IMacroLineContext) ast.MacroLine {
+			line, column, text := LowerMacroLine(lineCtx)
 			return ast.MacroLine{
 				Span: ast.Span{
 					File:   FileName,
 					Source: SourceCode,
-					Line:   macroLine.GetSymbol().GetLine(),
-					Column: macroLine.GetSymbol().GetColumn(),
-					Length: len(macroLine.GetText()),
+					Line:   line,
+					Column: column,
+					Length: len(text),
 				},
-				Text: macroLine.GetText(),
+				Text: text,
 			}
 		}),
 	}

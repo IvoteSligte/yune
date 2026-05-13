@@ -150,4 +150,4 @@ main(): () =
     result := sql#
         SELECT first_name, last_name, grade
         FROM students
-        WHERE grade > $grade        
+        WHERE grade > $grade

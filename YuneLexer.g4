@@ -3,7 +3,7 @@ lexer grammar YuneLexer;
 options { superClass=YuneLexerBase; }
 
 tokens {
-    INDENT, DEDENT, MACROLINE
+    INDENT, DEDENT, EMPTYMACROLINE, MACROLINE
 }
 
 LPAREN           : '(';

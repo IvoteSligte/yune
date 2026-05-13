@@ -162,7 +162,13 @@ func (l *YuneLexerBase) lexMacro() {
 		c := input.LA(1)
 		switch c {
 		case '\n':
-			l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+			if len(text) == 0 {
+				// Tokens cannot have no text in ANTLR, so use a separate token
+				// to signal it having no text.
+				l.pushToken(l.makeCommonToken(YuneParserEMPTYMACROLINE, text))
+			} else {
+				l.pushToken(l.makeCommonToken(YuneParserMACROLINE, text))
+			}
 			text = ""
 			l.pushToken(l.BaseLexer.NextToken())
 			indent := l.onMacroNewline()
