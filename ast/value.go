@@ -72,6 +72,14 @@ func UnmarshalArray(data *fj.Value, keys ...string) []*fj.Value {
 	return UnmarshalItem(data, (*fj.Value).Array, keys...)
 }
 
+func TryUnmarshalTuple(data *fj.Value) (elements []*fj.Value, ok bool) {
+	key, v := fjUnmarshalStruct(data.GetObject())
+	if key != "Tuple" {
+		return
+	}
+	return UnmarshalArray(v, "elements"), true
+}
+
 func UnmarshalTuple(data *fj.Value) []*fj.Value {
 	key, v := fjUnmarshalStruct(data.GetObject())
 	if key != "Tuple" {
@@ -81,18 +89,12 @@ func UnmarshalTuple(data *fj.Value) []*fj.Value {
 }
 
 func UnmarshalSpan(data *fj.Value, in *Macro) Span {
-	v := data.Get("location")
-	if v == nil {
-		log.Panicf("JSON does not have the expected 'location' field. JSON: %s\n", data)
-	}
-	location, err := v.Int()
+	location, err := data.Int()
 	if err != nil {
 		log.Panicf("Failed to extract location from JSON. Error: `%s`. JSON: %s\n", err, data)
 	}
 	macroText := in.GetText()
-	if location >= len(macroText) {
-		return in.Lines[0].Span
-	}
+	location = max(0, min(location, len(macroText)-1))
 	// within the macro
 	lineNumber := strings.Count(macroText[:location], "\n")
 	lineStart := strings.LastIndex(macroText[:location], "\n")
@@ -109,4 +111,12 @@ func UnmarshalSpan(data *fj.Value, in *Macro) Span {
 		Column: column,
 		Length: 0,
 	}
+}
+
+func UnmarshalLocation(data *fj.Value, in *Macro) Span {
+	v := data.Get("location")
+	if v == nil {
+		log.Panicf("JSON does not have the expected 'location' field. JSON: %s\n", data)
+	}
+	return UnmarshalSpan(v, in)
 }

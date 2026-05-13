@@ -59,16 +59,13 @@ func (a Analyzer) HasErrors() bool {
 }
 
 // Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
-func (a Analyzer) Evaluate(lowered cpp.Expression) (json *fj.Value) {
+// `in` should be non-nil if a macro is being evaluated.
+func (a Analyzer) Evaluate(lowered cpp.Expression, in *Macro) (json *fj.Value) {
 	getType := func(name string) cpp.Type {
 		span := Span{} // TODO: span
 		decl, ok := a.Table.Get(Name{String: name, Span: span})
 		if !ok {
-			a.ReportError(MacroRequestedUndefinedVariable{
-				// TODO
-				Macro: Variable{Name: Name{Span: Span{}, String: "<unknown>"}},
-				Name:  name,
-			})
+			a.ReportError(MacroRequestedUndefinedVariable{Macro: in, Name: name})
 		}
 		return decl.GetDeclaredType().LowerValue()
 	}

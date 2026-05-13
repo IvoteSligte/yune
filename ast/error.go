@@ -9,12 +9,8 @@ import (
 func makeCodeError(errorText string, span Span, message string) string {
 	var sourceLine string
 	lines := slices.Collect(strings.Lines(span.Source))
-	if span.Line <= 0 || span.Line > len(lines) {
-		sourceLine = "<unknown source code>"
-	} else {
-		sourceLine = lines[span.Line-1]
-	}
-	if sourceLine[len(sourceLine)-1] == '\n' {
+	span.Line = max(0, min(span.Line, len(lines)-1))
+	if len(sourceLine) > 0 && sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]
 	}
 	leftPad := strings.Repeat(" ", len(fmt.Sprintf("%d", span.Line)))
@@ -260,28 +256,32 @@ func (e CyclicConstantDependency) Error() string {
 }
 
 type MacroRequestedUndefinedVariable struct {
-	Macro Variable
+	Macro *Macro
 	Name  string
 }
 
 func (e MacroRequestedUndefinedVariable) Error() string {
 	// TODO: use span of e.Name instead of e.Macro
+	name := e.Macro.Function.Name
 	return fmt.Sprintf(
 		"Macro '%s' requested undefined variable '%s' at %s.",
-		e.Macro.Name.String, e.Name, e.Macro.Name.Span,
+		name.String, e.Name, name.Span,
 	)
 }
 
 type MacroOutputError struct {
-	Macro   Variable
+	Macro   *Macro
 	Message string
+	At      Span
 }
 
 func (e MacroOutputError) Error() string {
-	return fmt.Sprintf(
-		"Macro '%s' at %s returned error: %s",
-		e.Macro.Name.String, e.Macro.Name.Span, e.Message,
+	name := e.Macro.Function.Name
+	errorText := fmt.Sprintf(
+		"Macro '%s' at %s returned error.",
+		name.String, name.Span,
 	)
+	return makeCodeError(errorText, e.At, e.Message)
 }
 
 type ImpureGlobalVariable struct {

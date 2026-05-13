@@ -42,8 +42,11 @@ var MacroFunctionType = &FnType{
 		&StringType{},
 		&FnType{Argument: &StringType{}, Return: &TypeType{}},
 	}},
-	// (error String, result Expression)
-	Return: &UnionType{Variants: []TypeValue{&StringType{}, ExpressionType}},
+	// (error (Int, String), result Expression)
+	Return: &UnionType{Variants: []TypeValue{
+		&TupleType{Elements: []TypeValue{&IntType{}, &StringType{}}},
+		ExpressionType,
+	}},
 }
 
 type TypeValue interface {

@@ -547,14 +547,17 @@ func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	v := anal.Evaluate(fmt.Sprintf(
 		`(%s)(%q, getType_c)`,
 		m.Function.Lower(anal.State), m.GetText(),
-	))
+	), m)
 	// v is Union[String, Expression]
 	// First try to unmarshal a String.
-	errorBytes := v.GetStringBytes()
-	if errorBytes != nil {
+	errorTupleElements, isErrorTuple := TryUnmarshalTuple(v)
+	if isErrorTuple {
+		at := UnmarshalSpan(errorTupleElements[0], m)
+		message := UnmarshalNonEmptyString(errorTupleElements[1])
 		anal.ReportError(MacroOutputError{
-			Macro:   m.Function,
-			Message: string(errorBytes),
+			Macro:   m,
+			Message: message,
+			At:      at,
 		})
 	}
 	m.Result = UnmarshalExpression(v, m)
@@ -960,54 +963,54 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 	switch key {
 	case "IntegerExpression":
 		expr = &Integer{
-			Span:  UnmarshalSpan(v, in),
+			Span:  UnmarshalLocation(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Int64, "value"),
 		}
 	case "FloatExpression":
 		expr = &Float{
-			Span:  UnmarshalSpan(v, in),
+			Span:  UnmarshalLocation(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Float64, "value"),
 		}
 	case "BoolExpression":
 		expr = &Bool{
-			Span:  UnmarshalSpan(v, in),
+			Span:  UnmarshalLocation(v, in),
 			Value: UnmarshalItem(v, (*fj.Value).Bool, "value"),
 		}
 	case "StringExpression":
 		expr = &String{
-			Span:  UnmarshalSpan(v, in),
+			Span:  UnmarshalLocation(v, in),
 			Value: UnmarshalString(v, "value"), // can be empty
 		}
 	case "VariableExpression":
 		expr = &Variable{
 			Name: Name{
-				Span:   UnmarshalSpan(v, in),
+				Span:   UnmarshalLocation(v, in),
 				String: UnmarshalNonEmptyString(v, "name"),
 			},
 		}
 	case "FunctionCallExpression":
 		expr = &FunctionCall{
-			Span:     UnmarshalSpan(v, in),
+			Span:     UnmarshalLocation(v, in),
 			Function: UnmarshalExpression(v.Get("function"), in),
 			Argument: UnmarshalExpression(v.Get("argument"), in),
 		}
 	case "ListExpression":
 		expr = &List{
-			Span: UnmarshalSpan(v, in),
+			Span: UnmarshalLocation(v, in),
 			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
 				return UnmarshalExpression(v, in)
 			}),
 		}
 	case "TupleExpression":
 		expr = &Tuple{
-			Span: UnmarshalSpan(v, in),
+			Span: UnmarshalLocation(v, in),
 			Elements: util.Map(v.Get("elements").GetArray(), func(v *fj.Value) Expression {
 				return UnmarshalExpression(v, in)
 			}),
 		}
 	case "MacroExpression":
 		expr = &Macro{
-			Span:     UnmarshalSpan(v, in),
+			Span:     UnmarshalLocation(v, in),
 			Function: Variable{Name: Name{String: UnmarshalNonEmptyString(v, "macro"), Span: Span{}}},
 			Lines: util.Map(strings.Split(UnmarshalString(v, "text"), "\n"), func(s string) MacroLine {
 				return MacroLine{Span: Span{}, Text: s} // TODO: set span
@@ -1015,13 +1018,13 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 		}
 	case "UnaryExpression":
 		expr = &UnaryExpression{
-			Span:       UnmarshalSpan(v, in),
+			Span:       UnmarshalLocation(v, in),
 			Op:         UnaryOp(UnmarshalNonEmptyString(v, "op")),
 			Expression: UnmarshalExpression(v.Get("expression"), in),
 		}
 	case "BinaryExpression":
 		expr = &BinaryExpression{
-			Span:  UnmarshalSpan(v, in),
+			Span:  UnmarshalLocation(v, in),
 			Op:    BinaryOp(UnmarshalNonEmptyString(v, "op")),
 			Left:  UnmarshalExpression(v.Get("left"), in),
 			Right: UnmarshalExpression(v.Get("right"), in),
@@ -1030,7 +1033,7 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 		panic("unimplemented")
 	case "ClosureExpression":
 		expr = &Closure{
-			Span: UnmarshalSpan(v, in),
+			Span: UnmarshalLocation(v, in),
 			Parameters: util.Map(v.GetArray("parameters"), func(v *fj.Value) FunctionParameter {
 				elements := UnmarshalTuple(v)
 				return FunctionParameter{
@@ -1045,7 +1048,7 @@ func UnmarshalExpression(data *fj.Value, in *Macro) (expr Expression) {
 			Body:       UnmarshalBlock(v.Get("body"), in),
 		}
 	case "ValueExpression":
-		expr = &ValueExpression{Span: UnmarshalSpan(v, in), value: v.Get("value")}
+		expr = &ValueExpression{Span: UnmarshalLocation(v, in), value: v.Get("value")}
 	case "Box": // boxing is irrelevant when unmarshalling expressions
 		expr = UnmarshalExpression(v, in)
 	default:

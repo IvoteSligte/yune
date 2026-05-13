@@ -1,7 +1,7 @@
 
 import "std.un"
 
-Error: Type = String
+Error: Type = (Int, String)
 
 text: String = "<default>"
 offset: Int = 0
@@ -60,14 +60,6 @@ tokenizeAll(list: List(Token)): Union[List(Token), Invalid] =
     result is token: Token
     append(list, token)
 
-handle(result: Union[Token, Invalid, Eof]): Union[Token, Error] =
-    result is invalid: Invalid ->
-        char := at(text, offset)
-        "Invalid character: " + char // TODO: span in error
-    result is eof: Eof -> "Unexpected EOF"
-    result is token: Token
-    token
-
 tokens: List(Token) = []
 index: Int = 0
 
@@ -86,8 +78,10 @@ take(kind: TokenKind): Bool =
         isKind -> consume()
     isKind
 
-expected(e: String): String =
-    "Expected " + e + " but found " + peekKind()
+expected(e: String): Error =
+    index >= len(tokens) -> (len(text), "Expected " + e + " but found EOF")
+    (offset: Offset, kind: TokenKind, content: String) = get(tokens, index)
+    (offset, "Expected " + e + " but found " + peekKind())
 
 parseSelect(): Result =
     take("SELECT") -> 
@@ -140,7 +134,7 @@ sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
     result := tokenizeAll([])
     result is invalid: Invalid ->
         char := at(text, offset)
-        "Invalid character: " + char // TODO: span in error
+        (offset, "Invalid character: " + char)
     result is lexedTokens: List(Token)
     tokens = lexedTokens
     index = 0
