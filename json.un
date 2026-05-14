@@ -192,7 +192,7 @@ parseElements(list: List(Expression)): Union[List(Expression), Fail] =
     skipSpace()
     take(",") ->
         result := parseElements(list)
-        result is noMatch: () -> err("Expected expression (parseElements)")
+        result is noMatch: () -> err("Expected expression")
         result
 
     list
@@ -225,7 +225,7 @@ parse(index: Int): Result =
 
 mustParse(): Union[Expression, Error] =
     result := parse(0)
-    result is noMatch: () -> err("Expected expression (mustParse)")
+    result is noMatch: () -> err("Expected expression")
     result is output: Union[Expression, Error]
     output
 
@@ -239,11 +239,11 @@ main(): () =
     pi := 3.141
     value := json#
         {
-            "pi": pi,
+            "pi": unknown,
             "happy": true,
             "name": "Yune",
             "nothing": null,
-            "answer": { 5 "everything": 42 },
+            "answer": { "everything": 42 },
             "list": [1, 0, 2],
             "object": {
                 "currency": "EUR",
