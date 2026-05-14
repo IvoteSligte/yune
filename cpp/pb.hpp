@@ -362,7 +362,7 @@ inline std::string toJson_(const String_t &s) {
   return oss.str();
 }
 inline std::string toJson_(const int &i) { return std::to_string(i); }
-inline std::string toJson_(const bool &b) { return std::to_string(b); }
+inline std::string toJson_(const bool &b) { return b ? "true" : "false"; }
 inline std::string toJson_(const float &f) { return std::to_string(f); }
 
 inline std::string toJson_(const TypeType_t &) {
@@ -843,8 +843,7 @@ inline struct subString_f {
   std::string toJson_() const { return R"({ "Function": "subString" })"; }
 } subString;
 
-template <typename U, typename... T>
-bool isSubset_(U _union) {
+template <typename U, typename... T> bool isSubset_(U _union) {
   bool found = (std::holds_alternative<T>(_union.variant) || ...);
   return found;
 }
@@ -853,8 +852,7 @@ template <typename U, typename T> bool isVariant_(U _union) {
   return std::holds_alternative<T>(_union.variant);
 }
 
-template <typename U, typename... T>
-Union_t<T...> getSubset_(U _union) {
+template <typename U, typename... T> Union_t<T...> getSubset_(U _union) {
   std::optional<Union_t<T...>> result;
   (
       [&] {

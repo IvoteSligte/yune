@@ -106,7 +106,7 @@ type String struct {
 }
 
 func (s *String) String() string {
-	return fmt.Sprintf("%q", s.Value)
+	return fmt.Sprintf(`%q`, s.Value)
 }
 
 // GetSpan implements Expression.

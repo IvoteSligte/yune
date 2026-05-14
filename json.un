@@ -7,13 +7,14 @@ Fail: Type = Union[Error, ()]
 Result: Type = Union[Expression, Fail]
 
 GetType: Type = Fn(String, Type)
+Parser: Type = Fn((), Result)
 
 text: String = "<default>"
 offset: Int = 0
 getType: GetType = |s: String|: Type = ()
 
 peek(): String =
-    offset >= len(text) -> "EOF"
+    offset >= len(text) -> "%EOF%"
     at(text, offset)
 
 next(): String =
@@ -37,10 +38,11 @@ skipSpace(): () =
     takeIf(isSpace) ->
         skipSpace()
 
-err(message: String): Error = (offset, message)
+err(message: String): Error =
+    (offset, message + " at '" + peek() + "'")
 
 checkEOF(expected: String): Union[Error, ()] =
-    offset >= len(text) -> err("Expected '" + expected + "', but found EOF")
+    offset >= len(text) -> err("Expected '" + expected + "'")
 
 digitSeq(): String =
     ;isDigits(peek()) -> ""
@@ -60,12 +62,11 @@ stripLeadingZeros(string: String): String =
     string
 
 parseUint(start: Offset): Union[Int, ()] =
-    ;isDigits(peek()) ->
-        start > offset ->
-            stringToUint(subString(text, start, offset)) is uint: Int
-            uint
-    offset += 1
-    parseUint(start)
+    takeIf(isDigits) ->
+        parseUint(start)
+    offset > start ->
+        stringToUint(subString(text, start, offset)) is uint: Int
+        uint
 
 parseInt(): Union[Int, Error, ()] =
     take("-") ->
@@ -76,6 +77,7 @@ parseInt(): Union[Int, Error, ()] =
     parseUint(offset)
 
 parseNumber(): Result =
+    skipSpace()
     start := offset
     // integer part
     result := parseInt()
@@ -91,17 +93,20 @@ parseNumber(): Result =
     // fractional part
     parseUint(offset) is fraction: Int ->
         floatExpression(start, toFloat(int) + toFloat(fraction) / toFloat(pow(10, fractionLength)))
+    floatExpression(start, toFloat(int))
 
-parseIdentOrBool(): Result =
+parseIdentOrKeyword(): Result =
+    skipSpace()
     start := offset
     ;isAlpha(peek()) -> ()
     ident := next() + alnumSeq()
     ident == "true" -> boolExpression(start, true)
     ident == "false" -> boolExpression(start, false)
+    ident == "null" -> tupleExpression(start, [])
     type := getType(ident)
-    type == Int or type == String or type == Bool ->
+    type == Int or type == Float or type == String or type == Bool ->
         variableExpression(start, ident)
-    err("Only variables of type Int, String, or Bool can be used")
+    err("Only variables of type Int, Float, String, or Bool can be used")
 
 parseStringSuffix(): Union[String, Fail] =
     checkEOF("\"") is error: Error -> error
@@ -122,6 +127,7 @@ parseStringSuffix(): Union[String, Fail] =
     char + suffix
 
 parseString(): Result =
+    skipSpace()
     start := offset
     take("\"") ->
         result := parseStringSuffix()
@@ -138,9 +144,11 @@ parseField(): Result =
     skipSpace()
     ;take(":") -> err("Expected ':'")
 
-    valueResult := parse(0)
-    valueResult is fail: Fail -> fail
+    println("field value before")
+    valueResult := mustParse()
+    valueResult is error: Error -> error
     valueResult is value: Expression
+    println("field value after")
 
     tupleExpression(start, [key, value])
 
@@ -151,20 +159,27 @@ parseFields(fields: List(Expression)): Union[List(Expression), Fail] =
     fields = append(fields, field)
 
     skipSpace()
-    take(",") -> parseFields(fields)
+    take(",") ->
+        result := parseFields(fields)
+        result is noMatch: () -> err("Expected field")
+        result
 
     fields
 
 parseObject(): Result =
+    skipSpace()
     start := offset
     ;take("{") -> ()
 
     result := parseFields([])
-    result is fail: Fail -> fail
-    result is fields: List(Expression)
+    result is error: Error -> error
+    fields: List(Expression) =
+        result is list: List(Expression) -> list
+        result is noMatch: ()
+        []
 
     skipSpace()
-    ;take("}") -> err("Expected '}'")
+    ;take("}") -> err("Expected string or '}'")
 
     listExpression(start, fields)
 
@@ -175,48 +190,56 @@ parseElements(list: List(Expression)): Union[List(Expression), Fail] =
     list = append(list, value)
 
     skipSpace()
-    take(",") -> parseElements(list)
+    take(",") ->
+        result := parseElements(list)
+        result is noMatch: () -> err("Expected expression (parseElements)")
+        result
 
     list
 
 parseList(): Result =
+    skipSpace()
     start := offset
     ;take("[") -> ()
     
     result := parseElements([])
-    result is fail: Fail -> fail
-    result is elements: List(Expression)
+    result is error: Error -> error
+    elements: List(Expression) =
+        result is list: List(Expression) -> list
+        result is noMatch: ()
+        []
 
     skipSpace()
     ;take("]") -> err("Expected ']'")
 
     listExpression(start, elements)
 
-Parser: Type = Fn((), Result)
-
-PARSERS: List(Parser) = [parseNumber, parseString, parseIdentOrBool, parseObject, parseList]
-
 parse(index: Int): Result =
-    skipSpace()
+    PARSERS: List(Parser) = [parseNumber, parseString, parseIdentOrKeyword, parseObject, parseList]    
     index < len(PARSERS) ->
         parser := get(PARSERS, index)
         result := parser()
         result is noMatch: () ->
             parse(index+1)
         result
-    err("Expected expression")
+
+mustParse(): Union[Expression, Error] =
+    result := parse(0)
+    result is noMatch: () -> err("Expected expression (mustParse)")
+    result is output: Union[Expression, Error]
+    output
 
 json(macroText: String, macroGetType: GetType): Union[Expression, Error] =
     text = macroText
     getType = macroGetType
     offset = 0
-    parse(0)
+    mustParse()
     
 main(): () =
     pi := 3.141
     value := json#
         {
-            "pi": pi, // variable capture
+            "pi": pi,
             "happy": true,
             "name": "Yune",
             "nothing": null,
@@ -227,5 +250,4 @@ main(): () =
                 "value": 42.99
             }
         }
-
 

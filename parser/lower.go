@@ -257,10 +257,12 @@ func LowerPrimaryExpression(ctx IPrimaryExpressionContext) ast.Expression {
 	case ctx.STRING() != nil:
 		s := ctx.STRING().GetText()
 		s = s[1 : len(s)-1] // strip ""
+		s = strings.ReplaceAll(s, `\r`, "\r")
 		s = strings.ReplaceAll(s, `\n`, "\n")
 		s = strings.ReplaceAll(s, `\t`, "\t")
 		s = strings.ReplaceAll(s, `\f`, "\f")
 		s = strings.ReplaceAll(s, `\\`, "\\")
+		s = strings.ReplaceAll(s, `\"`, "\"")
 		return &ast.String{
 			Span:  GetSpan(ctx),
 			Value: s,
