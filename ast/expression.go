@@ -884,8 +884,7 @@ func (c Closure) LowerParameters() string {
 	return util.JoinFunc(c.Parameters, ", ", FunctionParameter.Lower)
 }
 
-// Lower implements Expression.
-func (c *Closure) Lower(state *State) cpp.Expression {
+func (c *Closure) LowerComplex(state *State, captureValues map[string]string) cpp.Expression {
 	id := state.registerClosure(c)
 	fields := ""
 	captureArguments := ""
@@ -899,7 +898,11 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 			captureArguments += ", "
 			captures += ` + ", " + `
 		}
-		captureArguments += captureName
+		if captureValues == nil {
+			captureArguments += captureName // capture variable in environment
+		} else {
+			captureArguments += captureValues[captureName]
+		}
 		// not using newlines because these are automatically escaped by the evaluator
 		// which results in malformed JSON
 		captures += fmt.Sprintf(
@@ -933,6 +936,11 @@ func (c *Closure) Lower(state *State) cpp.Expression {
 		fields,
 		captureArguments)
 	return lowered
+}
+
+// Lower implements Expression.
+func (c *Closure) Lower(state *State) cpp.Expression {
+	return c.LowerComplex(state, nil)
 }
 
 func (r *RawString) GetSpan() Span {

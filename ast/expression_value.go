@@ -57,20 +57,11 @@ func (state *State) lowerClosureValue(v *fj.Value) string {
 	if closure == nil {
 		panic(fmt.Sprintf("Invalid closure ID: '%s'", id))
 	}
-	lowered := closure.Lower(state)
-	captures := ""
+	captureValues := map[string]string{}
 	for _, capture := range UnmarshalArray(v, "captures") {
 		name := string(capture.GetStringBytes("name"))
-		_type := state.UnmarshalTypeValue(capture.Get("type"))
 		value := state.lowerExpressionValue(capture.Get("value"))
-		captures += _type.LowerType() + " " + name + " = " + value + ";\n"
+		captureValues[name] = value
 	}
-	parameters := closure.LowerParameters()
-	arguments := util.JoinFunc(closure.Parameters, ", ", func(p FunctionParameter) string {
-		return p.Name.String
-	})
-	return fmt.Sprintf(`[](%s){
-    %s
-    return %s(%s);
-}`, parameters, captures, lowered, arguments)
+	return closure.LowerComplex(state, captureValues)
 }

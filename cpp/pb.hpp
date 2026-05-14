@@ -47,26 +47,35 @@ template <class T> Box_t<T> box_f(T &&value) {
   return std::make_shared<std::decay_t<T>>(std::forward<T>(value));
 }
 
+template <class... T> struct Union_t;
+
+template <class> struct is_union_t : std::false_type {};
+template <class... Ts> struct is_union_t<Union_t<Ts...>> : std::true_type {};
+
+template <class T>
+concept not_union_t = !is_union_t<std::remove_cvref_t<T>>::value;
+
 template <class... T> struct Union_t {
   // Create from element directly
   template <class U>
-    requires(std::is_same_v<std::decay_t<U>, T> || ...) // U is one of T
+    requires not_union_t<U> && (std::same_as<std::remove_cvref_t<U>, T> || ...)
   constexpr Union_t(U &&element) : variant(std::forward<U>(element)) {}
 
   // Create from element using an intermediate class
-  // Required to create a Union[String] from a const char*, for example
+  // Required to create a Union[String] from const char*, for example
   template <class U>
-    requires(std::is_constructible_v<U, T> ||
-             ...) && // any T can be constructed from U
-            (!(std::is_same_v<std::decay_t<U>, T> || ...)) // U is not one of T
+    requires not_union_t<U> && (std::constructible_from<T, U> || ...) &&
+             (!(std::same_as<std::remove_cvref_t<U>, T> || ...))
   constexpr Union_t(U &&element) : variant(std::forward<U>(element)) {}
 
   // Create from subset
   template <class... U>
   constexpr Union_t(const Union_t<U...> &subset)
-      : variant(std::visit([](auto &&element) constexpr
-                               -> std::variant<T...> { return element; },
-                           subset.variant)) {}
+      : variant(std::visit(
+            [](auto &&element) -> std::variant<T...> {
+              return std::variant<T...>(element);
+            },
+            subset.variant)) {}
 
   bool operator==(const Union_t<T...> &other) const = default;
 
@@ -442,8 +451,9 @@ inline std::string toJson_(const ListType_t &t) {
   return R"({ "ListType": { "element": )" + toJson_(t.element) + " } }";
 }
 inline std::string toJson_(const FnType_t &t) {
-  return std::format(R"({{ "FnType": {{ "argument": {}, "returnType": {} }} }})",
-                     toJson_(t.argument), toJson_(t.returnType));
+  return std::format(
+      R"({{ "FnType": {{ "argument": {}, "returnType": {} }} }})",
+      toJson_(t.argument), toJson_(t.returnType));
 }
 inline std::string toJson_(const StructType_t::Field &t) {
   return std::format(R"({{ "name": {}, "type": {} }})", toJson_(t.name),
@@ -833,23 +843,18 @@ inline struct subString_f {
   std::string toJson_() const { return R"({ "Function": "subString" })"; }
 } subString;
 
-// isVariant for subset
-template <typename... T, typename... V>
-  requires(sizeof...(T) != 1)
-Union_t<T...> isVariant_(Union_t<V...> _union) {
+template <typename U, typename... T>
+bool isSubset_(U _union) {
   bool found = (std::holds_alternative<T>(_union.variant) || ...);
   return found;
 }
 
-// isVariant for element
-template <typename T, typename... V> bool isVariant_(Union_t<V...> _union) {
+template <typename U, typename T> bool isVariant_(U _union) {
   return std::holds_alternative<T>(_union.variant);
 }
 
-// getVariant for subset
-template <typename... T, typename... V>
-  requires(sizeof...(T) != 1)
-Union_t<T...> getVariant_(Union_t<V...> _union) {
+template <typename U, typename... T>
+Union_t<T...> getSubset_(U _union) {
   std::optional<Union_t<T...>> result;
   (
       [&] {
@@ -861,11 +866,10 @@ Union_t<T...> getVariant_(Union_t<V...> _union) {
   if (result.has_value()) {
     return result.value();
   }
-  panic("getVariant: variant mismatch");
+  panic("getSubset: variant mismatch");
 }
 
-// getVariant for element
-template <typename T, typename... V> T getVariant_(Union_t<V...> _union) {
+template <typename U, typename T> T getVariant_(U _union) {
   if (!std::holds_alternative<T>(_union.variant)) {
     panic("getVariant: variant mismatch");
   }

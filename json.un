@@ -10,7 +10,6 @@ GetType: Type = Fn(String, Type)
 
 text: String = "<default>"
 offset: Int = 0
-buffer: List(Value) = []
 getType: GetType = |s: String|: Type = ()
 
 peek(): String =
@@ -57,7 +56,7 @@ alnumSeq(): String =
 
 stripLeadingZeros(string: String): String =
     len(string) == 0 -> string
-    at(string, 0) == "0" -> stripLeadingZeros(subString(1, string))
+    at(string, 0) == "0" -> stripLeadingZeros(subString(string, 1, len(string)))
     string
 
 parseUint(start: Offset): Union[Int, ()] =
@@ -90,8 +89,8 @@ parseNumber(): Result =
     offset = before
 
     // fractional part
-    parseUint(remainder) is fraction: Int ->
-        floatExpression(int + toFloat(fraction) / toFloat(pow(10, fractionLength)))
+    parseUint(offset) is fraction: Int ->
+        floatExpression(start, toFloat(int) + toFloat(fraction) / toFloat(pow(10, fractionLength)))
 
 parseIdentOrBool(): Result =
     start := offset
@@ -139,7 +138,7 @@ parseField(): Result =
     skipSpace()
     ;take(":") -> err("Expected ':'")
 
-    valueResult := parse(offset, buffer)
+    valueResult := parse(0)
     valueResult is fail: Fail -> fail
     valueResult is value: Expression
 
@@ -170,7 +169,7 @@ parseObject(): Result =
     listExpression(start, fields)
 
 parseElements(list: List(Expression)): Union[List(Expression), Fail] =
-    result := parse()
+    result := parse(0)
     result is fail: Fail -> fail
     result is value: Expression
     list = append(list, value)
@@ -185,7 +184,7 @@ parseList(): Result =
     ;take("[") -> ()
     
     result := parseElements([])
-    result is fail: fail -> fail
+    result is fail: Fail -> fail
     result is elements: List(Expression)
 
     skipSpace()
@@ -198,11 +197,11 @@ Parser: Type = Fn((), Result)
 PARSERS: List(Parser) = [parseNumber, parseString, parseIdentOrBool, parseObject, parseList]
 
 parse(index: Int): Result =
-    offset = skipSpace(offset)
-    index < len(parsers) ->
-        parser := get(parsers, index)
+    skipSpace()
+    index < len(PARSERS) ->
+        parser := get(PARSERS, index)
         result := parser()
-        result is noMatch: NoMatch ->
+        result is noMatch: () ->
             parse(index+1)
         result
     err("Expected expression")

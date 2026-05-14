@@ -122,7 +122,7 @@ func (a *Assignment) GetFlags() Flags {
 // Lower implements Statement.
 func (a *Assignment) Lower(state *State, isLast bool) cpp.Statement {
 	lowered := fmt.Sprintf(`%s %s %s;`,
-		a.Target.Name.String,
+		a.Target.Name.Lower(),
 		a.Op,
 		cpp.LambdaBlock(a.Body.Lower(state), a.targetType.LowerType(), a.HasCaptures),
 	)
@@ -200,11 +200,12 @@ func (b *BranchStatement) Lower(state *State, isLast bool) cpp.Statement {
 // Always the last statement in a list, since the remaining
 // statements in a block are is in its .Else field.
 type IsBranchStatement struct {
-	Expression Expression
-	Name       Name
-	Type       Type
-	Then       Block
-	Else       Block
+	Expression     Expression
+	Name           Name
+	Type           Type
+	Then           Block
+	Else           Block
+	expressionType TypeValue
 }
 
 func (b *IsBranchStatement) GetSpan() Span {
@@ -234,11 +235,11 @@ func (b *IsBranchStatement) Analyze(expected TypeValue, anal Analyzer) (_type Ty
 		panic(fmt.Sprintf("Empty else-block at %s", b.Else.GetSpan()))
 	}
 	isType := b.Type.Analyze(anal)
-	expressionType := b.Expression.Analyze(isType, anal)
+	b.expressionType = b.Expression.Analyze(isType, anal)
 
-	if !IsSubType(isType, expressionType) {
+	if !IsSubType(isType, b.expressionType) {
 		anal.ReportError(ImpossibleIsExpression{
-			SuperType: expressionType,
+			SuperType: b.expressionType,
 			SubType:   isType,
 			At:        b.Expression.GetSpan(),
 		})
@@ -256,20 +257,40 @@ func (b *IsBranchStatement) Lower(state *State, isLast bool) cpp.Statement {
 	if !isLast {
 		panic("Is-statement should always be the last statement in a block.")
 	}
-	isType := b.Type.Get().LowerType()
+	unionType, typeIsUnion := b.Type.Get().(*UnionType)
 	name := fmt.Sprintf("is_expr_%x_", rand.Uint64())
-	return fmt.Sprintf(
-		`auto %s = %s;
-if (isVariant_<%s>(%s)) {
-    auto %s = getVariant_<%s>(%s);
+	expressionType := b.expressionType.LowerType()
+	if typeIsUnion {
+		isTypes := util.JoinFunc(unionType.Variants, "", func(variant TypeValue) string {
+			return ", " + variant.LowerType()
+		})
+		return fmt.Sprintf(
+			`auto %s = %s;
+if (isSubset_<%s%s>(%s)) {
+    auto %s = getSubset_<%s%s>(%s);
     %s
 } else %s`,
-		name, b.Expression.Lower(state),
-		isType, name,
-		b.Name.Lower(), isType, name,
-		strings.Join(b.Then.Lower(state), "\n"),
-		cpp.Block(b.Else.Lower(state)),
-	)
+			name, b.Expression.Lower(state),
+			expressionType, isTypes, name,
+			b.Name.Lower(), expressionType, isTypes, name,
+			strings.Join(b.Then.Lower(state), "\n"),
+			cpp.Block(b.Else.Lower(state)),
+		)
+	} else {
+		isType := b.Type.Get().LowerType()
+		return fmt.Sprintf(
+			`auto %s = %s;
+if (isVariant_<%s, %s>(%s)) {
+    auto %s = getVariant_<%s, %s>(%s);
+    %s
+} else %s`,
+			name, b.Expression.Lower(state),
+			expressionType, isType, name,
+			b.Name.Lower(), expressionType, isType, name,
+			strings.Join(b.Then.Lower(state), "\n"),
+			cpp.Block(b.Else.Lower(state)),
+		)
+	}
 }
 
 type Block struct {
