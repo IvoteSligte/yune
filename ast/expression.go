@@ -296,6 +296,37 @@ func (f *FunctionCall) AnalyzeBuiltins(anal Analyzer) (returnType TypeValue) {
 		}
 		f.parameterIsTuple = true
 		return firstArgumentListType.Element
+	// set(List(<element type>), Int, <element type>): ()
+	case "set":
+		argumentType := f.Argument.Analyze(nil, anal)
+		tupleArgumentType := checkIsTuple(argumentType, f.Argument.GetSpan(), anal)
+		checkTupleTypeArity(tupleArgumentType, 3, f.Argument.GetSpan(), anal)
+		firstArgumentType := tupleArgumentType.Elements[0]
+		firstArgumentListType, firstArgumentIsList := firstArgumentType.(*ListType)
+		if !firstArgumentIsList {
+			anal.ReportError(ExpectedList{
+				Found: firstArgumentType,
+				At:    f.Argument.(*Tuple).Elements[0].GetSpan(),
+			})
+		}
+		secondArgumentType := tupleArgumentType.Elements[1]
+		if !secondArgumentType.Eq(&IntType{}) {
+			anal.ReportError(UnexpectedType{
+				Expected: &IntType{},
+				Found:    secondArgumentType,
+				At:       f.Argument.(*Tuple).Elements[1].GetSpan(),
+			})
+		}
+		thirdArgumentType := tupleArgumentType.Elements[2]
+		if !firstArgumentListType.Element.Eq(thirdArgumentType) {
+			anal.ReportError(UnexpectedType{
+				Expected: firstArgumentListType.Element,
+				Found:    thirdArgumentType,
+				At:       f.Argument.(*Tuple).Elements[2].GetSpan(),
+			})
+		}
+		f.parameterIsTuple = true
+		return &TupleType{}
 	default:
 		return nil
 	}

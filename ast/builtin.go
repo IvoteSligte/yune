@@ -131,6 +131,13 @@ var BuiltinDeclarations = []BuiltinDeclaration{
 		// <element type>
 		Return: &UnionType{},
 	}, 0},
+	// overwrites an element in a list
+	{"set", &FnType{
+		// (list: List(<element type>), index: Int, element: <element type>)
+		Argument: &TupleType{Elements: []TypeValue{&UnionType{}, &IntType{}, &UnionType{}}},
+		// ()
+		Return: &TupleType{},
+	}, 0},
 	{"Union", &FnType{
 		Argument: &ListType{Element: &TypeType{}},
 		Return:   &TypeType{},

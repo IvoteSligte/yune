@@ -796,6 +796,17 @@ inline struct get_f {
   std::string toJson_() const { return R"({ "Function": "get" })"; }
 } get;
 
+inline struct set_f {
+  template <class T = int> std::tuple<> operator()(List_t<T> list, int index, T element) const {
+    if (index < 0 || index >= list.size()) {
+      panic("set: list index out of bounds");
+    }
+    list[index] = element;
+  }
+
+  std::string toJson_() const { return R"({ "Function": "set" })"; }
+} set;
+
 inline struct append_f {
   template <class T = int>
   List_t<T> operator()(List_t<T> list, T element) const {
