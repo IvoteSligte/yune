@@ -207,44 +207,16 @@ parseList(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
     
     (len(buffer), append(buffer, list))
 
-parse(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
-    offset = skipSpace(offset)
-    
-    result: Ok(Value) = ()
-    result = parseNumber(offset)
-    result is ok: Ok(Number) ->
-        (number: Number, offset: Offset) := ok
-        ((len(buffer), append(buffer, number)), offset)
-    result is error: Error -> error
-    
-    result = parseString(offset)
-    result is ok: Ok(Number) ->
-        (number: Number, offset: Offset) := ok
-        ((len(buffer), append(buffer, number)), offset)
-    result is error: Error -> error
-
-    result = parseBool(offset)
-    result is ok: Ok(Number) ->
-        (number: Number, offset: Offset) := ok
-        ((len(buffer), append(buffer, number)), offset)
-    result is error: Error -> error    
-    
-    result = parseIdent(offset)
-    result is ok: Ok(Number) ->
-        (number: Number, offset: Offset) := ok
-        ((len(buffer), append(buffer, number)), offset)
-    result is error: Error -> error    
-
-    result = parseObject(offset)
-    result is ok: Ok((ValueIndex, Buffer)) -> ok
-    result is error: Error -> error
-    
-    result = parseList(offset)
-    result is ok: Ok((ValueIndex, Buffer)) -> ok
-    result is error: Error -> error
-    
+parseAny(offset: Offset, buffer: Buffer, parsers: List(Fn(Offset, Result))): Result =
     // TODO
 
-json(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
+parse(offset: Offset, buffer: Buffer): Result((ValueIndex, Buffer)) =
+    offset = skipSpace(offset)
+    parseAny(offset, buffer, [parseNumber, parseString, parseBool, parseIdent, parseObject, parseList])
+
+json(macroText: String, getType: Fn(String, Type)): Union[Expression, (Int, String)] =
     text = macroText
+    result := parse(0, [])
+    
+    // TODO
 

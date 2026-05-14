@@ -10,7 +10,7 @@ isIdentifier(string: String): Bool =
     ;isAlpha(at(string, 0)) -> false
     isAlnum(subString(string, 1, len(string)))
 
-Error: Type = String
+Error: Type = (Int, String)
 
 // String interpolation (a.k.a. formatting or f-string) macro.
 fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
@@ -25,10 +25,11 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
         stringExpression(0, text)
 
     captureName := subString(text, leftIndex + 1, rightIndex)
-    ;isIdentifier(captureName) -> "'" + captureName + "' is not a valid identifier."
+    ;isIdentifier(captureName) ->
+        (leftIndex+1, "'" + captureName + "' is not a valid identifier.")
     captureType := getType(captureName)
     captureType ;= Bool and captureType ;= Int and captureType ;= String ->
-        "Only booleans, integers, and strings can be formatted for now."
+        (leftIndex+1, "Only booleans, integers, and strings can be formatted for now.")
 
     remainderResult := fmt(subString(text, rightIndex + 1, len(text)), getType)
     
@@ -36,7 +37,7 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     remainderResult is right: Expression
     // TODO: hygienic capture
     leftLeft := stringExpression(0, subString(text, 0, leftIndex))
-    leftRight := functionCallExpression(0, variableExpression(0, "toString"), variableExpression(0, captureName))
+    leftRight := functionCallExpression(0, inject(toString), variableExpression(0, captureName))
     left := binaryExpression(0, "+", leftLeft, leftRight)
     binaryExpression(0, "+", left, right)
 

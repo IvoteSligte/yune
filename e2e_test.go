@@ -188,11 +188,11 @@ func TestRawCppExpression(t *testing.T) {
 
 func TestClosureExpression(t *testing.T) {
 	stdout, _ := parseAndRunModule("closureExpression.un", `
-Error: Type = String
+Error: Type = (Int, String)
 square(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
     type := getType(text)
     type ;= Int ->
-        "Referenced variable must be an integer"
+        (0, "Referenced variable must be an integer")
     parameters: List((String, Expression)) = []
     statements: List(Statement) = [expressionStatement(binaryExpression(0, "*", variableExpression(0, text), variableExpression(0, text)))]
     closureExpression(0, parameters, inject(Int), statements)
@@ -224,8 +224,11 @@ something(f: Fn((), Int)): Int = f()
 takeTuple(t: (Int, String)): String =
     "literal"
 
-longString(text: String, getType: Fn(String, Type)): Union[String, Expression] =
-    getType("add") // test getType
+Error: Type = (Int, String)
+
+longString(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
+    getType("add") ;= Fn((Int, Int), Int) ->
+        (0, "Function 'add' does not have the expected type")
     stringExpression(0, text)
 
 noArguments(): () = a: Int = 0
@@ -249,7 +252,6 @@ main(): () =
 multi-line string.
 It contains several newlines.
 Something fancy it supports is quotes "" and even hashtags#!
-
 
 `) // TODO: get rid of (leading and) trailing newlines or whitespace in the macro parsing
 }

@@ -12,6 +12,10 @@ type AnalyzerError struct {
 	Message string
 }
 
+func (e AnalyzerError) Error() string {
+	return "Analyzer error: " + e.Message
+}
+
 type Analyzer struct {
 	Interpreter *cpp.Interpreter
 	Errors      *Errors

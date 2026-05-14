@@ -8,10 +8,10 @@ import (
 
 func makeCodeError(errorText string, span Span, message string) string {
 	lines := slices.Collect(strings.Lines(span.Source))
-	span.Line = max(0, min(span.Line, len(lines)-1))
+	span.Line = max(1, min(span.Line, len(lines)))
 	sourceLine := ""
 	if len(lines) > 0 {
-		sourceLine = lines[span.Line]
+		sourceLine = lines[span.Line-1] // line number starts at 1
 	}
 	if len(sourceLine) > 0 && sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]

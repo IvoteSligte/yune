@@ -136,8 +136,8 @@ func main() {
 	}
 	defer func() {
 		if err := recover(); err != nil {
-			if err, ok := err.(ast.AnalyzerError); ok {
-				fmt.Fprintf(os.Stderr, "Analyzer error: %s\n", err.Message)
+			if analyzerError, ok := err.(ast.AnalyzerError); ok {
+				fmt.Fprintln(os.Stderr, analyzerError.Error())
 			} else {
 				panic(err)
 			}

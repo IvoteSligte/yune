@@ -538,6 +538,7 @@ func (m *Macro) GetText() string {
 func (m *Macro) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	functionType := m.Function.Analyze(MacroFunctionType, anal)
 	if !functionType.Eq(MacroFunctionType) {
+		fmt.Printf("macro function span: %s\n", m.Function.GetSpan())
 		anal.ReportError(UnexpectedType{
 			Expected: MacroFunctionType,
 			Found:    functionType,
