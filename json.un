@@ -2,28 +2,15 @@ import "std.un"
 
 Offset: Type = Int
 
-Ok: Type = ValueIndex
 Error: Type = (Offset, String)
 Fail: Type = Union[Error, ()]
-Result: Type = Union[Ok, Fail]
-
-Number: Type = Union[Int, Float]
-Null = ()
-// Recursive types cannot be expressed in Yune, so we use indices
-// into an array that is passed along with the data.
-ValueIndex: Type = Int
-Value: Type = Union[Int, Float, String, Bool, List(ValueIndex), Object, Null]
-Field: Type = (String, ValueIndex)
-Object: Type = List(Field)
-
-// (root, values)
-Json: Type = (ValueIndex, List(Value))
+Result: Type = Union[Expression, Fail]
 
 GetType: Type = Fn(String, Type)
 
 text: String = "<default>"
 offset: Int = 0
-buffer: List(Value)
+buffer: List(Value) = []
 getType: GetType = |s: String|: Type = ()
 
 peek(): String =
@@ -51,22 +38,10 @@ skipSpace(): () =
     takeIf(isSpace) ->
         skipSpace()
 
-yield(value: Value): Int =
-    index := len(buffer)
-    buffer = append(buffer, value)
-    index
-
 err(message: String): Error = (offset, message)
 
 checkEOF(expected: String): Union[Error, ()] =
     offset >= len(text) -> err("Expected '" + expected + "', but found EOF")
-
-prependInner(element: ValueIndex, list: List(ValueIndex), index: Int): List(ValueIndex) =
-    index == 0 -> [element]
-    append(prependInner(element, list, index-1), get(list, index-1))
-
-prepend(element: ValueIndex, list: List(ValueIndex)): List(ValueIndex) =
-    prependInner(element, list, len(list))
 
 digitSeq(): String =
     ;isDigits(peek()) -> ""
@@ -75,6 +50,15 @@ digitSeq(): String =
 alphaSeq(): String =
     ;isAlpha(peek()) -> ""
     next() + alphaSeq()
+
+alnumSeq(): String =
+    ;isAlnum(peek()) -> ""
+    next() + alnumSeq()
+
+stripLeadingZeros(string: String): String =
+    len(string) == 0 -> string
+    at(string, 0) == "0" -> stripLeadingZeros(subString(1, string))
+    string
 
 parseUint(start: Offset): Union[Int, ()] =
     ;isDigits(peek()) ->
@@ -93,31 +77,35 @@ parseInt(): Union[Int, Error, ()] =
     parseUint(offset)
 
 parseNumber(): Result =
+    start := offset
     // integer part
     result := parseInt()
     result is fail: Fail -> fail
     result is int: Int
     // dot
-    ;take(".") -> yield(int)
-    fractionLength := digitPrefixLength(offset+1)
+    ;take(".") -> integerExpression(start, int)
+
+    before := offset
+    fractionLength := len(stripLeadingZeros(digitSeq()))
+    offset = before
+
     // fractional part
     parseUint(remainder) is fraction: Int ->
-        float := int + toFloat(fraction) / toFloat(pow(10, fractionLength))
-        yield(float)
+        floatExpression(int + toFloat(fraction) / toFloat(pow(10, fractionLength)))
 
 parseIdentOrBool(): Result =
     start := offset
     ;isAlpha(peek()) -> ()
     ident := next() + alnumSeq()
-    ident == "true" -> yield(true)
-    ident == "false" -> yield(false)
+    ident == "true" -> boolExpression(start, true)
+    ident == "false" -> boolExpression(start, false)
     type := getType(ident)
     type == Int or type == String or type == Bool ->
         variableExpression(start, ident)
     err("Only variables of type Int, String, or Bool can be used")
 
 parseStringSuffix(): Union[String, Fail] =
-    checkEOF("\"") is error: Error -> err
+    checkEOF("\"") is error: Error -> error
     char := peek()
     offset += 1
     char == "\"" -> ""
@@ -134,27 +122,33 @@ parseStringSuffix(): Union[String, Fail] =
     result is suffix: String
     char + suffix
 
-parseString(offset: Offset): Result(String) =
-    take("\"") -> parseStringSuffix()
+parseString(): Result =
+    start := offset
+    take("\"") ->
+        result := parseStringSuffix()
+        result is fail: Fail -> fail
+        result is string: String
+        stringExpression(start, string)
 
-parseField(): Union[Field, Fail] =
+parseField(): Result =
+    start := offset
     keyResult := parseString()
     keyResult is fail: Fail -> fail
-    keyResult is key: String
+    keyResult is key: Expression
 
     skipSpace()
     ;take(":") -> err("Expected ':'")
 
     valueResult := parse(offset, buffer)
     valueResult is fail: Fail -> fail
-    valueResult is valueIndex: ValueIndex
+    valueResult is value: Expression
 
-    (key, valueIndex)
+    tupleExpression(start, [key, value])
 
-parseFields(fields: List(Field)): Union[List(Field), Fail] =
+parseFields(fields: List(Expression)): Union[List(Expression), Fail] =
     result := parseField()
     result is fail: Fail -> fail
-    result is field: Field
+    result is field: Expression
     fields = append(fields, field)
 
     skipSpace()
@@ -163,22 +157,23 @@ parseFields(fields: List(Field)): Union[List(Field), Fail] =
     fields
 
 parseObject(): Result =
+    start := offset
     ;take("{") -> ()
 
     result := parseFields([])
     result is fail: Fail -> fail
-    result is fields: List(Field)
+    result is fields: List(Expression)
 
     skipSpace()
     ;take("}") -> err("Expected '}'")
 
-    yield(fields)
+    listExpression(start, fields)
 
-parseElements(list: List(ValueIndex)): Union[List(ValueIndex), Fail] =
+parseElements(list: List(Expression)): Union[List(Expression), Fail] =
     result := parse()
     result is fail: Fail -> fail
-    result is valueIndex: ValueIndex
-    list = append(list, valueIndex)
+    result is value: Expression
+    list = append(list, value)
 
     skipSpace()
     take(",") -> parseElements(list)
@@ -186,22 +181,23 @@ parseElements(list: List(ValueIndex)): Union[List(ValueIndex), Fail] =
     list
 
 parseList(): Result =
+    start := offset
     ;take("[") -> ()
     
-    result := parse()
+    result := parseElements([])
     result is fail: fail -> fail
-    result is list: List(ValueIndex)
+    result is elements: List(Expression)
 
     skipSpace()
     ;take("]") -> err("Expected ']'")
 
-    yield(elements)
+    listExpression(start, elements)
 
 Parser: Type = Fn((), Result)
 
 PARSERS: List(Parser) = [parseNumber, parseString, parseIdentOrBool, parseObject, parseList]
 
-parse(index: Int): Union[Ok, Error] =
+parse(index: Int): Result =
     offset = skipSpace(offset)
     index < len(parsers) ->
         parser := get(parsers, index)
@@ -215,7 +211,5 @@ json(macroText: String, macroGetType: GetType): Union[Expression, Error] =
     text = macroText
     getType = macroGetType
     offset = 0
-    result := parse(0)
-    result is error: Error -> error
-    result is root: ValueIndex
-    inject((root, buffer))
+    parse(0)
+    

@@ -442,8 +442,8 @@ inline std::string toJson_(const ListType_t &t) {
   return R"({ "ListType": { "element": )" + toJson_(t.element) + " } }";
 }
 inline std::string toJson_(const FnType_t &t) {
-  return R"({ "FnType": { "argument": )" + toJson_(t.argument) +
-         R"(, "return": )" + toJson_(t.returnType) + " } }";
+  return std::format(R"({{ "FnType": {{ "argument": {}, "returnType": {} }} }})",
+                     toJson_(t.argument), toJson_(t.returnType));
 }
 inline std::string toJson_(const StructType_t::Field &t) {
   return std::format(R"({{ "name": {}, "type": {} }})", toJson_(t.name),
@@ -797,7 +797,8 @@ inline struct get_f {
 } get;
 
 inline struct set_f {
-  template <class T = int> std::tuple<> operator()(List_t<T> list, int index, T element) const {
+  template <class T = int>
+  std::tuple<> operator()(List_t<T> list, int index, T element) const {
     if (index < 0 || index >= list.size()) {
       panic("set: list index out of bounds");
     }
@@ -811,7 +812,7 @@ inline struct append_f {
   template <class T = int>
   List_t<T> operator()(List_t<T> list, T element) const {
     list.push_back(element);
-    return list;    
+    return list;
   }
   std::string toJson_() const { return R"({ "Function": "append" })"; }
 } append;

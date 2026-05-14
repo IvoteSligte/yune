@@ -352,7 +352,7 @@ func (state *State) UnmarshalTypeValue(data *fj.Value) (t TypeValue) {
 	case "FnType":
 		t = &FnType{
 			Argument: state.UnmarshalTypeValue(v.Get("argument")),
-			Return:   state.UnmarshalTypeValue(v.Get("return")),
+			Return:   state.UnmarshalTypeValue(v.Get("returnType")),
 		}
 	case "StructType":
 		t = &StructType{
