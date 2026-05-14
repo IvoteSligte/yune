@@ -212,3 +212,20 @@ json(macroText: String, macroGetType: GetType): Union[Expression, Error] =
     offset = 0
     parse(0)
     
+main(): () =
+    pi := 3.141
+    value := json#
+        {
+            "pi": pi, // variable capture
+            "happy": true,
+            "name": "Yune",
+            "nothing": null,
+            "answer": { "everything": 42 },
+            "list": [1, 0, 2],
+            "object": {
+                "currency": "EUR",
+                "value": 42.99
+            }
+        }
+
+
