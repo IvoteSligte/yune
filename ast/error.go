@@ -16,6 +16,10 @@ func makeCodeError(errorText string, span Span, message string) string {
 	if len(sourceLine) > 0 && sourceLine[len(sourceLine)-1] == '\n' {
 		sourceLine = sourceLine[:len(sourceLine)-1]
 	}
+	// TODO: figure out why the column is 1 too great
+	// maybe only in macro errors?
+	// the macro-reported offset is correct, so it might be an UnmarshalSpan bug
+	span.Column -= 1
 	leftPad := strings.Repeat(" ", len(fmt.Sprintf("%d", span.Line)))
 	midPad := strings.Repeat(" ", span.Column)
 	underline := strings.Repeat("~", max(span.Length, 1))

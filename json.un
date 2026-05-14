@@ -39,7 +39,7 @@ skipSpace(): () =
         skipSpace()
 
 err(message: String): Error =
-    (offset, message + " at '" + peek() + "'")
+    (offset, message)
 
 checkEOF(expected: String): Union[Error, ()] =
     offset >= len(text) -> err("Expected '" + expected + "'")
@@ -243,7 +243,7 @@ main(): () =
             "happy": true,
             "name": "Yune",
             "nothing": null,
-            "answer": { "everything": 42 },
+            "answer": { 5 "everything": 42 },
             "list": [1, 0, 2],
             "object": {
                 "currency": "EUR",
