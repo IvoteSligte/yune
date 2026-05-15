@@ -13,7 +13,7 @@ isIdentifier(string: String): Bool =
 Error: Type = (Int, String)
 
 // String interpolation (a.k.a. formatting or f-string) macro.
-fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
+fmt(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, Error] =
     braces := findBraces(text, 0)
     braces is nothing: () ->
         stringExpression(0, text)
@@ -28,6 +28,8 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
     ;isIdentifier(captureName) ->
         (leftIndex+1, "'" + captureName + "' is not a valid identifier.")
     captureType := getType(captureName)
+    captureType is undefined: () ->
+        (leftIndex+1, "Variable '" + captureName + "' is not defined")
     captureType ;= Bool and captureType ;= Int and captureType ;= String ->
         (leftIndex+1, "Only booleans, integers, and strings can be formatted for now.")
 
@@ -44,7 +46,7 @@ fmt(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
 tokenize(text: String, yield: Fn(String, ())): () =
     panic("TODO")
 
-sql(text: String, getType: Fn(String, Type)): Union[String, Expression] =
+sql(text: String, getType: Fn(String, Union[Type, ()])): Union[String, Expression] =
     stringExpression(0, text)
 
 main(): () =

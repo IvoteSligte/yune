@@ -140,7 +140,7 @@ parseWhere(): Result =
 // "SELECT" ("*" | IDENT ("," IDENT)*)
 // "FROM" IDENT
 // ("WHERE" IDENT ("=" | ">" | "<") ("(" recurse ")" | "$" IDENT | NUMBER))?
-sql(macroText: String, getType: Fn(String, Type)): Union[Expression, Error] =
+sql(macroText: String, getType: Fn(String, Union[Type, ()])): Union[Expression, Error] =
     text = macroText
     offset = 0
 

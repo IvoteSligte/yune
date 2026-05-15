@@ -867,7 +867,7 @@ func (c *Closure) Analyze(expected TypeValue, anal Analyzer) TypeValue {
 	analyzeFunctionBody(anal, c.ReturnType.Get(), c.Body)
 	// FIXME: this should not capture the types used in the closure's signature
 	for _, capture := range *anal.Table.localCaptures {
-		c.captures[capture.name.String] = capture.declaration.GetDeclaredType()
+		c.captures[capture.name] = capture.declaration.GetDeclaredType()
 	}
 	return getFunctionType(c.Parameters, c.ReturnType)
 }

@@ -14,12 +14,12 @@ struct TypePromise_ {
   std::binary_semaphore sync{0};
   std::optional<Type_t> type;
 
-  Type_t get() {
+  std::optional<Type_t> get() {
     this->sync.acquire();
-    return std::move(*this->type);
+    return this->type;
   }
 
-  void set(Type_t type) {
+  void set(std::optional<Type_t> type) {
     this->type = type;
     this->sync.release();
   }
@@ -48,7 +48,7 @@ public:
 
   ~CompilerConnection_() { ::close(socket); }
 
-  Type_t get_type(String_t name) {
+  std::optional<Type_t> get_type(String_t name) {
     std::string payload = std::format(R"({{ "getType": "{}" }})"
                                       "\n",
                                       name);
@@ -79,7 +79,7 @@ public:
     }
   }
 
-  void set_type(Type_t type) { type_promise.set(type); }
+  void set_type(std::optional<Type_t> type) { type_promise.set(type); }
 
 private:
   std::string read_line() const {
@@ -103,8 +103,13 @@ private:
 } compiler_connection{};
 
 inline struct getType_cf {
-  Type_t operator()(String_t name) const {
-    return compiler_connection.get_type(name);
+  Union_t<Type_t, std::tuple<>> operator()(String_t name) const {
+    std::optional<Type_t> optional_type = compiler_connection.get_type(name);
+    if (optional_type.has_value()) {
+      return optional_type.value();
+    } else {
+      return std::make_tuple();
+    }
   }
   std::string toJson_() const {
     std::cerr << "getType_c is not serializable as it is compile-time-only."

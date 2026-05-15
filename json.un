@@ -6,12 +6,12 @@ Error: Type = (Offset, String)
 Fail: Type = Union[Error, ()]
 Result: Type = Union[Expression, Fail]
 
-GetType: Type = Fn(String, Type)
+GetType: Type = Fn(String, Union[Type, ()])
 Parser: Type = Fn((), Result)
 
 text: String = "<default>"
 offset: Int = 0
-getType: GetType = |s: String|: Type = ()
+getType: GetType = |s: String|: Union[Type, ()] = ()
 
 peek(): String =
     offset >= len(text) -> "%EOF%"
@@ -38,11 +38,8 @@ skipSpace(): () =
     takeIf(isSpace) ->
         skipSpace()
 
-err(message: String): Error =
-    (offset, message)
-
 checkEOF(expected: String): Union[Error, ()] =
-    offset >= len(text) -> err("Expected '" + expected + "'")
+    offset >= len(text) -> (len(text), "Expected '" + expected + "'")
 
 digitSeq(): String =
     ;isDigits(peek()) -> ""
@@ -71,7 +68,7 @@ parseUint(start: Offset): Union[Int, ()] =
 parseInt(): Union[Int, Error, ()] =
     take("-") ->
         result := parseUint(offset)
-        result is noMatch: () -> err("Expected unsigned number")
+        result is noMatch: () -> (offset, "Expected unsigned number")
         result is uint: Int
         -uint
     parseUint(offset)
@@ -103,10 +100,13 @@ parseIdentOrKeyword(): Result =
     ident == "true" -> boolExpression(start, true)
     ident == "false" -> boolExpression(start, false)
     ident == "null" -> tupleExpression(start, [])
-    type := getType(ident)
+    result := getType(ident)
+    result is undefined: () ->
+        (start, "Variable '" + ident + "' is not defined")
+    result is type: Type
     type == Int or type == Float or type == String or type == Bool ->
         variableExpression(start, ident)
-    err("Only variables of type Int, Float, String, or Bool can be used")
+    (start, "Only variables of type Int, Float, String, or Bool can be used")
 
 parseStringSuffix(): Union[String, Fail] =
     checkEOF("\"") is error: Error -> error
@@ -142,7 +142,7 @@ parseField(): Result =
     keyResult is key: Expression
 
     skipSpace()
-    ;take(":") -> err("Expected ':'")
+    ;take(":") -> (offset, "Expected ':'")
 
     println("field value before")
     valueResult := mustParse()
@@ -161,7 +161,7 @@ parseFields(fields: List(Expression)): Union[List(Expression), Fail] =
     skipSpace()
     take(",") ->
         result := parseFields(fields)
-        result is noMatch: () -> err("Expected field")
+        result is noMatch: () -> (offset, "Expected field")
         result
 
     fields
@@ -179,7 +179,7 @@ parseObject(): Result =
         []
 
     skipSpace()
-    ;take("}") -> err("Expected string or '}'")
+    ;take("}") -> (offset, "Expected string or '}'")
 
     listExpression(start, fields)
 
@@ -192,7 +192,7 @@ parseElements(list: List(Expression)): Union[List(Expression), Fail] =
     skipSpace()
     take(",") ->
         result := parseElements(list)
-        result is noMatch: () -> err("Expected expression")
+        result is noMatch: () -> (offset, "Expected expression")
         result
 
     list
@@ -210,7 +210,7 @@ parseList(): Result =
         []
 
     skipSpace()
-    ;take("]") -> err("Expected ']'")
+    ;take("]") -> (offset, "Expected ']'")
 
     listExpression(start, elements)
 
@@ -225,7 +225,7 @@ parse(index: Int): Result =
 
 mustParse(): Union[Expression, Error] =
     result := parse(0)
-    result is noMatch: () -> err("Expected expression")
+    result is noMatch: () -> (offset, "Expected expression")
     result is output: Union[Expression, Error]
     output
 

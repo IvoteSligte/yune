@@ -262,20 +262,6 @@ func (e CyclicConstantDependency) Error() string {
 	return makeCodeError(text, e.In.GetSpan(), "")
 }
 
-type MacroRequestedUndefinedVariable struct {
-	Macro *Macro
-	Name  string
-}
-
-func (e MacroRequestedUndefinedVariable) Error() string {
-	// TODO: use span of e.Name instead of e.Macro
-	name := e.Macro.Function.Name
-	return fmt.Sprintf(
-		"Macro '%s' requested undefined variable '%s' at %s.",
-		name.String, e.Name, name.Span,
-	)
-}
-
 type MacroOutputError struct {
 	Macro   *Macro
 	Message string
@@ -285,7 +271,7 @@ type MacroOutputError struct {
 func (e MacroOutputError) Error() string {
 	name := e.Macro.Function.Name
 	errorText := fmt.Sprintf(
-		"Macro '%s' at %s returned error.",
+		"Macro '%s' at %s returned an error.",
 		name.String, name.Span,
 	)
 	return makeCodeError(errorText, e.At, e.Message)

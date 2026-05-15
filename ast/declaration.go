@@ -5,7 +5,7 @@ import (
 )
 
 type capture struct {
-	name        Name
+	name        string
 	declaration Declaration
 }
 
@@ -40,11 +40,11 @@ func (table DeclarationTable) NewScope() DeclarationTable {
 	}
 }
 
-func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
+func (table *DeclarationTable) Get(name string) (Declaration, bool) {
 	if table == table.parent {
 		log.Panicf("Table at address %p has itself as parent.", table)
 	}
-	local, isLocal := table.localDeclarations[name.String]
+	local, isLocal := table.localDeclarations[name]
 	if !isLocal && table.parent != nil {
 		decl, found := table.parent.Get(name)
 		_, isTopLevel := decl.(TopLevelDeclaration)
@@ -54,7 +54,7 @@ func (table *DeclarationTable) Get(name Name) (Declaration, bool) {
 		return decl, found
 	}
 	if !isLocal {
-		topLevel, found := table.topLevelDeclarations[name.String]
+		topLevel, found := table.topLevelDeclarations[name]
 		return topLevel, found
 	}
 	return local, isLocal

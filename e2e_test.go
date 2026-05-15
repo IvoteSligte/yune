@@ -189,10 +189,11 @@ func TestRawCppExpression(t *testing.T) {
 func TestClosureExpression(t *testing.T) {
 	stdout, _ := parseAndRunModule("closureExpression.un", `
 Error: Type = (Int, String)
-square(text: String, getType: Fn(String, Type)): Union[Error, Expression] =
-    type := getType(text)
-    type ;= Int ->
-        (0, "Referenced variable must be an integer")
+square(text: String, getType: Fn(String, Union[Type, ()])): Union[Error, Expression] =
+    result := getType(text)
+    result is undefined: () -> (0, "Variable does not exist")
+    result is type: Type
+    type ;= Int -> (0, "Variable must be an integer")
     parameters: List((String, Expression)) = []
     statements: List(Statement) = [expressionStatement(binaryExpression(0, "*", variableExpression(0, text), variableExpression(0, text)))]
     closureExpression(0, parameters, inject(Int), statements)
@@ -226,8 +227,12 @@ takeTuple(t: (Int, String)): String =
 
 Error: Type = (Int, String)
 
-longString(text: String, getType: Fn(String, Type)): Union[Expression, Error] =
-    getType("add") ;= Fn((Int, Int), Int) ->
+longString(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, Error] =
+    result := getType("add")
+    result is undefined: () ->
+        (0, "Function 'add' is not defined")
+    result is type: Type
+    type ;= Fn((Int, Int), Int) ->
         (0, "Function 'add' does not have the expected type")
     stringExpression(0, text)
 

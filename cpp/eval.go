@@ -129,7 +129,7 @@ func (r *Interpreter) Close() {
 	}
 }
 
-func (r *Interpreter) Evaluate(expr Expression, getType func(string) Type) (output *fj.Value, err error) {
+func (r *Interpreter) Evaluate(expr Expression, getType func(string) (Type, bool)) (output *fj.Value, err error) {
 	// A thread is created and detached because in order to write the result of a getType query
 	// more code needs to be evaluated by the interpreter, which causes a deadlock with only a single thread.
 	text := "std::thread([]() { compiler_connection.yield(toJson_(" + sanitize(expr) + ")); }).detach();\n"
@@ -143,7 +143,7 @@ func (r *Interpreter) Evaluate(expr Expression, getType func(string) Type) (outp
 	return
 }
 
-func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, err error) {
+func (r *Interpreter) readResult(getType func(string) (Type, bool)) (result *fj.Value, err error) {
 	for {
 		var read string
 		read, err = r.reader.ReadString('\n')
@@ -162,7 +162,12 @@ func (r *Interpreter) readResult(getType func(string) Type) (result *fj.Value, e
 		if nameBytes := message.GetStringBytes("getType"); nameBytes != nil {
 			name := string(nameBytes)
 			// set the type and signal that it has been set
-			if err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", getType(name))); err != nil {
+			_type, exists := getType(name)
+			typeValue := "std::nullopt"
+			if exists {
+				typeValue = _type
+			}
+			if err = r.Write(fmt.Sprintf("compiler_connection.set_type(%s);", typeValue)); err != nil {
 				err = fmt.Errorf("Failed to set type after getType request. Message: '%s'. Error: %s", message, err)
 				return
 			}

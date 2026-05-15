@@ -37,10 +37,13 @@ var ParameterType = &StructType{Name: "FunctionParameter", Fields: []StructTypeF
 var BlockType = &ListType{Element: StatementType}
 
 var MacroFunctionType = &FnType{
-	// (text String, getType Fn(String, Type))
+	// (text String, getType Fn(String, Union[Type, ()]))
 	Argument: &TupleType{Elements: []TypeValue{
 		&StringType{},
-		&FnType{Argument: &StringType{}, Return: &TypeType{}},
+		&FnType{
+			Argument: &StringType{},
+			Return:   &UnionType{Variants: []TypeValue{&TypeType{}, &TupleType{}}},
+		},
 	}},
 	// (error (Int, String), result Expression)
 	Return: &UnionType{Variants: []TypeValue{

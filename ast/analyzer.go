@@ -48,7 +48,7 @@ func (a Analyzer) ReportError(err error) {
 			a.MacroStack[0].Function.Name.String,
 			a.MacroStack[0].Span,
 			err, util.JoinFunc(a.MacroStack, "\n", func(m *Macro) string {
-				macroDeclaration, _ := a.Table.Get(m.Function.Name)
+				macroDeclaration, _ := a.Table.Get(m.Function.Name.String)
 				return fmt.Sprintf("  `%s` defined in file `%s` at %s", m.Function.Name.String, macroDeclaration.GetSpan().File, macroDeclaration.GetSpan())
 			}),
 		)
@@ -65,13 +65,12 @@ func (a Analyzer) HasErrors() bool {
 // Evaluate a lowered Expression, assuming that Expression.Analyze has already been called on it.
 // `in` should be non-nil if a macro is being evaluated.
 func (a Analyzer) Evaluate(lowered cpp.Expression, in *Macro) (json *fj.Value) {
-	getType := func(name string) cpp.Type {
-		span := Span{} // TODO: span
-		decl, ok := a.Table.Get(Name{String: name, Span: span})
-		if !ok {
-			a.ReportError(MacroRequestedUndefinedVariable{Macro: in, Name: name})
+	getType := func(name string) (_type cpp.Type, ok bool) {
+		decl, ok := a.Table.Get(name)
+		if ok {
+			_type = decl.GetDeclaredType().LowerValue()
 		}
-		return decl.GetDeclaredType().LowerValue()
+		return
 	}
 	json, err := a.Interpreter.Evaluate(lowered, getType)
 	if err != nil {
@@ -86,7 +85,7 @@ func (a Analyzer) NewScope() Analyzer {
 }
 
 func (a Analyzer) GetType(name Name) (TypeValue, Flags) {
-	decl, ok := a.Table.Get(name)
+	decl, ok := a.Table.Get(name.String)
 	if !ok {
 		a.ReportError(UndefinedVariable{
 			Span:   name.Span,
