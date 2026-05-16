@@ -121,8 +121,8 @@ func (d *FunctionDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 // LowerDefinition implements TopLevelDeclaration.
 func (d *FunctionDeclaration) LowerDefinition(state *State) cpp.Definition {
 	params := util.JoinFunc(d.Parameters, ", ", FunctionParameter.Lower)
-	return fmt.Sprintf(`%s %s_::operator()(%s) const %s
-std::string %s_::toJson_() const {
+	return fmt.Sprintf(`inline %s %s_::operator()(%s) const %s
+inline std::string %s_::toJson_() const {
     return R"({ "Function": "%s" })";
 }`, d.ReturnType.Lower(), d.Name.String, params, cpp.Block(d.Body.Lower(state)), d.Name.String, d.Name.String)
 }
@@ -226,7 +226,7 @@ func (d ConstantDeclaration) LowerDeclaration(state *State) cpp.Declaration {
 // LowerDefinition implements TopLevelDeclaration.
 func (d ConstantDeclaration) LowerDefinition(state *State) cpp.Definition {
 	return fmt.Sprintf(
-		"%s %s(%s);",
+		"inline %s %s(%s);",
 		d.Type.Lower(), d.Name.Lower(), state.lowerExpressionValue(d.value),
 	)
 }

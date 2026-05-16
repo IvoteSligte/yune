@@ -54,26 +54,8 @@ func writeFile(dir, name, contents string) *os.File {
 }
 
 func CompileLibrary(module Module) {
-	dir, err := os.MkdirTemp("", "yune-build")
-	if err != nil {
-		log.Fatalln("Failed to create temporary directory during compilation process. Error:", err)
-	}
-	defer os.RemoveAll(dir)
-
-	writeFile(dir, "code.cpp", module)
-
-	implementationPath := path.Join(dir, "code.cpp")
-	libraryPath := "./library.o"
-
-	fmt.Println("-- Clang++ log --")
-	includes := os.ExpandEnv("-I$PWD/cpp")
-	// Creates a C++23 object file
-	cmd := exec.Command("clang++", "-O1", "-c", "-std=c++23", implementationPath, "-o", libraryPath, includes)
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		log.Fatalln("Failed to compile code. Error:", err)
-	}
+	libraryPath := "library.hpp"
+	writeFile(os.ExpandEnv("$PWD"), libraryPath, module)
 	fmt.Println("-- Compilation Finished --")
 	return
 }

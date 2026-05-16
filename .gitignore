@@ -21,4 +21,4 @@ trace.out
 
 # compiler-generated
 program
-library.o
+library.hpp

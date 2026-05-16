@@ -53,7 +53,7 @@ func NewInterpreter() *Interpreter {
 		log.Fatalln("Failed to start TCP connection with clang-repl. Error:", err)
 	}
 	// Start REPL and setup inputs/outputs
-	cmd := exec.Command("clang-repl", "-Xcc=-std=c++23")
+	cmd := exec.Command("clang-repl", "-Xcc=-std=c++23", os.ExpandEnv("-Xcc=-I$PWD/cpp"))
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatalln("Failed to get stdin pipe from clang-repl command. Error:", err)
@@ -71,10 +71,10 @@ func NewInterpreter() *Interpreter {
 		logFile:  newLogFile(),
 		Declared: "",
 	}
-	if err = r.Declare(os.ExpandEnv(`#include "$PWD/cpp/pb.hpp"`)); err != nil {
+	if err = r.Declare(os.ExpandEnv(`#include "pb.hpp"`)); err != nil {
 		log.Fatalln("Failed to declare PB header through clang-repl. Error:", err)
 	}
-	if err = r.Write(os.ExpandEnv(`#include "$PWD/cpp/ipc.hpp"`) + "\n"); err != nil {
+	if err = r.Write(os.ExpandEnv(`#include "ipc.hpp"`) + "\n"); err != nil {
 		log.Fatalln("Failed to declare IPC header through clang-repl. Error:", err)
 	}
 	if err = r.Write("#include <thread>\n"); err != nil {
