@@ -27,9 +27,10 @@ fmt(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, Error
     captureName := subString(text, leftIndex + 1, rightIndex)
     ;isIdentifier(captureName) ->
         (leftIndex+1, "'" + captureName + "' is not a valid identifier.")
-    captureType := getType(captureName)
-    captureType is undefined: () ->
+    maybeCaptureType := getType(captureName)
+    maybeCaptureType is undefined: () ->
         (leftIndex+1, "Variable '" + captureName + "' is not defined")
+    maybeCaptureType is captureType: Type
     captureType ;= Bool and captureType ;= Int and captureType ;= String ->
         (leftIndex+1, "Only booleans, integers, and strings can be formatted for now.")
 

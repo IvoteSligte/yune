@@ -973,7 +973,11 @@ type ValueExpression struct {
 
 // Analyze implements Expression.
 func (v *ValueExpression) Analyze(expected TypeValue, anal Analyzer) TypeValue {
-	return anal.State.getValueType(v.value)
+	_type := anal.State.getValueType(v.value)
+	if _type == nil {
+		panic(fmt.Sprintf("Failed to get type of ValueExpression. Value: %s. State: %#v", v.value, anal.State))
+	}
+	return _type
 }
 
 // GetFlags implements Expression.

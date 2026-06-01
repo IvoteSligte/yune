@@ -214,6 +214,7 @@ func TestSQL(t *testing.T) {
 func TestFmt(t *testing.T) {
 	stdout, _ := parseAndRunModule("fmtTest.un", `import "fmt.un"`)
 	assertEq(stdout, `Hello, World! This is a long string: "A Long String!" and math is 999 + 999 * 999
+
 `)
 }
 

@@ -11,19 +11,16 @@ type State struct {
 	registeredClosures map[string]*Closure
 	// Stores type values that need to be serializable from C++.
 	registeredTypeValues map[string]TypeValue
-	// Stores types of functions that need to be serializable from C++.
-	registeredFunctions map[string]TypeValue
 }
 
 func NewState() *State {
-	registeredFunctions := map[string]TypeValue{}
+	registeredTypeValues := map[string]TypeValue{}
 	for _, b := range BuiltinDeclarations {
-		registeredFunctions[b.Name] = b.Type
+		registeredTypeValues[b.Name] = b.Type
 	}
 	return &State{
 		registeredClosures:   map[string]*Closure{},
-		registeredTypeValues: map[string]TypeValue{},
-		registeredFunctions:  registeredFunctions,
+		registeredTypeValues: registeredTypeValues,
 	}
 }
 

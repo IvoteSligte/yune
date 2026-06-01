@@ -397,7 +397,7 @@ func (state *State) getObjectValueType(object *fj.Object) TypeValue {
 		"MacroExpression", "UnaryExpression", "BinaryExpression", "StructExpression", "ClosureExpression":
 		return ExpressionType
 	case "Function":
-		return state.registeredFunctions[string(v.GetStringBytes())]
+		return state.registeredTypeValues[string(v.GetStringBytes())]
 	case "Box":
 		return state.getValueType(v)
 	default:
