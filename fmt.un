@@ -43,12 +43,6 @@ fmt(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, Error
     left := binaryExpression(0, "+", leftLeft, leftRight)
     binaryExpression(0, "+", left, right)
 
-tokenize(text: String, yield: Fn(String, ())): () =
-    panic("TODO")
-
-sql(text: String, getType: Fn(String, Union[Type, ()])): Union[String, Expression] =
-    stringExpression(0, text)
-
 main(): () =
     N := 999
     s := "A Long String!"

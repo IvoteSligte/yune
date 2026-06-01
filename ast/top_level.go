@@ -191,6 +191,10 @@ func (d *ConstantDeclaration) Analyze(anal Analyzer) {
 		return
 	}
 	if d.Type.Get() != nil {
+		_, isAnalyzed := anal.Defined[d]
+		if !isAnalyzed {
+			anal.ReportError(CyclicDependency{In: d})
+		}
 		return // already (being) analyzed
 	}
 	declaredType := d.Type.Analyze(anal)

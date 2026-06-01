@@ -78,7 +78,7 @@ int main() {
 	implementationPath := path.Join(dir, "code.cpp")
 	binaryPath := "./program"
 
-	fmt.Println("-- Clang++ log --")
+	fmt.Fprintln(os.Stderr, "-- Clang++ log --")
 	includes := os.ExpandEnv("-I$PWD/cpp")
 	cmd := exec.Command("clang++", "-O1", "-std=c++23", implementationPath, "-o", binaryPath, includes)
 	cmd.Stderr = os.Stderr
@@ -86,7 +86,7 @@ int main() {
 	if err != nil {
 		log.Fatalln("Failed to compile code. Error:", err)
 	}
-	fmt.Println("-- Output --")
+	fmt.Fprintln(os.Stderr, "-- Output --")
 	stdoutWriter := strings.Builder{}
 	stderrWriter := strings.Builder{}
 	cmd = exec.Command(binaryPath)
@@ -96,7 +96,7 @@ int main() {
 	if err != nil {
 		log.Fatalln("Failed to run code. Error:", err)
 	}
-	fmt.Println("-- Completed --")
+	fmt.Fprintln(os.Stderr, "-- Completed --")
 	stdout = stdoutWriter.String()
 	stderr = stderrWriter.String()
 	return

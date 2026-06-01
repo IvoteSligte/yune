@@ -5,17 +5,29 @@ import (
 	"testing"
 )
 
-func assert(condition bool) {
-	if !condition {
-		panic("Assertion failed.")
-	}
-}
-
 func assertEq[T comparable](found T, expected T) {
 	if found != expected {
 		panic(fmt.Sprintf(`Assertion failed. found != expected.
     found   : %#v
     expected: %#v`, found, expected))
+	}
+}
+
+func expectPanic(run func(), failMessage string) {
+	panicked := false
+	// defer runs at function exit, so we wrap this in another function to
+	// not accidentally recover from the later panic
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Recovered from panic:", r)
+			}
+			panicked = true
+		}()
+		run()
+	}()
+	if !panicked {
+		panic(failMessage)
 	}
 }
 
@@ -30,25 +42,36 @@ main(): () =
 `)
 }
 
-func TestImpureConstant(t *testing.T) {
-	panicked := false
-	// defer runs at function exit, so we wrap this in another function to
-	// not accidentally recover from the later panic
-	func() {
+func TestTypeCycle(t *testing.T) {
+	expectPanic(func() {
+		parseAndRunModule("typeCycle.un", `
+A: B = ()
+B: A = ()
+`)
+	}, "Cycle not detected.")
+}
 
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println("Recovered from panic:", r)
-			}
-			panicked = true
-		}()
+func TestSelfCycle(t *testing.T) {
+	expectPanic(func() {
+		parseAndRunModule("selfCycle.un", `A: A = A`)
+	}, "Cycle not detected.")
+}
+
+func TestTypeValueCycle(t *testing.T) {
+	expectPanic(func() {
+		parseAndRunModule("typeValueCycle.un", `
+A: B = ()
+B: Type = A
+`)
+	}, "Cycle not detected.")
+}
+
+func TestImpureConstant(t *testing.T) {
+	expectPanic(func() {
 		parseAndRunModule("impureConstant.un", `
 T: () = printlnString("impure! begone!")
 `)
-	}()
-	if !panicked {
-		panic("Impure constant not detected.")
-	}
+	}, "Impure constant not detected.")
 }
 
 func TestParsing(t *testing.T) {
@@ -162,6 +185,35 @@ LIST: List(Union[String, Int]) = ["alpha", "beta", "gamma", 50]
 
 // Tests serialization of Box
 EXPRESSION: Expression = binaryExpression(0, "+", stringExpression(0, "before"), stringExpression(0, "after"))
+`)
+}
+
+func TestJson(t *testing.T) {
+	parseAndRunModule("jsonTest.un", `import "json.un"`)
+}
+
+func TestSQL(t *testing.T) {
+	stdout, _ := parseAndRunModule("sqlTest.un", `import "sql.un"`)
+	assertEq(stdout, ""+
+		"SELECT `SELECT`\n"+
+		"IDENT `first_name`\n"+
+		", `,`\n"+
+		"IDENT `last_name`\n"+
+		", `,`\n"+
+		"IDENT `grade`\n"+
+		"FROM `FROM`\n"+
+		"IDENT `students`\n"+
+		"WHERE `WHERE`\n"+
+		"IDENT `grade`\n"+
+		"> `>`\n"+
+		"$ `$`\n"+
+		"IDENT `grade`\n",
+	)
+}
+
+func TestFmt(t *testing.T) {
+	stdout, _ := parseAndRunModule("fmtTest.un", `import "fmt.un"`)
+	assertEq(stdout, `Hello, World! This is a long string: "A Long String!" and math is 999 + 999 * 999
 `)
 }
 

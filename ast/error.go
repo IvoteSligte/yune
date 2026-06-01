@@ -245,20 +245,20 @@ func (e InvalidMainSignature) Error() string {
 }
 
 type CyclicTypeDependency struct {
-	In Declaration
+	On *Type
 }
 
 func (e CyclicTypeDependency) Error() string {
-	text := fmt.Sprintf("Cyclic type dependency in declaration '%s'.", e.In.GetName())
-	return makeCodeError(text, e.In.GetSpan(), "")
+	text := "Cyclic dependency on type."
+	return makeCodeError(text, e.On.Expression.GetSpan(), "")
 }
 
-type CyclicConstantDependency struct {
+type CyclicDependency struct {
 	In Declaration
 }
 
-func (e CyclicConstantDependency) Error() string {
-	text := fmt.Sprintf("Cyclic constant dependency in declaration '%s'.", e.In.GetName())
+func (e CyclicDependency) Error() string {
+	text := fmt.Sprintf("Cyclic dependency in declaration '%s'.", e.In.GetName())
 	return makeCodeError(text, e.In.GetSpan(), "")
 }
 

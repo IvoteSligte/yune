@@ -110,7 +110,7 @@ func runModule(fileName string, astModule ast.Module) (stdout, stderr string) {
 		}
 		log.Fatalln("Errors found, exiting.")
 	}
-	fmt.Println("--- Output ---")
+	fmt.Fprintln(os.Stderr, "--- Output ---")
 	if !hasMainFunction {
 		log.Println("Module does not have a `main` function. Compiling a library.")
 		cpp.CompileLibrary(cppModule)

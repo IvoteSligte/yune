@@ -239,7 +239,7 @@ main(): () =
     pi := 3.141
     value := json#
         {
-            "pi": unknown,
+            "pi": pi,
             "happy": true,
             "name": "Yune",
             "nothing": null,

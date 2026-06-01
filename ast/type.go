@@ -10,8 +10,9 @@ import (
 
 type Type struct {
 	// Evaluated expression
-	value      TypeValue
-	Expression Expression
+	Expression    Expression
+	value         TypeValue
+	beingAnalyzed bool
 }
 
 // TODO: rename to GetValue
@@ -33,6 +34,12 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	if t.value != nil {
 		panic("Called Type.Analyze on already-analyzed type.")
 	}
+	if t.beingAnalyzed {
+		anal.ReportError(CyclicTypeDependency{
+			On: t,
+		})
+	}
+	t.beingAnalyzed = true
 	expressionType := t.Expression.Analyze(&TypeType{}, anal.TopLevel())
 	// TODO: check if expressionType is part of the union TypeType rather than equal
 	// (is this necessary?)
@@ -45,5 +52,6 @@ func (t *Type) Analyze(anal Analyzer) TypeValue {
 	}
 	json := anal.Evaluate(t.Expression.Lower(anal.State), nil)
 	t.value = anal.State.UnmarshalTypeValue(json)
+	t.beingAnalyzed = false
 	return t.value
 }

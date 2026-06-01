@@ -43,7 +43,7 @@ public:
     if (err != 0) {
       panic("clang-repl: Failed to connect to the compiler.");
     }
-    std::cout << "clang-repl: Connected to Yune compiler." << std::endl;
+    std::cerr << "clang-repl: Connected to Yune compiler." << std::endl;
   }
 
   ~CompilerConnection_() { ::close(socket); }

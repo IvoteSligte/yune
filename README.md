@@ -14,4 +14,8 @@ If a Yune source file does not contain a `main` function, then a file named `lib
 
 In the case that the target project is not a C++ project, it is recommended to compile the `library.hpp` file to a dynamic library file with a static C++ standard library, which can easily be linked against from any language. `extern "C"` wrappers need to be made for the required functions.
 
+## Examples
+
+See `json.un`, `sql.un`, and `fmt.un` for examples of Yune code.
+
 
