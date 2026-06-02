@@ -260,6 +260,35 @@ main(): () =
 	assertEq(stdout, "correct\n")
 }
 
+// // Tests the deterministic evaluation order of macros.
+// // It currently does not pass and was deemed too annoying to fix before the thesis deadline.
+// func TestMacroEvalOrder(t *testing.T) {
+// 	previousStdout := ""
+//
+// 	for range 20 {
+// 		stdout, _ := parseAndRunModule("macroEvalOrder.un", `
+// output: String = "initial"
+//
+// setOutput(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, String] =
+//     output = "modified"
+//     tupleExpression(0, [])
+//
+// getOutput(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, String] =
+//     inject(output)
+//
+// setOutputFunction(): () = setOutput#
+//
+// main(): () =
+//     printlnString getOutput#
+// `)
+// 		if previousStdout != "" {
+// 			assertEq(previousStdout, stdout)
+// 		} else {
+// 			previousStdout = stdout
+// 		}
+// 	}
+// }
+
 func TestBasic(t *testing.T) {
 	stdout, _ := parseAndRunModule("basic.un", `
 import "std.un"
