@@ -261,7 +261,7 @@ main(): () =
 }
 
 // // Tests the deterministic evaluation order of macros.
-// // It currently does not pass and was deemed too annoying to fix before the thesis deadline.
+// // It currently does not pass and was deemed too much work to fix before the thesis deadline.
 // func TestMacroEvalOrder(t *testing.T) {
 // 	previousStdout := ""
 //
