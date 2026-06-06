@@ -35,7 +35,7 @@ struct NewType_t {};
 NewType: Type = `box_f(StructType_t{.name = "NewType"})`
 ```
 
-See [`json.un`](json.un), [`sql.un`](sql.un), and [`fmt.un`](fmt.un) for more complex examples of Yune code, including its macro system.
+See [`json.un`](json.un), [`sql.un`](sql.un), and [`fmt.un`](fmt.un) for more complex examples of Yune code, including its macro system. Tests for the compiler can also be seen in [`e2e_test.go`](e2e_test.go).
 
 ## Yune libraries
 
