@@ -10,32 +10,6 @@ import (
 	"strings"
 )
 
-func format(code string) (formatted string, err error) {
-	cmd := exec.Command("clang-format")
-	if cmd.Err != nil {
-		err = cmd.Err
-		return
-	}
-	cmd.Stdin = strings.NewReader(code)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		return
-	}
-	formatted = string(outputBytes)
-	return
-}
-
-func PrintFormatted(code string) {
-	formatted, err := format(code)
-	if err != nil {
-		log.Println("Error formatting C++ with clang-format:", err)
-		fmt.Println("Unformatted C++:")
-		fmt.Println(code)
-	} else {
-		fmt.Println(formatted)
-	}
-}
-
 func createFile(dir, name string) *os.File {
 	file, err := os.Create(path.Join(dir, name))
 	if err != nil {
