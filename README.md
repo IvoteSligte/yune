@@ -8,7 +8,7 @@ Yune is a programming language made for my Bachelor's thesis. It has a powerful 
 
 The compiler can theoretically be run on Linux, Windows, and MacOS, but it has only been tested on Linux (Fedora). The following executables must to be in your `PATH`: `go`, `clang++`, and `clang-repl`. `clang++` must support at least `C++23`. The code has been tested using `go1.25.10` and `LLVM/clang` version `21.1.8`.
 
-First the parser must be generated using `make parser`, then a Yune file can be compiled using `go . -- <file.un>`. Other files that this file imports are automatically loaded. Note that files are imported by path, there is no standard location for libraries. The standard library [`std.un`](std.un) is a regular file.
+First the parser must be generated using `make parser`, then a Yune file can be compiled using `go run . -- <file.un>`. Other files that this file imports are automatically loaded. Note that files are imported by path, there is no standard location for libraries. The standard library [`std.un`](std.un) is a regular file.
 
 A simple example:
 ```
