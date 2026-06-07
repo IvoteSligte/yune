@@ -23,6 +23,16 @@ main(): () =
 
 Yune supports tagged unions through the `Union[A, B, C, ...]` type (`std::variant` in C++) and tuples using `(A, B, C)` (`std::tuple` in C++). The language has primitive types `Int`, `Float`, `Bool`, and `String`, which translate to `int`, `float`, `bool`, and `std::string` in C++.
 
+The `is` operator can be used to check which variant a `Union` is. Example:
+```
+someUnion is num: Int -> doStuffIfTrue()
+doStuffIfFalse()
+
+// panics if someUnion is not an Int
+someUnion is num: Int
+doStuff()
+```
+
 Other types can be introduced using C++ interoperation as follows:
 ```
 `
@@ -46,3 +56,43 @@ In the case that the target project is not a C++ project, it is recommended to c
 ## IDE Tools
 
 Yune currently only has an Emacs mode that provides syntax highlighting in [`yune-mode.el`](yune-mode.el).
+
+## Builtins
+
+```
+Primitive types: Type, Int, Float, Bool, String, List(T), Fn(Arg/TupleOfArgs, Return), Union(List(Type)), Expression, Statement
+
+Functions for creating Expressions:
+- integerExpression(location: Int, value: Int)
+- floatExpression(Int, Float)
+- boolExpression(Int, Bool)
+- stringExpression(Int, String)
+- variableExpression(Int, name: String)
+- unaryExpression(Int, op: String, Expression)
+- binaryExpression(Int, op: String, left: Expression, right: Expression)
+- functionCallExpression(Int, function: Expression, arg: Expression)
+- closureExpression(Int, params: List((name: String, type: Expression)), returnType: Expression, body: List(Statement))
+- macroExpression(Int, name: String, text: String)
+- listExpression(Int, elements: List(Expression))
+- tupleExpression(Int, elements: List(Expression))
+- inject(T)
+
+Functions for creating Statements:
+- variableDeclaration(name: String, type: Expression, body: List(Statement))
+- assignStatement(target: String, body: List(Statement))
+- branchStatement(cond: Expression, if: List(Statement), else: List(Statement))
+- isBranchStatement(value: Expression, name: String, type: Expression, then: List(Statement), else: List(Statement))
+- expressionStatement(Expression)
+
+Miscellaneous functions:
+- toFloat(Int): Float
+- panic(String): Union[]
+- printlnString(String): ()
+- len(String): Int
+- append(List(T), T): List(T)
+- subString(String, Int, Int): String
+- get(List(T), Int): T
+- set(List(T), Int, T): ()
+
+Reserved names: 'Box', primitives followed by 'Type' as suffix (e.g. ListType, TupleType), and the names of all functions named above in PascalCase.
+```
