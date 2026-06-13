@@ -1,0 +1,10 @@
+// the simplest possible macro
+longString(text: String, getType: Fn(String, Union[Type, ()])): Union[Expression, String] =
+    stringExpression(0, text)
+
+main(): () =
+    printlnString longString#
+        This is a long string.
+        It contains several newlines.
+        You can put anything in here,
+        even quotes "" and hashtags #!
